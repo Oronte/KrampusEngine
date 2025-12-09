@@ -3,7 +3,7 @@
 #include "Components/SpriteComponent.h"
 #include "Actors/Actor.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class CameraManager

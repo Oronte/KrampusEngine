@@ -3,7 +3,7 @@
 #include "Graphics/Ressources/Animation.h"
 
 
-namespace engine
+namespace Krampus
 {
 
 	class SpriteComponent;

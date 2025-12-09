@@ -1,25 +1,25 @@
 #include "TextureManager.h"
 
-using namespace engine;
+using namespace Krampus;
 
-engine::TextureManager::TextureManager()
+Krampus::TextureManager::TextureManager()
 {
 	std::filesystem::create_directories(texturePath);
 	LoadDefaultTexture();
 }
 
-void engine::TextureManager::LoadDefaultTexture()
+void Krampus::TextureManager::LoadDefaultTexture()
 {
 	SetTextureToDefault(defaultTexture);
 }
 
-void engine::TextureManager::SetTextureToDefault(Texture& _texture)
+void Krampus::TextureManager::SetTextureToDefault(Texture& _texture)
 {
 	const std::string& _finalPath = defaultTexturePath + "." + defaultTextureExtension;
 	LoadTexture(_texture, _finalPath);
 }
 
-void engine::TextureManager::LoadTexture(Texture& _texture, const std::string& _path, const IRect& _rect)
+void Krampus::TextureManager::LoadTexture(Texture& _texture, const std::string& _path, const IRect& _rect)
 {
 	const std::string& _finalPath = texturePath + _path;
 
@@ -30,7 +30,7 @@ void engine::TextureManager::LoadTexture(Texture& _texture, const std::string& _
 	}
 }
 
-void engine::TextureManager::SetTexture(Shape* _shape, const Texture* _texture)
+void Krampus::TextureManager::SetTexture(Shape* _shape, const Texture* _texture)
 {
 	if (!_shape)
 	{
@@ -40,7 +40,7 @@ void engine::TextureManager::SetTexture(Shape* _shape, const Texture* _texture)
 	_shape->SetTexture(_texture);
 }
 
-std::string engine::TextureManager::GetExtensionNameByType(const TextureExtensionType& _textureType)
+std::string Krampus::TextureManager::GetExtensionNameByType(const TextureExtensionType& _textureType)
 {
 	const std::string _extensionNames[] =
 	{
@@ -52,7 +52,7 @@ std::string engine::TextureManager::GetExtensionNameByType(const TextureExtensio
 	return _extensionNames[CAST(int, _textureType)];
 }
 
-void engine::TextureManager::Load(ShapeObject* _shapeObject, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool _isRepeated, const bool _smooth)
+void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool _isRepeated, const bool _smooth)
 {
 	Texture& _texture = _shapeObject->GetTextureRef();
 
@@ -72,12 +72,12 @@ void engine::TextureManager::Load(ShapeObject* _shapeObject, const std::string& 
 	SetTexture(_shapeObject->GetShape(), &_texture);
 }
 
-void engine::TextureManager::SetTextureRect(Shape* _shape, const IVector2& _start, const IVector2& _size)
+void Krampus::TextureManager::SetTextureRect(Shape* _shape, const IVector2& _start, const IVector2& _size)
 {
 	SetTextureRect(_shape, IRect(_start, _size));
 }
 
-void engine::TextureManager::SetTextureRect(Shape* _shape, const IRect& _rect)
+void Krampus::TextureManager::SetTextureRect(Shape* _shape, const IRect& _rect)
 {
 	if (!_shape)
 	{

@@ -1,24 +1,36 @@
 #pragma once
 #include "GameFramework/Level.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Engine
 	{
+		std::string windowSaveDir = "Content/Saves/";
+		std::string windowSaveFileName = "Window.json";
+
 	public:
 		Event<> onEngineStart;
 		Event<> onEngineStop;
 
-	private:
-		Level* level = nullptr;
+		Event<> onFocusGained;
+		Event<> onFocusLost;
+		Event<UVector2> onWindowResized;
+		Event<IVector2> onMouseMoved;
+		Event<> onMouseEntered;
+		Event<> onMouseExit;
+		Event<> onWindowClosed;
 		
 	public:
-		Engine(Level* _level);
+		Engine();
 
 		void Start();
 		void Update();
 		void Stop();
+
+	private:
+		void UpdateEvent();
+		void SaveWindowInfo();
 	};
 
 }

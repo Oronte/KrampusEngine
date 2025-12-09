@@ -4,7 +4,7 @@
 #include "Components/AnimationComponent.h"
 #include "Managers/TextureManager.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class SpriteActor : public Actor

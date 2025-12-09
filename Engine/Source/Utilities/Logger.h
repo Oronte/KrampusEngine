@@ -10,10 +10,13 @@
 #define USE_DEBUG 0
 #endif // DEBUG
 
-#define LOG(_verbosity, _msg)   engine::Logger::PrintLog(_verbosity, _msg, DEBUG_INFO)
-#define LOG_MSG(_msg)               engine::Logger::PrintLog(engine::VerbosityType::Display, _msg, DEBUG_INFO)
+#define LOG(_verbosity, _msg)   Krampus::Logger::PrintLog(_verbosity, _msg, DEBUG_INFO)
+#define LOG_MSG(_msg)           Krampus::Logger::PrintLog(Krampus::VerbosityType::Display, _msg, DEBUG_INFO)
+#define LOG_WARNING(_msg)       Krampus::Logger::PrintLog(Krampus::VerbosityType::Warning, _msg, DEBUG_INFO)
+#define LOG_ERROR(_msg)         Krampus::Logger::PrintLog(Krampus::VerbosityType::Error, _msg, DEBUG_INFO)
+#define LOG_FATAL(_msg)         Krampus::Logger::PrintLog(Krampus::VerbosityType::Fatal, _msg, DEBUG_INFO)
 
-namespace engine
+namespace Krampus
 {
 
     enum class VerbosityType
@@ -53,7 +56,9 @@ namespace engine
 
     class Logger
     {
-        static INLINE std::string logsPath = "../Content/Logs/log.txt";
+        static INLINE std::string logsDir = "Content/Logs/";
+        static INLINE std::string logsFileName = "log.txt";
+        static INLINE std::string logsPath = logsDir + logsFileName;
 
         static INLINE std::queue<std::string> logQueue;
         static INLINE std::queue<std::string> consoleQueue;

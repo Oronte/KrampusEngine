@@ -1,14 +1,14 @@
 #include "TimerManager.h"
 #include "Graphics/Window/MainWindow.h"
 
-using namespace engine;
+using namespace Krampus;
 
-engine::TimerManager::~TimerManager()
+Krampus::TimerManager::~TimerManager()
 {
 	allTimers.clear();
 }
 
-std::string engine::TimerManager::GetCurrentRealTime() const
+std::string Krampus::TimerManager::GetCurrentRealTime() const
 {
 	const time_t& _now = std::time(nullptr);
 
@@ -26,14 +26,14 @@ std::string engine::TimerManager::GetCurrentRealTime() const
 	return _date + " " + _time;
 }
 
-Timer* engine::TimerManager::CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning, const bool& _isLoop)
+Timer* Krampus::TimerManager::CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning, const bool& _isLoop)
 {
     return allTimers.emplace_back(
         std::make_unique<Timer>(_callback, _duration, _startRunning, _isLoop)
     ).get();
 }
 
-float engine::TimerManager::Update()
+float Krampus::TimerManager::Update()
 {
 	float _currentTime = GetTime(clock.getElapsedTime());
     //ImGui::SFML::Update(MAIN_WINDOW.GetRenderWindow(), clock.restart());
@@ -84,6 +84,13 @@ float engine::TimerManager::Update()
         smoothedFPS = (1.0f - _smoothingFactor) * smoothedFPS + _smoothingFactor * fps;
     }
 
+    UpdateTimers();
+
+    return deltaTime;
+}
+
+void Krampus::TimerManager::UpdateTimers()
+{
     for (std::vector<std::unique_ptr<Timer>>::iterator _iterator = allTimers.begin(); _iterator != allTimers.end(); )
     {
         Timer* _timer = _iterator->get();
@@ -96,25 +103,23 @@ float engine::TimerManager::Update()
         }
         else ++_iterator;
     }
-
-    return deltaTime;
 }
 
-void engine::TimerManager::Pause()
+void Krampus::TimerManager::Pause()
 {
 	onPauseTimer.Broadcast();
 
 	for (const std::unique_ptr<Timer>& _timer : allTimers) _timer->Pause();
 }
 
-void engine::TimerManager::Resume()
+void Krampus::TimerManager::Resume()
 {
 	onResumeTimer.Broadcast();
 
 	for (const std::unique_ptr<Timer>& _timer : allTimers) _timer->Resume();
 }
 
-void engine::TimerManager::Stop()
+void Krampus::TimerManager::Stop()
 {
 	onStopTimer.Broadcast();
 

@@ -2,7 +2,7 @@
 #include "Utilities/Math/Transform.h"
 #include "Graphics/Ressources/Texture.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Shape

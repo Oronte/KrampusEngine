@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/CoreMinimal.h"
 
-namespace engine
+namespace Krampus
 {
 	class Timer
 	{

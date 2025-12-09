@@ -1,12 +1,13 @@
 #pragma once
 #include "Math.h"
 #include "Utilities/System/Printable.h"
+#include "Utilities/System/Savable.h"
 
-namespace engine
+namespace Krampus
 {
 
     template<typename T>
-    struct Vector2D : public IPrintable
+    struct Vector2D : public IPrintable, public ISavable
     {
         static_assert(std::is_arithmetic_v<T>, "Vector2<T> requires an arithmetic type T");
 
@@ -44,16 +45,16 @@ namespace engine
         }
 
 
-        NO_DISCARD CalcType LengthSquared() const noexcept 
+        INLINE NO_DISCARD CalcType LengthSquared() const noexcept 
         { 
             return CAST(CalcType, x) * CAST(CalcType, x) + CAST(CalcType, y) * CAST(CalcType, y);
         }
-        NO_DISCARD CalcType Length() const noexcept 
+        INLINE NO_DISCARD CalcType Length() const noexcept 
         { 
             return Math::Sqrt(LengthSquared());
         }
 
-        NO_DISCARD Vector2D<CalcType> Normalized(const CalcType& _fallback = 0.0) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> Normalized(const CalcType& _fallback = 0.0) const noexcept
         {
             CalcType _length = Length();
 
@@ -62,31 +63,31 @@ namespace engine
             return Vector2D<CalcType>(CAST(CalcType, x) / _length, CAST(CalcType, y) / _length);
         }
 
-        NO_DISCARD CalcType Dot(const Vector2D& _other) const noexcept
+        INLINE NO_DISCARD CalcType Dot(const Vector2D& _other) const noexcept
         {
             return CAST(CalcType, x) * CAST(CalcType, _other.x) + CAST(CalcType, y) * CAST(CalcType, _other.y);
         }
 
-        NO_DISCARD CalcType Cross(const Vector2D& _other) const noexcept
+        INLINE NO_DISCARD CalcType Cross(const Vector2D& _other) const noexcept
         {
             return CAST(CalcType, x) * CAST(CalcType, _other.y) - CAST(CalcType, y) * CAST(CalcType, _other.x);
         }
 
-        NO_DISCARD Vector2D Perp() const noexcept 
+        INLINE NO_DISCARD Vector2D Perp() const noexcept 
         { 
             return Vector2D(CAST(T, -y), CAST(T, x));
         }
 
-        NO_DISCARD CalcType DistanceSquared(const Vector2D& _other) const noexcept 
+        INLINE NO_DISCARD CalcType DistanceSquared(const Vector2D& _other) const noexcept 
         { 
             return (*this - _other).LengthSquared();
         }
-        NO_DISCARD CalcType Distance(const Vector2D& _other) const noexcept 
+        INLINE NO_DISCARD CalcType Distance(const Vector2D& _other) const noexcept 
         { 
             return Math::Sqrt(DistanceSquared(_other));
         }
 
-        NO_DISCARD Vector2D<CalcType> ClampMagnitude(CalcType _maxLength) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> ClampMagnitude(CalcType _maxLength) const noexcept
         {
             CalcType _lengthSquared = CAST(CalcType, LengthSquared());
             CalcType _maxLengthSquared = _maxLength * _maxLength;
@@ -98,7 +99,7 @@ namespace engine
             return Vector2D<CalcType>(CAST(CalcType, x) * (_maxLength / _length), CAST(CalcType, y) * (_maxLength / _length));
         }
 
-        NO_DISCARD Vector2D<CalcType> MoveTowards(const Vector2D& _target, CalcType _maxDelta) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> MoveTowards(const Vector2D& _target, CalcType _maxDelta) const noexcept
         {
 
             Vector2D<CalcType> _current = Vector2D(CAST(CalcType, x), CAST(CalcType, y));
@@ -111,7 +112,7 @@ namespace engine
             return _current + _toTarget * (CAST(CalcType, _maxDelta) / _dist);
         }
 
-        NO_DISCARD Vector2D<CalcType> Reflect(const Vector2D& _normal) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> Reflect(const Vector2D& _normal) const noexcept
         {
             Vector2D<CalcType> _incident = Vector2D(CAST(CalcType, x), CAST(CalcType, y));
             Vector2D<CalcType> _calcTypeNormal = Vector2D(CAST(CalcType, _normal.x), CAST(CalcType, _normal.y));
@@ -119,7 +120,7 @@ namespace engine
             return _incident - _calcTypeNormal * (CAST(CalcType, 2) * _dotIncidentNormal);
         }
 
-        NO_DISCARD Vector2D<CalcType> Project(const Vector2D& _axis) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> Project(const Vector2D& _axis) const noexcept
         {
             Vector2D<CalcType> _vector{ CAST(CalcType, x), CAST(CalcType, y) };
             Vector2D<CalcType> _direction{ CAST(CalcType, _axis.x), CAST(CalcType, _axis.y) };
@@ -131,12 +132,12 @@ namespace engine
             return _direction * _projectionScale;
         }
 
-        NO_DISCARD CalcType AtanToRadian() const noexcept 
+        INLINE NO_DISCARD CalcType AtanToRadian() const noexcept 
         { 
             return Math::Atan2(CAST(CalcType, y), CAST(CalcType, x));
         }
 
-        NO_DISCARD CalcType AngleBetweenRadians(const Vector2D& _other) const noexcept
+        INLINE NO_DISCARD CalcType AngleBetweenRadians(const Vector2D& _other) const noexcept
         {
             CalcType _thisAngle = AtanToRadian();
             CalcType _otherAngle = _other.AtanToRadian();
@@ -149,12 +150,12 @@ namespace engine
             return _deltaAngle;
         }
 
-        NO_DISCARD CalcType SignedAngleDeg(const Vector2D& _to) const noexcept
+        INLINE NO_DISCARD CalcType SignedAngleDeg(const Vector2D& _to) const noexcept
         {
             return Math::RadToDeg(AngleBetweenRadians(_to));
         }
 
-        NO_DISCARD Vector2D<CalcType> Rotated(const CalcType& _angleRad) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> Rotated(const CalcType& _angleRad) const noexcept
         {
             CalcType _cos = Math::Cos(_angleRad);
             CalcType _sin = Math::Sin(_angleRad);
@@ -166,32 +167,32 @@ namespace engine
                 _x * _sin + _y * _cos);
         }
 
-        NO_DISCARD Vector2D<CalcType> RotatedDeg(const CalcType& _angleDeg) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> RotatedDeg(const CalcType& _angleDeg) const noexcept
         {
             return Rotated(Math::DegToRad(_angleDeg));
         }
 
-        NO_DISCARD Vector2D<CalcType> RotateAround(const Vector2D& _pivot, CalcType _angleRad) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> RotateAround(const Vector2D& _pivot, CalcType _angleRad) const noexcept
         {
             Vector2D<CalcType> _calcTypePivot = Vector2D(CAST(CalcType, _pivot.x), CAST(CalcType, _pivot.y));
             Vector2D<CalcType> _self = Vector2D(CAST(CalcType, x), CAST(CalcType, y));
             return _calcTypePivot + (_self - _calcTypePivot).Rotated(_angleRad);
         }
 
-        NO_DISCARD Vector2D<CalcType> Lerp(const Vector2D& _b, CalcType _time) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> Lerp(const Vector2D& _b, CalcType _time) const noexcept
         {
             CalcType _x = Math::Lerp(CAST(CalcType, x), CAST(CalcType, _b.x), _time);
             CalcType _y = Math::Lerp(CAST(CalcType, y), CAST(CalcType, _b.y), _time);
             return Vector2D<CalcType>(_x, _y);
         }
-        static Vector2D<CalcType> Lerp(const Vector2D& _a, const Vector2D& _b, CalcType _time) noexcept
+        INLINE static Vector2D<CalcType> Lerp(const Vector2D& _a, const Vector2D& _b, CalcType _time) noexcept
         {
             CalcType _x = Math::Lerp(CAST(CalcType, _a.x), CAST(CalcType, _b.x), _time);
             CalcType _y = Math::Lerp(CAST(CalcType, _a.y), CAST(CalcType, _b.y), _time);
             return Vector2D<CalcType>(_x, _y);
         }
         
-        NO_DISCARD Vector2D<CalcType> ClosestPointOnSegment(const Vector2D& _a, const Vector2D& _b) const noexcept
+        INLINE NO_DISCARD Vector2D<CalcType> ClosestPointOnSegment(const Vector2D& _a, const Vector2D& _b) const noexcept
         {
             Vector2D<CalcType> _calcTypeA = Vector2D(CAST(CalcType, _a.x), CAST(CalcType, _a.y));
             Vector2D<CalcType> _calcTypeB = Vector2D(CAST(CalcType, _b.x), CAST(CalcType, _b.y));
@@ -206,14 +207,14 @@ namespace engine
             return _calcTypeA + _ab * _t;
         }
 
-        NO_DISCARD CalcType DistanceToSegment(const Vector2D& _a, const Vector2D& _b) const noexcept
+        INLINE NO_DISCARD CalcType DistanceToSegment(const Vector2D& _a, const Vector2D& _b) const noexcept
         {
             Vector2D<CalcType> _closestPoint = ClosestPointOnSegment(_a, _b);
             Vector2D<CalcType> _thisVector{ CAST(CalcType, x), CAST(CalcType, y) };
             return (_thisVector - _closestPoint).Length();
         }
 
-        NO_DISCARD CalcType SignedDistanceToLine(const Vector2D& _a, const Vector2D& _b) const noexcept
+        INLINE NO_DISCARD CalcType SignedDistanceToLine(const Vector2D& _a, const Vector2D& _b) const noexcept
         {
             Vector2D<CalcType> _calcTypeA{ CAST(CalcType, _a.x), CAST(CalcType, _a.y) };
             Vector2D<CalcType> _calcTypeB{ CAST(CalcType, _b.x), CAST(CalcType, _b.y) };
@@ -227,13 +228,13 @@ namespace engine
             return CAST(CalcType, _ab.Cross(_thisVector - _calcTypeA) / _denominator);
         }
 
-        bool IsOnSegment(const Vector2D& _a, const Vector2D& _b, CalcType _epsVal = Math::epsilon) const noexcept
+        INLINE bool IsOnSegment(const Vector2D& _a, const Vector2D& _b, CalcType _epsVal = Math::epsilon) const noexcept
         {
             return DistanceToSegment(_a, _b) <= _epsVal;
         }
 
 
-        static bool ComputeLineIntersection(const Vector2D& _lineAOrigin, const Vector2D& _lineADirection,
+        INLINE static bool ComputeLineIntersection(const Vector2D& _lineAOrigin, const Vector2D& _lineADirection,
             const Vector2D& _lineBOrigin, const Vector2D& _lineBDirection,
             CalcType& _outLineAParam, CalcType& _outLineBParam) noexcept
         {
@@ -255,7 +256,7 @@ namespace engine
             return true;
         }
 
-        static bool ComputeSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentADirection,
+        INLINE static bool ComputeSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentADirection,
             const Vector2D& _segmentBStart, const Vector2D& _segmentBDirection,
             Vector2D<double>* _intersectionPoint = nullptr) noexcept
         {
@@ -275,7 +276,7 @@ namespace engine
             return true;
         }
 
-        static bool FindSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentAEnd,
+        INLINE static bool FindSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentAEnd,
             const Vector2D& _segmentBStart, const Vector2D& _segmentBEnd,
             Vector2D<double>* _intersectionPoint = nullptr) noexcept
         {
@@ -288,9 +289,26 @@ namespace engine
         }
 
 
-        virtual std::string ToString() const override
+        INLINE virtual std::string ToString() const override
         {
             return std::format("X : {}, Y : {}", x, y);
+        }
+
+        INLINE virtual rapidjson::Value ToJson(rapidjson::Document::AllocatorType& _allocator) const override
+        {
+            rapidjson::Value _obj = rapidjson::Value(rapidjson::kObjectType);
+
+            _obj.AddMember("X", x, _allocator);
+            _obj.AddMember("Y", y, _allocator);
+
+            return _obj;
+        }
+        INLINE virtual void FromJson(const rapidjson::Value& _json) override
+        {
+            if (_json.HasMember("X"))
+                x = CAST(T, _json["X"].GetInt());
+            if (_json.HasMember("Y"))
+                y = CAST(T, _json["Y"].GetInt());
         }
 
         #pragma region Operators
@@ -380,12 +398,12 @@ namespace engine
         #pragma endregion
     };
 
-    using FVector2 = engine::Vector2D<float>;
-    using IVector2 = engine::Vector2D<int>;
-    using UVector2 = engine::Vector2D<unsigned int>;
-    using DVector2 = engine::Vector2D<double>;
-    using LVector2 = engine::Vector2D<long>;
-    using SVector2 = engine::Vector2D<short>;
+    using FVector2 = Krampus::Vector2D<float>;
+    using IVector2 = Krampus::Vector2D<int>;
+    using UVector2 = Krampus::Vector2D<unsigned int>;
+    using DVector2 = Krampus::Vector2D<double>;
+    using LVector2 = Krampus::Vector2D<long>;
+    using SVector2 = Krampus::Vector2D<short>;
 
 }
 

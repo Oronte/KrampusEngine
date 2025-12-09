@@ -1,41 +1,49 @@
 project "Engine"
-   kind "StaticLib"
-   language "C++"
-   cppdialect "C++20"
-   targetdir "Bin/%{cfg.buildcfg}"
-   staticruntime "off"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++20"
+    staticruntime "off"
 
-   files { "Source/**.h", "Source/**.cpp" }
+    files { "Source/**.h", "Source/**.cpp" }
 
-   includedirs
-   {
-      "Source",
-      RootDir .. "ThirdParty/SFML-3.0.0/include",
-      RootDir .. "ThirdParty/rapidjson",
-      RootDir .. "ThirdParty/imgui"
-   }
+    includedirs {
+        "Source",
+        RootDir .. "/ThirdParty/SFML-3.0.0/include",
+        RootDir .. "/ThirdParty/rapidjson",
+        RootDir .. "/ThirdParty/imgui"
+    }
 
-   libdirs 
-   {
-      RootDir .. "ThirdParty/SFML-3.0.0/lib"
-   }
+    libdirs {
+        RootDir .. "/ThirdParty/SFML-3.0.0/lib"
+    }
 
-   targetdir (RootDir .. "Bin/" .. OutputDir .. "/%{prj.name}")
-   objdir (RootDir .. "Bin/Intermediates/" .. OutputDir .. "/%{prj.name}")
+    targetdir (RootDir .. "/Bin/" .. OutputDir .. "/%{prj.name}")
+    objdir    (RootDir .. "/Bin/Intermediates/" .. OutputDir .. "/%{prj.name}")
 
-   filter "system:windows"
-       systemversion "latest"
-       defines { }
+    defines { 'PROJECT_ROOT=\"' .. RootDir:gsub("\\","/") .. '\"' }
 
-   filter "configurations:Debug"
-       defines { "DEBUG" }
-       links { "sfml-graphics-d", "sfml-window-d", "sfml-system-d", "sfml-audio-d", "sfml-network-d" }
-       runtime "Debug"
-       symbols "On"
+    filter "system:windows"
+        systemversion "latest"
 
-   filter "configurations:Release"
-       defines { "RELEASE" }
-       links { "sfml-graphics", "sfml-window", "sfml-system", "sfml-audio", "sfml-network" }
-       runtime "Release"
-       optimize "On"
-       symbols "On"
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        links {
+            "sfml-graphics-d", "sfml-window-d",
+            "sfml-system-d", "sfml-audio-d",
+            "sfml-network-d"
+        }
+        runtime "Debug"
+        symbols "On"
+
+    filter "configurations:Release"
+        defines { "RELEASE" }
+        links {
+            "sfml-graphics", "sfml-window",
+            "sfml-system", "sfml-audio",
+            "sfml-network"
+        }
+        runtime "Release"
+        optimize "On"
+        symbols "On"
+
+    filter {}

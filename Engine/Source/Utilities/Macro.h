@@ -42,12 +42,6 @@
 #include "ImGui/imgui.h"
 #include "ImGui/imgui-SFML.h"
 
-// RapidJson
-#include "RapidJson/document.h"
-#include "RapidJson/writer.h"
-#include "RapidJson/stringbuffer.h"
-#include "RapidJson/prettywriter.h"
-
 
 #define DEBUG_PATH
 #ifdef DEBUG_PATH

@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/Core.h"
 
-namespace engine
+namespace Krampus
 {
 	class Transform;
 

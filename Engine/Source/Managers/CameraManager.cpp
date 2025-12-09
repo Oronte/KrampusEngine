@@ -1,6 +1,6 @@
 #include "CameraManager.h"
 
-void engine::CameraManager::Render(Window& _window, const bool& splitScreen)
+void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)
 {
 	for (std::pair<int, std::vector<IDrawable*>> _pair : drawer)
 	{

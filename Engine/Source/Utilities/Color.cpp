@@ -1,15 +1,15 @@
 #include "Color.h"
 
-using namespace engine;
+using namespace Krampus;
 
 //Color 
-constexpr engine::Color::Color() noexcept
+constexpr Krampus::Color::Color() noexcept
 {
     r = g = b = 0;
     a = 255;
 }
 
-constexpr engine::Color::Color(const std::uint8_t& _r, const std::uint8_t& _g, const std::uint8_t& _b, const std::uint8_t& _a) noexcept
+constexpr Krampus::Color::Color(const std::uint8_t& _r, const std::uint8_t& _g, const std::uint8_t& _b, const std::uint8_t& _a) noexcept
 {
     r = _r;
     g = _g;
@@ -17,7 +17,7 @@ constexpr engine::Color::Color(const std::uint8_t& _r, const std::uint8_t& _g, c
     a = _a;
 }
 
-constexpr engine::Color::Color(const std::uint32_t& _color) noexcept
+constexpr Krampus::Color::Color(const std::uint32_t& _color) noexcept
 {
     r = CAST(std::uint8_t, (_color >> 24) & 255);
     g = CAST(std::uint8_t, (_color >> 16) & 255);
@@ -25,7 +25,7 @@ constexpr engine::Color::Color(const std::uint32_t& _color) noexcept
     a = CAST(std::uint8_t, (_color) & 255);
 }
 
-constexpr engine::Color::Color(const sf::Color& _color) noexcept
+constexpr Krampus::Color::Color(const sf::Color& _color) noexcept
 {
     r = _color.r;
     g = _color.g;
@@ -33,7 +33,7 @@ constexpr engine::Color::Color(const sf::Color& _color) noexcept
     a = _color.a;
 }
 
-constexpr std::uint32_t engine::Color::ToInteger() const noexcept
+constexpr std::uint32_t Krampus::Color::ToInteger() const noexcept
 {
     return (CAST(std::uint32_t, r) << 24) |
         (CAST(std::uint32_t, g) << 16) |
@@ -42,14 +42,14 @@ constexpr std::uint32_t engine::Color::ToInteger() const noexcept
 }
 
 
-std::string engine::Color::ToString(const bool& _textOnly) const noexcept
+std::string Krampus::Color::ToString(const bool& _textOnly) const noexcept
 {
     return _textOnly ? TEXT_RGB(r, g, b) : BG_RGB(r, g, b);
 }
 
 
 //Gradiant
-engine::Gradient::Gradient(const Color& _a, const Color& _b)
+Krampus::Gradient::Gradient(const Color& _a, const Color& _b)
 {
     gradA = _a;
     gradB = _b;

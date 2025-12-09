@@ -3,7 +3,7 @@
 #include "Graphics/Ressources/Image.h"
 
 
-namespace engine
+namespace Krampus
 {
 	
 	class ShapeObject;
@@ -65,7 +65,7 @@ namespace engine
 		}
 		virtual void SetView(const CameraComponent* _camera);
 
-		Window() {}
+		Window() = default;
 
 		virtual void Create(const std::string& _name, const UVector2& _windowSize, const bool& _isFullscreen);
 		virtual void Clear(const Color& _color);

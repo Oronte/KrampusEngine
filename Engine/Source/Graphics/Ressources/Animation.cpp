@@ -4,14 +4,14 @@
 
 // SpriteData
 
-engine::SpriteData::SpriteData(const IVector2& _start, const IVector2& _size, const float& _factor)
+Krampus::SpriteData::SpriteData(const IVector2& _start, const IVector2& _size, const float& _factor)
 {
     start = _start;
     size = _size;
     factor = _factor;
 }
 
-engine::SpriteData::SpriteData(const IRect& _rect, const float& _factor)
+Krampus::SpriteData::SpriteData(const IRect& _rect, const float& _factor)
 {
     start = _rect.GetPosition();
     size = _rect.GetSize();
@@ -22,7 +22,7 @@ engine::SpriteData::SpriteData(const IRect& _rect, const float& _factor)
 
 // AnimationData
 
-engine::AnimationData::AnimationData(const int& _count, const float& _duration, const SpriteData& _spriteData, const bool& _hasExitTime, const bool& _canLoop, const ReadDirection& _direction, const bool _isReversed)
+Krampus::AnimationData::AnimationData(const int& _count, const float& _duration, const SpriteData& _spriteData, const bool& _hasExitTime, const bool& _canLoop, const ReadDirection& _direction, const bool _isReversed)
 {
     canLoop = _canLoop;
     hasExitTime = _hasExitTime;
@@ -77,7 +77,7 @@ engine::AnimationData::AnimationData(const int& _count, const float& _duration, 
     }
 }
 
-engine::AnimationData::AnimationData(const float& _duration, const std::vector<SpriteData>& _spritesData, const bool& _hasExitTime, const bool& _canLoop, const bool& _isReversed)
+Krampus::AnimationData::AnimationData(const float& _duration, const std::vector<SpriteData>& _spritesData, const bool& _hasExitTime, const bool& _canLoop, const bool& _isReversed)
 {
     canLoop = _canLoop;
     hasExitTime = _hasExitTime;
@@ -91,7 +91,7 @@ engine::AnimationData::AnimationData(const float& _duration, const std::vector<S
 
 // Animation
 
-engine::Animation::Animation(const std::string& _name, ShapeObject* _shape, const AnimationData& _data)
+Krampus::Animation::Animation(const std::string& _name, ShapeObject* _shape, const AnimationData& _data)
 {
     name = _name;
     shape = _shape;
@@ -102,12 +102,12 @@ engine::Animation::Animation(const std::string& _name, ShapeObject* _shape, cons
         true);
 }
 
-engine::Animation::~Animation()
+Krampus::Animation::~Animation()
 {
     timer->Stop();
 }
 
-void engine::Animation::Update()
+void Krampus::Animation::Update()
 {
     if (!IsValidIndex())
     {
@@ -141,36 +141,36 @@ void engine::Animation::Update()
     M_TEXTURE.SetTextureRect(shape->GetShape(), _spriteData.start, _spriteData.size);
 }
 
-void engine::Animation::UpdateTimer(const SpriteData& _spriteData)
+void Krampus::Animation::UpdateTimer(const SpriteData& _spriteData)
 {
     const float& _duration = ComputeDuration(_spriteData);
     timer->SetDuration(_duration);
     timer->Reset();
 }
 
-void engine::Animation::Reset()
+void Krampus::Animation::Reset()
 {
     currentIndex = 0;
     timer->Reset();
 }
 
-void engine::Animation::Start()
+void Krampus::Animation::Start()
 {
     Update();
     timer->Start();
 }
 
-void engine::Animation::Resume()
+void Krampus::Animation::Resume()
 {
     timer->Resume();
 }
 
-void engine::Animation::Pause()
+void Krampus::Animation::Pause()
 {
     timer->Pause();
 }
 
-void engine::Animation::Stop()
+void Krampus::Animation::Stop()
 {
     Pause();
     Reset();

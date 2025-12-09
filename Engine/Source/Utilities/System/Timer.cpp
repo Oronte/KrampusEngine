@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-using namespace engine;
+using namespace Krampus;
 
 Timer::Timer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning,
 	const bool& _isLoop)

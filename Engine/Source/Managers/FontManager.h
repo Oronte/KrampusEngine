@@ -2,9 +2,9 @@
 #include "Graphics/Ressources/Font.h"
 #include "Utilities/Singleton.h"
 
-#define M_FONT engine::FontManager::GetInstance()
+#define M_FONT Krampus::FontManager::GetInstance()
 
-namespace engine
+namespace Krampus
 {
 	class Text;
 

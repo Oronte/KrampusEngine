@@ -2,7 +2,7 @@
 #include "Graphics/Shapes/ShapeObject.h"
 #include "Utilities/System/Timer.h"
 
-namespace engine
+namespace Krampus
 {
 
     enum class ReadDirection

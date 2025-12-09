@@ -4,19 +4,19 @@
 #include "GameFramework/Level.h"
 #include "Managers/CameraManager.h"
 
-engine::SpriteComponent::SpriteComponent(Actor* _owner, const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
+Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
 	: Component(_owner)
 {
 	shape = std::make_unique<ShapeObject>(_radius, _path, _textureType, _rect, _pointCount);
 }
 
-engine::SpriteComponent::SpriteComponent(Actor* _owner, const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
+Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
 	: Component(_owner)
 {
 	shape = std::make_unique<ShapeObject>(_size, _path, _textureType, _rect, _isRepeated);
 }
 
-void engine::SpriteComponent::Construct()
+void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
@@ -24,14 +24,14 @@ void engine::SpriteComponent::Construct()
 	owner->GetLevel()->GetCameraManager().AddToWindow(this); // TODO zOrder
 }
 
-void engine::SpriteComponent::Deconstruct()
+void Krampus::SpriteComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
 	owner->GetLevel()->GetCameraManager().RemoveToWindow(this);
 }
 
-void engine::SpriteComponent::Tick(const float& _deltaTime)
+void Krampus::SpriteComponent::Tick(const float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
@@ -39,14 +39,14 @@ void engine::SpriteComponent::Tick(const float& _deltaTime)
 }
 
 
-void engine::SpriteComponent::Draw(Window& _window)
+void Krampus::SpriteComponent::Draw(Window& _window)
 {
 	if (!isActive) return;
 	_window.Draw(*shape);
 	DrawDebug(_window);
 }
 
-void engine::SpriteComponent::DrawDebug(Window& _window)
+void Krampus::SpriteComponent::DrawDebug(Window& _window)
 {
 	if (!useDebug) return;
 
@@ -64,7 +64,7 @@ void engine::SpriteComponent::DrawDebug(Window& _window)
 	};
 }
 
-void engine::SpriteComponent::SetOriginAtMiddle()
+void Krampus::SpriteComponent::SetOriginAtMiddle()
 {
 	owner->transform.origin = shape->GetShape()->GetGeometricCenter();
 }

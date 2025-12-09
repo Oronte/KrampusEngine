@@ -1,15 +1,15 @@
 #pragma once
 #include "Window.h"
 
-#define MAIN_WINDOW engine::MainWindow::GetInstance()
+#define MAIN_WINDOW Krampus::MainWindow::GetInstance()
 
-namespace engine
+namespace Krampus
 {
 
 	class MainWindow : public Window, public Singleton<MainWindow>
 	{
 	public:
-		MainWindow() {}
+		MainWindow() = default;
 
 		INLINE void RenderGui()
 		{

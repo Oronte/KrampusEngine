@@ -3,10 +3,10 @@
 #include "RectangleShape.h"
 #include "Managers/TextureManager.h"
 
-using namespace engine;
+using namespace Krampus;
 
 
-engine::ShapeObject::ShapeObject(const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
+Krampus::ShapeObject::ShapeObject(const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
 {
 	shapeType = ShapeType::Circle;
 	sizeData.radius = _radius;
@@ -14,7 +14,7 @@ engine::ShapeObject::ShapeObject(const float& _radius, const std::string& _path,
 	M_TEXTURE.Load(this, _path, _textureType);
 }
 
-engine::ShapeObject::ShapeObject(const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
+Krampus::ShapeObject::ShapeObject(const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
 {
 	shapeType = ShapeType::Rectangle;
 	sizeData.size = _size;

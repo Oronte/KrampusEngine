@@ -2,7 +2,7 @@
 #include "Core/CoreMinimal.h"
 #include "Utilities/System/Printable.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Transform : public IPrintable

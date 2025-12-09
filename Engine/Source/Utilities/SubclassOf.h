@@ -1,7 +1,7 @@
 #pragma once
 #include "Macro.h"
 
-namespace engine
+namespace Krampus
 {
 	template <typename Type>
 	class SubclassOf

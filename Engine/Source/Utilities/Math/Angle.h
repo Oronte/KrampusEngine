@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Math.h"
 
-namespace engine
+namespace Krampus
 {
     class Angle
     {

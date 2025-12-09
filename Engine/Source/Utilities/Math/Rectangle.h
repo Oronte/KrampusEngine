@@ -1,7 +1,7 @@
 #pragma once
 #include "Vector2D.h"
 
-namespace engine
+namespace Krampus
 {
 	template<typename T>
 	class Rectangle
@@ -51,8 +51,8 @@ namespace engine
 
 	};
 
-	using IRect = engine::Rectangle<int>;
-	using FRect = engine::Rectangle<float>;
+	using IRect = Krampus::Rectangle<int>;
+	using FRect = Krampus::Rectangle<float>;
 }
 
 

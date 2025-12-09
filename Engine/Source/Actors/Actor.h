@@ -3,7 +3,7 @@
 #include "components/Component.h"
 #include "Utilities/Math/Transform.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Level;

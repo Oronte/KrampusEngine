@@ -3,9 +3,9 @@
 #include "Utilities/System/Timer.h"
 #include "Core/Engine.h"
 
-#define M_TIMER engine::TimerManager::GetInstance()
+#define M_TIMER Krampus::TimerManager::GetInstance()
 
-namespace engine
+namespace Krampus
 {
 	class Timer;
 
@@ -82,12 +82,20 @@ namespace engine
 
 	private:
 		float Update();
+		void UpdateTimers();
 
 	public:
 		std::string GetCurrentRealTime() const;
 
 		Timer* CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning = true,
 			const bool& _isLoop = false);
+		/// <summary>
+		/// Trigger every frame
+		/// </summary>
+		/// <param name="_callback"></param>
+		/// <param name="_startRunning"></param>
+		/// <param name="_isLoop"></param>
+		/// <returns></returns>
 
 		void Pause();
 		void Resume();

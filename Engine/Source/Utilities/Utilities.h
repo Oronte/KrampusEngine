@@ -1,7 +1,7 @@
 #pragma once
 #include "SubclassOf.h"
 
-namespace engine
+namespace Krampus
 {
     //unsigned int GetUniqueID()
     //{

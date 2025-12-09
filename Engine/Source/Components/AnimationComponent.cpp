@@ -2,7 +2,7 @@
 #include "SpriteComponent.h"
 #include "Actors/Actor.h"
 
-engine::AnimationComponent::AnimationComponent(Actor* _owner)
+Krampus::AnimationComponent::AnimationComponent(Actor* _owner)
 	: Component(_owner)
 {
 	sprite = owner->GetComponent<SpriteComponent>();
@@ -10,7 +10,7 @@ engine::AnimationComponent::AnimationComponent(Actor* _owner)
 		LOG(VerbosityType::Warning, "You need to have a sprite component for this Component");
 }
 
-void engine::AnimationComponent::AddAnimation(const std::string& _name, const AnimationData& _data)
+void Krampus::AnimationComponent::AddAnimation(const std::string& _name, const AnimationData& _data)
 {
 	if (animations.contains(_name)) return;
 

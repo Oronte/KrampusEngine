@@ -4,7 +4,7 @@
 #include "Managers/CameraManager.h"
 #include "Graphics/Window/Window.h"
 
-using namespace engine;
+using namespace Krampus;
 
 FVector2 SoftBodyComponent::ToWorld(const FVector2& local) const noexcept
 {
@@ -257,7 +257,7 @@ void SoftBodyComponent::Draw(Window& window)
     // we don't include SFML here: Vertices wraps the sf::VertexArray internally
     if (drawFill && kind == ShapeKind::Ring && particles.size() >= 3)
     {
-        Vertices poly(engine::PrimitiveType::Triangles);
+        Vertices poly(Krampus::PrimitiveType::Triangles);
         // simple fan triangulation around center in world space
         FVector2 center = owner->transform.position;
         // create triangle fan: center, p[i], p[i+1]
@@ -274,7 +274,7 @@ void SoftBodyComponent::Draw(Window& window)
     }
     else if (drawFill && kind == ShapeKind::Grid && gridW >= 2 && gridH >= 2)
     {
-        Vertices va(engine::PrimitiveType::Triangles);
+        Vertices va(Krampus::PrimitiveType::Triangles);
         auto idx = [this](int x, int y) { return y * gridW + x; };
         for (int y = 0; y < gridH - 1; ++y)
         {
@@ -294,7 +294,7 @@ void SoftBodyComponent::Draw(Window& window)
 
     if (drawSprings)
     {
-        Vertices lines(engine::PrimitiveType::Lines);
+        Vertices lines(Krampus::PrimitiveType::Lines);
         for (const Spring& s : springs)
         {
             FVector2 A = ToWorld(particles[s.a].positionLocal);
@@ -305,7 +305,7 @@ void SoftBodyComponent::Draw(Window& window)
     }
 
     // particles
-    Vertices pts(engine::PrimitiveType::Points);
+    Vertices pts(Krampus::PrimitiveType::Points);
     for (const Particle& p : particles)
     {
         FVector2 wp = ToWorld(p.positionLocal);

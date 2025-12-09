@@ -2,7 +2,7 @@
 #include "Utilities/Math/Transform.h"
 #include "Actors/Actor.h"
 
-using namespace engine;
+using namespace Krampus;
 
 Component::Component(Actor* _owner)
 {
@@ -19,7 +19,7 @@ void Component::Deconstruct()
 	SetActive(false);
 }
 
-std::string engine::Component::ToString() const
+std::string Krampus::Component::ToString() const
 {
 	if (!owner) return "Component wath no owner";
 	return "Component : owner = " + owner->ToString();

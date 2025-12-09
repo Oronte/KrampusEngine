@@ -4,7 +4,7 @@
 #include "Utilities/Math/Transform.h"
 #include "Managers/FontManager.h"
 
-namespace engine
+namespace Krampus
 {
 
     class Text

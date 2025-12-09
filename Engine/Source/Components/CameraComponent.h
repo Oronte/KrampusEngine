@@ -1,7 +1,7 @@
 #pragma once
 #include "Component.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class CameraComponent : public Component

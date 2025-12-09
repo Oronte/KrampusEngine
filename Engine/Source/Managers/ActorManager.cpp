@@ -1,11 +1,11 @@
 #include "ActorManager.h"
 
-void engine::ActorManager::BeginPlay()
+void Krampus::ActorManager::BeginPlay()
 {
 	for (const std::unique_ptr<Actor>& _actor : actors) _actor->BeginPlay();
 }
 
-void engine::ActorManager::Update(const float& _deltaTime)
+void Krampus::ActorManager::Update(const float& _deltaTime)
 {
 	for (const std::unique_ptr<Actor>& _actor : actors)
 	{
@@ -20,7 +20,7 @@ void engine::ActorManager::Update(const float& _deltaTime)
 	}
 }
 
-void engine::ActorManager::BeginDestroy()
+void Krampus::ActorManager::BeginDestroy()
 {
 	for (const std::unique_ptr<Actor>& _actor : actors)
 	{

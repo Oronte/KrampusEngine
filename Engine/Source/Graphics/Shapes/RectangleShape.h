@@ -2,7 +2,7 @@
 #include "Shape.h"
 
 
-namespace engine
+namespace Krampus
 {
 
     class RectangleShape : public Shape

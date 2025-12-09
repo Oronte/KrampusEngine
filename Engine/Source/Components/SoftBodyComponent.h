@@ -3,7 +3,7 @@
 #include "Graphics/Ressources/Vertices.h"
 #include "Utilities/System/Drawable.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class SoftBodyComponent : public Component, public IDrawable

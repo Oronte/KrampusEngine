@@ -2,7 +2,7 @@
 #include "Logger.h"
 
 
-namespace engine
+namespace Krampus
 {
 
     template<typename... Args>

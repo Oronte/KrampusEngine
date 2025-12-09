@@ -2,7 +2,7 @@
 #include "Image.h"
 #include "Utilities/Logger.h"
 
-namespace engine
+namespace Krampus
 {
 
     enum class TextureExtensionType

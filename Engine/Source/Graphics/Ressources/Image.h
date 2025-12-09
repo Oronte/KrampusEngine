@@ -2,7 +2,7 @@
 #include "Utilities/Math/Rectangle.h"
 #include "Utilities/Color.h"
 
-namespace engine
+namespace Krampus
 {
 	class Image
 	{
@@ -19,7 +19,7 @@ namespace engine
         }
         INLINE Color GetPixel(const UVector2& _coords) const
         {
-            return engine::Color(image.getPixel(_coords));
+            return Krampus::Color(image.getPixel(_coords));
         }
         INLINE const std::uint8_t* GetPixelsPtr() const
         {

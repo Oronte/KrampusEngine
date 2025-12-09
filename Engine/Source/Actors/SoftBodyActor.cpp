@@ -1,7 +1,7 @@
 #include "SoftBodyActor.h"
 #include "GameFramework/Level.h"
 
-using namespace engine;
+using namespace Krampus;
 
 SoftBodyActor::SoftBodyActor(Level* _level, const FVector2& _size, int gridW, int gridH, float kstruct, float kshear)
 	: Actor(_level)

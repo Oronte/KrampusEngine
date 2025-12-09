@@ -3,7 +3,7 @@
 #include "Utilities/Math/Rectangle.h"
 #include "Utilities/Color.h"
 
-namespace engine
+namespace Krampus
 {
     using Vertex = sf::Vertex;
     using PrimitiveType = sf::PrimitiveType;

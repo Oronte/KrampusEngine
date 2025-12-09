@@ -1,20 +1,20 @@
 #include "Exception.h"
 #include "Logger.h"
 
-engine::Exception::Exception(const Error& _error, const Error& _debugInfo)
+Krampus::Exception::Exception(const Error& _error, const Error& _debugInfo)
 {
 	message = _error + " " + _debugInfo;
 	if (_debugInfo == "") message += DEBUG_INFO;
 
-	engine::Logger::Shutdown();
+	Krampus::Logger::Shutdown();
 }
 
-const char* engine::Exception::what() const noexcept
+const char* Krampus::Exception::what() const noexcept
 {
 	return message.c_str();
 }
 
-const char* engine::Exception::What() const
+const char* Krampus::Exception::What() const
 {
 	return what();
 	

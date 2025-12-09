@@ -2,12 +2,12 @@
 #include "GameFramework/Level.h"
 
 
-engine::Actor::Actor(Level* _level)
+Krampus::Actor::Actor(Level* _level)
 {
 	level = _level;
 }
 
-void engine::Actor::SetActive(const bool& _status)
+void Krampus::Actor::SetActive(const bool& _status)
 {
 	Core::SetActive(_status);
 
@@ -17,7 +17,7 @@ void engine::Actor::SetActive(const bool& _status)
 	}
 }
 
-void engine::Actor::Construct()
+void Krampus::Actor::Construct()
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
@@ -25,7 +25,7 @@ void engine::Actor::Construct()
 	}
 }
 
-void engine::Actor::Deconstruct()
+void Krampus::Actor::Deconstruct()
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
@@ -33,7 +33,7 @@ void engine::Actor::Deconstruct()
 	}
 }
 
-void engine::Actor::BeginPlay()
+void Krampus::Actor::BeginPlay()
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
@@ -41,7 +41,7 @@ void engine::Actor::BeginPlay()
 	}
 }
 
-void engine::Actor::Tick(const float& _deltaTime)
+void Krampus::Actor::Tick(const float& _deltaTime)
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
@@ -49,7 +49,7 @@ void engine::Actor::Tick(const float& _deltaTime)
 	}
 }
 
-void engine::Actor::BeginDestroy()
+void Krampus::Actor::BeginDestroy()
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
@@ -58,7 +58,7 @@ void engine::Actor::BeginDestroy()
 	components.clear();
 }
 
-void engine::Actor::Destroy()
+void Krampus::Actor::Destroy()
 {
 	toDelete = true;
 }

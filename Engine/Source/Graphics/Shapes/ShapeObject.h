@@ -1,7 +1,7 @@
 #pragma once
 #include "Shape.h"
 
-namespace engine
+namespace Krampus
 {
 
 	enum class ShapeType

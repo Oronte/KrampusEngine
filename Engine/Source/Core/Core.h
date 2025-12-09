@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Core : public IPrintable

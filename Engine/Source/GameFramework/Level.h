@@ -3,44 +3,44 @@
 #include "Managers/ActorManager.h"
 #include "Managers/CameraManager.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Level
 	{
-		std::string name;
-		Window window;
+		std::string name = "Level";
+		//Window window;
 		CameraManager cameraManager;
 		ActorManager actorManager;
 		Color backgroundColor = Color::Black();
+		bool isLoaded = false;
 
 	public:
-		Level(const std::string& _name, const UVector2& _windowSize = UVector2(1920, 1080),
-			const bool& _isFullscreen = false);
+		Level(const std::string& _name);
 
-		FORCEINLINE bool IsActive() const
+		FORCEINLINE void SetBackgroundColor(const Color& _bgColor)
 		{
-			return window.IsOpen();
+			backgroundColor = _bgColor;
 		}
-		FORCEINLINE Window& GetWindow()
+		FORCEINLINE std::string GetName() const
 		{
-			return window;
+			return name;
 		}
-		FORCEINLINE UVector2 GetWindowSize() const
-		{
-			return window.GetSize();
-		}
-		CameraManager& GetCameraManager()
+		FORCEINLINE CameraManager& GetCameraManager()
 		{
 			return cameraManager;
 		}
-		ActorManager& GetActorManager()
+		FORCEINLINE ActorManager& GetActorManager()
 		{
 			return actorManager;
 		}
 
+	protected:
+		virtual void InitLevel();
+
 	public:
 		virtual void Load();
+		virtual void Unload();
 		void Update(const float& _deltaTime);
 	};
 

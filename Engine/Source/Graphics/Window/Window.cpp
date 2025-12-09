@@ -3,12 +3,12 @@
 #include "Components/CameraComponent.h"
 #include "Graphics/Ressources/Vertices.h"
 
-void engine::Window::SetView(const CameraComponent* _camera)
+void Krampus::Window::SetView(const CameraComponent* _camera)
 {
 	window.setView(*_camera->GetView());
 }
 
-void engine::Window::Create(const std::string& _name, const UVector2& _windowSize, const bool& _isFullscreen)
+void Krampus::Window::Create(const std::string& _name, const UVector2& _windowSize, const bool& _isFullscreen)
 {
 	const UVector2& _size = _isFullscreen ? UVector2(1920, 1080) : _windowSize;
 	window.create(sf::VideoMode(_size),
@@ -16,32 +16,32 @@ void engine::Window::Create(const std::string& _name, const UVector2& _windowSiz
 		_isFullscreen ? sf::State::Fullscreen : sf::State::Windowed);
 }
 
-void engine::Window::Clear(const Color& _color)
+void Krampus::Window::Clear(const Color& _color)
 {
 	window.clear(_color);
 }
 
-void engine::Window::Display()
+void Krampus::Window::Display()
 {
 	window.display();
 }
 
-void engine::Window::Close()
+void Krampus::Window::Close()
 {
 	window.close();
 }
 
-std::optional<sf::Event> engine::Window::PollEvent()
+std::optional<sf::Event> Krampus::Window::PollEvent()
 {
 	return window.pollEvent();
 }
 
-void engine::Window::Draw(const sf::Drawable& _drawable)
+void Krampus::Window::Draw(const sf::Drawable& _drawable)
 {
 	window.draw(_drawable);
 }
 
-void engine::Window::Draw(const ShapeObject& _drawable)
+void Krampus::Window::Draw(const ShapeObject& _drawable)
 {
 	window.draw(*(_drawable.GetShape()->Get()));
 }

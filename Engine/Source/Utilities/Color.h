@@ -66,7 +66,7 @@
 #define TEXT_RGB(r,g,b) "\033[38;2;" + std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m"
 
 
-namespace engine
+namespace Krampus
 {
 
 	class Color

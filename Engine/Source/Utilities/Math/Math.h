@@ -1,7 +1,7 @@
 #pragma once
 #include "Utilities/Exception.h"
 
-namespace engine
+namespace Krampus
 {
 
     template<typename Real>
@@ -461,10 +461,10 @@ namespace engine
         #pragma endregion
 	};
 
-    using FMath = engine::Math<float>;
-    using IMath = engine::Math<int>;
-    using UMath = engine::Math<unsigned int>;
-    using DMath = engine::Math<double>;
-    using LMath = engine::Math<long>;
-    using SMath = engine::Math<short>;
+    using FMath = Krampus::Math<float>;
+    using IMath = Krampus::Math<int>;
+    using UMath = Krampus::Math<unsigned int>;
+    using DMath = Krampus::Math<double>;
+    using LMath = Krampus::Math<long>;
+    using SMath = Krampus::Math<short>;
 }

@@ -2,7 +2,7 @@
 #include "Graphics/Ressources/Vertices.h"
 #include "Utilities/Math/Angle.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Actor;

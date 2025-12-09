@@ -2,13 +2,14 @@
 #include "actors/Actor.h"
 #include "Graphics/Window/Window.h"
 #include "GameFramework/Level.h"
+#include "Graphics/Window/MainWindow.h"
 
-void engine::Debug::DrawDebugCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawDebugCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
-	DrawDebugCircle(_context->GetLevel()->GetWindow(), _position, _radius, _pointCount, _color);
+	DrawDebugCircle(MAIN_WINDOW, _position, _radius, _pointCount, _color);
 }
 
-void engine::Debug::DrawDebugCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawDebugCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
 	Vertices _vert = Vertices(PrimitiveType::LineStrip);
 
@@ -24,12 +25,12 @@ void engine::Debug::DrawDebugCircle(Window& _window, const FVector2& _position, 
 	_window.Draw(_vert);
 }
 
-void engine::Debug::DrawFillCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawFillCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
-	DrawFillCircle(_context->GetLevel()->GetWindow(), _position, _radius, _pointCount, _color);
+	DrawFillCircle(MAIN_WINDOW, _position, _radius, _pointCount, _color);
 }
 
-void engine::Debug::DrawFillCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawFillCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
 	Vertices _vert = Vertices(PrimitiveType::TriangleStrip);
 
@@ -46,12 +47,12 @@ void engine::Debug::DrawFillCircle(Window& _window, const FVector2& _position, c
 	_window.Draw(_vert);
 }
 
-void engine::Debug::DrawPointCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawPointCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
-	DrawPointCircle(_context->GetLevel()->GetWindow(), _position, _radius, _pointCount, _color);
+	DrawPointCircle(MAIN_WINDOW, _position, _radius, _pointCount, _color);
 }
 
-void engine::Debug::DrawPointCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawPointCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
 	Vertices _vert = Vertices(PrimitiveType::Points);
 
@@ -68,17 +69,17 @@ void engine::Debug::DrawPointCircle(Window& _window, const FVector2& _position, 
 	_window.Draw(_vert);
 }
 
-void engine::Debug::DrawDebugRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawDebugRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
-	DrawDebugRect(_context->GetLevel()->GetWindow(), _position, _size, _rotation, _color);
+	DrawDebugRect(MAIN_WINDOW, _position, _size, _rotation, _color);
 }
 
-void engine::Debug::DrawDebugRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawDebugRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
-	DrawDebugRect(_context->GetLevel()->GetWindow(), _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
+	DrawDebugRect(MAIN_WINDOW, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
 }
 
-void engine::Debug::DrawDebugRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawDebugRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
 	Vertices _vert = Vertices(PrimitiveType::LineStrip);
 
@@ -93,27 +94,27 @@ void engine::Debug::DrawDebugRect(Window& _window, const FVector2& _position, co
 	_window.Draw(_vert);
 }
 
-void engine::Debug::DrawDebugRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawDebugRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
 	DrawDebugRect(_window, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
 }
 
-void engine::Debug::DrawFillRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawFillRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
-	DrawFillRect(_context->GetLevel()->GetWindow(), _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
+	DrawFillRect(MAIN_WINDOW, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
 }
 
-void engine::Debug::DrawFillRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawFillRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
 	DrawFillRect(_window, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
 }
 
-void engine::Debug::DrawFillRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawFillRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
-	DrawFillRect(_context->GetLevel()->GetWindow(), _position, _size, _rotation, _color);
+	DrawFillRect(MAIN_WINDOW, _position, _size, _rotation, _color);
 }
 
-void engine::Debug::DrawFillRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawFillRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
 	Vertices _vert = Vertices(PrimitiveType::TriangleStrip);
 
@@ -128,22 +129,22 @@ void engine::Debug::DrawFillRect(Window& _window, const FVector2& _position, con
 	_window.Draw(_vert);
 }
 
-void engine::Debug::DrawPointRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawPointRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
-	DrawPointRect(_context->GetLevel()->GetWindow(), _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
+	DrawPointRect(MAIN_WINDOW, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
 }
 
-void engine::Debug::DrawPointRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawPointRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
 	DrawPointRect(_window, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);
 }
 
-void engine::Debug::DrawPointRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawPointRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
-	DrawPointRect(_context->GetLevel()->GetWindow(), _position, _size, _rotation, _color);
+	DrawPointRect(MAIN_WINDOW, _position, _size, _rotation, _color);
 }
 
-void engine::Debug::DrawPointRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
+void Krampus::Debug::DrawPointRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
 	Vertices _vert = Vertices(PrimitiveType::Points);
 
@@ -159,12 +160,12 @@ void engine::Debug::DrawPointRect(Window& _window, const FVector2& _position, co
 	_window.Draw(_vert);
 }
 
-void engine::Debug::DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness, const Color& _color)
+void Krampus::Debug::DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness, const Color& _color)
 {
-	DrawDebugPoint(_context->GetLevel()->GetWindow(), _position, _thickness, _color);
+	DrawDebugPoint(MAIN_WINDOW, _position, _thickness, _color);
 }
 
-void engine::Debug::DrawDebugPoint(Window& _window, const FVector2& _position, const float& _thickness, const Color& _color)
+void Krampus::Debug::DrawDebugPoint(Window& _window, const FVector2& _position, const float& _thickness, const Color& _color)
 {
 	DrawFillCircle(_window, _position, _thickness, 30, _color);
 }

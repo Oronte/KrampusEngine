@@ -5,7 +5,7 @@
 #include "Utilities/System/Drawable.h"
 #include "Graphics/Ressources/Text.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class Window;

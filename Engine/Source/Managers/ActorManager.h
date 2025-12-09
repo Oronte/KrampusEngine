@@ -1,7 +1,7 @@
 #pragma once
 #include "Actors/Actor.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class ActorManager

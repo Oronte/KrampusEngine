@@ -1,9 +1,9 @@
 #pragma once
 #include "Macro.h"
 
-#define THROW_EXCEPTION(_msg) throw engine::Exception(_msg, DEBUG_INFO);
+#define THROW_EXCEPTION(_msg) throw Krampus::Exception(_msg, DEBUG_INFO);
 
-namespace engine
+namespace Krampus
 {
 
     class Exception : public std::exception

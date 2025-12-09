@@ -2,7 +2,7 @@
 #include "Actor.h"
 #include "Components/SoftBodyComponent.h"
 
-namespace engine
+namespace Krampus
 {
 
 	class SoftBodyActor : public Actor

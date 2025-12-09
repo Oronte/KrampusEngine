@@ -2,9 +2,9 @@
 #include "Utilities/Singleton.h"
 #include "Graphics/Shapes/ShapeObject.h"
 
-#define M_TEXTURE engine::TextureManager::GetInstance()
+#define M_TEXTURE Krampus::TextureManager::GetInstance()
 
-namespace engine
+namespace Krampus
 {
 
 	class TextureManager : public Singleton<TextureManager>

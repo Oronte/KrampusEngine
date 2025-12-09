@@ -1,7 +1,7 @@
 #pragma once
 #include "Utilities/Macro.h"
 
-namespace engine
+namespace Krampus
 {
 
 	struct IPrintable
