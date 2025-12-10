@@ -36,7 +36,7 @@ namespace Krampus
 			//drawer.erase(std::remove(drawer.begin(), drawer.end(), _sprite), drawer.end());
 		}
 
-		CameraManager() {}
+		CameraManager() = default;
 
 	public:
 		void Render(Window& _window, const bool& splitScreen);

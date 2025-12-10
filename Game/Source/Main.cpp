@@ -30,7 +30,7 @@ void StartGame()
 
 	std::unique_ptr<Krampus::Level> _level = std::make_unique<Krampus::Level>("first level");
 	M_LEVEL.SetLevel(_level.get());
-	Krampus::Engine _engine = Krampus::Engine();
+	Krampus::Engine& _engine = Krampus::Engine::GetInstance();
 
 	//engine::SpriteActor* _actor = _level->GetActorManager().CreateActor<engine::SpriteActor>(_level.get(), engine::FVector2(200.f), "Player", engine::TextureExtensionType::PNG, engine::IRect());
 	//_actor->transform.position += engine::FVector2(200.f, 540.f);
@@ -40,8 +40,6 @@ void StartGame()
 	//engine::SpriteActor* _defaultActor = _level->GetActorManager().CreateActor<engine::SpriteActor>(_level.get(), 50.f);
 	//_defaultActor->GetComponent<engine::SpriteComponent>()->useDebug = true;
 	//_defaultActor->transform.position = engine::FVector2(1600.f, 300.f);
-	
-	M_TIMER.SetMaxFrameRate(244);
 
 	//TestFps(_level.get());
 	

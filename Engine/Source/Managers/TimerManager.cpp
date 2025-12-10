@@ -1,5 +1,7 @@
 #include "TimerManager.h"
 #include "Graphics/Window/MainWindow.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui-SFML.h"
 
 using namespace Krampus;
 
@@ -36,7 +38,6 @@ Timer* Krampus::TimerManager::CreateTimer(const std::function<void()>& _callback
 float Krampus::TimerManager::Update()
 {
 	float _currentTime = GetTime(clock.getElapsedTime());
-    //ImGui::SFML::Update(MAIN_WINDOW.GetRenderWindow(), clock.restart());
 
     // First frame initialization
     if (lastTimeStamp < 0.0f)
@@ -76,6 +77,7 @@ float Krampus::TimerManager::Update()
     deltaTime = lastFrameDuration * timeScale;
     framesCount++;
 
+    ImGui::SFML::Update(MAIN_WINDOW.GetRenderWindow(), sf::seconds(deltaTime));
 
     if (lastFrameDuration > 0.0f)
     {

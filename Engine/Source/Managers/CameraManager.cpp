@@ -1,4 +1,5 @@
 #include "CameraManager.h"
+#include "Graphics/Window/MainWindow.h"
 
 void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)
 {
@@ -8,5 +9,7 @@ void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)
 
 		for (IDrawable* _sprite : _sprites) _sprite->Draw(_window);
 	}
+
+	MAIN_WINDOW.RenderGui();
 	
 }

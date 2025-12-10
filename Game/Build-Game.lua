@@ -1,5 +1,4 @@
 project "Game"
-    location (RootDir .. "/Game/Source")
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
@@ -13,6 +12,10 @@ project "Game"
         RootDir .. "/ThirdParty/imgui",
         RootDir .. "/ThirdParty/rapidjson",
         RootDir .. "/Engine/Source"
+    }
+
+    libdirs {
+        RootDir .. "/ThirdParty/SFML-3.0.0/lib"
     }
 
     links { "Engine" }

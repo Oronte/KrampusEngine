@@ -1,5 +1,6 @@
 #pragma once
 #include "Window.h"
+#include "Utilities/Singleton.h"
 
 #define MAIN_WINDOW Krampus::MainWindow::GetInstance()
 
@@ -11,10 +12,7 @@ namespace Krampus
 	public:
 		MainWindow() = default;
 
-		INLINE void RenderGui()
-		{
-			//ImGui::SFML::Render(GetRenderWindow());
-		}
+		void RenderGui();
 	};
 
 }

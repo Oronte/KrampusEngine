@@ -38,10 +38,6 @@
 #include "SFML/Audio.hpp"
 #include "SFML/Network.hpp"
 
-// ImGui
-#include "ImGui/imgui.h"
-#include "ImGui/imgui-SFML.h"
-
 
 #define DEBUG_PATH
 #ifdef DEBUG_PATH

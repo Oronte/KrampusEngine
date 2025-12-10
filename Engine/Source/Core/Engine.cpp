@@ -2,13 +2,15 @@
 #include "Managers/TimerManager.h"
 #include "Managers/LevelManager.h"
 #include "Graphics/Window/MainWindow.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui-SFML.h"
 
 using namespace Krampus;
 
 Engine::Engine()
 {
 	std::ifstream _ifs(windowSaveDir + windowSaveFileName);
-	if (!_ifs) MAIN_WINDOW.Create("EngineSFML", UVector2(1920, 1080), false);
+	if (!_ifs) MAIN_WINDOW.Create("EngineSFML", UVector2(1920, 1080));
 	else
 	{
 		std::stringstream _buffer;
@@ -23,19 +25,26 @@ Engine::Engine()
 		UVector2 _windowPos;
 		_windowPos.FromJson(_document["Pos"]);
 
-		MAIN_WINDOW.Create("EngineSFML", _windowSize, false);
+		MAIN_WINDOW.Create("EngineSFML", _windowSize);
 		MAIN_WINDOW.SetPosition(_windowPos);
 	}
 
 	// TODO imgui + MainWindow
 	
 	MAIN_WINDOW.SetIcon(Image("Content/Textures/KrampusLogo.png"));
-	//const bool& _imguiInit = ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow());
+
+	onWindowClosed.AddListener([this](){
+		SaveWindowInfo();
+		MAIN_WINDOW.Close();
+		M_LEVEL.SetLevel(nullptr);
+		});
 }
 
 void Engine::Start()
 {
 	onEngineStart.Broadcast();
+	ImGui::CreateContext();
+	ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow());
 	Logger::Init();
 	Update();
 	Stop();
@@ -45,11 +54,9 @@ void Engine::Update()
 {
 	while (Level* _currentLevel = M_LEVEL.GetCurrentLevel())
 	{
-		_currentLevel->Update(M_TIMER.Update());
-
 		UpdateEvent();
 
-		//MAIN_WINDOW.RenderGui();
+		_currentLevel->Update(M_TIMER.Update());
 	}
 }
 
@@ -58,16 +65,16 @@ void Engine::Stop()
 	onEngineStop.Broadcast();
 	M_LEVEL.Destroy();
 	Logger::Shutdown();
-	//ImGui::SFML::Shutdown();
+	ImGui::SFML::Shutdown();
 }
 
 
 void Engine::UpdateEvent()
 {
-	const std::optional _event = MAIN_WINDOW.PollEvent();
-	//ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), *_event);
-
+	const std::optional<sf::Event> _event = MAIN_WINDOW.PollEvent();
 	if (!_event.has_value()) return;
+
+	ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), _event.value());
 
 	if (_event->is<sf::Event::FocusGained>()) onFocusGained.Broadcast();
 	if (_event->is<sf::Event::FocusLost>()) onFocusLost.Broadcast();
@@ -75,13 +82,7 @@ void Engine::UpdateEvent()
 	if (_event->is<sf::Event::MouseMoved>()) onMouseMoved.Broadcast(_event->getIf<sf::Event::MouseMoved>()->position);
 	if (_event->is<sf::Event::MouseEntered>()) onMouseEntered.Broadcast();
 	if (_event->is<sf::Event::MouseLeft>()) onMouseExit.Broadcast();
-	if (_event->is<sf::Event::Closed>())
-	{
-		onWindowClosed.Broadcast();
-		SaveWindowInfo();
-		MAIN_WINDOW.Close();
-		M_LEVEL.SetLevel(nullptr);
-	}
+	if (_event->is<sf::Event::Closed>()) onWindowClosed.Broadcast();
 }
 
 void Engine::SaveWindowInfo()

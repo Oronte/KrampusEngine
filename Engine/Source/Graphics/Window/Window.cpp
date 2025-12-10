@@ -8,12 +8,10 @@ void Krampus::Window::SetView(const CameraComponent* _camera)
 	window.setView(*_camera->GetView());
 }
 
-void Krampus::Window::Create(const std::string& _name, const UVector2& _windowSize, const bool& _isFullscreen)
+void Krampus::Window::Create(const std::string& _name, const UVector2& _windowSize)
 {
-	const UVector2& _size = _isFullscreen ? UVector2(1920, 1080) : _windowSize;
-	window.create(sf::VideoMode(_size),
-		CAST(sf::String, _name.c_str()),
-		_isFullscreen ? sf::State::Fullscreen : sf::State::Windowed);
+	window.create(sf::VideoMode(_windowSize),
+		CAST(sf::String, _name.c_str()), sf::Style::None);
 }
 
 void Krampus::Window::Clear(const Color& _color)

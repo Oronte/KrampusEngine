@@ -67,7 +67,7 @@ namespace Krampus
 
 		Window() = default;
 
-		virtual void Create(const std::string& _name, const UVector2& _windowSize, const bool& _isFullscreen);
+		virtual void Create(const std::string& _name, const UVector2& _windowSize);
 		virtual void Clear(const Color& _color);
 		virtual void Display();
 		virtual void Close();
