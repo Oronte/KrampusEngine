@@ -52,12 +52,11 @@ namespace Krampus
         void ComputePrefix(const VerbosityType& _type);
     };
 
-
-
     class Logger
     {
-        static INLINE std::string logsDir = "Content/Logs/";
+        static INLINE std::string logsDir = CONTENT_PATH + "Logs/";
         static INLINE std::string logsFileName = "log.txt";
+
         static INLINE std::string logsPath = logsDir + logsFileName;
 
         static INLINE std::queue<std::string> logQueue;

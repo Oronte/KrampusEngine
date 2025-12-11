@@ -69,3 +69,5 @@
 #define TYPE_INDEX_NAME(_typeIndex)		CAST(std::string, _typeIndex.name())
 #define NAME_OF(var)					#var
 #define CURRENT_PATH					std::filesystem::current_path().string()
+#define PROJECT_ROOT					std::string(PROJECT_ROOT_DIR)
+#define CONTENT_PATH					PROJECT_ROOT + "/Content/"

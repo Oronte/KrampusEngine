@@ -25,7 +25,7 @@ project "Game"
 
     debugdir (RootDir)
 
-    defines { 'PROJECT_ROOT=\"' .. RootDir:gsub("\\","/") .. '\"' }
+    defines { 'PROJECT_ROOT_DIR=\"' .. RootDir:gsub("\\","/") .. '\"' }
 
     filter "system:windows"
         systemversion "latest"

@@ -21,7 +21,7 @@ project "Engine"
     targetdir (RootDir .. "/Bin/" .. OutputDir .. "/%{prj.name}")
     objdir    (RootDir .. "/Bin/Intermediates/" .. OutputDir .. "/%{prj.name}")
 
-    defines { 'PROJECT_ROOT=\"' .. RootDir:gsub("\\","/") .. '\"' }
+    defines { 'PROJECT_ROOT_DIR=\"' .. RootDir:gsub("\\","/") .. '\"' }
 
     filter "system:windows"
         systemversion "latest"
