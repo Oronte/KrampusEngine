@@ -6,7 +6,7 @@ Krampus::SpriteActor::SpriteActor(Level* _level, const FVector2& _size, const st
 {
 	sprite = CreateComponent<SpriteComponent>(_size, _path, _textureType, _rect, _isRepeated);
 	animation = CreateComponent<AnimationComponent>();
-	animation->AddAnimation("Idle", AnimationData(6, 0.5f, SpriteData(IVector2(0, 0), IVector2(500, 775)), true, true, ReadDirection::RD_ROW));
+	animation->AddAnimation("Idle", AnimationData(6, FMath::GetRandomNumberInRange(0.2f, 1.5f), SpriteData(IVector2(0, 0), IVector2(500, 775)), true, true, ReadDirection::RD_ROW));
 	animation->SetCurrentAnimation("Idle");
 	animation->StartAnimation();
 }

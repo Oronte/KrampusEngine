@@ -24,7 +24,7 @@ namespace Krampus
 			return Vector2D<T>(rect.getCenter());
 		}
 
-		Rectangle() {}
+		Rectangle() = default;
 		Rectangle(const Vector2D<T>& _position, const Vector2D<T>& _size)
 		{
 			rect = sf::Rect<T>(_position, _size);
@@ -43,6 +43,10 @@ namespace Krampus
 			return rect.findIntersection(_rect);
 		}
 
+		INLINE bool operator == (const Rectangle<T> _other)
+		{
+			return _other.rect == rect;
+		}
 
 		INLINE operator sf::Rect<T>() const noexcept
 		{

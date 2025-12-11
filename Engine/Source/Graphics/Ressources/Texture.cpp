@@ -1,10 +1,5 @@
 #include "Texture.h"
 
-Krampus::Texture::Texture()
-{
-	texture = std::make_unique<sf::Texture>();
-}
-
 Krampus::Texture::Texture(const std::string& _path, const bool& _rgb)
 {
 	texture = std::make_unique<sf::Texture>(std::filesystem::path(_path), _rgb);

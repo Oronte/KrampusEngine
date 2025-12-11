@@ -1,0 +1,2 @@
+Max spawn for memory -> 10 000 000 Actors without tick and with Sprite Component and Animation Component
+Stable FPS -> 70 FPS for 10 000 Actors with Sprite Component and Animation Component

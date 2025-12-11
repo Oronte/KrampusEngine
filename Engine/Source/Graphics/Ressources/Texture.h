@@ -14,7 +14,7 @@ namespace Krampus
 
 	class Texture
 	{
-		std::unique_ptr<sf::Texture> texture;
+		std::shared_ptr<sf::Texture> texture;
 
 	public:
         INLINE sf::Texture* Get() const noexcept
@@ -77,7 +77,9 @@ namespace Krampus
         }
 
 
-        Texture();
+        Texture() = default;
+        explicit Texture(std::shared_ptr<sf::Texture> _texture) noexcept
+            : texture(std::move(_texture)) { }
         explicit Texture(const std::string& _path, const bool& _rgb = false);
         Texture(const std::string& _path, const bool& _rgb, const IRect& _area);
         Texture(const void* data, std::size_t _size, const bool& _rgb = false);
@@ -105,18 +107,27 @@ namespace Krampus
         }
 
 
-        INLINE void operator = (const Texture& _other) noexcept
+        INLINE Texture& operator = (const Texture& _other) noexcept
         {
-            if (!_other.texture)
-            {
-                LOG(VerbosityType::Error, "You try to set the value of texture with a nullptr texture");
-                return;
-            }
-            texture = std::make_unique<sf::Texture>(*(_other.texture.get()));
+            this->texture = _other.texture;
+            return *this;
         }
+
+        INLINE Texture& operator = (Texture&& _other) noexcept
+        {
+            this->texture = std::move(_other.texture);
+            return *this;
+        }
+
         INLINE operator sf::Texture() const noexcept
         {
-            return *(texture.get());
+            if (!texture) return sf::Texture();
+            return *texture.get();
+        }
+
+        INLINE void SetSharedTexture(std::shared_ptr<sf::Texture> _texture) noexcept
+        {
+            texture = std::move(_texture);
         }
 	};
 

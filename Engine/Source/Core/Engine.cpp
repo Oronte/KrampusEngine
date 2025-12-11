@@ -44,7 +44,7 @@ void Engine::Start()
 {
 	onEngineStart.Broadcast();
 	ImGui::CreateContext();
-	ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow());
+	if (!ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow())) LOG_ERROR("ImGui has not being correctly initialize");
 	Logger::Init();
 	Update();
 	Stop();
@@ -55,7 +55,7 @@ void Engine::Update()
 	while (Level* _currentLevel = M_LEVEL.GetCurrentLevel())
 	{
 		UpdateEvent();
-
+		LOG_MSG(std::to_string(M_TIMER.GetInstantFPS()));
 		_currentLevel->Update(M_TIMER.Update());
 	}
 }

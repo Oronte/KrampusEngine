@@ -41,7 +41,7 @@ namespace Krampus
 			return _rawActor;
 		}
 
-		ActorManager() {}
+		ActorManager() = default;
 
 	public:
 		void BeginPlay();

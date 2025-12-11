@@ -14,12 +14,12 @@ void InitConfig()
 
 void TestFps(Krampus::Level* _level)
 {
-	for (int i = 1; i < 25; i++)
+	for (int i = 1; i < 100; i++)
 	{
-		for (int j = 1; j < 25; j++)
+		for (int j = 1; j < 100; j++)
 		{
 			Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level, Krampus::FVector2(21.6f, 38.4f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
-			_actor->transform.position = Krampus::FVector2(21.6f * (j - 1), 38.4f * (i - 1));
+			_actor->transform.position = Krampus::FVector2(5.4f * (j - 1), 9.6f * (i - 1));
 		}
 	}
 }
@@ -41,7 +41,7 @@ void StartGame()
 	//_defaultActor->GetComponent<engine::SpriteComponent>()->useDebug = true;
 	//_defaultActor->transform.position = engine::FVector2(1600.f, 300.f);
 
-	//TestFps(_level.get());
+	TestFps(_level.get());
 	
 	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor->transform.position += Krampus::FVector2(200.f, 540.f);
@@ -72,6 +72,8 @@ void StartGame()
 int main(/*int argc, char** argv*/)
 {
 	//std::cout << PROJECT_ROOT;
+
+	M_TIMER.SetMaxFrameRate(0);
 
 	try
 	{

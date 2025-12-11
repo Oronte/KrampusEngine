@@ -77,12 +77,27 @@ namespace Krampus
 		std::uint8_t b;
 		std::uint8_t a;
 
-		constexpr Color() noexcept;
-		constexpr Color(const std::uint8_t& _r, const std::uint8_t& _g, const std::uint8_t& _b, const std::uint8_t& _a = 255) noexcept;
-		constexpr explicit Color(const std::uint32_t& _color) noexcept;
-		constexpr Color(const sf::Color& _color) noexcept;
+		constexpr Color() noexcept
+			: r(0), g(0), b(0), a(255) { }
+		constexpr Color(const std::uint8_t& _r, const std::uint8_t& _g, const std::uint8_t& _b, const std::uint8_t& _a = 255) noexcept
+			: r(_r), g(_g), b(_b), a(_a) { }
+		constexpr explicit Color(const std::uint32_t& _color) noexcept
+			: r(CAST(std::uint8_t, (_color >> 24) & 255)),
+			  g(CAST(std::uint8_t, (_color >> 16) & 255)),
+			  b(CAST(std::uint8_t, (_color >> 8) & 255)),
+			  a(CAST(std::uint8_t, _color & 255)) { }
+		constexpr Color(const sf::Color& _color) noexcept
+			: r(_color.r), g(_color.g), b(_color.b), a(_color.a) { }
 
-		constexpr std::uint32_t ToInteger() const noexcept;
+		INLINE constexpr std::uint32_t ToInteger() const noexcept
+		{
+			return std::uint32_t(
+				CAST(std::uint32_t, r << 24) |
+				CAST(std::uint32_t, g << 16) |
+				CAST(std::uint32_t, b << 8) |
+				CAST(std::uint32_t, a)
+			);
+		}
 		std::string ToString(const bool& _textOnly) const noexcept;
 
 		INLINE operator sf::Color() const

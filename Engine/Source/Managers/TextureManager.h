@@ -14,13 +14,17 @@ namespace Krampus
 		std::string defaultTextureExtension = "png";
 		Texture defaultTexture;
 
+		std::unordered_map<std::string, std::shared_ptr<sf::Texture>> cache;
+
 	public:
 		TextureManager();
 
 	private:
 		void LoadDefaultTexture();
 		void SetTextureToDefault(Texture& _texture);
-		void LoadTexture(Texture& _texture, const std::string& _path, const IRect& _rect = IRect());
+
+		std::shared_ptr<sf::Texture> LoadOrGetSharedTexture(const std::string& _path, const IRect& _rect = IRect());
+		
 		void SetTexture(Shape* _shape, const Texture* _texture);
 		std::string GetExtensionNameByType(const TextureExtensionType& _textureType);
 
