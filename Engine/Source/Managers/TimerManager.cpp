@@ -1,7 +1,7 @@
 #include "TimerManager.h"
 #include "Graphics/Window/MainWindow.h"
-#include "ImGui/imgui.h"
-#include "ImGui/imgui-SFML.h"
+//#include "ImGui/imgui.h"
+//#include "ImGui/imgui-SFML.h"
 
 using namespace Krampus;
 
@@ -77,7 +77,11 @@ float Krampus::TimerManager::Update()
     deltaTime = lastFrameDuration * timeScale;
     framesCount++;
 
-    ImGui::SFML::Update(MAIN_WINDOW.GetRenderWindow(), sf::seconds(deltaTime));
+    //
+    // 
+    // 
+    // 
+    // ::SFML::Update(MAIN_WINDOW.GetRenderWindow(), sf::seconds(deltaTime));
 
     if (lastFrameDuration > 0.0f)
     {

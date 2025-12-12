@@ -8,7 +8,7 @@ namespace Krampus
 	class Singleton
 	{
 	public:
-		FORCEINLINE static Type& GetInstance()
+		INLINE static Type& GetInstance()
 		{
 			static Type _instance;
 			return _instance;

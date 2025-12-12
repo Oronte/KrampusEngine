@@ -47,14 +47,13 @@
 #endif // DEBUG_FILE
 
 #ifdef _MSC_VER
-	//#define new							new(_NORMAL_BLOCK, __FILE__, __LINE__)// Memory leaks
+	#define new							new(_NORMAL_BLOCK, __FILE__, __LINE__)// Memory leaks
 #endif
 
 //#define Super							__super // IDEA Find alternative
 #define FILE_NAME						std::filesystem::path(__FILE__).filename().string()
 #define DEBUG_INFO						std::string("(File : " + FILE_NAME + " | Func : " + CAST(std::string, PATH) + " | Line : " + std::to_string(__LINE__) + ")")
-#define INLINE							inline  //__inline
-#define FORCEINLINE						INLINE	//__forceinline
+#define INLINE							inline
 #define CAST(_type, _expr)				static_cast<_type>(_expr)
 #define SLEEP(_time)					sf::sleep(sf::seconds(_time))
 #define SLEEP_MILLISECOND(_time)		sf::sleep(sf::milliseconds(_time))

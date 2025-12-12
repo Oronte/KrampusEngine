@@ -20,7 +20,7 @@ namespace Krampus
 		Transform transform;
 
 		template<typename Type = Level, IS_BASE_OF(Level, Type)>
-		FORCEINLINE Type* GetLevel()
+		INLINE Type* GetLevel()
 		{
 			if (InstanceOf<Type>(level))
 			{
@@ -38,7 +38,7 @@ namespace Krampus
 
 	protected:
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
-		FORCEINLINE Type* CreateComponent(Args&&... _args)
+		INLINE Type* CreateComponent(Args&&... _args)
 		{
 			if (GetComponent<Type>())
 			{
@@ -62,7 +62,7 @@ namespace Krampus
 		
 	public:
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
-		FORCEINLINE Type* GetComponent()
+		INLINE Type* GetComponent()
 		{
 			for (const std::unique_ptr<Component>& _component : components)
 				if (Type* _castedComponent = Cast<Type>(_component.get())) return _castedComponent;

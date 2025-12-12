@@ -15,7 +15,7 @@ namespace Krampus
 			return actors;
 		}
 		template <typename Type, IS_BASE_OF(Actor, Type)>
-		FORCEINLINE std::vector<Type*> GetAllActorOfClass()
+		INLINE std::vector<Type*> GetAllActorOfClass()
 		{
 			std::vector<Type*> _finalVector;
 
@@ -32,7 +32,7 @@ namespace Krampus
 		//	actors.erase(std::remove(actors.begin(), actors.end(), _actor), actors.end());
 		//}
 		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
-		FORCEINLINE Type* CreateActor(Args&&... _args)
+		INLINE Type* CreateActor(Args&&... _args)
 		{
 			std::unique_ptr<Type> _actor = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _rawActor = _actor.get();

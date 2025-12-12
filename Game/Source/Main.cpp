@@ -5,12 +5,6 @@
 #include "Managers/TimerManager.h"
 #include "Managers/LevelManager.h"
 
-void InitConfig()
-{
-#ifdef _MSC_VER
-	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
-}
 
 void TestFps(Krampus::Level* _level)
 {
@@ -26,8 +20,6 @@ void TestFps(Krampus::Level* _level)
 
 void StartGame()
 {
-	InitConfig();
-
 	std::unique_ptr<Krampus::Level> _level = std::make_unique<Krampus::Level>("first level");
 	M_LEVEL.SetLevel(_level.get());
 	Krampus::Engine& _engine = Krampus::Engine::GetInstance();

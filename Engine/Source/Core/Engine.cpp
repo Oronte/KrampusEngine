@@ -3,10 +3,33 @@
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
 #include "Graphics/Window/MainWindow.h"
-#include "ImGui/imgui.h"
-#include "ImGui/imgui-SFML.h"
+//#include "ImGui/imgui.h"
+//#include "ImGui/imgui-SFML.h"
+#include "Graphics/Mouse.h"
 
 using namespace Krampus;
+
+// Memory leak detection
+#ifdef _MSC_VER
+#include <Windows.h>
+int __cdecl HookReport(int _reportType, char* _message, int* _returnValue)
+{
+	HANDLE _hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(_hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
+	DWORD _written;
+	WriteConsoleA(_hOut, _message, (DWORD)strlen(_message), &_written, NULL);
+
+	SetConsoleTextAttribute(_hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+
+	return false;
+}
+void InitConfig()
+{
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetReportHook(HookReport);
+}
+#endif
 
 Engine::Engine()
 {
@@ -31,21 +54,26 @@ Engine::Engine()
 	//	MAIN_WINDOW.SetPosition(_windowPos);
 	//}
 
-	onWindowClosed.AddListener([this](){
+}
+
+void Engine::Start()
+{
+	//ImGui::CreateContext();
+	onEngineStart.Broadcast();
+
+#ifdef _MSC_VER
+	InitConfig();
+#endif
+
+
+	M_INPUT.WindowClose.AddListener([this](){
 		//SaveWindowInfo();
 		MAIN_WINDOW.Close();
 		M_LEVEL.SetLevel(nullptr);
 		});
 
-	M_INPUT.A.AddListener([]() {LOG_MSG("A"); });
-}
-
-void Engine::Start()
-{
-	ImGui::CreateContext();
-	onEngineStart.Broadcast();
-	if (!ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow())) LOG_ERROR("ImGui has not being correctly initialize");
-	ImGui::GetIO().IniFilename = nullptr; // Suppr imgui.ini file
+	//if (!ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow())) LOG_ERROR("ImGui has not being correctly initialize");
+	//ImGui::GetIO().IniFilename = nullptr; // Suppr imgui.ini file
 	Logger::Init();
 	Update();
 	Stop();
@@ -55,9 +83,9 @@ void Engine::Update()
 {
 	while (Level* _currentLevel = M_LEVEL.GetCurrentLevel())
 	{
-		UpdateEvent();
-		M_INPUT.Update(MAIN_WINDOW);
+		Mouse::GetInstance().Update();
 		_currentLevel->Update(M_TIMER.Update());
+		UpdateEvent();
 	}
 }
 
@@ -66,25 +94,16 @@ void Engine::Stop()
 	onEngineStop.Broadcast();
 	M_LEVEL.Destroy();
 	Logger::Shutdown();
-	ImGui::SFML::Shutdown();
+	//ImGui::SFML::Shutdown();
 }
 
 
 void Engine::UpdateEvent()
 {
-	const std::optional<sf::Event> _event = MAIN_WINDOW.PollEvent();
-	if (!_event.has_value()) return;
+	const std::optional<sf::Event>& _event = MAIN_WINDOW.PollEvent();
+	M_INPUT.Update(_event);
 
-
-	ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), _event.value());
-
-	if (_event->is<sf::Event::FocusGained>()) onFocusGained.Broadcast();
-	if (_event->is<sf::Event::FocusLost>()) onFocusLost.Broadcast();
-	if (_event->is<sf::Event::Resized>()) onWindowResized.Broadcast(_event->getIf<sf::Event::Resized>()->size);
-	if (_event->is<sf::Event::MouseMoved>()) onMouseMoved.Broadcast(_event->getIf<sf::Event::MouseMoved>()->position);
-	if (_event->is<sf::Event::MouseEntered>()) onMouseEntered.Broadcast();
-	if (_event->is<sf::Event::MouseLeft>()) onMouseExit.Broadcast();
-	if (_event->is<sf::Event::Closed>()) onWindowClosed.Broadcast();
+	//ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), _event.value());
 }
 
 //void Engine::SaveWindowInfo()

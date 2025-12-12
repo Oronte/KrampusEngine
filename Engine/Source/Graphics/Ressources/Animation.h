@@ -56,19 +56,19 @@ namespace Krampus
         Event<> onAnimationEnded;
 
     private:
-        FORCEINLINE bool IsValidIndex() const
+        INLINE bool IsValidIndex() const
         {
             return currentIndex < data.count;
         }
-        FORCEINLINE float ComputeDuration()
+        INLINE float ComputeDuration()
         {
             return ComputeDuration(*GetSpriteData());
         }
-        FORCEINLINE float ComputeDuration(const SpriteData& _spriteData) const
+        INLINE float ComputeDuration(const SpriteData& _spriteData) const
         {
             return data.duration / data.count * _spriteData.factor;
         }
-        FORCEINLINE SpriteData* GetSpriteData()
+        INLINE SpriteData* GetSpriteData()
         {
             if (data.sprites.empty()) return nullptr;
 
@@ -82,7 +82,7 @@ namespace Krampus
         //    const LinkedAnimation& _linkedAnim = LinkedAnimation(_transition, animation);
         //    data.linkedAnimations.push_back(_linkedAnim);
         //}
-        FORCEINLINE std::string GetName() const
+        INLINE std::string GetName() const
         {
             return name;
         }

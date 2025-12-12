@@ -14,21 +14,21 @@ namespace Krampus
 
     public:
 
-        NO_DISCARD FORCEINLINE std::size_t GetVertexCount() const
+        NO_DISCARD INLINE std::size_t GetVertexCount() const
         {
             const std::size_t& _size = vertices.getVertexCount();
             return _size;
         }
-        NO_DISCARD FORCEINLINE PrimitiveType GetPrimitiveType() const
+        NO_DISCARD INLINE PrimitiveType GetPrimitiveType() const
         {
             const PrimitiveType& _type = vertices.getPrimitiveType();
             return _type;
         }
-        FORCEINLINE void SetPrimitiveType(const PrimitiveType& _type)
+        INLINE void SetPrimitiveType(const PrimitiveType& _type)
         {
             return vertices.setPrimitiveType(_type);
         }
-        NO_DISCARD FORCEINLINE FRect GetBounds() const
+        NO_DISCARD INLINE FRect GetBounds() const
         {
             return FRect(vertices.getBounds());
         }

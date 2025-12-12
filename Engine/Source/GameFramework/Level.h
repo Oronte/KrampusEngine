@@ -18,19 +18,19 @@ namespace Krampus
 	public:
 		Level(const std::string& _name);
 
-		FORCEINLINE void SetBackgroundColor(const Color& _bgColor)
+		INLINE void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
 		}
-		FORCEINLINE std::string GetName() const
+		INLINE std::string GetName() const
 		{
 			return name;
 		}
-		FORCEINLINE CameraManager& GetCameraManager()
+		INLINE CameraManager& GetCameraManager()
 		{
 			return cameraManager;
 		}
-		FORCEINLINE ActorManager& GetActorManager()
+		INLINE ActorManager& GetActorManager()
 		{
 			return actorManager;
 		}

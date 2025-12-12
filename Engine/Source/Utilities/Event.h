@@ -123,21 +123,38 @@ namespace Krampus
             return _count;
         }
 
-        void Broadcast(Args&&... _args)
+        //void Broadcast(Args&&... _args)
+        //{
+        //    for (Listener& _listener : listeners)
+        //    {
+        //        if (!_listener.isActive) continue;
+        //        _listener.callback(std::forward<Args>(_args)...);
+        //        if (_listener.isOnce) _listener.isActive = false;
+        //    }
+
+        //    CleanupIfNeeded();
+        //}
+
+        void Broadcast(const Args&... _args)
         {
             for (Listener& _listener : listeners)
             {
                 if (!_listener.isActive) continue;
-                _listener.callback(std::forward<Args>(_args)...);
+                _listener.callback(_args...);
                 if (_listener.isOnce) _listener.isActive = false;
             }
 
             CleanupIfNeeded();
         }
 
-        void operator()(Args&&... _args)
+        //void operator()(Args&&... _args)
+        //{
+        //    Broadcast(std::forward<Args>(_args)...);
+        //}
+
+        void operator()(const Args&... _args)
         {
-            Broadcast(std::forward<Args>(_args)...);
+            Broadcast(_args...);
         }
 
         void operator += (Callback&& _callback)

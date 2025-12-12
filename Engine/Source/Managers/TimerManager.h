@@ -33,43 +33,43 @@ namespace Krampus
 		std::vector<std::unique_ptr<Timer>> allTimers;
 
 	private:
-		FORCEINLINE float GetTime(const sf::Time& _time) const
+		INLINE float GetTime(const sf::Time& _time) const
 		{
 			return _time.asSeconds();
 		}
-		FORCEINLINE std::string TwoDigitsTime(const int& _value) const
+		INLINE std::string TwoDigitsTime(const int& _value) const
 		{
 			if (_value >= 10) return std::to_string(_value);
 			return "0" + std::to_string(_value);
 		}
 	
 	public:
-		FORCEINLINE float GetDeltaTime() const
+		INLINE float GetDeltaTime() const
 		{
 			return deltaTime;
 		}
-		FORCEINLINE float GetElapsedTime() const
+		INLINE float GetElapsedTime() const
 		{
 			return elapsedTime;
 		}
-		FORCEINLINE float GetInstantFPS() const
+		INLINE float GetInstantFPS() const
 		{
 			return fps;
 		}
 		// Use for display
-		FORCEINLINE float GetSmoothedFPS() const
+		INLINE float GetSmoothedFPS() const
 		{
 			return smoothedFPS;
 		}
-		FORCEINLINE void SetTimerScale(const float& _timeScale)
+		INLINE void SetTimerScale(const float& _timeScale)
 		{
 			timeScale = _timeScale;
 		}
-		FORCEINLINE void SetMaxFrameRate(const unsigned short& _fps)
+		INLINE void SetMaxFrameRate(const unsigned short& _fps)
 		{
 			maxFrameRate = _fps;
 		}
-		FORCEINLINE unsigned short GetMaxFrameRate() const
+		INLINE unsigned short GetMaxFrameRate() const
 		{
 			return maxFrameRate;
 		}

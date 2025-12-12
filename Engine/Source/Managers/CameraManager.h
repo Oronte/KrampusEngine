@@ -12,12 +12,12 @@ namespace Krampus
 		std::map<int, std::vector<IDrawable*>> drawer;
 
 	public:
-		FORCEINLINE void SetCurrent(CameraComponent* _camera)
+		INLINE void SetCurrent(CameraComponent* _camera)
 		{
 			if (!_camera) return;
 			current = _camera;
 		}
-		FORCEINLINE void AddToWindow(IDrawable* _drawable)
+		INLINE void AddToWindow(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -26,7 +26,7 @@ namespace Krampus
 			}
 			drawer[_drawable->zOrder].push_back(_drawable);
 		}
-		FORCEINLINE void RemoveToWindow(IDrawable* _drawable)
+		INLINE void RemoveToWindow(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{

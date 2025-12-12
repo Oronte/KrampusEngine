@@ -11,7 +11,7 @@ namespace Krampus
 		class Actor* owner;
 
 	public:
-		FORCEINLINE Actor* GetOwner() const
+		INLINE Actor* GetOwner() const
 		{
 			return owner;
 		}

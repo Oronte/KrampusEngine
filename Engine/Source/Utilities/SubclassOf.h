@@ -9,11 +9,11 @@ namespace Krampus
 		Type* objectRef = nullptr;
 
 	public:
-		FORCEINLINE Type GetObject() const
+		INLINE Type GetObject() const
 		{
 			return *objectRef;
 		}
-		FORCEINLINE Type* GetObjectPtr() const
+		INLINE Type* GetObjectPtr() const
 		{
 			return objectRef;
 		}

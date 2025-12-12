@@ -15,7 +15,7 @@ namespace Krampus
 		SpriteComponent* sprite;
 
 	public:
-		FORCEINLINE void SetCurrentAnimation(const std::string& _name)
+		INLINE void SetCurrentAnimation(const std::string& _name)
 		{
 			if (!animations.contains(_name)) return;
 			current = animations[_name].get();
@@ -25,7 +25,7 @@ namespace Krampus
 		//	if (!_animation) return;
 		//	current = _animation;
 		//}
-		FORCEINLINE void StartAnimation()
+		INLINE void StartAnimation()
 		{
 			if (!current) return;
 
@@ -39,7 +39,7 @@ namespace Krampus
 			//	});
 			current->Start();
 		}
-		FORCEINLINE void StopAnimation()
+		INLINE void StopAnimation()
 		{
 			if (!current) return;
 			current->Stop();

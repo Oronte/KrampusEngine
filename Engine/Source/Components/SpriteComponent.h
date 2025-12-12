@@ -15,7 +15,7 @@ namespace Krampus
 		std::unique_ptr<ShapeObject> shape;
 
 	public:
-		FORCEINLINE ShapeObject* GetShapeObject()
+		INLINE ShapeObject* GetShapeObject()
 		{
 			return shape.get();
 		}

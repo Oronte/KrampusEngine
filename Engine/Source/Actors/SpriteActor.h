@@ -13,15 +13,15 @@ namespace Krampus
 		AnimationComponent* animation;
 
 	public:
-		FORCEINLINE SpriteComponent* GetSprite() const
+		INLINE SpriteComponent* GetSprite() const
 		{
 			return sprite;
 		}
-		FORCEINLINE void SetTextureRect(const IVector2& _start, const IVector2& _size)
+		INLINE void SetTextureRect(const IVector2& _start, const IVector2& _size)
 		{
 			M_TEXTURE.SetTextureRect(sprite->GetShapeObject()->GetShape(), _start, _size);
 		}
-		FORCEINLINE void SetTextureRect(const IRect& _rect)
+		INLINE void SetTextureRect(const IRect& _rect)
 		{
 			M_TEXTURE.SetTextureRect(sprite->GetShapeObject()->GetShape(), _rect);
 		}

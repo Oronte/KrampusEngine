@@ -5,145 +5,179 @@
 
 namespace Krampus
 {
-	class Window;
 
-	struct Input
-	{
-		Event<> onPerform;
-		Event<> onPerform;
-		bool isPressed = false;
-	};
-
+	// TODO make std::unordored_map with automatic creation
 	class InputManager : public Singleton<InputManager>
 	{
+		using Key = sf::Keyboard::Key;
+		using MouseButton = sf::Mouse::Button;
+		using MouseWheel = sf::Mouse::Wheel;
+		using JoystickAxis = sf::Joystick::Axis;
+
+		struct Input
+		{
+			Event<> onPress;
+			Event<> onPerform; // Called every framewhile holding
+			Event<> onRelease;
+
+		private:
+			bool isPressed = false;
+
+			void Press()
+			{
+				if (isPressed) return;
+				onPress.Broadcast();
+				isPressed = true;
+			}
+			void Release()
+			{
+				if (!isPressed) return;
+				onRelease.Broadcast();
+				isPressed = false;
+			}
+			void Update()
+			{
+				if (isPressed) onPerform.Broadcast();
+			}
+			friend class InputManager;
+		};
+
 	public:
-		// ==================== KEYBOARD ====================
-		Event<> A;
-		Event<> B;
-		Event<> C;
-		Event<> D;
-		Event<> E;
-		Event<> F;
-		Event<> G;
-		Event<> H;
-		Event<> I;
-		Event<> J;
-		Event<> K;
-		Event<> L;
-		Event<> M;
-		Event<> N;
-		Event<> O;
-		Event<> P;
-		Event<> Q;
-		Event<> R;
-		Event<> S;
-		Event<> T;
-		Event<> U;
-		Event<> V;
-		Event<> W;
-		Event<> X;
-		Event<> Y;
-		Event<> Z;
-		Event<> Num0;
-		Event<> Num1;
-		Event<> Num2;
-		Event<> Num3;
-		Event<> Num4;
-		Event<> Num5;
-		Event<> Num6;
-		Event<> Num7;
-		Event<> Num8;
-		Event<> Num9;
-		Event<> Escape;
-		Event<> LControl;
-		Event<> LShift;
-		Event<> LAlt;
-		Event<> LSystem;
-		Event<> RControl;
-		Event<> RShift;
-		Event<> RAlt;
-		Event<> RSystem;
-		Event<> Menu;
-		Event<> LBracket;
-		Event<> RBracket;
-		Event<> Semicolon;
-		Event<> Comma;
-		Event<> Period;
-		Event<> Quote;
-		Event<> Slash;
-		Event<> Backslash;
-		Event<> Tilde;
-		Event<> Equal;
-		Event<> Hyphen;
-		Event<> Space;
-		Event<> Enter;
-		Event<> Backspace;
-		Event<> Tab;
-		Event<> PageUp;
-		Event<> PageDown;
-		Event<> End;
-		Event<> Home;
-		Event<> Insert;
-		Event<> Delete;
-		Event<> F1;
-		Event<> F2;
-		Event<> F3;
-		Event<> F4;
-		Event<> F5;
-		Event<> F6;
-		Event<> F7;
-		Event<> F8;
-		Event<> F9;
-		Event<> F10;
-		Event<> F11;
-		Event<> F12;
-		Event<> F13;
-		Event<> F14;
-		Event<> F15;
-		Event<> Pause;
+		// KEYBOARD
+		Input A;
+		Input B;
+		Input C;
+		Input D;
+		Input E;
+		Input F;
+		Input G;
+		Input H;
+		Input I;
+		Input J;
+		Input K;
+		Input L;
+		Input M;
+		Input N;
+		Input O;
+		Input P;
+		Input Q;
+		Input R;
+		Input S;
+		Input T;
+		Input U;
+		Input V;
+		Input W;
+		Input X;
+		Input Y;
+		Input Z;
+		Input Num0;
+		Input Num1;
+		Input Num2;
+		Input Num3;
+		Input Num4;
+		Input Num5;
+		Input Num6;
+		Input Num7;
+		Input Num8;
+		Input Num9;
+		Input Escape;
+		Input LControl;
+		Input LShift;
+		Input LAlt;
+		Input LSystem;
+		Input RControl;
+		Input RShift;
+		Input RAlt;
+		Input RSystem;
+		Input Menu;
+		Input LBracket;
+		Input RBracket;
+		Input Semicolon;
+		Input Comma;
+		Input Period;
+		Input Quote;
+		Input Slash;
+		Input Backslash;
+		//Input Tilde;
+		Input Equal;
+		Input Hyphen;
+		Input Space;
+		Input Enter;
+		Input Backspace;
+		Input Tab;
+		Input PageUp;
+		Input PageDown;
+		Input End;
+		Input Home;
+		Input Insert;
+		Input Delete;
+		Input F1;
+		Input F2;
+		Input F3;
+		Input F4;
+		Input F5;
+		Input F6;
+		Input F7;
+		Input F8;
+		Input F9;
+		Input F10;
+		Input F11;
+		Input F12;
+		Input F13;
+		Input F14;
+		Input F15;
+		Input Pause;
 
-		// ==================== MOUSE BUTTONS ====================
-		Event<> MouseLeftClick;
-		Event<> MouseRightClick;
-		Event<> MouseMiddleClick;
-		Event<> MouseExtraButton1;
-		Event<> MouseExtraButton2;
+		// MOUSE BUTTONS
+		Input MouseLeftClick;
+		Input MouseRightClick;
+		Input MouseMiddleClick;
+		Input MouseExtraButton1;
+		Input MouseExtraButton2;
 
-		// ==================== MOUSE MOVEMENT ====================
-		Event<FVector2> MouseMoved;
-		Event<FVector2> MouseDelta;
+		// MOUSE MOVEMENT 
+		Event<IVector2> MouseMoved;
 
-		// ==================== MOUSE WHEEL ====================
-		Event<float> MouseWheelVertical;
-		Event<float> MouseWheelHorizontal;
+		// MOUSE WHEEL 
+		Event<float> MouseWheelScroll;      // 1 / -1 for each scroll
 
-		// ==================== JOYSTICK / GAMEPAD ====================
-		Event<float> LeftJoystickX;          // [-100 ; 100]
-		Event<float> LeftJoystickY;          // [-100 ; 100]
-		Event<float> RightJoystickX;         // [-100 ; 100]
-		Event<float> RightJoystickY;         // [-100 ; 100]
-		Event<float> BackTriggerLeft;        // LT [0 ; 100]
-		Event<float> BackTriggerRight;       // RT [0 ; 100]
-		Event<float> DPadX;                  // [-100 ; 100]
-		Event<float> DPadY;                  // [-100 ; 100]
+		// OTHER MOUSE EVENTS
+		Event<> FocusGain;
+		Event<> FocusLost;
+		Event<> MouseEntred;
+		Event<> MouseLeft;
 
-		Event<> ButtonA;
-		Event<> ButtonB;
-		Event<> ButtonX;
-		Event<> ButtonY;
-		Event<> ButtonStart;
-		Event<> ButtonBack;
-		Event<> ButtonLB;
-		Event<> ButtonRB;
-		Event<> ButtonLS;
-		Event<> ButtonRS;
+		// JOYSTICK / GAMEPAD 
+		Event<FVector2> LeftJoystick;       // [-100 ; 100]
+		Event<FVector2> RightJoystick;      // [-100 ; 100]
+		Event<float> BackTriggerLeft;       // LT [0 ; 100]
+		Event<float> BackTriggerRight;      // RT [0 ; 100]
+		Event<FVector2> DPad;				// [-100 ; 100]
+
+		Input ButtonA;
+		Input ButtonB;
+		Input ButtonX;
+		Input ButtonY;
+		Input ButtonStart;
+		Input ButtonBack;
+		Input ButtonLB;
+		Input ButtonRB;
+		Input ButtonLS;
+		Input ButtonRS;
+
+		// Other Events
+		Event<IVector2> WindowResize;
+		Event<> WindowClose;
 
 		InputManager() = default;
 
 	private:
-		void Update(Window& _window);
+		void Update(const std::optional<sf::Event>& _event);
+		void UpdateKey(Input& _input, const Key& _key);
+		void UpdateMouseButton(Input& _input, const MouseButton& _mouseButton);
 
-		friend void Engine::Update();
+		friend class Engine;
 	};
+
 }
 

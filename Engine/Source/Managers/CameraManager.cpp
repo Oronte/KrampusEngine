@@ -10,6 +10,6 @@ void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)
 		for (IDrawable* _sprite : _sprites) _sprite->Draw(_window);
 	}
 
-	MAIN_WINDOW.RenderGui();
+	//MAIN_WINDOW.RenderGui();
 	
 }

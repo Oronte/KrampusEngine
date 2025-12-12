@@ -13,11 +13,11 @@ namespace Krampus
 		Level* currentLevel;
 
 	public:
-		FORCEINLINE Level* GetCurrentLevel() const
+		INLINE Level* GetCurrentLevel() const
 		{
 			return currentLevel;
 		}
-		FORCEINLINE void SetLevel(Level* _level)
+		INLINE void SetLevel(Level* _level)
 		{
 			if (_level == currentLevel) return;
 
@@ -26,14 +26,14 @@ namespace Krampus
 			if (currentLevel) currentLevel->Load();
 			if (_level && !levels.contains(_level->GetName())) RegisterLevel(_level);
 		}
-		FORCEINLINE void SetLevel(const std::string& _name)
+		INLINE void SetLevel(const std::string& _name)
 		{
 			if (!levels.contains(_name))
 				LOG(VerbosityType::Fatal, "Level \"" + _name + "\" not found !");
 
 			SetLevel(levels[_name]);
 		}
-		FORCEINLINE void RegisterLevel(Level* _level)
+		INLINE void RegisterLevel(Level* _level)
 		{
 			if (!_level)
 			{
@@ -47,11 +47,11 @@ namespace Krampus
 			}
 			levels.emplace(_level->GetName(), _level);
 		}
-		FORCEINLINE void UnregisterLevel(const std::string& _name)
+		INLINE void UnregisterLevel(const std::string& _name)
 		{
 			levels.erase(_name);
 		}
-		FORCEINLINE void Destroy()
+		INLINE void Destroy()
 		{
 			levels.clear();
 		}

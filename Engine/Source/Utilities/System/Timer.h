@@ -21,27 +21,27 @@ namespace Krampus
 		std::function<void()> callback;
 
 	public:
-		FORCEINLINE void SetDuration(const float& _duration)
+		INLINE void SetDuration(const float& _duration)
 		{
 			duration = _duration;
 		}
-		FORCEINLINE bool IsToDelete() const
+		INLINE bool IsToDelete() const
 		{
 			return isToDelete;
 		}
-		FORCEINLINE bool IsRunning() const
+		INLINE bool IsRunning() const
 		{
 			return isRunning;
 		}
-		FORCEINLINE bool IsLoop() const
+		INLINE bool IsLoop() const
 		{
 			return isLoop;
 		}
-		FORCEINLINE float GetCurrentTime() const
+		INLINE float GetCurrentTime() const
 		{
 			return currentTime;
 		}
-		FORCEINLINE float GetRemainingTime() const
+		INLINE float GetRemainingTime() const
 		{
 			return duration - currentTime;
 		}

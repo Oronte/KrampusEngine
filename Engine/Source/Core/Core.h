@@ -10,11 +10,11 @@ namespace Krampus
 		bool isActive = true;
 
 	public:
-		FORCEINLINE virtual void SetActive(const bool& _active)
+		INLINE virtual void SetActive(const bool& _active)
 		{
 			isActive = _active;
 		}
-		FORCEINLINE bool IsActive() const
+		INLINE bool IsActive() const
 		{
 			return isActive;
 		}

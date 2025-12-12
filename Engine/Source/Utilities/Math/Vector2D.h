@@ -7,7 +7,7 @@ namespace Krampus
 {
 
     template<typename T>
-    struct Vector2D : public IPrintable, public ISavable
+    struct Vector2D : public IPrintable/*, public ISavable*/
     {
         static_assert(std::is_arithmetic_v<T>, "Vector2<T> requires an arithmetic type T");
 
@@ -294,22 +294,22 @@ namespace Krampus
             return std::format("X : {}, Y : {}", x, y);
         }
 
-        INLINE virtual rapidjson::Value ToJson(rapidjson::Document::AllocatorType& _allocator) const override
-        {
-            rapidjson::Value _obj = rapidjson::Value(rapidjson::kObjectType);
+        //INLINE virtual rapidjson::Value ToJson(rapidjson::Document::AllocatorType& _allocator) const override
+        //{
+        //    rapidjson::Value _obj = rapidjson::Value(rapidjson::kObjectType);
 
-            _obj.AddMember("X", x, _allocator);
-            _obj.AddMember("Y", y, _allocator);
+        //    _obj.AddMember("X", x, _allocator);
+        //    _obj.AddMember("Y", y, _allocator);
 
-            return _obj;
-        }
-        INLINE virtual void FromJson(const rapidjson::Value& _json) override
-        {
-            if (_json.HasMember("X"))
-                x = CAST(T, _json["X"].GetInt());
-            if (_json.HasMember("Y"))
-                y = CAST(T, _json["Y"].GetInt());
-        }
+        //    return _obj;
+        //}
+        //INLINE virtual void FromJson(const rapidjson::Value& _json) override
+        //{
+        //    if (_json.HasMember("X"))
+        //        x = CAST(T, _json["X"].GetInt());
+        //    if (_json.HasMember("Y"))
+        //        y = CAST(T, _json["Y"].GetInt());
+        //}
 
         #pragma region Operators
 
@@ -393,6 +393,15 @@ namespace Krampus
             x = CAST(T, CAST(R, x) / CAST(R, _scalar));
             y = CAST(T, CAST(R, y) / CAST(R, _scalar));
             return *this;
+        }
+
+        bool operator == (const Vector2D& _other) const noexcept
+        {
+            return x == _other.x && y == _other.y;
+        }
+        bool operator != (const Vector2D& _other) const noexcept
+        {
+            return !(*this == _other);
         }
 
         #pragma endregion
