@@ -170,6 +170,7 @@ void Logger::Reset()
 
 void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, const std::string& _debug)
 {
+#ifdef DEBUG
     if (!running) 
         std::cout << "You printed a log but the Logger is not running (call => engine::Logger::Init()) " << DEBUG_INFO << std::endl;
 
@@ -182,6 +183,7 @@ void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, cons
     }
 
     if (_type == VerbosityType::Fatal) THROW_EXCEPTION("Fatal exception occurred");
+#endif
 }
 
 void Krampus::Logger::PrintLog(const VerbosityType& _type, const IPrintable& _object, const std::string& _debug)

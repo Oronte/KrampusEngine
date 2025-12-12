@@ -1,5 +1,4 @@
 project "Game"
-    kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
     staticruntime "off"
@@ -32,6 +31,7 @@ project "Game"
         defines { "WINDOWS" }
 
     filter "configurations:Debug"
+        kind "ConsoleApp"
         defines { "DEBUG" }
         runtime "Debug"
         symbols "On"
@@ -44,6 +44,7 @@ project "Game"
         }
 
     filter "configurations:Release"
+        kind "WindowedApp"
         defines { "RELEASE" }
         runtime "Release"
         optimize "On"

@@ -11,6 +11,7 @@ void Krampus::Debug::DrawDebugCircle(Actor* _context, const FVector2& _position,
 
 void Krampus::Debug::DrawDebugCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
+#ifdef DEBUG
 	Vertices _vert = Vertices(PrimitiveType::LineStrip);
 
 	FVector2 _initialPoint = _position + FVector2(0.f, _radius);
@@ -23,6 +24,7 @@ void Krampus::Debug::DrawDebugCircle(Window& _window, const FVector2& _position,
 	}
 
 	_window.Draw(_vert);
+#endif
 }
 
 void Krampus::Debug::DrawFillCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
@@ -32,6 +34,7 @@ void Krampus::Debug::DrawFillCircle(Actor* _context, const FVector2& _position, 
 
 void Krampus::Debug::DrawFillCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
+#ifdef DEBUG
 	Vertices _vert = Vertices(PrimitiveType::TriangleStrip);
 
 	FVector2 _initialPoint = _position + FVector2(0.f, _radius);
@@ -45,6 +48,7 @@ void Krampus::Debug::DrawFillCircle(Window& _window, const FVector2& _position, 
 	}
 
 	_window.Draw(_vert);
+#endif
 }
 
 void Krampus::Debug::DrawPointCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
@@ -54,6 +58,7 @@ void Krampus::Debug::DrawPointCircle(Actor* _context, const FVector2& _position,
 
 void Krampus::Debug::DrawPointCircle(Window& _window, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {
+#ifdef DEBUG
 	Vertices _vert = Vertices(PrimitiveType::Points);
 
 	FVector2 _initialPoint = _position + FVector2(0.f, _radius);
@@ -67,6 +72,7 @@ void Krampus::Debug::DrawPointCircle(Window& _window, const FVector2& _position,
 	_vert.Append(_position, _color);
 
 	_window.Draw(_vert);
+#endif
 }
 
 void Krampus::Debug::DrawDebugRect(Actor* _context, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
@@ -81,6 +87,7 @@ void Krampus::Debug::DrawDebugRect(Actor* _context, const FRect& _rect, const An
 
 void Krampus::Debug::DrawDebugRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
+#ifdef DEBUG
 	Vertices _vert = Vertices(PrimitiveType::LineStrip);
 
 	const FVector2& _initialPos = (_position - _size / 2.f).RotateAround(_position, _rotation.ToRadians());
@@ -92,6 +99,7 @@ void Krampus::Debug::DrawDebugRect(Window& _window, const FVector2& _position, c
 	_vert.Append(_initialPos, _color);
 
 	_window.Draw(_vert);
+#endif
 }
 
 void Krampus::Debug::DrawDebugRect(Window& _window, const FRect& _rect, const Angle& _rotation, const Color& _color)
@@ -116,6 +124,7 @@ void Krampus::Debug::DrawFillRect(Actor* _context, const FVector2& _position, co
 
 void Krampus::Debug::DrawFillRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
+#ifdef DEBUG
 	Vertices _vert = Vertices(PrimitiveType::TriangleStrip);
 
 	const FVector2& _initialPos = (_position - _size / 2.f).RotateAround(_position, _rotation.ToRadians());
@@ -127,6 +136,7 @@ void Krampus::Debug::DrawFillRect(Window& _window, const FVector2& _position, co
 	_vert.Append(_initialPos, _color);
 
 	_window.Draw(_vert);
+#endif
 }
 
 void Krampus::Debug::DrawPointRect(Actor* _context, const FRect& _rect, const Angle& _rotation, const Color& _color)
@@ -146,6 +156,7 @@ void Krampus::Debug::DrawPointRect(Actor* _context, const FVector2& _position, c
 
 void Krampus::Debug::DrawPointRect(Window& _window, const FVector2& _position, const FVector2& _size, const Angle& _rotation, const Color& _color)
 {
+#ifdef DEBUG
 	Vertices _vert = Vertices(PrimitiveType::Points);
 
 	const FVector2& _initialPos = (_position - _size / 2.f).RotateAround(_position, _rotation.ToRadians());
@@ -158,6 +169,7 @@ void Krampus::Debug::DrawPointRect(Window& _window, const FVector2& _position, c
 	_vert.Append(_position, _color);
 
 	_window.Draw(_vert);
+#endif
 }
 
 void Krampus::Debug::DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness, const Color& _color)

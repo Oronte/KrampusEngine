@@ -56,8 +56,9 @@ namespace Krampus
             return _id;
         }
 
-        template<typename T>
-        ListenerId AddListener(T* _instance, void(T::* _memberFunc)(Args&&...), const bool& _once = false, const int& _priority = 0)
+        template<typename T, typename MemFn>
+        ListenerId AddListener(T* _instance, MemFn _memFn,
+            bool once = false, int priority = 0)
         {
             if (!_instance)
             {
@@ -65,29 +66,12 @@ namespace Krampus
                 return 0;
             }
 
-            Callback _callback = [_instance, _memberFunc](Args&&... args)
+            Callback _callback = [_instance, _memFn](Args... args)
                 {
-                    (_instance->*_memberFunc)(std::forward<Args>(args)...);
+                    std::invoke(_memFn, _instance, args...);
                 };
 
-            return AddListener(std::move(_callback), _once, _priority);
-        }
-
-        template<typename T>
-        ListenerId AddListener(T* _instance, void(T::* _memberFunc)(Args&&...) const, const bool& _once = false, const int& _priority = 0)
-        {
-            if (!_instance)
-            {
-                LOG(VerbosityType::Error, "The instance for the callback is nullptr");
-                return 0;
-            }
-
-            Callback _callback = [_instance, _memberFunc](Args&&... args)
-                {
-                    (_instance->*_memberFunc)(std::forward<Args>(args)...);
-                };
-
-            return AddListener(std::move(_callback), _once, _priority);
+            return AddListener(std::move(_callback), once, priority);
         }
 
         void RemoveListener(ListenerId _id)
@@ -131,7 +115,7 @@ namespace Krampus
         //        _listener.callback(std::forward<Args>(_args)...);
         //        if (_listener.isOnce) _listener.isActive = false;
         //    }
-
+        //
         //    CleanupIfNeeded();
         //}
 
@@ -215,8 +199,8 @@ namespace Krampus
 
             callback = _callback;
         }
-        template<typename T>
-        void SetCallback(T* _instance, R(T::* _memberFunc)(Args&&...))
+        template<typename T, typename MemFn>
+        void SetCallback(T* _instance, MemFn _memFn)
         {
             if (!_instance)
             {
@@ -224,12 +208,12 @@ namespace Krampus
                 return;
             }
 
-            Callback _callback = [_instance, _memberFunc](Args&&... _args) -> R
+            Callback _callback = [_instance, _memFn](const Args&... args) -> R
                 {
-                    return (_instance->*_memberFunc)(std::forward<Args>(_args)...);
+                    return std::invoke(_memFn, _instance, args...);
                 };
 
-            return SetCallback(std::move(_callback));
+            SetCallback(std::move(_callback));
         }
 
         void RemoveCallback()
@@ -237,20 +221,20 @@ namespace Krampus
             callback = nullptr;
         }
 
-        R Broadcast(Args&&... _args)
+        R Broadcast(const Args&... _args)
         {
             if (!callback)
             {
                 LOG(VerbosityType::Error, "You broadcast a delegate who does not have a callback");
-                return;
+                return R();
             }
              
-            return callback(std::forward<Args>(_args)...);
+            return callback(_args...);
         }
 
-        void operator()(Args&&... _args)
+        R operator()(const Args&... _args)
         {
-            Broadcast(std::forward<Args>(_args)...);
+            return Broadcast(_args...);
         }
         void operator = (Callback&& _callback)
         {

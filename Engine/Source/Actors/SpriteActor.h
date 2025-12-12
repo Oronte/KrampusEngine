@@ -32,6 +32,9 @@ namespace Krampus
 		SpriteActor(Level* _level, const float& _radius, const std::string& _path = "Default",
 			const TextureExtensionType& _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(),
 			const size_t& _pointCount = 30);
+
+	public:
+		void Move(const IVector2& _position);
 	};
 
 
