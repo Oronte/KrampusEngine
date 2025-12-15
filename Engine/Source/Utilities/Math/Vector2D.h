@@ -9,7 +9,7 @@ namespace Krampus
     template<typename T>
     struct Vector2D : public IPrintable/*, public ISavable*/
     {
-        static_assert(std::is_arithmetic_v<T>, "Vector2<T> requires an arithmetic type T");
+        static_assert(std::is_arithmetic_v<T>, "Vector2D<T> requires an arithmetic type T");
 
         using CalcType = std::common_type_t<T, float>;
         using Math = Math<CalcType>;
@@ -44,6 +44,32 @@ namespace Krampus
             y = CAST(T, _vector.y);
         }
 
+        static INLINE constexpr Vector2D<T> Up() noexcept
+            requires std::is_signed_v<T>
+        { 
+            return Vector2D<T>(CAST(T, 0), CAST(T, -1));
+        };
+        static INLINE constexpr Vector2D<T> Down() noexcept
+        { 
+            return Vector2D<T>(CAST(T, 0), CAST(T, 1));
+        };
+        static INLINE constexpr Vector2D<T> Right() noexcept
+        { 
+            return Vector2D<T>(CAST(T, 1), CAST(T, 0));
+        };
+        static INLINE constexpr Vector2D<T> Left() noexcept
+            requires std::is_signed_v<T>
+        { 
+            return Vector2D<T>(CAST(T, -1), CAST(T, 0));
+        };
+        static INLINE constexpr Vector2D<T> Zero() noexcept
+        { 
+            return Vector2D<T>(CAST(T, 0), CAST(T, 0));
+        };
+        static INLINE constexpr Vector2D<T> One() noexcept
+        { 
+            return Vector2D<T>(CAST(T, 1), CAST(T, 1));
+        };
 
         INLINE NO_DISCARD CalcType LengthSquared() const noexcept 
         { 
@@ -413,6 +439,10 @@ namespace Krampus
     using DVector2 = Krampus::Vector2D<double>;
     using LVector2 = Krampus::Vector2D<long>;
     using SVector2 = Krampus::Vector2D<short>;
+
+    //Vector3D for sound TODO move somewhere else
+    using IVector3 = sf::Vector3<int>;
+    using FVector3 = sf::Vector3f;
 
 }
 

@@ -4,6 +4,7 @@
 #include "GameFramework/Level.h"
 #include "Managers/TimerManager.h"
 #include "Managers/LevelManager.h"
+#include "Managers/AudioManager.h"
 
 
 void TestFps(Krampus::Level* _level)
@@ -22,7 +23,7 @@ void StartGame()
 {
 	std::unique_ptr<Krampus::Level> _level = std::make_unique<Krampus::Level>("first level");
 	M_LEVEL.SetLevel(_level.get());
-	Krampus::Engine& _engine = Krampus::Engine::GetInstance();
+	Krampus::Engine& _engine = KRAMPUS;
 
 	//TestFps(_level.get());
 	
@@ -30,6 +31,16 @@ void StartGame()
 	_actor->transform.position += Krampus::FVector2(200.f, 540.f);
 	_actor->transform.rotation = Krampus::Angle(50.f, true);
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+
+	Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
+	_sound.SetVolume(50.f);
+	_sound.SetLoop(true);
+	_sound.SetPitch(1.5f);
+	_sound.Play();
+	Krampus::Sound _sound2 = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
+	_sound2.SetVolume(50.f);
+	_sound2.SetLoop(true);
+	_sound2.Play();
 
 	_engine.Start();
 }
@@ -58,14 +69,7 @@ int main(/*int argc, char** argv*/)
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	try
-	{
-		StartGame();
-	}
-	catch (const Krampus::Exception& _exception)
-	{
-		std::cerr << TXT_DARK_RED << _exception.What() << COLOR_RESET << std::endl;
-	}
+	StartGame();
 
 	return EXIT_SUCCESS;
 }
