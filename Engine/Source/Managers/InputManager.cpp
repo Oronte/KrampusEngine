@@ -103,14 +103,18 @@ void Krampus::InputManager::Update(const std::optional<sf::Event>& _event)
 
     if (const sf::Event::MouseWheelScrolled* _mouseWheelScrolled = _event->getIf<sf::Event::MouseWheelScrolled>())
         MouseWheelScroll(_mouseWheelScrolled->delta);
+}
 
+void Krampus::InputManager::UpdateSystemEvent(const std::optional<sf::Event>& _event)
+{
+    if (!_event.has_value()) return;
 
     if (_event->is<sf::Event::FocusGained>()) FocusGain.Broadcast();
     if (_event->is<sf::Event::FocusLost>()) FocusLost.Broadcast();
     if (_event->is<sf::Event::MouseEntered>()) MouseEntred.Broadcast();
     if (_event->is<sf::Event::MouseLeft>()) MouseLeft.Broadcast();
 
-    if (const sf::Event::Resized* _resized = _event->getIf<sf::Event::Resized>()) 
+    if (const sf::Event::Resized* _resized = _event->getIf<sf::Event::Resized>())
         WindowResize.Broadcast(_resized->size);
     if (_event->is<sf::Event::Closed>()) WindowClose.Broadcast();
 }

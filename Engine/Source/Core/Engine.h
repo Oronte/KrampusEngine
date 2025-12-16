@@ -24,7 +24,6 @@ namespace Krampus
 		void Stop();
 
 	private:
-		void UpdateEvent();
 		//void SaveWindowInfo();
 	};
 

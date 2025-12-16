@@ -86,8 +86,10 @@ void Engine::Update()
 	{
 		Mouse::GetInstance().Update();
 		_currentLevel->Update(M_TIMER.Update());
-		UpdateEvent();
+		const std::optional<sf::Event>& _event = MAIN_WINDOW.PollEvent();
+		M_INPUT.Update(_event);
 		M_COLLISION.Update();
+		M_INPUT.UpdateSystemEvent(_event);
 	}
 }
 
@@ -100,13 +102,11 @@ void Engine::Stop()
 }
 
 
-void Engine::UpdateEvent()
-{
-	const std::optional<sf::Event>& _event = MAIN_WINDOW.PollEvent();
-	M_INPUT.Update(_event);
-
-	//ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), _event.value());
-}
+//void Engine::UpdateEvent()
+//{
+//
+//	//ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), _event.value());
+//}
 
 //void Engine::SaveWindowInfo()
 //{

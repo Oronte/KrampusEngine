@@ -27,6 +27,11 @@ namespace Krampus
         using Iterator = typename std::vector<Listener>::iterator;
 
     public:
+        INLINE bool IsEmpty() const noexcept
+        {
+            return listeners.size() == 0;
+        }
+
         Event() = default;
 
         Event(const Event&) = delete;
@@ -79,7 +84,7 @@ namespace Krampus
         }
 
         template<typename T, typename MemFn>
-        ListenerId AddListener(const T* _instance, const MemFn& _memFn,
+        ListenerId AddListener(T* _instance, MemFn _memFn,
             const bool& once = false, const int& priority = 0)
         {
             if (!_instance)
@@ -219,7 +224,7 @@ namespace Krampus
             callback = _callback;
         }
         template<typename T, typename MemFn>
-        void SetCallback(const T* _instance, const MemFn& _memFn)
+        void SetCallback(T* _instance, MemFn _memFn)
         {
             if (!_instance)
             {

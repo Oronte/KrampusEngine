@@ -1,5 +1,7 @@
 #pragma once
-#include "SpriteComponent.h"
+#include "Utilities/Math/Vector2D.h"
+#include "Utilities/Math/Angle.h"
+#include "Component.h"
 
 namespace Krampus
 {
@@ -12,10 +14,10 @@ namespace Krampus
 		class CollisionComponent* collision;
 	};
 
+	class SpriteComponent;
+
 	class CollisionComponent : public Component
 	{
-		FVector2 halfSize;
-		ShapeType type;
 		SpriteComponent* sprite;
 
 	public:
@@ -28,7 +30,12 @@ namespace Krampus
 		void ComputeCollision(CollisionComponent* _other);
 
 	private:
+		//OBB
 		bool CircleToCircle(CollisionComponent* _other);
+		bool RectToRect(CollisionComponent* _other);
+
+		void GetAxes(const CollisionComponent* _component, FVector2 axes[2]);
+		float ProjectOBB(const CollisionComponent* _component, const FVector2& axis);
 	};
 
 }
