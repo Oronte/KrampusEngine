@@ -1,9 +1,8 @@
 #pragma once
 #include "GameFramework/Level.h"
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 
 #define ENGINE Krampus::Engine::GetInstance()
-#define KRAMPUS ENGINE
 
 namespace Krampus
 {

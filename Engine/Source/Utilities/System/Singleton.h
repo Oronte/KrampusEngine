@@ -8,6 +8,7 @@ namespace Krampus
 	class Singleton
 	{
 	public:
+		// Get/create the unique instance of Type
 		INLINE static Type& GetInstance()
 		{
 			static Type _instance;

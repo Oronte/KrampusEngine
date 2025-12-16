@@ -1,5 +1,5 @@
 #pragma once
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 #include "Graphics/Shapes/ShapeObject.h"
 
 #define M_TEXTURE Krampus::TextureManager::GetInstance()

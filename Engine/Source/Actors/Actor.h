@@ -54,6 +54,7 @@ namespace Krampus
 		}
 
 		virtual void SetActive(const bool& _status) override;
+
 		void Construct() override;
 		void Deconstruct() override;
 		void BeginPlay() override;

@@ -28,10 +28,17 @@ std::string Krampus::TimerManager::GetCurrentRealTime() const
 	return _date + " " + _time;
 }
 
-Timer* Krampus::TimerManager::CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning, const bool& _isLoop)
+Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _startRunning, const bool& _isLoop)
 {
     return allTimers.emplace_back(
         std::make_unique<Timer>(_callback, _duration, _startRunning, _isLoop)
+    ).get();
+}
+
+Timer* Krampus::TimerManager::CreateTimer(const float& _duration, const bool& _startRunning, const bool& _isLoop)
+{
+    return allTimers.emplace_back(
+        std::make_unique<Timer>(_duration, _startRunning, _isLoop)
     ).get();
 }
 

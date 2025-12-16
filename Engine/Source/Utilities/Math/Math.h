@@ -1,5 +1,5 @@
 #pragma once
-#include "Utilities/Exception.h"
+#include "Utilities/Debug/Exception.h"
 
 namespace Krampus
 {
@@ -22,27 +22,27 @@ namespace Krampus
 
         #pragma region Common Functions
 
-        static INLINE Real Sqrt(Real _x)
+        static INLINE Real Sqrt(const Real& _x)
         {
             if (_x < CAST(Real, 0))
                 THROW_EXCEPTION(std::format("Sqrt: negative input => _x = {} (must be >= 0)", _x));
             return CAST(Real, std::sqrt(_x));
         }
-        static INLINE Real InvSqrt(Real _x)
+        static INLINE Real InvSqrt(const Real& _x)
         {
             if (_x <= CAST(Real, 0))
                 THROW_EXCEPTION(std::format("InvSqrt: non-positive input => _x = {} (must be > 0)", _x));
             return CAST(Real, 1) / Sqrt(_x);
         }
-        static INLINE Real Pow(Real _base, int _exp) noexcept
+        static INLINE Real Pow(const Real& _base, const int& _exp) noexcept
         {
             return CAST(Real, std::pow(_base, _exp));
         }
-        static INLINE Real Exp(Real _x) noexcept
+        static INLINE Real Exp(const Real& _x) noexcept
         {
             return CAST(Real, std::exp(_x));
         }
-        static INLINE Real Log(Real _x)
+        static INLINE Real Log(const Real& _x)
         {
             if (_x <= CAST(Real, 0))
                 THROW_EXCEPTION(std::format("Log: non-positive input => _x = {} (must be > 0)", _x));
@@ -55,15 +55,15 @@ namespace Krampus
             return CAST(Real, std::log10(_x));
         }
 
-        static INLINE Real Sin(Real _x) noexcept
+        static INLINE Real Sin(const Real& _x) noexcept
         {
             return CAST(Real, std::sin(_x));
         }
-        static INLINE Real Cos(Real _x) noexcept
+        static INLINE Real Cos(const Real& _x) noexcept
         {
             return CAST(Real, std::cos(_x));
         }
-        static INLINE Real Tan(Real _x) noexcept
+        static INLINE Real Tan(const Real& _x) noexcept
         {
             return CAST(Real, std::tan(_x));
         }
@@ -221,12 +221,11 @@ namespace Krampus
 
         #pragma region Random
 
-        template <typename T>
-        static NO_DISCARD T GetRandomNumberInRange(const T& _min, const T& _max)
+        static NO_DISCARD Real RandomRange(const Real& _min, const Real& _max)
         {
             std::random_device _rSeed; // Get a random seed
             std::mt19937 _gen(_rSeed()); // Init generator with the seed
-            std::uniform_real_distribution<T> _distr(_min, _max); // Define limits
+            std::uniform_real_distribution<Real> _distr(_min, _max); // Define limits
 
             return _distr(_gen); // Generate number
         }
@@ -237,34 +236,34 @@ namespace Krampus
         #pragma region Easing curves
 
 
-        static NO_DISCARD INLINE Real Linear(Real _x) noexcept
+        static NO_DISCARD INLINE Real Linear(const Real& _x) noexcept
         {
             return _x;
         }
 
-        static NO_DISCARD INLINE Real EaseInSine(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInSine(const Real& _x) noexcept
         {
             return CAST(Real, 1.0) - Cos((_x * pi) / CAST(Real, 2.0));
         }
-        static NO_DISCARD INLINE Real EaseOutSine(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutSine(const Real& _x) noexcept
         {
             return Sin((_x * pi) / CAST(Real, 2.0));
         }
-        static NO_DISCARD INLINE Real EaseInOutSine(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutSine(const Real& _x) noexcept
         {
             return -CAST(Real, 0.5) * (Cos(pi * _x) - CAST(Real, 1.0));
         }
 
-        static NO_DISCARD INLINE Real EaseInQuad(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInQuad(const Real& _x) noexcept
         {
             return _x * _x;
         }
-        static NO_DISCARD INLINE Real EaseOutQuad(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutQuad(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return _one - (_one - _x) * (_one - _x);
         }
-        static NO_DISCARD INLINE Real EaseInOutQuad(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutQuad(const Real& _x) noexcept
         {
             constexpr Real _two = CAST(Real, 2.0);
             return (_x < CAST(Real, 0.5)) ?
@@ -272,16 +271,16 @@ namespace Krampus
                 CAST(Real, 1.0) - Pow(-_two * _x + _two, 2) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInCubic(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInCubic(const Real& _x) noexcept
         {
             return _x * _x * _x;
         }
-        static NO_DISCARD INLINE Real EaseOutCubic(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutCubic(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return _one - Pow(_one - _x, 3);
         }
-        static NO_DISCARD INLINE Real EaseInOutCubic(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutCubic(const Real& _x) noexcept
         {
             constexpr Real _two = CAST(Real, 2.0);
             return (_x < CAST(Real, 0.5)) ?
@@ -289,16 +288,16 @@ namespace Krampus
                 CAST(Real, 1.0) - Pow(-_two * _x + _two, 3) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInQuart(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInQuart(const Real& _x) noexcept
         {
             return _x * _x * _x * _x;
         }
-        static NO_DISCARD INLINE Real EaseOutQuart(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutQuart(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return _one - Pow(_one - _x, 4);
         }
-        static NO_DISCARD INLINE Real EaseInOutQuart(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutQuart(const Real& _x) noexcept
         {
             constexpr Real _two = CAST(Real, 2.0);
             return (_x < CAST(Real, 0.5)) ?
@@ -306,16 +305,16 @@ namespace Krampus
                 CAST(Real, 1.0) - Pow(-_two * _x + _two, 4) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInQuint(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInQuint(const Real& _x) noexcept
         {
             return _x * _x * _x * _x * _x;
         }
-        static NO_DISCARD INLINE Real EaseOutQuint(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutQuint(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return _one - Pow(_one - _x, 5);
         }
-        static NO_DISCARD INLINE Real EaseInOutQuint(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutQuint(const Real& _x) noexcept
         {
             constexpr Real _two = CAST(Real, 2.0);
             return (_x < CAST(Real, 0.5)) ?
@@ -323,18 +322,18 @@ namespace Krampus
                 CAST(Real, 1.0) - Pow(-_two * _x + _two, 5) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInExpo(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInExpo(const Real& _x) noexcept
         {
             constexpr Real _zero = CAST(Real, 0.0);
             constexpr Real _ten = CAST(Real, 10.0);
             return (_x == _zero) ? _zero : Pow(2.0, CAST(int, _ten * _x - _ten));
         }
-        static NO_DISCARD INLINE Real EaseOutExpo(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutExpo(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return (_x == _one) ? _one : _one - Pow(2.0, CAST(int, -CAST(Real, 10.0) * _x));
         }
-        static NO_DISCARD INLINE Real EaseInOutExpo(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutExpo(const Real& _x) noexcept
         {
             constexpr Real _zero = CAST(Real, 0.0);
             constexpr Real _one = CAST(Real, 1.0);
@@ -347,17 +346,17 @@ namespace Krampus
                 : (_two - Pow(2.0, CAST(int, -_two * _ten * _x + _ten))) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInCirc(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInCirc(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return _one - Sqrt(_one - _x * _x);
         }
-        static NO_DISCARD INLINE Real EaseOutCirc(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutCirc(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return Sqrt(_one - Pow(_x - _one, 2));
         }
-        static NO_DISCARD INLINE Real EaseInOutCirc(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutCirc(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             constexpr Real _two = CAST(Real, 2.0);
@@ -366,13 +365,13 @@ namespace Krampus
                 : (Sqrt(_one - Pow(-_two * _x + _two, 2)) + _one) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInBack(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInBack(const Real& _x) noexcept
         {
             constexpr Real _c1 = CAST(Real, 1.70158);
             constexpr Real _c3 = _c1 + CAST(Real, 1.0);
             return _c3 * _x * _x * _x - _c1 * _x * _x;
         }
-        static NO_DISCARD INLINE Real EaseOutBack(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutBack(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
 
@@ -380,7 +379,7 @@ namespace Krampus
             constexpr Real _c3 = _c1 + _one;
             return _one + _c3 * Pow(_x - _one, 3) + _c1 * Pow(_x - _one, 2);
         }
-        static NO_DISCARD INLINE Real EaseInOutBack(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutBack(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             constexpr Real _two = CAST(Real, 2.0);
@@ -393,7 +392,7 @@ namespace Krampus
                 : (Pow(_two * _x - _two, 2) * ((_c2 + _one) * (_two * _x - _two) + _c2) + _two) / _two;
         }
 
-        static NO_DISCARD INLINE Real EaseInElastic(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInElastic(const Real& _x) noexcept
         {
             constexpr Real _zero = CAST(Real, 0.0);
             constexpr Real _one = CAST(Real, 1.0);
@@ -404,7 +403,7 @@ namespace Krampus
             if (_x == _one)  return _one;
             return -Pow(CAST(Real, 2.0), CAST(int, _ten * _x - _ten)) * Sin((_x * _ten - CAST(Real, 10.75)) * _twoPiOverThree);
         }
-        static NO_DISCARD INLINE Real EaseOutElastic(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutElastic(const Real& _x) noexcept
         {
             constexpr Real _zero = CAST(Real, 0.0);
             constexpr Real _one = CAST(Real, 1.0);
@@ -415,7 +414,7 @@ namespace Krampus
             if (_x == _one)  return _one;
             return Pow(CAST(Real, 2.0), CAST(int, -_ten * _x)) * Sin((_x * _ten - CAST(Real, 0.75)) * _twoPiOverThree) + _one;
         }
-        static NO_DISCARD INLINE Real EaseInOutElastic(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutElastic(const Real& _x) noexcept
         {
             constexpr Real _zero = CAST(Real, 0.0);
             constexpr Real _one = CAST(Real, 1.0);
@@ -431,7 +430,7 @@ namespace Krampus
                 return (Pow(_two, CAST(int, -_two * _ten * _x + _ten)) * Sin((_two * _x - CAST(Real, 1.1125)) * _twoPiOver4_5)) / _two + _one;
         }
 
-        static NO_DISCARD INLINE Real EaseOutBounce(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseOutBounce(const Real& _x) noexcept
         {
             constexpr Real _n1 = CAST(Real, 7.5625);
             constexpr Real _d1 = CAST(Real, 2.75);
@@ -443,12 +442,12 @@ namespace Krampus
             else if (_x < CAST(Real, 2.5) / _d1) return _n1 * (_x - _twoPoint625 / _d1) * (_x - _twoPoint625 / _d1) + CAST(Real, 0.9375);
             else return _n1 * (_x - _twoPoint625 / _d1) * (_x - _twoPoint625 / _d1) + CAST(Real, 0.984375);
         }
-        static NO_DISCARD INLINE Real EaseInBounce(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInBounce(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             return _one - EaseOutBounce(_one - _x);
         }
-        static NO_DISCARD INLINE Real EaseInOutBounce(Real _x) noexcept
+        static NO_DISCARD INLINE Real EaseInOutBounce(const Real& _x) noexcept
         {
             constexpr Real _one = CAST(Real, 1.0);
             constexpr Real _two = CAST(Real, 2.0);

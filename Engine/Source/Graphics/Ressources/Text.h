@@ -1,6 +1,6 @@
 #pragma once
 #include "Font.h"
-#include "Utilities/Color.h"
+#include "Utilities/Debug/Color.h"
 #include "Utilities/Math/Transform.h"
 #include "Managers/FontManager.h"
 

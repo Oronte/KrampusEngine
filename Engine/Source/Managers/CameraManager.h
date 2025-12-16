@@ -33,7 +33,7 @@ namespace Krampus
 				LOG(VerbosityType::Error, "You try to remove to window an nullptr sprite");
 				return;
 			} // TODO fix
-			//drawer.erase(std::remove(drawer.begin(), drawer.end(), _sprite), drawer.end());
+			//drawer.erase(std::remove(drawer.begin(), drawer.end(), _drawable), drawer.end());
 		}
 
 		CameraManager() = default;

@@ -1,6 +1,6 @@
 #pragma once
 #include "Window.h"
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 
 #define MAIN_WINDOW Krampus::MainWindow::GetInstance()
 

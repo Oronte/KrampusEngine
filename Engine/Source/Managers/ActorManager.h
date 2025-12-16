@@ -7,7 +7,6 @@ namespace Krampus
 	class ActorManager
 	{
 		std::vector<std::unique_ptr<Actor>> actors;
-		//std::vector<Actor*> garbage; //TODO multithread
 
 	public:
 		INLINE const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept

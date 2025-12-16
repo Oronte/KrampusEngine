@@ -48,6 +48,7 @@ void Krampus::SpriteComponent::Draw(Window& _window)
 
 void Krampus::SpriteComponent::DrawDebug(Window& _window)
 {
+#ifdef DEBUG
 	if (!useDebug) return;
 
 	const FVector2& _position = owner->transform.position;
@@ -62,6 +63,7 @@ void Krampus::SpriteComponent::DrawDebug(Window& _window)
 		Debug::DrawDebugRect(_window, _position, shape->GetSizeData().size, owner->transform.rotation, Color::Green());
 		break;
 	};
+#endif
 }
 
 void Krampus::SpriteComponent::SetOriginAtMiddle()

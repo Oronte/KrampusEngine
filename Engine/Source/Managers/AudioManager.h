@@ -1,7 +1,7 @@
 #pragma once
-#include "Utilities/Singleton.h"
-#include "Sound.h"
-#include "Music.h"
+#include "Utilities/System/Singleton.h"
+#include "Audio/Sound.h"
+#include "Audio/Music.h"
 
 #define M_AUDIO Krampus::AudioManager::GetInstance()
 

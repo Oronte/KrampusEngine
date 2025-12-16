@@ -1,7 +1,7 @@
 #pragma once
 #include "Utilities/Macro.h"
 #include "Utilities/Math/Rectangle.h"
-#include "Utilities/Color.h"
+#include "Utilities/Debug/Color.h"
 
 namespace Krampus
 {

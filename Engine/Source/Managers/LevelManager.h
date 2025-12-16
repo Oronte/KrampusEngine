@@ -1,5 +1,5 @@
 #pragma once
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 #include "GameFramework/Level.h"
 
 #define M_LEVEL Krampus::LevelManager::GetInstance()

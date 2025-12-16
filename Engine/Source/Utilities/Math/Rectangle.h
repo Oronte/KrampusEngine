@@ -15,9 +15,17 @@ namespace Krampus
 		{
 			return Vector2D<T>(rect.position);
 		}
+		INLINE void SetPosition(const Vector2D<T>& _position) noexcept
+		{
+			rect.position = _position;
+		}
 		INLINE constexpr Vector2D<T> GetSize() const noexcept
 		{
 			return Vector2D<T>(rect.size);
+		}
+		INLINE void SetSize(const Vector2D<T>& _position) noexcept
+		{
+			rect.size = _position;
 		}
 		INLINE constexpr Vector2D<T> GetCenter() const
 		{

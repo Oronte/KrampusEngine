@@ -1,6 +1,6 @@
 #pragma once
 #include "Image.h"
-#include "Utilities/Logger.h"
+#include "Utilities/Debug/Logger.h"
 
 namespace Krampus
 {

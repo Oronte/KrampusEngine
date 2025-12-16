@@ -45,6 +45,7 @@ namespace Krampus
 			current->Stop();
 		}
 
+		// The owner require a SpriteComponent
 		AnimationComponent(Actor* _owner);
 
 		void AddAnimation(const std::string& _name, const AnimationData& _data);

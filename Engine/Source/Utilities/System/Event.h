@@ -1,5 +1,5 @@
 #pragma once
-#include "Logger.h"
+#include "Utilities/Debug/Logger.h"
 
 
 namespace Krampus
@@ -9,7 +9,7 @@ namespace Krampus
     class Event
     {
         using Callback = std::function<void(Args...)>;
-        using ListenerId = unsigned long long;
+        using ListenerId = unsigned int;
 
         struct Listener
         {
@@ -23,15 +23,37 @@ namespace Krampus
         std::vector<Listener> listeners;
         ListenerId nextId = 1;
         bool needsCleanup = false;
-
+        
         using Iterator = typename std::vector<Listener>::iterator;
 
     public:
         Event() = default;
-        ~Event() = default;
 
         Event(const Event&) = delete;
         Event& operator=(const Event&) = delete;
+
+        ListenerId AddListener(const Callback& _callback, const bool& _once = false, const int& _priority = 0)
+        {
+            if (!_callback)
+            {
+                LOG(VerbosityType::Error, "There is no callback for the event");
+                return 0;
+            }
+
+            ListenerId _id = nextId++;
+            Listener _listener;
+            _listener.id = _id;
+            _listener.callback = _callback;
+            _listener.isOnce = _once;
+            _listener.priority = _priority;
+
+            Iterator _iterator = std::upper_bound(
+                listeners.begin(), listeners.end(), _listener,
+                [](const Listener& _a, const Listener& _b) { return _a.priority > _b.priority; });
+
+            listeners.insert(_iterator, std::move(_listener));
+            return _id;
+        }
 
         ListenerId AddListener(Callback&& _callback, const bool& _once = false, const int& _priority = 0)
         {
@@ -57,8 +79,8 @@ namespace Krampus
         }
 
         template<typename T, typename MemFn>
-        ListenerId AddListener(T* _instance, MemFn _memFn,
-            bool once = false, int priority = 0)
+        ListenerId AddListener(const T* _instance, const MemFn& _memFn,
+            const bool& once = false, const int& priority = 0)
         {
             if (!_instance)
             {
@@ -74,7 +96,7 @@ namespace Krampus
             return AddListener(std::move(_callback), once, priority);
         }
 
-        void RemoveListener(ListenerId _id)
+        void RemoveListener(const ListenerId& _id)
         {
             if (_id == 0)
             {
@@ -107,43 +129,40 @@ namespace Krampus
             return _count;
         }
 
-        //void Broadcast(Args&&... _args)
-        //{
-        //    for (Listener& _listener : listeners)
-        //    {
-        //        if (!_listener.isActive) continue;
-        //        _listener.callback(std::forward<Args>(_args)...);
-        //        if (_listener.isOnce) _listener.isActive = false;
-        //    }
-        //
-        //    CleanupIfNeeded();
-        //}
-
         void Broadcast(const Args&... _args)
         {
             for (Listener& _listener : listeners)
             {
                 if (!_listener.isActive) continue;
                 _listener.callback(_args...);
-                if (_listener.isOnce) _listener.isActive = false;
+                if (_listener.isOnce)
+                {
+                    _listener.isActive = false;
+                    needsCleanup = true;
+                }
             }
 
             CleanupIfNeeded();
         }
-
-        //void operator()(Args&&... _args)
-        //{
-        //    Broadcast(std::forward<Args>(_args)...);
-        //}
 
         void operator()(const Args&... _args)
         {
             Broadcast(_args...);
         }
 
+        void operator += (const Callback& _callback)
+        {
+            AddListener(_callback);
+        }
+
         void operator += (Callback&& _callback)
         {
             AddListener(_callback);
+        }
+
+        void operator -= (const ListenerId& _toRemove)
+        {
+            RemoveListener(_toRemove);
         }
 
     private:
@@ -152,7 +171,7 @@ namespace Krampus
             if (!needsCleanup) return;
 
             listeners.erase(std::remove_if(listeners.begin(), listeners.end(),
-                [](const Listener& l) { return !l.isActive; }), listeners.end());
+                [](const Listener& _listener) { return !_listener.isActive; }), listeners.end());
 
             needsCleanup = false;
         }
@@ -181,11 +200,11 @@ namespace Krampus
     
     template<typename Signature>
     class Delegate;
-
-    template<typename R, typename... Args>
-    class Delegate<R(Args...)>
+    
+    template<typename ReturnType, typename... Args>
+    class Delegate<ReturnType(Args...)>
     {
-        using Callback = std::function<R(Args...)>;
+        using Callback = std::function<ReturnType(Args...)>;
         Callback callback;
 
     public:
@@ -200,7 +219,7 @@ namespace Krampus
             callback = _callback;
         }
         template<typename T, typename MemFn>
-        void SetCallback(T* _instance, MemFn _memFn)
+        void SetCallback(const T* _instance, const MemFn& _memFn)
         {
             if (!_instance)
             {
@@ -208,7 +227,7 @@ namespace Krampus
                 return;
             }
 
-            Callback _callback = [_instance, _memFn](const Args&... args) -> R
+            Callback _callback = [_instance, _memFn](const Args&... args) -> ReturnType
                 {
                     return std::invoke(_memFn, _instance, args...);
                 };
@@ -221,24 +240,30 @@ namespace Krampus
             callback = nullptr;
         }
 
-        R Broadcast(const Args&... _args)
+        ReturnType Broadcast(const Args&... _args)
         {
             if (!callback)
             {
                 LOG(VerbosityType::Error, "You broadcast a delegate who does not have a callback");
-                return R();
+                return ReturnType();
             }
              
             return callback(_args...);
         }
 
-        R operator()(const Args&... _args)
+        ReturnType operator()(const Args&... _args)
         {
             return Broadcast(_args...);
         }
+
         void operator = (Callback&& _callback)
         {
             SetCallback(_callback);
+        }
+
+        void operator -- ()
+        {
+            RemoveCallback();
         }
     };
 

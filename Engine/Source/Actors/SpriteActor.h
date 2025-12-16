@@ -2,6 +2,7 @@
 #include "Actor.h"
 #include "Components/SpriteComponent.h"
 #include "Components/AnimationComponent.h"
+#include "Components/CollisionComponent.h"
 #include "Managers/TextureManager.h"
 
 namespace Krampus
@@ -11,6 +12,7 @@ namespace Krampus
 	{
 		SpriteComponent* sprite;
 		AnimationComponent* animation;
+		CollisionComponent* collision;
 
 	public:
 		INLINE SpriteComponent* GetSprite() const
@@ -29,7 +31,7 @@ namespace Krampus
 		SpriteActor(Level* _level, const FVector2& _size, const std::string& _path = "Default",
 			const TextureExtensionType& _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), 
 			const bool& _isRepeated = false);
-		SpriteActor(Level* _level, const float& _radius, const std::string& _path = "Default",
+		SpriteActor(Level* _level, bool _test, const float& _radius, const std::string& _path = "Default",
 			const TextureExtensionType& _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(),
 			const size_t& _pointCount = 30);
 	};

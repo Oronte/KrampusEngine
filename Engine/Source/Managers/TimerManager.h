@@ -1,5 +1,5 @@
 #pragma once
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 #include "Utilities/System/Timer.h"
 #include "Core/Engine.h"
 
@@ -76,7 +76,7 @@ namespace Krampus
 		
 
 	public:
-		TimerManager() {}
+		TimerManager() = default;
 		~TimerManager();
 
 
@@ -87,15 +87,8 @@ namespace Krampus
 	public:
 		std::string GetCurrentRealTime() const;
 
-		Timer* CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning = true,
-			const bool& _isLoop = false);
-		/// <summary>
-		/// Trigger every frame
-		/// </summary>
-		/// <param name="_callback"></param>
-		/// <param name="_startRunning"></param>
-		/// <param name="_isLoop"></param>
-		/// <returns></returns>
+		Timer* CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _startRunning = true, const bool& _isLoop = false);
+		Timer* CreateTimer(const float& _duration, const bool& _startRunning = true, const bool& _isLoop = false);
 
 		void Pause();
 		void Resume();

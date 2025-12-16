@@ -6,12 +6,13 @@
 //#include "ImGui/imgui.h"
 //#include "ImGui/imgui-SFML.h"
 #include "Graphics/Mouse.h"
+#include "Managers/CollisionManager.h"
 
 using namespace Krampus;
 
 // Memory leak detection
 #ifdef _MSC_VER
-#include <Windows.h>
+
 int __cdecl HookReport(int _reportType, char* _message, int* _returnValue)
 {
 	HANDLE _hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -86,6 +87,7 @@ void Engine::Update()
 		Mouse::GetInstance().Update();
 		_currentLevel->Update(M_TIMER.Update());
 		UpdateEvent();
+		M_COLLISION.Update();
 	}
 }
 

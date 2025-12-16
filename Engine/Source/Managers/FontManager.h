@@ -1,6 +1,6 @@
 #pragma once
 #include "Graphics/Ressources/Font.h"
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 
 #define M_FONT Krampus::FontManager::GetInstance()
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "Utilities/Math/Vector2D.h"
-#include "Utilities/Singleton.h"
+#include "Utilities/System/Singleton.h"
 
 namespace Krampus
 {

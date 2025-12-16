@@ -5,6 +5,7 @@
 #include "Managers/TimerManager.h"
 #include "Managers/LevelManager.h"
 #include "Managers/AudioManager.h"
+#include "Managers/InputManager.h"
 
 
 void TestFps(Krampus::Level* _level)
@@ -23,14 +24,16 @@ void StartGame()
 {
 	std::unique_ptr<Krampus::Level> _level = std::make_unique<Krampus::Level>("first level");
 	M_LEVEL.SetLevel(_level.get());
-	Krampus::Engine& _engine = KRAMPUS;
+	Krampus::Engine& _engine = ENGINE;
 
 	//TestFps(_level.get());
 	
-	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), true, /*Krampus::FVector2(125.f, 193.75f)*/ 200.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor->transform.position += Krampus::FVector2(200.f, 540.f);
 	_actor->transform.rotation = Krampus::Angle(50.f, true);
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+
+	Krampus::SpriteActor* _actor2 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, /*Krampus::FVector2(125.f, 193.75f)*/ 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 
 	Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
 	_sound.SetVolume(50.f);
@@ -65,7 +68,6 @@ int main(/*int argc, char** argv*/)
 #endif
 
 #ifdef RELEASE
-#include <Windows.h>
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {

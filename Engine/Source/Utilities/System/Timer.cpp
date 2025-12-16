@@ -2,18 +2,23 @@
 
 using namespace Krampus;
 
-Timer::Timer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning,
-	const bool& _isLoop)
+Krampus::Timer::Timer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning, const bool& _isLoop)
+{
+	callback.AddListener(_callback);
+	isRunning = _startRunning;
+	isLoop = _isLoop;
+	duration = _duration;
+}
+
+Timer::Timer(const float& _duration, const bool& _startRunning, const bool& _isLoop)
 {
 	isRunning = _startRunning;
 	isLoop = _isLoop;
 	duration = _duration;
-	callback = _callback;
 }
 
 void Timer::Start()
 {
-	onStart.Broadcast();
 	Reset();
 	Resume();
 }
@@ -26,7 +31,7 @@ void Timer::Update(const float& _deltaTime)
 
 	if (currentTime >= duration)
 	{
-		if (callback) callback();
+		callback.Broadcast();
 
 		isLoop ? Reset() : Stop();
 	}
@@ -34,26 +39,21 @@ void Timer::Update(const float& _deltaTime)
 
 void Timer::Stop()
 {
-	onStop.Broadcast();
-
 	Pause();
 	isToDelete = true;
 }
 
 void Timer::Resume()
 {
-	onResume.Broadcast();
 	isRunning = true;
 }
 
 void Timer::Reset()
 {
-	onReset.Broadcast();
 	currentTime = 0.0f;
 }
 
 void Timer::Pause()
 {
-	onPause.Broadcast();
 	isRunning = false;
 }
