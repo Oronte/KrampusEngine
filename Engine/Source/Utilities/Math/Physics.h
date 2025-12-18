@@ -10,6 +10,15 @@ namespace Krampus
 		float penetration = 0.f;
 		FVector2 contactPoint;
 		class CollisionComponent* collision;
+		bool hit = false;
+	};
+
+	struct RaycastHitInfo
+	{
+		FVector2 normal;
+		float distance = 0.f;
+		FVector2 point;
+		bool hit = false;
 	};
 
 	class Physics
@@ -26,6 +35,7 @@ namespace Krampus
 		static bool CircleToRect(const FVector2& _circlePos, const float& _radius,
 			const FRect& _rect, const Angle& _rectRot,
 			CollisionInfo& _circleInfo, CollisionInfo& _rectInfo);
+		static RaycastHitInfo Raycast(const FVector2& _rayOrigin, const FVector2& _rayDir, const FRect& _rect, const float _rectRot);
 
 	private:
 		static void GetAxes(const Angle& _rotation, FVector2 _axes[2]);
