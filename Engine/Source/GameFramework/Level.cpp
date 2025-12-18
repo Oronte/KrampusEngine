@@ -37,7 +37,7 @@ void Krampus::Level::Unload()
 void Level::Update(const float& _deltaTime)
 {
 	MAIN_WINDOW.Clear(backgroundColor);
+	actorManager.Update(_deltaTime);
 	cameraManager.Render(MAIN_WINDOW, false); // TODO SplitScreen
 	MAIN_WINDOW.Display();
-	actorManager.Update(_deltaTime);
 }

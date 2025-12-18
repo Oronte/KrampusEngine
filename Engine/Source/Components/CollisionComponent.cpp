@@ -24,118 +24,90 @@ void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)
 	if (_ownerType == ShapeType::Circle)
 	{
 		if (_otherType == ShapeType::Circle) CircleToCircle(_other);
-		else /*CircleToRect(this, _other)*/;
+		else CircleToRect(this, _other);
 	}
-	else if (_otherType == ShapeType::Rectangle) RectToRect(_other);
-	else /*CircleToRect(_other, this)*/;
+	else if (_otherType == ShapeType::Rectangle)
+	{
+		if (FMath::Abs(owner->transform.rotation) > 0.02f || FMath::Abs(_other->owner->transform.rotation) > 0.02f)
+			RectToRectOBB(_other);
+		else RectToRectAABB(_other);
+	}
+	else CircleToRect(_other, this);
 
 }
 
 bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
 {
-	const FVector2& _ownerPosition = owner->transform.position;
-	const FVector2& _otherPosition = _other->owner->transform.position;
+	CollisionInfo _hitInfo, _otherHitInfo;
 
-	const float& _ownerRadius = sprite->GetShapeObject()->GetSizeData().radius;
-	const float& _otherRadius = _other->sprite->GetShapeObject()->GetSizeData().radius;
+    const bool _collision = Physics::CircleToCircle(owner->transform.position, sprite->GetShapeObject()->GetSizeData().radius,
+        _other->owner->transform.position, _other->sprite->GetShapeObject()->GetSizeData().radius,
+        _hitInfo, _otherHitInfo);
 
-	const float& _distance = _ownerPosition.Distance(_otherPosition);
-	const float& _radiusSum = _ownerRadius + _otherRadius;
+    if (!_collision) return false;
 
-	if (_distance > _radiusSum) return false;
-
-	const FVector2& _normal = _distance == 0.0f ? FVector2() :
-		(_otherPosition - _ownerPosition) / -_distance;
-
-	CollisionInfo _hitInfo;
-
-	_hitInfo.normal = _normal;
-	_hitInfo.penetration = _radiusSum - _distance;
-	_hitInfo.contactPoint = _ownerPosition + _normal * (_ownerRadius - (_radiusSum - _distance) / 2.0f);
 	_hitInfo.collision = _other;
+    _otherHitInfo.collision = this;
 
 	onCollision.Broadcast(_hitInfo);
-	_other->onCollision.Broadcast(_hitInfo);
+	_other->onCollision.Broadcast(_otherHitInfo);
+
 	return true;
 }
 
-bool Krampus::CollisionComponent::RectToRect(CollisionComponent* _other)
+bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
 {
-    const FVector2& _ownerPosition = owner->transform.position;
-    const FVector2& _ownerHalfSize = sprite->GetShapeObject()->GetSizeData().size * 0.5f;
-    const Angle& _ownerRotation = owner->transform.rotation;
+    CollisionInfo _hitInfo, _otherHitInfo;
 
-    const FVector2& _otherPosition = _other->owner->transform.position;
-    const FVector2& _otherHalfSize = _other->sprite->GetShapeObject()->GetSizeData().size * 0.5f;
-    const Angle& _otherRotation = _other->owner->transform.rotation;
+    const bool _collision = Physics::RectToRectOBB(FRect(owner->transform.position, sprite->GetShapeObject()->GetSizeData().size), owner->transform.rotation,
+        FRect(_other->owner->transform.position, _other->sprite->GetShapeObject()->GetSizeData().size), _other->owner->transform.rotation,
+        _hitInfo, _otherHitInfo);
 
-    FVector2 axesA[2];
-    FVector2 axesB[2];
-    GetAxes(this, axesA);
-    GetAxes(_other, axesB);
+	if (!_collision) return false;
 
-    float minPenetration = FLT_MAX;
-    FVector2 bestAxis;
+    _hitInfo.collision = _other;
+	_otherHitInfo.collision = this;
 
-    FVector2 delta = _otherPosition - _ownerPosition;
-
-    auto TestAxis = [&](const FVector2& axis) -> bool
-        {
-            float dist = fabs(delta.Dot(axis));
-            float projA = ProjectOBB(this, axis);
-            float projB = ProjectOBB(_other, axis);
-
-            float overlap = projA + projB - dist;
-            if (overlap < 0.0f)
-                return false;
-
-            if (overlap < minPenetration)
-            {
-                minPenetration = overlap;
-                bestAxis = axis;
-            }
-            return true;
-        };
-
-    // Test des 4 axes
-    if (!TestAxis(axesA[0])) return false;
-    if (!TestAxis(axesA[1])) return false;
-    if (!TestAxis(axesB[0])) return false;
-    if (!TestAxis(axesB[1])) return false;
-
-    // Normal orientée correctement
-    if (delta.Dot(bestAxis) > 0.0f)
-        bestAxis *= -1;
-
-    CollisionInfo hitInfo;
-    hitInfo.normal = bestAxis;
-    hitInfo.penetration = minPenetration;
-    hitInfo.collision = _other;
-
-    // Contact point approximatif (suffisant pour un moteur 2D)
-    hitInfo.contactPoint = _ownerPosition + bestAxis * (_ownerHalfSize.x);
-
-    onCollision.Broadcast(hitInfo);
-    _other->onCollision.Broadcast(hitInfo);
+    onCollision.Broadcast(_hitInfo);
+    _other->onCollision.Broadcast(_otherHitInfo);
 
     return true;
 }
 
-void Krampus::CollisionComponent::GetAxes(const CollisionComponent* _component, FVector2 axes[2])
+bool Krampus::CollisionComponent::RectToRectAABB(CollisionComponent* _other)
 {
-	const float& _cos = FMath::Cos(_component->owner->transform.rotation);
-	const float& _sin = FMath::Sin(_component->owner->transform.rotation);
+	CollisionInfo _hitInfo, _otherHitInfo;
 
-	axes[0] = FVector2(_cos, _sin);
-	axes[1] = FVector2(-_sin, _cos);
+	const bool _collision = Physics::RectToRectAABB(FRect(owner->transform.position, sprite->GetShapeObject()->GetSizeData().size),
+		FRect(_other->owner->transform.position, _other->sprite->GetShapeObject()->GetSizeData().size),
+		_hitInfo, _otherHitInfo);
+
+	if (!_collision) return false;
+
+	_hitInfo.collision = _other;
+	_otherHitInfo.collision = this;
+
+	onCollision.Broadcast(_hitInfo);
+	_other->onCollision.Broadcast(_otherHitInfo);
+
+	return true;
 }
 
-float Krampus::CollisionComponent::ProjectOBB(const CollisionComponent* _component, const FVector2& axis)
+bool Krampus::CollisionComponent::CircleToRect(CollisionComponent* _circle, CollisionComponent* _rect)
 {
-	FVector2 axes[2];
-	GetAxes(_component, axes);
+	CollisionInfo _circleInfo, _rectInfo;
 
-    return
-        (_component->sprite->GetShapeObject()->GetSizeData().size / 2.0f).x * fabs(axis.Dot(axes[0])) +
-        (_component->sprite->GetShapeObject()->GetSizeData().size / 2.0f).y * fabs(axis.Dot(axes[1]));
+	const bool _collision = Physics::CircleToRect(_circle->owner->transform.position, _circle->sprite->GetShapeObject()->GetSizeData().radius,
+		FRect(_rect->owner->transform.position, _rect->sprite->GetShapeObject()->GetSizeData().size), _rect->owner->transform.rotation,
+		_circleInfo, _rectInfo);
+
+	if (!_collision) return false;
+
+	_circleInfo.collision = _rect;
+	_rectInfo.collision = _circle;
+
+	_circle->onCollision.Broadcast(_circleInfo);
+	_rect->onCollision.Broadcast(_rectInfo);
+
+	return true;
 }

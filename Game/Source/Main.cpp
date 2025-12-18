@@ -10,7 +10,7 @@
 
 void TestFps(Krampus::Level* _level)
 {
-	for (int i = 1; i < 200; i++)
+	for (int i = 1; i < 150; i++)
 	{
 		for (int j = 1; j < 100; j++)
 		{
@@ -28,14 +28,23 @@ void StartGame()
 
 	//TestFps(_level.get());
 	
-	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), true, Krampus::FVector2(125.f, 193.75f) /*200.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), true, Krampus::FVector2(125.f, 193.75f) /*150.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor->transform.position += Krampus::FVector2(1600.f, 540.f);
-	_actor->transform.rotation = Krampus::Angle(50.f, true);
+	_actor->transform.origin += Krampus::FVector2();
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 
-	Krampus::SpriteActor* _actor2 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, Krampus::FVector2(125.f, 193.75f) /*100.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor2 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor2->transform.position = Krampus::FVector2(200.f, 220.f);
 	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+
+	Krampus::SpriteActor* _actor3 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	_actor3->transform.position = Krampus::FVector2(200.f, 920.f);
+	_actor3->transform.rotation = Krampus::Angle(50.f, true);
+	_actor3->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+
+	Krampus::SpriteActor* _actor4 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	_actor4->transform.position = Krampus::FVector2(800.f, 720.f);
+	_actor4->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 
 	Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
 	_sound.SetVolume(50.f);

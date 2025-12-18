@@ -24,11 +24,8 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const FVector2& _si
 		M_INPUT.D.onPerform.AddListener(this, &SpriteActor::MoveRight);
 
 		collision->onCollision.AddListener([this](CollisionInfo _info) {
-			animation->StopAnimation();
-			LOG_MSG("Contact Point : " + _info.contactPoint.ToString());
-			LOG_MSG("Normal : " + _info.normal.ToString());
-			LOG_MSG("Penetration : " + std::to_string(_info.penetration));
 			transform.position += _info.normal * _info.penetration;
+			LOG_MSG("Collision");
 			});
 	}
 }
@@ -53,11 +50,8 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const float& _radiu
 		M_INPUT.D.onPerform.AddListener(this, &SpriteActor::MoveRight);
 
 		collision->onCollision.AddListener([this](CollisionInfo _info) {
-			animation->StopAnimation();
-			LOG_MSG("Contact Point : " + _info.contactPoint.ToString());
-			LOG_MSG("Normal : " + _info.normal.ToString());
-			LOG_MSG("Penetration : " + std::to_string(_info.penetration));
 			transform.position += _info.normal * _info.penetration;
+			LOG_MSG("Collision");
 			});
 	}
 }

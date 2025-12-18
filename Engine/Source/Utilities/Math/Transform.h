@@ -8,10 +8,10 @@ namespace Krampus
 	class Transform : public IPrintable
 	{
 	public:
+		FVector2 origin;
 		FVector2 position;
 		Angle rotation;
 		FVector2 scale;
-		FVector2 origin;
 
 		INLINE FVector2 Up() const
 		{

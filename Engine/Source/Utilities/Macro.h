@@ -61,6 +61,7 @@
 #define SLEEP_MILLISECOND(_time)		sf::sleep(sf::milliseconds(_time))
 #define SLEEP_MICROSECONDS(_time)		sf::sleep(sf::microseconds(_time))
 #define NO_DISCARD						[[nodiscard]]
+#define DEPRECATED						[[deprecated]]
 #define SAME_VALUE(_first, _second)		std::is_same_v<_first, _second>
 #define ENABLE_IF(_element)				std::enable_if_t<_element>
 #define IS_BASE_OF(_base, _type)		typename = std::enable_if_t<std::is_base_of_v<_base, _type>>

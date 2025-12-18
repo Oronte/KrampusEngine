@@ -1,18 +1,9 @@
 #pragma once
-#include "Utilities/Math/Vector2D.h"
-#include "Utilities/Math/Angle.h"
+#include "Utilities/Math/Physics.h"
 #include "Component.h"
 
 namespace Krampus
 {
-
-	struct CollisionInfo
-	{
-		FVector2 normal;
-		float penetration = 0.f;
-		FVector2 contactPoint;
-		class CollisionComponent* collision;
-	};
 
 	class SpriteComponent;
 
@@ -30,12 +21,10 @@ namespace Krampus
 		void ComputeCollision(CollisionComponent* _other);
 
 	private:
-		//OBB
 		bool CircleToCircle(CollisionComponent* _other);
-		bool RectToRect(CollisionComponent* _other);
-
-		void GetAxes(const CollisionComponent* _component, FVector2 axes[2]);
-		float ProjectOBB(const CollisionComponent* _component, const FVector2& axis);
+		bool RectToRectOBB(CollisionComponent* _other);
+		bool RectToRectAABB(CollisionComponent* _other);
+		bool CircleToRect(CollisionComponent* _circle, CollisionComponent* _rect);
 	};
 
 }
