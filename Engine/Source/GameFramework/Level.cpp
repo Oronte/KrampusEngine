@@ -1,6 +1,7 @@
 #include "Level.h"
 #include "Graphics/Window/MainWindow.h"
 #include "Managers/LevelManager.h"
+#include "Managers/CollisionManager.h"
 
 using namespace Krampus;
 
@@ -37,6 +38,7 @@ void Krampus::Level::Unload()
 void Level::Update(const float& _deltaTime)
 {
 	MAIN_WINDOW.Clear(backgroundColor);
+	M_COLLISION.Update(); 
 	actorManager.Update(_deltaTime);
 	cameraManager.Render(MAIN_WINDOW, false); // TODO SplitScreen
 	MAIN_WINDOW.Display();

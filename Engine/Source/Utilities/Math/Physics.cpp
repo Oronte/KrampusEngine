@@ -12,7 +12,7 @@ bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadi
 
 	_aInfo.normal = _normal;
 	_aInfo.penetration = _radiusSum - _distance;
-	_aInfo.contactPoint = _aPos + _normal * (_aRadius - _aInfo.penetration / 2.0f);
+	_aInfo.contactPoint = _bPos + _normal * (_bRadius - _bInfo.penetration / 2.0f);
 
 	_bInfo.normal = _aInfo.normal * -1.0f;
 	_bInfo.penetration = _aInfo.penetration;
@@ -66,13 +66,15 @@ bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
     if (_delta.Dot(_bestAxis) > 0.0f)
         _bestAxis *= -1;
 
-    _aInfo.normal = _bestAxis;
-    _aInfo.penetration = _minPenetration;
-    _aInfo.contactPoint = _aPos + _bestAxis * (_aSize.x * 0.5f);
+    const float _minOffset = 0.0001f; // TODO better solution
 
-    _bInfo.normal = _aInfo.normal * -1.0f;
+    _aInfo.normal = _bestAxis;
+    _aInfo.penetration = _minPenetration + _minOffset;
+    _aInfo.contactPoint = (_aPos + _bPos) * 0.5f - _bestAxis * _minPenetration; // TODO Contact Point not precise
+
+    _bInfo.normal = _bestAxis * -1.0f;
     _bInfo.penetration = _aInfo.penetration;
-    _bInfo.contactPoint = _bPos + _bestAxis * (_bSize.x * 0.5f);
+    _bInfo.contactPoint = _aInfo.contactPoint;
 
     return true;
 }
@@ -111,8 +113,7 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
 
     _aInfo.normal = _normal;
     _aInfo.penetration = FMath::MinVal(_sizeIntersection.x, _sizeIntersection.y);
-    _aInfo.contactPoint = _contactPoint;
-    // TODO contectPoint = _intersection.GetPosition();
+    _aInfo.contactPoint = _contactPoint; // TODO Contact Point not precise
 
     _aInfo.normal = _normal * -1;
     _aInfo.penetration = _aInfo.penetration;
@@ -123,56 +124,63 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
 
 bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _radius, const FRect& _rect, const Angle& _rectRot, CollisionInfo& _circleInfo, CollisionInfo& _rectInfo)
 {
-    const FVector2 _rectPos = _rect.GetPosition();
-    const FVector2 _localCircle = _circlePos - _rectPos;
+    const FVector2 _rectPosition = _rect.GetPosition();
+    const FVector2 _rectHalfSize = _rect.GetSize() * 0.5f;
 
-    const float _cosR = FMath::Cos(-_rectRot);
-    const float _sinR = FMath::Sin(-_rectRot);
+    FVector2 _localPosition = _circlePos - _rectPosition;
+    _localPosition = _localPosition.Rotated(-_rectRot);
 
-    const FVector2 _rotatedCircle = FVector2(_localCircle.x * _cosR - _localCircle.y * _sinR,
-        _localCircle.x * _sinR + _localCircle.y * _cosR);
-
-    const FVector2 _halfSize = _rect.GetSize() * 0.5f;
-    const FVector2 _closestPoint = FVector2(FMath::MaxVal(-_halfSize.x, FMath::MinVal(_rotatedCircle.x, _halfSize.x)),
-        FMath::MaxVal(-_halfSize.y, FMath::MinVal(_rotatedCircle.y, _halfSize.y)));
-
-    const FVector2 _delta = _rotatedCircle - _closestPoint;
-    const float _distanceSquared = _delta.x * _delta.x + _delta.y * _delta.y;
-
-
-    // HitInfos
-    const float _distance = FMath::Sqrt(_distanceSquared);
+    const FVector2 _closest = FVector2::Clamp(_localPosition, _rectHalfSize * -1.0f, _rectHalfSize);
+    const FVector2 _delta = _localPosition - _closest;
 
     FVector2 _normalLocal;
+    FVector2 _contactLocal;
     float _penetration;
 
-    if (_distance > 0.f)
+    // Outside
+    if (_delta.LengthSquared() > 0.f)
     {
-        _normalLocal = _delta / _distance;
-        _penetration = _radius - _distance;
+        const float _dist = _delta.Length();
+        if (_dist > _radius) return false;
+
+        _normalLocal = _delta / _dist; 
+        _penetration = _radius - _dist;
+        _contactLocal = _closest;
     }
+    // Inside
     else
     {
-        _normalLocal = FVector2(1.f, 0.f);
-        _penetration = _radius;
+        const float _deltaX = _rectHalfSize.x - FMath::Abs(_localPosition.x);
+        const float _deltaY = _rectHalfSize.y - FMath::Abs(_localPosition.y);
+
+        if (_deltaX < _deltaY)
+        {
+            _normalLocal = FVector2((_localPosition.x > 0.f) ? 1.f : -1.f, 0.f);
+            _penetration = _radius + _deltaX;
+            _contactLocal = FVector2(_rectHalfSize.x * _normalLocal.x, _localPosition.y);
+        }
+        else
+        {
+            _normalLocal = FVector2(0.f, (_localPosition.y > 0.f) ? 1.f : -1.f);
+            _penetration = _radius + _deltaY;
+            _contactLocal = FVector2(_localPosition.x, _rectHalfSize.y * _normalLocal.y);
+        }
     }
+    const float _minOffset = 0.0001f; // TODO better solution
+    _penetration += _minOffset;
 
-    const FVector2 _normalWorld = FVector2(_normalLocal.x * _cosR - _normalLocal.y * _sinR,
-        _normalLocal.x * _sinR + _normalLocal.y * _cosR);
+    const FVector2 normalWorld = _normalLocal.Rotated(_rectRot);
+    const FVector2 contactWorld = _contactLocal.Rotated(_rectRot) + _rectPosition;
 
-    const FVector2 _contactPointWorld = FVector2(_closestPoint.x * _cosR - _closestPoint.y * _sinR,
-        _closestPoint.x * _sinR + _closestPoint.y * _cosR) + _rectPos;
-
-    // TODO strange response
-    _circleInfo.normal = _normalWorld;
+    _circleInfo.normal = normalWorld;
     _circleInfo.penetration = _penetration;
-    _circleInfo.contactPoint = _contactPointWorld;
+    _circleInfo.contactPoint = contactWorld;
 
-    _rectInfo.normal = _normalWorld * -1.0f;
+    _rectInfo.normal = normalWorld * -1.0f;
     _rectInfo.penetration = _penetration;
-    _rectInfo.contactPoint = _contactPointWorld;
+    _rectInfo.contactPoint = contactWorld;
 
-    return _distanceSquared <= _radius * _radius;
+    return true;
 }
 
 void Krampus::Physics::GetAxes(const Angle& _rotation, FVector2 _axes[2])

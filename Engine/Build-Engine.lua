@@ -25,7 +25,6 @@ project "Engine"
 
     filter "system:windows"
         systemversion "latest"
-        links { "opengl32" }
 
     filter "configurations:Debug"
         defines { "DEBUG" }

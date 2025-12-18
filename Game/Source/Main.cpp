@@ -10,12 +10,13 @@
 
 void TestFps(Krampus::Level* _level)
 {
-	for (int i = 1; i < 150; i++)
+	for (int i = 1; i < 15; i++)
 	{
 		for (int j = 1; j < 100; j++)
 		{
 			Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level, false,Krampus::FVector2(21.6f, 38.4f)/*30.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 			_actor->transform.position = Krampus::FVector2(5.4f * (j - 1), 9.6f * (i - 1));
+			//_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 		}
 	}
 }
@@ -26,10 +27,11 @@ void StartGame()
 	M_LEVEL.SetLevel(_level.get());
 	Krampus::Engine& _engine = ENGINE;
 
-	//TestFps(_level.get());
+	TestFps(_level.get());
 	
 	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), true, Krampus::FVector2(125.f, 193.75f) /*150.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor->transform.position += Krampus::FVector2(1600.f, 540.f);
+	//_actor->transform.rotation = Krampus::Angle(-70.f, true);
 	_actor->transform.origin += Krampus::FVector2();
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 

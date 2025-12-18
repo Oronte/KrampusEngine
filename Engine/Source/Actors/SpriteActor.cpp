@@ -25,7 +25,7 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const FVector2& _si
 
 		collision->onCollision.AddListener([this](CollisionInfo _info) {
 			transform.position += _info.normal * _info.penetration;
-			LOG_MSG("Collision");
+			Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
 			});
 	}
 }
@@ -51,27 +51,27 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const float& _radiu
 
 		collision->onCollision.AddListener([this](CollisionInfo _info) {
 			transform.position += _info.normal * _info.penetration;
-			LOG_MSG("Collision");
+			Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
 			});
 	}
 }
 
 void Krampus::SpriteActor::MoveUp()
 {
-	transform.position += FVector2(0, -10);
+	transform.position += FVector2(0, -300) * M_TIMER.GetDeltaTime();
 }
 void Krampus::SpriteActor::MoveDown()
 {
-	transform.position += FVector2(0, 10);
+	transform.position += FVector2(0, 300) * M_TIMER.GetDeltaTime();
 
 }
 void Krampus::SpriteActor::MoveLeft()
 {
-	transform.position += FVector2(-10, 0);
+	transform.position += FVector2(-300, 0) * M_TIMER.GetDeltaTime();
 
 }
 void Krampus::SpriteActor::MoveRight()
 {
-	transform.position += FVector2(10, 0);
+	transform.position += FVector2(300, 0) * M_TIMER.GetDeltaTime();
 
 }

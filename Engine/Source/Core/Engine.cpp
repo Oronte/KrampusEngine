@@ -6,7 +6,6 @@
 //#include "ImGui/imgui.h"
 //#include "ImGui/imgui-SFML.h"
 #include "Graphics/Mouse.h"
-#include "Managers/CollisionManager.h"
 
 using namespace Krampus;
 
@@ -88,7 +87,6 @@ void Engine::Update()
 		_currentLevel->Update(M_TIMER.Update());
 		const std::optional<sf::Event>& _event = MAIN_WINDOW.PollEvent();
 		M_INPUT.Update(_event);
-		M_COLLISION.Update();
 		M_INPUT.UpdateSystemEvent(_event);
 	}
 }

@@ -88,6 +88,17 @@ namespace Krampus
             return Vector2D<CalcType>(CAST(CalcType, x) / _length, CAST(CalcType, y) / _length);
         }
 
+        INLINE NO_DISCARD void Clamp(const Vector2D& _min, const Vector2D& _max)
+        {
+            x = FMath::Clamp(x, _min.x, _max.x);
+            y = FMath::Clamp(y, _min.y, _max.y);
+        }
+
+        static INLINE NO_DISCARD Vector2D<CalcType> Clamp(const Vector2D& _vector, const Vector2D& _min, const Vector2D& _max)
+        {
+            return Vector2D<CalcType>(FMath::Clamp(_vector.x, _min.x, _max.x), FMath::Clamp(_vector.y, _min.y, _max.y));
+        }
+
         INLINE NO_DISCARD CalcType Dot(const Vector2D& _other) const noexcept
         {
             return CAST(CalcType, x) * CAST(CalcType, _other.x) + CAST(CalcType, y) * CAST(CalcType, _other.y);
