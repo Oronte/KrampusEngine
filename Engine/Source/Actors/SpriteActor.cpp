@@ -15,9 +15,13 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const FVector2& _si
 
 	collision = CreateComponent<CollisionComponent>();
 
+	
+
 	if (_test)
 	{
-		//M_INPUT.MouseMoved.AddListener([this](Krampus::FVector2 _pos) {transform.position = _pos; });
+		camera = CreateComponent<CameraComponent>();
+
+		M_INPUT.MouseMoved.AddListener([this](Krampus::FVector2 _pos) { transform.LookAt(_pos); });
 		M_INPUT.Z.onPerform.AddListener(this, &SpriteActor::MoveUp);
 		M_INPUT.S.onPerform.AddListener(this, &SpriteActor::MoveDown);
 		M_INPUT.Q.onPerform.AddListener(this, &SpriteActor::MoveLeft);

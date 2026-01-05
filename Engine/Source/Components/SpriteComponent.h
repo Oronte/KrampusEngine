@@ -26,9 +26,12 @@ namespace Krampus
 			const TextureExtensionType& _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const bool& _isRepeated = false);
 
 		virtual void Construct() override;
+	protected:
 		virtual void Deconstruct() override;
 		virtual void Tick(const float& _deltaTime) override;
+		virtual void BeginDestroy() override;
 
+	public:
 		virtual void Draw(Window& _window) override;
 		virtual void DrawDebug(Window& _window) override;
 		void SetOriginAtMiddle();

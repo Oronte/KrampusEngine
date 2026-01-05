@@ -7,9 +7,11 @@ namespace Krampus
 	class CameraComponent : public Component
 	{
 		std::unique_ptr<sf::View> view;
-		//bool attachedToOwner = true; // TODO Attach camera to owner
 
 	public:
+		bool attachedToOwner = true;
+
+
 		INLINE sf::View* GetView() const
 		{
 			return view.get();
@@ -55,6 +57,9 @@ namespace Krampus
 		CameraComponent(Actor* _owner, const FVector2& _center, const FVector2& _size);
 		CameraComponent(Actor* _owner, const FVector2& _size);
 		CameraComponent(Actor* _owner, const FRect& _rect);
+
+	private:
+		virtual void Tick(const float& _deltaTime) override;
 	};
 
 }

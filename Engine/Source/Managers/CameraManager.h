@@ -36,9 +36,18 @@ namespace Krampus
 			//drawer.erase(std::remove(drawer.begin(), drawer.end(), _drawable), drawer.end());
 		}
 
+		INLINE void RemoveDrawable(IDrawable* _toDelete)
+		{
+			std::erase_if(drawer[_toDelete->zOrder], [&](const IDrawable* _drawable)
+				{
+					return _drawable == _toDelete;
+				});
+		}
+
 		CameraManager() = default;
 
 	public:
+		void UpdateView();
 		void Render(Window& _window, const bool& splitScreen);
 	};
 

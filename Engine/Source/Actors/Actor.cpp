@@ -47,6 +47,21 @@ void Krampus::Actor::Tick(const float& _deltaTime)
 	{
 		_component->Tick(_deltaTime);
 	}
+
+	for (Actor* _actor : children)
+	{
+		_actor->transform.position += transform.position - oldTransform.position;
+
+		const Angle& _deltaRot = transform.rotation - oldTransform.rotation;
+
+		_actor->transform.position = 
+			_actor->transform.position.FVector2::RotateAround(transform.position, _deltaRot);
+		
+		_actor->transform.rotation += _deltaRot;
+		_actor->transform.scale += transform.scale - oldTransform.scale;
+	}
+
+	oldTransform = transform;
 }
 
 void Krampus::Actor::BeginDestroy()
@@ -60,5 +75,6 @@ void Krampus::Actor::BeginDestroy()
 
 void Krampus::Actor::Destroy()
 {
-	toDelete = true;
+	BeginDestroy();
+	level->GetActorManager().DeleteActor(this);
 }

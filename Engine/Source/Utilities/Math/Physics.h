@@ -13,6 +13,7 @@ namespace Krampus
 		bool hit = false;
 	};
 
+	// TODO raycast
 	struct RaycastHitInfo
 	{
 		FVector2 normal;
@@ -35,7 +36,9 @@ namespace Krampus
 		static bool CircleToRect(const FVector2& _circlePos, const float& _radius,
 			const FRect& _rect, const Angle& _rectRot,
 			CollisionInfo& _circleInfo, CollisionInfo& _rectInfo);
-		static RaycastHitInfo Raycast(const FVector2& _rayOrigin, const FVector2& _rayDir, const FRect& _rect, const float _rectRot);
+
+		static bool ContainsCircle(const FVector2& _point, const FVector2& _circlePos,
+			const float& _radius, CollisionInfo& _info);
 
 	private:
 		static void GetAxes(const Angle& _rotation, FVector2 _axes[2]);

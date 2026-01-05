@@ -27,7 +27,7 @@ void StartGame()
 	M_LEVEL.SetLevel(_level.get());
 	Krampus::Engine& _engine = ENGINE;
 
-	TestFps(_level.get());
+	//TestFps(_level.get());
 	
 	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), true, Krampus::FVector2(125.f, 193.75f) /*150.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor->transform.position += Krampus::FVector2(1600.f, 540.f);
@@ -57,6 +57,9 @@ void StartGame()
 	_sound2.SetVolume(50.f);
 	_sound2.SetLoop(true);
 	_sound2.Play();
+
+	Krampus::Timer* _timer = M_TIMER.CreateTimer(5.0f);
+	_timer->callback.AddListener([&]() {_actor2->Destroy(); _actor->AddChild(_actor4); });
 
 	_engine.Start();
 }

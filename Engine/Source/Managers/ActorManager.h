@@ -39,6 +39,14 @@ namespace Krampus
 			_rawActor->Construct();
 			return _rawActor;
 		}
+		
+		INLINE void DeleteActor(Actor* _toDelete)
+		{
+			std::erase_if(actors, [&](const std::unique_ptr<Actor>& _actor)
+				{
+					return _actor.get() == _toDelete;
+				});
+		}
 
 		ActorManager() = default;
 

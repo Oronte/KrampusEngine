@@ -115,12 +115,12 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
         _contactPoint = FVector2(_bPos.x, _aPos.y + _aHalfSize.y * _normal.y);
     }
 
-    _aInfo.normal = _normal;
+    _aInfo.normal = _normal * -1;
     _aInfo.penetration = FMath::MinVal(_sizeIntersection.x, _sizeIntersection.y);
     _aInfo.contactPoint = _contactPoint; // TODO Contact Point not precise
     _aInfo.hit = true;
 
-    _bInfo.normal = _normal * -1;
+    _bInfo.normal = _normal;
     _bInfo.penetration = _aInfo.penetration;
     _bInfo.contactPoint = _contactPoint;
     _bInfo.hit = true;
@@ -191,84 +191,21 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
     return true;
 }
 
-RaycastHitInfo Krampus::Physics::Raycast(const FVector2& _rayOrigin, const FVector2& _rayDir, const FRect& _rect, const float _rectRot)
+bool Krampus::Physics::ContainsCircle(const FVector2& _point, const FVector2& _circlePos, const float& _radius, CollisionInfo& _info)
 {
-    const FVector2 rayDir = _rayDir.Normalized();
+    const float _distance = _point.Distance(_circlePos);
 
-    FVector2 localOrigin = rayOrigin - rect.GetPosition();
-    float cosR = std::cos(-rectRot);
-    float sinR = std::sin(-rectRot);
+    if (_distance > _radius) return false;
 
-    FVector2 ro(
-        localOrigin.x * cosR - localOrigin.y * sinR,
-        localOrigin.x * sinR + localOrigin.y * cosR
-    );
+    const FVector2& _normal = _distance == 0.0f ? FVector2() :
+        (_circlePos - _point) / -_distance;
 
-    FVector2 rd(
-        rayDir.x * cosR - rayDir.y * sinR,
-        rayDir.x * sinR + rayDir.y * cosR
-    );
+    _info.normal = _normal;
+    _info.penetration = _radius - _distance;
+    _info.contactPoint = _point;
+    _info.hit = true;
 
-    FVector2 half = rect.GetSize() * 0.5f;
-
-    // --- Slab method (AABB) ---
-    float tMin = -FLT_MAX;
-    float tMax = FLT_MAX;
-
-    FVector2 normal;
-
-    for (int i = 0; i < 2; ++i)
-    {
-        float originComp = (i == 0) ? ro.x : ro.y;
-        float dirComp = (i == 0) ? rd.x : rd.y;
-        float min = (i == 0) ? -half.x : -half.y;
-        float max = (i == 0) ? half.x : half.y;
-
-        if (std::abs(dirComp) < 1e-6f)
-        {
-            // Rayon parallèle à cette face
-            if (originComp < min || originComp > max)
-                return {}; // Pas d'intersection
-        }
-        else
-        {
-            float t1 = (min - originComp) / dirComp;
-            float t2 = (max - originComp) / dirComp;
-
-            if (t1 > t2) std::swap(t1, t2);
-
-            if (t1 > tMin)
-            {
-                tMin = t1;
-                // normale correspondante
-                normal = (i == 0) ? FVector2((dirComp > 0) ? -1.f : 1.f, 0.f)
-                    : FVector2(0.f, (dirComp > 0) ? -1.f : 1.f);
-            }
-
-            tMax = std::min(tMax, t2);
-
-            if (tMin > tMax) return {}; // Pas d'intersection
-        }
-    }
-
-    if (tMin < 0.f) return {}; // L'intersection est derrière le rayon
-
-    // --- Calcul du point de contact en espace monde ---
-    FVector2 localHit = ro + rd * tMin;
-
-    FVector2 hitPoint(
-        localHit.x * cosR - localHit.y * sinR,
-        localHit.x * sinR + localHit.y * cosR
-    );
-    hitPoint += rect.GetPosition();
-
-    RaycastHit result;
-    result.hit = true;
-    result.point = hitPoint;
-    result.normal = Rotate(normal, rectRot); // normale en monde
-    result.distance = tMin;
-
-    return result;
+    return true;
 }
 
 void Krampus::Physics::GetAxes(const Angle& _rotation, FVector2 _axes[2])

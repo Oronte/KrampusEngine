@@ -38,6 +38,13 @@ void Krampus::SpriteComponent::Tick(const float& _deltaTime)
 	shape->GetShape()->SetTransform(owner->transform);
 }
 
+void Krampus::SpriteComponent::BeginDestroy()
+{
+	Component::BeginDestroy();
+
+	owner->GetLevel()->GetCameraManager().RemoveDrawable(this);
+}
+
 
 void Krampus::SpriteComponent::Draw(Window& _window)
 {

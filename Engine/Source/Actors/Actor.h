@@ -10,12 +10,13 @@ namespace Krampus
 
 	class Actor : public Core
 	{
-		bool toDelete = false;
+		std::vector<Actor*> children;
 
 	protected:
 		std::vector<std::unique_ptr<Component>> components;
 		Level* level;
 
+		Transform oldTransform;
 	public:
 		Transform transform;
 
@@ -29,9 +30,20 @@ namespace Krampus
 
 			return Cast<Type>(level);
 		}
-		INLINE bool IsToDelete() const noexcept
+
+		INLINE void AddChild(Actor* _actor)
 		{
-			return toDelete;
+			if (std::find(children.begin(), children.end(), _actor) == children.end())
+			{
+				children.push_back(_actor);
+			}
+		}
+		INLINE void RemoveChild(Actor* _toRemove)
+		{
+			std::erase_if(children, [&](Actor* _actor)
+				{
+					return _actor == _toRemove;
+				});
 		}
 
 		Actor(Level* _level);

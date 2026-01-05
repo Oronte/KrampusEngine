@@ -111,3 +111,10 @@ bool Krampus::CollisionComponent::CircleToRect(CollisionComponent* _circle, Coll
 
 	return true;
 }
+
+void Krampus::CollisionComponent::BeginDestroy()
+{
+	Component::BeginDestroy();
+
+	M_COLLISION.RemoveComponent(this);
+}

@@ -3,6 +3,7 @@
 #include "Components/SpriteComponent.h"
 #include "Components/AnimationComponent.h"
 #include "Components/CollisionComponent.h"
+#include "Components/CameraComponent.h"
 #include "Managers/TextureManager.h"
 
 namespace Krampus
@@ -13,6 +14,7 @@ namespace Krampus
 		SpriteComponent* sprite;
 		AnimationComponent* animation;
 		CollisionComponent* collision;
+		CameraComponent* camera;
 
 		Timer* timer;
 

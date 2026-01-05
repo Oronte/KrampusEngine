@@ -25,6 +25,8 @@ namespace Krampus
 		bool RectToRectOBB(CollisionComponent* _other);
 		bool RectToRectAABB(CollisionComponent* _other);
 		bool CircleToRect(CollisionComponent* _circle, CollisionComponent* _rect);
+
+		virtual void BeginDestroy() override;
 	};
 
 }

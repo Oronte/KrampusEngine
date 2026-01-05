@@ -25,6 +25,12 @@ Krampus::Transform::Transform(const FVector2& _origin, const FVector2& _position
 	scale = _scale;
 }
 
+void Krampus::Transform::LookAt(const FVector2& _target)
+{
+	const FVector2 _direction = _target - position;
+	rotation = Angle(_direction.AtanToRadian());
+}
+
 std::string Krampus::Transform::ToString() const
 {
 	return std::format("Position = {} | Rotation (degrees) = {} | Scale = {} | Origin = {}",

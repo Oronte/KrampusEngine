@@ -13,11 +13,11 @@ namespace Krampus
 		Angle rotation;
 		FVector2 scale;
 
-		INLINE FVector2 Up() const
+		INLINE FVector2 Forward() const
 		{
 			return FVector2::Up().Rotated(rotation.ToRadians());
 		}
-		INLINE FVector2 Down() const
+		INLINE FVector2 Back() const
 		{
 			return FVector2::Down().Rotated(rotation.ToRadians());
 		}
@@ -30,11 +30,14 @@ namespace Krampus
 			return FVector2::Left().Rotated(rotation.ToRadians());
 		}
 
+
 		Transform();
 		Transform(const FVector2& _position, const Angle& _rotation, const FVector2& _scale = FVector2(1.0f));
 		Transform(const FVector2& _origin, const FVector2& _position,
 			const Angle& _rotation, const FVector2& _scale = FVector2(1.0f));
 
+
+		void LookAt(const FVector2& _target);
 
 		virtual std::string ToString() const override;
 	};
