@@ -65,7 +65,6 @@ namespace Krampus
 			return _rawComponent;
 		}
 
-		virtual void SetActive(const bool& _status) override;
 
 		void Construct() override;
 		void Deconstruct() override;
@@ -74,6 +73,8 @@ namespace Krampus
 		void BeginDestroy() override;
 		
 	public:
+		virtual void SetActive(const bool& _status) override;
+
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
 		INLINE Type* GetComponent()
 		{

@@ -50,9 +50,9 @@
 	#define NOMINMAX
 	#include <windows.h>
 	#define new							new(_NORMAL_BLOCK, __FILE__, __LINE__)// Memory leaks
+	#define Super							__super
 #endif
 
-//#define Super							__super // IDEA Find alternative
 #define FILE_NAME						std::filesystem::path(__FILE__).filename().string()
 #define DEBUG_INFO						std::string("(File : " + FILE_NAME + " | Func : " + CAST(std::string, PATH) + " | Line : " + std::to_string(__LINE__) + ")")
 #define INLINE							inline
@@ -65,6 +65,7 @@
 #define SAME_VALUE(_first, _second)		std::is_same_v<_first, _second>
 #define ENABLE_IF(_element)				std::enable_if_t<_element>
 #define IS_BASE_OF(_base, _type)		typename = std::enable_if_t<std::is_base_of_v<_base, _type>>
+#define IS_NOT_BASE_OF(_base, _type)	typename = std::enable_if_t<!std::is_base_of_v<_base, _type>>
 #define TYPE(_type)						std::decay_t<decltype(_type)>
 #define TYPE_ID(_type)					typeid(_type)
 #define TYPE_NAME(_type)				CAST(std::string, TYPE_ID(_type).name())

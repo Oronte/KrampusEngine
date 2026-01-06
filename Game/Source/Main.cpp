@@ -6,6 +6,7 @@
 #include "Managers/LevelManager.h"
 #include "Managers/AudioManager.h"
 #include "Managers/InputManager.h"
+#include "UI/Button.h"
 
 
 void TestFps(Krampus::Level* _level)
@@ -34,10 +35,15 @@ void StartGame()
 	//_actor->transform.rotation = Krampus::Angle(-70.f, true);
 	_actor->transform.origin += Krampus::FVector2();
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+	_actor->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Player;
+	_actor->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Enemy;
 
 	Krampus::SpriteActor* _actor2 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor2->transform.position = Krampus::FVector2(200.f, 220.f);
 	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+	//_actor2->SetActive(false);
+	_actor2->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Enemy;
+	_actor2->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Player;
 
 	Krampus::SpriteActor* _actor3 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor3->transform.position = Krampus::FVector2(200.f, 920.f);
@@ -48,6 +54,12 @@ void StartGame()
 	_actor4->transform.position = Krampus::FVector2(800.f, 720.f);
 	_actor4->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 
+	Krampus::Button* _button = _level->GetHUD().CreateWidget<Krampus::Button>(_level.get(), Krampus::FVector2(200.0f, 300.0f), "KrampusEngineBanner");
+	_button->onHover.AddListener([]() {LOG_MSG("onHover"); });
+	_button->onUnhover.AddListener([]() {LOG_MSG("onUnhover"); });
+	_button->onPress.AddListener([]() {LOG_MSG("onPress"); });
+	_button->onRelease.AddListener([]() {LOG_MSG("onRelease"); });
+
 	Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
 	_sound.SetVolume(50.f);
 	_sound.SetLoop(true);
@@ -57,9 +69,6 @@ void StartGame()
 	_sound2.SetVolume(50.f);
 	_sound2.SetLoop(true);
 	_sound2.Play();
-
-	Krampus::Timer* _timer = M_TIMER.CreateTimer(5.0f);
-	_timer->callback.AddListener([&]() {_actor2->Destroy(); _actor->AddChild(_actor4); });
 
 	_engine.Start();
 }

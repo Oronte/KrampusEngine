@@ -78,3 +78,17 @@ void Krampus::SpriteComponent::SetOriginAtMiddle()
 	owner->transform.origin = shape->GetShape()->GetGeometricCenter();
 }
 
+void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)
+{
+	const uint8_t& _oldZOrder = GetZOrder();
+	IDrawable::SetZOrder(_zOrder);
+	owner->GetLevel()->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+}
+
+void Krampus::SpriteComponent::SetZOrder(const ZOrder& _zOrder)
+{
+	const uint8_t& _oldZOrder = GetZOrder();
+	IDrawable::SetZOrder(_zOrder);
+	owner->GetLevel()->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+}
+

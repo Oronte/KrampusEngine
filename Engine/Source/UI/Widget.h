@@ -1,12 +1,18 @@
 #pragma once
-#include "Core/Core.h"
+#include "Actors/Actor.h"
+#include "Utilities/Math/Transform.h"
 
 namespace Krampus
 {
 
-	class Widget : public Core
-	{
+	class Level;
 
+	class Widget : public Actor
+	{
+	protected:
+		Widget(Level* _level);
+
+		friend class HUD;
 	};
 
 }

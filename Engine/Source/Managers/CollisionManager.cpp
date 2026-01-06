@@ -11,11 +11,12 @@ void Krampus::CollisionManager::Update()
 	for (int _index = 0; _index < _collisionCount; _index++)
 	{
 		CollisionComponent* _currentComponent = collisions[_index];
-		if (_currentComponent->onCollision.IsEmpty()) continue;
+		if (!_currentComponent->IsActive()) continue;
 		for (int _i = 0; _i < _collisionCount; _i++)
 		{
-			if (_index == _i) continue;
-			_currentComponent->ComputeCollision(collisions[_i]);
+			CollisionComponent* _otherComponent = collisions[_i];
+			if (_index == _i || !_otherComponent->IsActive()) continue;
+			_currentComponent->ComputeCollision(_otherComponent);
 		}
 	}
 }

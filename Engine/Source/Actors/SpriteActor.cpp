@@ -3,11 +3,13 @@
 
 #include"Managers/InputManager.h"
 #include"Managers/TimerManager.h"
+#include "Graphics/Mouse.h"
 
 Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
 	: Actor(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(_size, _path, _textureType, _rect, _isRepeated);
+	sprite->SetZOrder(ZOrder::Actors);
 	animation = CreateComponent<AnimationComponent>();
 	animation->AddAnimation("Idle", AnimationData(6, 0.5f, SpriteData(IVector2(0, 0), IVector2(500, 775)), true, true, ReadDirection::RD_ROW));
 	animation->SetCurrentAnimation("Idle");
@@ -15,29 +17,29 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const FVector2& _si
 
 	collision = CreateComponent<CollisionComponent>();
 
-	
 
 	if (_test)
 	{
 		camera = CreateComponent<CameraComponent>();
-
-		M_INPUT.MouseMoved.AddListener([this](Krampus::FVector2 _pos) { transform.LookAt(_pos); });
+		//M_INPUT.MouseMoved.AddListener([this](Krampus::FVector2 _pos) { transform.LookAt(_pos); LOG_MSG(_pos); });
 		M_INPUT.Z.onPerform.AddListener(this, &SpriteActor::MoveUp);
 		M_INPUT.S.onPerform.AddListener(this, &SpriteActor::MoveDown);
 		M_INPUT.Q.onPerform.AddListener(this, &SpriteActor::MoveLeft);
 		M_INPUT.D.onPerform.AddListener(this, &SpriteActor::MoveRight);
+	}
+
 
 		collision->onCollision.AddListener([this](CollisionInfo _info) {
 			transform.position += _info.normal * _info.penetration;
 			Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
 			});
-	}
 }
 
 Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
 	: Actor(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(_radius, _path, _textureType, _rect, _pointCount);
+	sprite->SetZOrder(ZOrder::Actors);
 	animation = CreateComponent<AnimationComponent>();
 	animation->AddAnimation("Idle", AnimationData(6, 0.5f, SpriteData(IVector2(0, 0), IVector2(500, 775)), true, true, ReadDirection::RD_ROW));
 	animation->SetCurrentAnimation("Idle");
@@ -52,12 +54,12 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const float& _radiu
 		M_INPUT.S.onPerform.AddListener(this, &SpriteActor::MoveDown);
 		M_INPUT.Q.onPerform.AddListener(this, &SpriteActor::MoveLeft);
 		M_INPUT.D.onPerform.AddListener(this, &SpriteActor::MoveRight);
-
+	}
 		collision->onCollision.AddListener([this](CollisionInfo _info) {
 			transform.position += _info.normal * _info.penetration;
 			Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
 			});
-	}
+
 }
 
 void Krampus::SpriteActor::MoveUp()

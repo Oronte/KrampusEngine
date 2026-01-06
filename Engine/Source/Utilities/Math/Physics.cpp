@@ -191,7 +191,7 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
     return true;
 }
 
-bool Krampus::Physics::ContainsCircle(const FVector2& _point, const FVector2& _circlePos, const float& _radius, CollisionInfo& _info)
+bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circlePos, const float& _radius, CollisionInfo& _info)
 {
     const float _distance = _point.Distance(_circlePos);
 
@@ -202,6 +202,104 @@ bool Krampus::Physics::ContainsCircle(const FVector2& _point, const FVector2& _c
 
     _info.normal = _normal;
     _info.penetration = _radius - _distance;
+    _info.contactPoint = _point;
+    _info.hit = true;
+
+    return true;
+}
+
+bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, CollisionInfo& _info)
+{
+    const FVector2 _halfSize = _size * 0.5f;
+
+    const float _minX = _pos.x - _halfSize.x;
+    const float _maxX = _pos.x + _halfSize.x;
+    const float _minY = _pos.y - _halfSize.y;
+    const float _maxY = _pos.y + _halfSize.y;
+
+    if (_point.x < _minX || _point.x > _maxX ||
+        _point.y < _minY || _point.y > _maxY)
+        return false;
+
+    const float _left = _point.x - _minX;
+    const float _right = _maxX - _point.x;
+    const float _top = _point.y - _minY;
+    const float _bottom = _maxY - _point.y;
+
+    float _penetration = _left;
+    FVector2 _normal(-1.f, 0.f);
+
+    if (_right < _penetration)
+    {
+        _penetration = _right;
+        _normal = FVector2(1.f, 0.f);
+    }
+    if (_top < _penetration)
+    {
+        _penetration = _top;
+        _normal = FVector2(0.f, -1.f);
+    }
+    if (_bottom < _penetration)
+    {
+        _penetration = _bottom;
+        _normal = FVector2(0.f, 1.f);
+    }
+
+    _info.normal = _normal;
+    _info.penetration = _penetration;
+    _info.contactPoint = _point;
+    _info.hit = true;
+
+    return true;
+}
+
+bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, const Angle& _rot, CollisionInfo& _info)
+{
+    const FVector2 _halfSize = _size * 0.5f;
+
+    const float _cosA = FMath::Cos(_rot);
+    const float _sinA = FMath::Sin(_rot);
+
+    FVector2 _local;
+    FVector2 _delta = _point - _pos;
+
+    _local.x = _delta.x * _cosA + _delta.y * _sinA;
+    _local.y = -_delta.x * _sinA + _delta.y * _cosA;
+
+    if (_local.x < -_halfSize.x || _local.x > _halfSize.x ||
+        _local.y < -_halfSize.y || _local.y > _halfSize.y)
+        return false;
+
+    const float _left = _local.x + _halfSize.x;
+    const float _right = _halfSize.x - _local.x;
+    const float _top = _local.y + _halfSize.y;
+    const float _bottom = _halfSize.y - _local.y;
+
+    float _penetration = _left;
+    FVector2 _localNormal(-1.f, 0.f);
+
+    if (_right < _penetration)
+    {
+        _penetration = _right;
+        _localNormal = FVector2(1.f, 0.f);
+    }
+    if (_top < _penetration)
+    {
+        _penetration = _top;
+        _localNormal = FVector2(0.f, -1.f);
+    }
+    if (_bottom < _penetration)
+    {
+        _penetration = _bottom;
+        _localNormal = FVector2(0.f, 1.f);
+    }
+
+    FVector2 _worldNormal;
+    _worldNormal.x = _localNormal.x * _cosA - _localNormal.y * _sinA;
+    _worldNormal.y = _localNormal.x * _sinA + _localNormal.y * _cosA;
+
+    _info.normal = _worldNormal;
+    _info.penetration = _penetration;
     _info.contactPoint = _point;
     _info.hit = true;
 

@@ -63,6 +63,10 @@ namespace Krampus
 		{
 			window.requestFocus();
 		}
+		virtual INLINE sf::View GetView() const
+		{
+			return window.getView();
+		}
 		virtual void SetView(const CameraComponent* _camera);
 
 		Window() = default;

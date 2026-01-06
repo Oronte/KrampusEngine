@@ -37,8 +37,12 @@ namespace Krampus
 			const FRect& _rect, const Angle& _rectRot,
 			CollisionInfo& _circleInfo, CollisionInfo& _rectInfo);
 
-		static bool ContainsCircle(const FVector2& _point, const FVector2& _circlePos,
+		static bool Contains(const FVector2& _point, const FVector2& _circlePos,
 			const float& _radius, CollisionInfo& _info);
+		static bool Contains(const FVector2& _point, const FVector2& _pos,
+			const FVector2& _size, CollisionInfo& _info);
+		static bool Contains(const FVector2& _point, const FVector2& _pos,
+			const FVector2& _size, const Angle& _rot, CollisionInfo& _info);
 
 	private:
 		static void GetAxes(const Angle& _rotation, FVector2 _axes[2]);

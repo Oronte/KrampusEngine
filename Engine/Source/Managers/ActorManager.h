@@ -1,5 +1,6 @@
 #pragma once
 #include "Actors/Actor.h"
+#include "UI/Widget.h"
 
 namespace Krampus
 {
@@ -13,7 +14,7 @@ namespace Krampus
 		{
 			return actors;
 		}
-		template <typename Type, IS_BASE_OF(Actor, Type)>
+		template <typename Type, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
 		INLINE std::vector<Type*> GetAllActorOfClass()
 		{
 			std::vector<Type*> _finalVector;
@@ -26,11 +27,7 @@ namespace Krampus
 
 			return _finalVector;
 		}
-		//INLINE void RemoveActor(Actor* _actor)
-		//{
-		//	actors.erase(std::remove(actors.begin(), actors.end(), _actor), actors.end());
-		//}
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
 		INLINE Type* CreateActor(Args&&... _args)
 		{
 			std::unique_ptr<Type> _actor = std::make_unique<Type>(std::forward<Args>(_args)...);

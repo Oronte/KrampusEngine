@@ -25,6 +25,7 @@ void Level::Load()
 	isLoaded = true;
 
 	actorManager.BeginPlay();
+	hud.BeginPlay();
 }
 
 void Krampus::Level::Unload()
@@ -33,6 +34,7 @@ void Krampus::Level::Unload()
 	isLoaded = false;
 	MAIN_WINDOW.Clear(backgroundColor);
 	actorManager.BeginDestroy();
+	hud.BeginDestroy();
 }
 
 void Level::Update(const float& _deltaTime)
@@ -40,6 +42,7 @@ void Level::Update(const float& _deltaTime)
 	MAIN_WINDOW.Clear(backgroundColor);
 	M_COLLISION.Update(); 
 	actorManager.Update(_deltaTime);
+	hud.Update(_deltaTime);
 	cameraManager.Render(MAIN_WINDOW, false); // TODO SplitScreen
 	MAIN_WINDOW.Display();
 }

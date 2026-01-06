@@ -3,9 +3,12 @@
 #include "Managers/CollisionManager.h"
 #include "SpriteComponent.h"
 
-Krampus::CollisionComponent::CollisionComponent(Actor* _owner)
+Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionChannel& _channel, const CollisionChannel& _mask)
 	: Component(_owner)
 {
+	channel = _channel;
+	mask = _mask;
+
 	sprite = owner->GetComponent<SpriteComponent>();
 	if (!sprite)
 	{
@@ -18,6 +21,8 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner)
 
 void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)
 {
+	if (!CanCollide(_other)) return;
+
 	const ShapeType& _ownerType = sprite->GetShapeObject()->GetShapeType();
 	const ShapeType& _otherType = _other->sprite->GetShapeObject()->GetShapeType();
 
@@ -34,6 +39,12 @@ void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)
 	}
 	else CircleToRect(_other, this);
 
+}
+
+bool Krampus::CollisionComponent::CanCollide(const CollisionComponent* _other) const
+{
+	return CAST(uint32_t, mask & _other->channel) != 0 &&
+		CAST(uint32_t, _other->mask & channel) != 0;
 }
 
 bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
@@ -57,7 +68,7 @@ bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
 
 bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
 {
-    CollisionInfo _hitInfo, _otherHitInfo;
+	CollisionInfo _hitInfo, _otherHitInfo;
 
     const bool _collision = Physics::RectToRectOBB(FRect(owner->transform.position, sprite->GetShapeObject()->GetSizeData().size), owner->transform.rotation,
         FRect(_other->owner->transform.position, _other->sprite->GetShapeObject()->GetSizeData().size), _other->owner->transform.rotation,
@@ -68,8 +79,8 @@ bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
     _hitInfo.collision = _other;
 	_otherHitInfo.collision = this;
 
-    onCollision.Broadcast(_hitInfo);
-    _other->onCollision.Broadcast(_otherHitInfo);
+	onCollision.Broadcast(_hitInfo);
+	_other->onCollision.Broadcast(_otherHitInfo);
 
     return true;
 }

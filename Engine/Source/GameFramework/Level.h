@@ -2,6 +2,7 @@
 #include "Graphics/Window/Window.h"
 #include "Managers/ActorManager.h"
 #include "Managers/CameraManager.h"
+#include "Managers/HUD.h"
 
 namespace Krampus
 {
@@ -9,9 +10,9 @@ namespace Krampus
 	class Level
 	{
 		std::string name = "Level";
-		//Window window;
 		CameraManager cameraManager;
 		ActorManager actorManager;
+		HUD hud;
 		Color backgroundColor = Color::Black();
 		bool isLoaded = false;
 
@@ -33,6 +34,10 @@ namespace Krampus
 		INLINE ActorManager& GetActorManager()
 		{
 			return actorManager;
+		}
+		INLINE HUD& GetHUD()
+		{
+			return hud;
 		}
 
 	protected:
