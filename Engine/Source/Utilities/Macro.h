@@ -50,7 +50,7 @@
 	#define NOMINMAX
 	#include <windows.h>
 	#define new							new(_NORMAL_BLOCK, __FILE__, __LINE__)// Memory leaks
-	#define Super							__super
+	#define Super						__super
 #endif
 
 #define FILE_NAME						std::filesystem::path(__FILE__).filename().string()

@@ -3,8 +3,6 @@
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
 #include "Graphics/Window/MainWindow.h"
-//#include "ImGui/imgui.h"
-//#include "ImGui/imgui-SFML.h"
 #include "Graphics/Mouse.h"
 
 using namespace Krampus;
@@ -34,46 +32,21 @@ void InitConfig()
 Engine::Engine()
 {
 	MAIN_WINDOW.Create("EngineSFML", UVector2(1920, 1080));
-	//std::ifstream _ifs(windowSaveDir + windowSaveFileName);
-	//if (!_ifs) MAIN_WINDOW.Create("EngineSFML", UVector2(1920, 1080));
-	//else
-	//{
-	//	std::stringstream _buffer;
-	//	_buffer << _ifs.rdbuf();
-	//	std::string _jsonStr = _buffer.str();
-
-	//	rapidjson::Document _document;
-	//	_document.Parse(_jsonStr.c_str());
-
-	//	UVector2 _windowSize;
-	//	_windowSize.FromJson(_document["Size"]);
-	//	UVector2 _windowPos;
-	//	_windowPos.FromJson(_document["Pos"]);
-
-	//	MAIN_WINDOW.Create("EngineSFML", _windowSize);
-	//	MAIN_WINDOW.SetPosition(_windowPos);
-	//}
-
 }
 
 void Engine::Start()
 {
-	//ImGui::CreateContext();
 	onEngineStart.Broadcast();
 
 #ifdef _MSC_VER
 	InitConfig();
 #endif
 
-
 	M_INPUT.WindowClose.AddListener([this](){
-		//SaveWindowInfo();
 		MAIN_WINDOW.Close();
 		M_LEVEL.SetLevel(nullptr);
 		});
 
-	//if (!ImGui::SFML::Init(MAIN_WINDOW.GetRenderWindow())) LOG_ERROR("ImGui has not being correctly initialize");
-	//ImGui::GetIO().IniFilename = nullptr; // Suppr imgui.ini file
 	Logger::Init();
 	Update();
 	Stop();
@@ -96,33 +69,4 @@ void Engine::Stop()
 	onEngineStop.Broadcast();
 	M_LEVEL.Destroy();
 	Logger::Shutdown();
-	//ImGui::SFML::Shutdown();
 }
-
-
-//void Engine::UpdateEvent()
-//{
-//
-//	//ImGui::SFML::ProcessEvent(MAIN_WINDOW.GetRenderWindow(), _event.value());
-//}
-
-//void Engine::SaveWindowInfo()
-//{
-//	rapidjson::Document _doc;
-//	_doc.SetObject();
-//
-//	rapidjson::Document::AllocatorType& _allocator = _doc.GetAllocator();
-//
-//	_doc.AddMember("Size", MAIN_WINDOW.GetSize().ToJson(_allocator), _allocator);
-//	_doc.AddMember("Pos", MAIN_WINDOW.GetPosition().ToJson(_allocator), _allocator);
-//
-//	rapidjson::StringBuffer _buffer;
-//	rapidjson::Writer<rapidjson::StringBuffer> _writer(_buffer);
-//	_doc.Accept(_writer);
-//
-//	std::filesystem::create_directories(windowSaveDir);
-//	std::ofstream _ofs(windowSaveDir + windowSaveFileName);
-//
-//	_ofs << _buffer.GetString();
-//	_ofs.close();
-//}

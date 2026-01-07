@@ -17,7 +17,6 @@ project "Game"
         RootDir .. "/ThirdParty/SFML-3.0.0/lib"
     }
 
-    links { "Engine" }
 
     targetdir (RootDir .. "/Bin/" .. OutputDir .. "/%{prj.name}")
     objdir    (RootDir .. "/Bin/Intermediates/" .. OutputDir .. "/%{prj.name}")
@@ -33,6 +32,12 @@ project "Game"
     filter "configurations:Debug"
         kind "ConsoleApp"
         defines { "DEBUG" }
+        links { 
+            "Engine", 
+            "sfml-graphics-d", "sfml-window-d",
+            "sfml-system-d", "sfml-audio-d",
+            "sfml-network-d"
+        }
         runtime "Debug"
         symbols "On"
         postbuildcommands {
@@ -46,6 +51,12 @@ project "Game"
     filter "configurations:Release"
         kind "WindowedApp"
         defines { "RELEASE" }
+        links {
+            "Engine",
+            "sfml-graphics", "sfml-window",
+            "sfml-system", "sfml-audio",
+            "sfml-network"
+        }
         runtime "Release"
         optimize "On"
         symbols "On"
@@ -55,6 +66,6 @@ project "Game"
             'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-network-3.dll" "%{cfg.targetdir}"',
             'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-system-3.dll" "%{cfg.targetdir}"',
             'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-window-3.dll" "%{cfg.targetdir}"'
-    }
+        }
 
     filter {}

@@ -11,8 +11,6 @@ namespace Krampus
 	{
 	public:
 		MainWindow() = default;
-
-		void RenderGui();
 	};
 
 }

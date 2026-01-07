@@ -8,6 +8,7 @@
 #include "Managers/InputManager.h"
 #include "UI/Button.h"
 
+// TODO quand tu t'abonne a un event tu dois te desabonner sinon crash. donc faire un event manager std::unordered_map<Core*, std::pair<Event&, ListenerID>>
 
 void TestFps(Krampus::Level* _level)
 {
@@ -58,7 +59,11 @@ void StartGame()
 	_button->onHover.AddListener([]() {LOG_MSG("onHover"); });
 	_button->onUnhover.AddListener([]() {LOG_MSG("onUnhover"); });
 	_button->onPress.AddListener([]() {LOG_MSG("onPress"); });
+	_button->onPerform.AddListener([]() {LOG_MSG("onPerform"); });
 	_button->onRelease.AddListener([]() {LOG_MSG("onRelease"); });
+
+	//_button->Destroy();
+	//_actor3->Destroy();
 
 	Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
 	_sound.SetVolume(50.f);

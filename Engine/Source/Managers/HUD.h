@@ -36,12 +36,14 @@ namespace Krampus
 			return _rawWidget;
 		}
 
-		INLINE void DeleteActor(Widget* _toDelete)
+		INLINE void DeleteWidget(Widget* _toDelete)
 		{
+			std::cout << std::to_string(widgets.size()) << std::endl;
 			std::erase_if(widgets, [&](const std::unique_ptr<Widget>& _widget)
 				{
 					return _widget.get() == _toDelete;
 				});
+			std::cout << std::to_string(widgets.size()) << std::endl;
 		}
 
 		HUD() = default;

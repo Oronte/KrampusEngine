@@ -9,9 +9,6 @@ namespace Krampus
 
 	class Engine : public Singleton<Engine>
 	{
-		//std::string windowSaveDir = "Content/Saves/";
-		//std::string windowSaveFileName = "Window.json";
-
 	public:
 		Event<> onEngineStart;
 		Event<> onEngineStop;
@@ -22,9 +19,6 @@ namespace Krampus
 		void Start();
 		void Update();
 		void Stop();
-
-	private:
-		//void SaveWindowInfo();
 	};
 
 }

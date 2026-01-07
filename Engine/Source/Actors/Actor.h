@@ -83,7 +83,7 @@ namespace Krampus
 
 			return nullptr;
 		}
-		void Destroy();
+		virtual void Destroy();
 
 		friend class ActorManager;
 	};

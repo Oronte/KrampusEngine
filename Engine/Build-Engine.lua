@@ -28,31 +28,13 @@ project "Engine"
 
     filter "configurations:Debug"
         defines { "DEBUG" }
-        links {
-            "sfml-graphics-d", "sfml-window-d",
-            "sfml-system-d", "sfml-audio-d",
-            "sfml-network-d",
-            "ImGuiD"
-        }
         runtime "Debug"
         symbols "On"
-        postbuildcommands {
-            'copy /Y "%{RootDir}\\ThirdParty\\imgui\\ImGui\\binaries\\ImGuiD.lib" "%{cfg.targetdir}"'
-        }
 
     filter "configurations:Release"
         defines { "RELEASE" }
-        links {
-            "sfml-graphics", "sfml-window",
-            "sfml-system", "sfml-audio",
-            "sfml-network",
-            "ImGuiR"
-        }
         runtime "Release"
         optimize "On"
         symbols "On"
-        postbuildcommands {
-            'copy /Y "%{RootDir}\\ThirdParty\\imgui\\ImGui\\binaries\\ImGuiR.lib" "%{cfg.targetdir}"'
-        }
 
     filter {}

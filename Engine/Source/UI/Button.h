@@ -18,6 +18,7 @@ namespace Krampus
 		Event<> onHover;
 		Event<> onUnhover;
 		Event<> onPress;
+		Event<> onPerform;
 		Event<> onRelease;
 
 		Button(Level* _level, const float& _radius, const std::string& _path = "Default",
@@ -26,6 +27,9 @@ namespace Krampus
 			const TextureExtensionType& _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const bool& _isRepeated = false);
 	
 	protected:
+		virtual void Tick(const float& _deltaTime) override;
+
+	private:
 		void OnMouseMoved(const IVector2& _mousePos);
 		void OnClick();
 		void OnRelease();

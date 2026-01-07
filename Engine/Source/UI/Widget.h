@@ -12,6 +12,9 @@ namespace Krampus
 	protected:
 		Widget(Level* _level);
 
+	public:
+		virtual void Destroy() override final;
+
 		friend class HUD;
 	};
 

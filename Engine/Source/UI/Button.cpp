@@ -26,6 +26,13 @@ Krampus::Button::Button(Level* _level, const FVector2& _size, const std::string&
 	M_INPUT.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
 }
 
+void Krampus::Button::Tick(const float& _deltaTime)
+{
+	Widget::Tick(_deltaTime);
+
+	if (isPressed) onPerform.Broadcast();
+}
+
 void Krampus::Button::OnMouseMoved(const IVector2& _mousePos)
 {
 	CollisionInfo _info;
