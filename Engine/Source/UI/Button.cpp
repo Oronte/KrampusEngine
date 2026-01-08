@@ -6,24 +6,14 @@ Krampus::Button::Button(Level* _level, const float& _radius, const std::string& 
 	: Widget(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(_radius, _path, _textureType, _rect, _pointCount);
-	sprite->SetZOrder(ZOrder::Widgets);
-	collision = CreateComponent<CollisionComponent>();
-
-	M_INPUT.MouseMoved.AddListener(this, &Krampus::Button::OnMouseMoved);
-	M_INPUT.MouseLeftClick.onPress.AddListener(this, &Krampus::Button::OnClick);
-	M_INPUT.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
+	Init();
 }
 
 Krampus::Button::Button(Level* _level, const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
 	: Widget(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(_size, _path, _textureType, _rect, _isRepeated);
-	sprite->SetZOrder(ZOrder::Widgets);
-	collision = CreateComponent<CollisionComponent>();
-
-	M_INPUT.MouseMoved.AddListener(this, &Krampus::Button::OnMouseMoved);
-	M_INPUT.MouseLeftClick.onPress.AddListener(this, &Krampus::Button::OnClick);
-	M_INPUT.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
+	Init();
 }
 
 void Krampus::Button::Tick(const float& _deltaTime)
@@ -31,6 +21,18 @@ void Krampus::Button::Tick(const float& _deltaTime)
 	Widget::Tick(_deltaTime);
 
 	if (isPressed) onPerform.Broadcast();
+}
+
+void Krampus::Button::Init()
+{
+	sprite->SetZOrder(ZOrder::Widgets);
+	collision = CreateComponent<CollisionComponent>();
+
+	InputManager& _inputManager = M_INPUT;
+
+	MouseMovedEventId = _inputManager.MouseMoved.AddListener(this, &Krampus::Button::OnMouseMoved);
+	MouseLeftClickPressedEventId = _inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::Button::OnClick);
+	MouseMovedReleasedEventId = _inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
 }
 
 void Krampus::Button::OnMouseMoved(const IVector2& _mousePos)
@@ -59,4 +61,15 @@ void Krampus::Button::OnRelease()
 {
 	if (isPressed) onRelease.Broadcast();
 	isPressed = false;
+}
+
+void Krampus::Button::BeginDestroy()
+{
+	Widget::BeginDestroy();
+
+	InputManager& _inputManager = M_INPUT;
+
+	_inputManager.MouseMoved.RemoveListener(MouseMovedEventId);
+	_inputManager.MouseLeftClick.onPress.RemoveListener(MouseLeftClickPressedEventId);
+	_inputManager.MouseLeftClick.onRelease.RemoveListener(MouseMovedReleasedEventId);
 }

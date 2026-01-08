@@ -44,6 +44,16 @@ namespace Krampus
 		virtual void InitLevel();
 
 	public:
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+		INLINE Type* SpawnActor(Args&&... _args)
+		{
+			return actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
+		}
+		template <typename Type, typename ...Args, IS_BASE_OF(Widget, Type)>
+		INLINE Type* SpawnWidget(Args&&... _args)
+		{
+			return hud.CreateWidget<Type>(this, std::forward<Args>(_args)...);
+		}
 		virtual void Load();
 		virtual void Unload();
 		void Update(const float& _deltaTime);

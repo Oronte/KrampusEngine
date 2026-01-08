@@ -5,11 +5,12 @@
 namespace Krampus
 {
 
+    using ListenerId = unsigned int;
+
     template<typename... Args>
     class Event
     {
         using Callback = std::function<void(Args...)>;
-        using ListenerId = unsigned int;
 
         struct Listener
         {
@@ -33,11 +34,15 @@ namespace Krampus
         }
 
         Event() = default;
+        ~Event()
+        {
+            Clear();
+        }
 
         Event(const Event&) = delete;
         Event& operator=(const Event&) = delete;
 
-        ListenerId AddListener(const Callback& _callback, const bool& _once = false, const int& _priority = 0)
+        INLINE ListenerId AddListener(Callback _callback, const bool& _once = false, const int& _priority = 0)
         {
             if (!_callback)
             {
@@ -48,7 +53,7 @@ namespace Krampus
             ListenerId _id = nextId++;
             Listener _listener;
             _listener.id = _id;
-            _listener.callback = _callback;
+            _listener.callback = std::move(_callback);
             _listener.isOnce = _once;
             _listener.priority = _priority;
 
@@ -60,31 +65,8 @@ namespace Krampus
             return _id;
         }
 
-        ListenerId AddListener(Callback&& _callback, const bool& _once = false, const int& _priority = 0)
-        {
-            if (!_callback)
-            {
-                LOG(VerbosityType::Error, "There is no callback for the event");
-                return 0;
-            }
-
-            ListenerId _id = nextId++;
-            Listener _listener;
-            _listener.id = _id;
-            _listener.callback = _callback;
-            _listener.isOnce = _once;
-            _listener.priority = _priority;
-
-            Iterator _iterator = std::upper_bound(
-                listeners.begin(), listeners.end(), _listener,
-                [](const Listener& a, const Listener& b) { return a.priority > b.priority; });
-
-            listeners.insert(_iterator, std::move(_listener));
-            return _id;
-        }
-
         template<typename T, typename MemFn>
-        ListenerId AddListener(T* _instance, MemFn _memFn,
+        INLINE ListenerId AddListener(T* _instance, MemFn _memFn,
             const bool& once = false, const int& priority = 0)
         {
             if (!_instance)
@@ -101,13 +83,9 @@ namespace Krampus
             return AddListener(std::move(_callback), once, priority);
         }
 
-        void RemoveListener(const ListenerId& _id)
+        INLINE void RemoveListener(const ListenerId& _id)
         {
-            if (_id == 0)
-            {
-                LOG(VerbosityType::Error, "Incorrect id, cant be 0");
-                return;
-            }
+            if (_id == 0) return;
 
             Iterator _iterator = std::find_if(listeners.begin(), listeners.end(),
                 [_id](const Listener& _listener) { return _listener.id == _id; });
@@ -121,20 +99,20 @@ namespace Krampus
                 LOG(VerbosityType::Error, "Incorrect id, cant remove listener");
         }
 
-        void Clear()
+        INLINE void Clear()
         {
             listeners.clear();
             needsCleanup = false;
         }
 
-        size_t Count() const
+        INLINE size_t Count() const
         {
             size_t _count = 0;
             for (const Listener& _listener : listeners) if (_listener.isActive) ++_count;
             return _count;
         }
 
-        void Broadcast(const Args&... _args)
+        INLINE void Broadcast(const Args&... _args)
         {
             for (Listener& _listener : listeners)
             {
@@ -150,28 +128,23 @@ namespace Krampus
             CleanupIfNeeded();
         }
 
-        void operator()(const Args&... _args)
+        INLINE void operator()(const Args&... _args)
         {
             Broadcast(_args...);
         }
 
-        void operator += (const Callback& _callback)
+        INLINE void operator += (Callback _callback)
         {
-            AddListener(_callback);
+            AddListener(std::move(_callback));
         }
 
-        void operator += (Callback&& _callback)
-        {
-            AddListener(_callback);
-        }
-
-        void operator -= (const ListenerId& _toRemove)
+        INLINE void operator -= (const ListenerId& _toRemove)
         {
             RemoveListener(_toRemove);
         }
 
     private:
-        void CleanupIfNeeded()
+        INLINE void CleanupIfNeeded()
         {
             if (!needsCleanup) return;
 

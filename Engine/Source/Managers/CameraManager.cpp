@@ -10,7 +10,6 @@ void Krampus::CameraManager::UpdateView()
 
 void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)
 {
-	UpdateView();
 
 	for (std::pair<int, std::vector<IDrawable*>> _pair : drawer)
 	{

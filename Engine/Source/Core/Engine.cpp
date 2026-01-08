@@ -48,6 +48,7 @@ void Engine::Start()
 		});
 
 	Logger::Init();
+
 	Update();
 	Stop();
 }
@@ -67,6 +68,5 @@ void Engine::Update()
 void Engine::Stop()
 {
 	onEngineStop.Broadcast();
-	M_LEVEL.Destroy();
 	Logger::Shutdown();
 }

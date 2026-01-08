@@ -9,7 +9,7 @@ Krampus::Actor::Actor(Level* _level)
 
 void Krampus::Actor::SetActive(const bool& _status)
 {
-	Core::SetActive(_status);
+	KObject::SetActive(_status);
 
 	for (const std::unique_ptr<Component>& _component : components)
 	{

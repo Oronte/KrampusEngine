@@ -15,6 +15,9 @@ namespace Krampus
 		sf::RenderWindow window;
 
 	public:
+		Event<sf::View> onViewChange;
+
+	public:
 		virtual INLINE sf::RenderWindow& GetRenderWindow() noexcept
 		{
 			return window;

@@ -42,6 +42,7 @@ void Level::Update(const float& _deltaTime)
 	MAIN_WINDOW.Clear(backgroundColor);
 	M_COLLISION.Update(); 
 	actorManager.Update(_deltaTime);
+	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
 	cameraManager.Render(MAIN_WINDOW, false); // TODO SplitScreen
 	MAIN_WINDOW.Display();

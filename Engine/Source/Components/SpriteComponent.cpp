@@ -21,28 +21,28 @@ void Krampus::SpriteComponent::Construct()
 	Component::Construct();
 
 	SetOriginAtMiddle();
-	owner->GetLevel()->GetCameraManager().AddToWindow(this); // TODO zOrder
+	level->GetCameraManager().AddToWindow(this); // TODO zOrder
 }
 
 void Krampus::SpriteComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	owner->GetLevel()->GetCameraManager().RemoveToWindow(this);
+	level->GetCameraManager().RemoveToWindow(this);
 }
 
 void Krampus::SpriteComponent::Tick(const float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
-	shape->GetShape()->SetTransform(owner->transform);
+	shape->GetShape()->SetTransform(transform);
 }
 
 void Krampus::SpriteComponent::BeginDestroy()
 {
 	Component::BeginDestroy();
 
-	owner->GetLevel()->GetCameraManager().RemoveDrawable(this);
+	level->GetCameraManager().RemoveDrawable(this);
 }
 
 
@@ -58,7 +58,7 @@ void Krampus::SpriteComponent::DrawDebug(Window& _window)
 #ifdef DEBUG
 	if (!useDebug) return;
 
-	const FVector2& _position = owner->transform.position;
+	const FVector2& _position = transform.position;
 
 	switch (shape->GetShapeType())
 	{
@@ -67,7 +67,7 @@ void Krampus::SpriteComponent::DrawDebug(Window& _window)
 		break;
 
 	case ShapeType::Rectangle:
-		Debug::DrawDebugRect(_window, _position, shape->GetSizeData().size, owner->transform.rotation, Color::Green());
+		Debug::DrawDebugRect(_window, _position, shape->GetSizeData().size, transform.rotation, Color::Green());
 		break;
 	};
 #endif
@@ -75,20 +75,20 @@ void Krampus::SpriteComponent::DrawDebug(Window& _window)
 
 void Krampus::SpriteComponent::SetOriginAtMiddle()
 {
-	owner->transform.origin = shape->GetShape()->GetGeometricCenter();
+	transform.origin = shape->GetShape()->GetGeometricCenter();
 }
 
 void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	owner->GetLevel()->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+	level->GetCameraManager().ChangeZOrder(this, _oldZOrder);
 }
 
 void Krampus::SpriteComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	owner->GetLevel()->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+	level->GetCameraManager().ChangeZOrder(this, _oldZOrder);
 }
 

@@ -5,7 +5,9 @@
 
 void Krampus::Window::SetView(const CameraComponent* _camera)
 {
-	window.setView(*_camera->GetView());
+	const sf::View _view = *_camera->GetView();
+	window.setView(_view);
+	onViewChange.Broadcast(_view);
 }
 
 void Krampus::Window::Create(const std::string& _name, const UVector2& _windowSize)
@@ -41,5 +43,5 @@ void Krampus::Window::Draw(const sf::Drawable& _drawable)
 
 void Krampus::Window::Draw(const ShapeObject& _drawable)
 {
-	window.draw(*(_drawable.GetShape()->Get()));
+	Draw(*(_drawable.GetShape()->Get()));
 }

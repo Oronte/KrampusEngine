@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Core.h"
+#include "Core/Object.h"
 #include "components/Component.h"
 #include "Utilities/Math/Transform.h"
 
@@ -8,7 +8,7 @@ namespace Krampus
 
 	class Level;
 
-	class Actor : public Core
+	class Actor : public KObject
 	{
 		std::vector<Actor*> children;
 

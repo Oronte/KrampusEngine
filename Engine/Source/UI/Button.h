@@ -14,6 +14,10 @@ namespace Krampus
 		bool isPressed = false;
 		bool isHovered = false;
 
+		ListenerId MouseMovedEventId = 0;
+		ListenerId MouseLeftClickPressedEventId = 0;
+		ListenerId MouseMovedReleasedEventId = 0;
+
 	public:
 		Event<> onHover;
 		Event<> onUnhover;
@@ -30,9 +34,13 @@ namespace Krampus
 		virtual void Tick(const float& _deltaTime) override;
 
 	private:
+		void Init();
+
 		void OnMouseMoved(const IVector2& _mousePos);
 		void OnClick();
 		void OnRelease();
+
+		virtual void BeginDestroy() override;
 	};
 
 }

@@ -51,10 +51,6 @@ namespace Krampus
 		{
 			levels.erase(_name);
 		}
-		INLINE void Destroy()
-		{
-			levels.clear();
-		}
 
 
 		LevelManager() = default;

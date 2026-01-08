@@ -16,7 +16,7 @@ void TestFps(Krampus::Level* _level)
 	{
 		for (int j = 1; j < 100; j++)
 		{
-			Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level, false,Krampus::FVector2(21.6f, 38.4f)/*30.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+			Krampus::SpriteActor* _actor = _level->SpawnActor<Krampus::SpriteActor>(false,Krampus::FVector2(21.6f, 38.4f)/*30.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 			_actor->transform.position = Krampus::FVector2(5.4f * (j - 1), 9.6f * (i - 1));
 			//_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 		}
@@ -31,7 +31,7 @@ void StartGame()
 
 	//TestFps(_level.get());
 	
-	Krampus::SpriteActor* _actor = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), true, Krampus::FVector2(125.f, 193.75f) /*150.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor = _level->SpawnActor<Krampus::SpriteActor>(true, Krampus::FVector2(125.f, 193.75f) /*150.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor->transform.position += Krampus::FVector2(1600.f, 540.f);
 	//_actor->transform.rotation = Krampus::Angle(-70.f, true);
 	_actor->transform.origin += Krampus::FVector2();
@@ -39,23 +39,23 @@ void StartGame()
 	_actor->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Player;
 	_actor->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Enemy;
 
-	Krampus::SpriteActor* _actor2 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(false, 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor2->transform.position = Krampus::FVector2(200.f, 220.f);
 	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 	//_actor2->SetActive(false);
 	_actor2->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Enemy;
 	_actor2->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Player;
 
-	Krampus::SpriteActor* _actor3 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor3 = _level->SpawnActor<Krampus::SpriteActor>(false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor3->transform.position = Krampus::FVector2(200.f, 920.f);
 	_actor3->transform.rotation = Krampus::Angle(50.f, true);
 	_actor3->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 
-	Krampus::SpriteActor* _actor4 = _level->GetActorManager().CreateActor<Krampus::SpriteActor>(_level.get(), false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor4 = _level->SpawnActor<Krampus::SpriteActor>(false, Krampus::FVector2(125.f, 193.75f), "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor4->transform.position = Krampus::FVector2(800.f, 720.f);
 	_actor4->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 
-	Krampus::Button* _button = _level->GetHUD().CreateWidget<Krampus::Button>(_level.get(), Krampus::FVector2(200.0f, 300.0f), "KrampusEngineBanner");
+	Krampus::Button* _button = _level->SpawnWidget<Krampus::Button>(Krampus::FVector2(200.0f, 300.0f), "KrampusEngineBanner");
 	_button->onHover.AddListener([]() {LOG_MSG("onHover"); });
 	_button->onUnhover.AddListener([]() {LOG_MSG("onUnhover"); });
 	_button->onPress.AddListener([]() {LOG_MSG("onPress"); });
@@ -65,15 +65,15 @@ void StartGame()
 	//_button->Destroy();
 	//_actor3->Destroy();
 
-	Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
-	_sound.SetVolume(50.f);
-	_sound.SetLoop(true);
-	_sound.SetPitch(1.5f);
-	_sound.Play();
-	Krampus::Sound _sound2 = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
-	_sound2.SetVolume(50.f);
-	_sound2.SetLoop(true);
-	_sound2.Play();
+	//Krampus::Sound _sound = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
+	//_sound.SetVolume(50.f);
+	//_sound.SetLoop(true);
+	//_sound.SetPitch(1.5f);
+	//_sound.Play();
+	//Krampus::Sound _sound2 = M_AUDIO.CreateSound("Shoryuken", Krampus::AudioExtensionType::MP3);
+	//_sound2.SetVolume(50.f);
+	//_sound2.SetLoop(true);
+	//_sound2.Play();
 
 	_engine.Start();
 }

@@ -4,7 +4,7 @@
 namespace Krampus
 {
 
-	class Core : public IPrintable
+	class KObject : public IPrintable
 	{
 	protected:
 		bool isActive = true;

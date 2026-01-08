@@ -1,14 +1,16 @@
 #pragma once
-#include "Core/Core.h"
+#include "Core/Object.h"
 
 namespace Krampus
 {
 	class Transform;
 
-	class Component : public Core
+	class Component : public KObject
 	{
 	protected:
 		class Actor* owner;
+		class Level* level = nullptr;
+		Transform& transform;
 
 	public:
 		INLINE Actor* GetOwner() const

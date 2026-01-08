@@ -14,6 +14,8 @@ namespace Krampus
 		IVector2 lastPosition;
 
 	public:
+		Mouse() = default;
+
 		INLINE IVector2 GetPosition() const noexcept
 		{
 			const sf::View& _view = MAIN_WINDOW.GetView();
