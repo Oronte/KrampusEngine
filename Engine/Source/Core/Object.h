@@ -19,6 +19,9 @@ namespace Krampus
 			return isActive;
 		}
 
+		KObject() = default;
+		virtual ~KObject() = default;
+
 		virtual void Construct() = 0;
 		virtual void Deconstruct() = 0;
 		virtual void BeginPlay() = 0;

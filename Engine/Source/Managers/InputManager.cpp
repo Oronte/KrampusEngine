@@ -100,7 +100,11 @@ void Krampus::InputManager::Update(const std::optional<sf::Event>& _event)
 
     const Mouse& _mouse = Mouse::GetInstance();
     const sf::View _view = MAIN_WINDOW.GetView();
-    if (_mouse.HasMoved() && MAIN_WINDOW.HasFocus()) MouseMoved(_mouse.GetPosition());
+    if (_mouse.HasMoved() && MAIN_WINDOW.HasFocus())
+    {
+        MouseMovedWorld(_mouse.GetPosition());
+        MouseMovedScreen(_mouse.GetScreenPosition());
+    }
 
     if (const sf::Event::MouseWheelScrolled* _mouseWheelScrolled = _event->getIf<sf::Event::MouseWheelScrolled>())
         MouseWheelScroll(_mouseWheelScrolled->delta);

@@ -14,10 +14,6 @@ namespace Krampus
 		bool isPressed = false;
 		bool isHovered = false;
 
-		ListenerId MouseMovedEventId = 0;
-		ListenerId MouseLeftClickPressedEventId = 0;
-		ListenerId MouseMovedReleasedEventId = 0;
-
 	public:
 		Event<> onHover;
 		Event<> onUnhover;

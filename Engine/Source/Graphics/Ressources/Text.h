@@ -138,14 +138,13 @@ namespace Krampus
 
         INLINE void SetTransform(const Transform& _transform)
         {
-            SetOrigin(_transform.origin);
             SetPosition(_transform.position); 
             SetRotation(_transform.rotation);
             SetScale(_transform.scale);
         }
         INLINE Transform GetTransform() const
         {
-            return Transform(GetOrigin(), GetPosition(), GetRotation(), GetScale());
+            return Transform(GetPosition(), GetRotation(), GetScale());
         }
 
 

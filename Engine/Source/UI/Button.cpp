@@ -30,9 +30,9 @@ void Krampus::Button::Init()
 
 	InputManager& _inputManager = M_INPUT;
 
-	MouseMovedEventId = _inputManager.MouseMoved.AddListener(this, &Krampus::Button::OnMouseMoved);
-	MouseLeftClickPressedEventId = _inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::Button::OnClick);
-	MouseMovedReleasedEventId = _inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
+	_inputManager.MouseMovedScreen.AddListener(this, &Krampus::Button::OnMouseMoved);
+	_inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::Button::OnClick);
+	_inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
 }
 
 void Krampus::Button::OnMouseMoved(const IVector2& _mousePos)
@@ -41,9 +41,9 @@ void Krampus::Button::OnMouseMoved(const IVector2& _mousePos)
 	bool _colliding = false;
 	ShapeObject* _object = sprite->GetShapeObject();
 	if (_object->GetShapeType() == ShapeType::Circle)
-		_colliding = Physics::Contains(_mousePos, transform.position, _object->GetSizeData().radius, _info);
+		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().radius, _info);
 	else
-		_colliding = Physics::Contains(_mousePos, transform.position, _object->GetSizeData().size, transform.rotation, _info);
+		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().size, _info);
 
 	if (_colliding && !isHovered) onHover.Broadcast();
 	if (!_colliding && isHovered) onUnhover.Broadcast();
@@ -69,7 +69,7 @@ void Krampus::Button::BeginDestroy()
 
 	InputManager& _inputManager = M_INPUT;
 
-	_inputManager.MouseMoved.RemoveListener(MouseMovedEventId);
-	_inputManager.MouseLeftClick.onPress.RemoveListener(MouseLeftClickPressedEventId);
-	_inputManager.MouseLeftClick.onRelease.RemoveListener(MouseMovedReleasedEventId);
+	_inputManager.MouseMovedScreen.RemoveAllFrom(this);
+	_inputManager.MouseLeftClick.onPress.RemoveAllFrom(this);
+	_inputManager.MouseLeftClick.onRelease.RemoveAllFrom(this);
 }

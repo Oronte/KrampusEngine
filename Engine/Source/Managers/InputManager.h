@@ -136,7 +136,8 @@ namespace Krampus
 		Input MouseExtraButton2;
 
 		// MOUSE MOVEMENT 
-		Event<IVector2> MouseMoved;
+		Event<IVector2> MouseMovedWorld;
+		Event<IVector2> MouseMovedScreen;
 
 		// MOUSE WHEEL 
 		Event<float> MouseWheelScroll;      // 1 / -1 for each scroll

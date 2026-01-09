@@ -20,8 +20,7 @@ void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
-	SetOriginAtMiddle();
-	level->GetCameraManager().AddToWindow(this); // TODO zOrder
+	level->GetCameraManager().AddToWindow(this);
 }
 
 void Krampus::SpriteComponent::Deconstruct()
@@ -71,11 +70,6 @@ void Krampus::SpriteComponent::DrawDebug(Window& _window)
 		break;
 	};
 #endif
-}
-
-void Krampus::SpriteComponent::SetOriginAtMiddle()
-{
-	transform.origin = shape->GetShape()->GetGeometricCenter();
 }
 
 void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)

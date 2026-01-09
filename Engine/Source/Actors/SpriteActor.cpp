@@ -21,18 +21,26 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const FVector2& _si
 	if (_test)
 	{
 		camera = CreateComponent<CameraComponent>();
-		M_INPUT.MouseMoved.AddListener([this](Krampus::FVector2 _pos) { transform.LookAt(_pos); });
+		//M_INPUT.MouseMovedWorld.AddListener([this](Krampus::FVector2 _pos) { transform.LookAt(_pos); });
 		M_INPUT.Z.onPerform.AddListener(this, &SpriteActor::MoveUp);
 		M_INPUT.S.onPerform.AddListener(this, &SpriteActor::MoveDown);
 		M_INPUT.Q.onPerform.AddListener(this, &SpriteActor::MoveLeft);
 		M_INPUT.D.onPerform.AddListener(this, &SpriteActor::MoveRight);
+
+
+		//collision->onCollision.AddListener([this](CollisionInfo _info) {
+		//	transform.position += _info.normal * _info.penetration;
+		//	Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
+		//	});
+		
+		collision->onCollisionEnter.AddListener([this](CollisionInfo _info) {
+			LOG_MSG("Enter");
+			});
+		collision->onCollisionExit.AddListener([this](CollisionComponent* _manager) {
+			LOG_MSG("Exit");
+			});
 	}
 
-
-		collision->onCollision.AddListener([this](CollisionInfo _info) {
-			transform.position += _info.normal * _info.penetration;
-			Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
-			});
 }
 
 Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
@@ -55,10 +63,10 @@ Krampus::SpriteActor::SpriteActor(Level* _level, bool _test, const float& _radiu
 		M_INPUT.Q.onPerform.AddListener(this, &SpriteActor::MoveLeft);
 		M_INPUT.D.onPerform.AddListener(this, &SpriteActor::MoveRight);
 	}
-		collision->onCollision.AddListener([this](CollisionInfo _info) {
-			transform.position += _info.normal * _info.penetration;
-			Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
-			});
+		//collision->onCollision.AddListener([this](CollisionInfo _info) {
+		//	transform.position += _info.normal * _info.penetration;
+		//	Debug::DrawDebugCircle(this, _info.contactPoint, 30.0f);
+		//	});
 
 }
 

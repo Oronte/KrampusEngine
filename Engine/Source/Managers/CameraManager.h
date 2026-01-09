@@ -32,8 +32,11 @@ namespace Krampus
 			{
 				LOG(VerbosityType::Error, "You try to remove to window an nullptr sprite");
 				return;
-			} // TODO fix
-			//drawer.erase(std::remove(drawer.begin(), drawer.end(), _drawable), drawer.end());
+			}
+			std::erase_if(drawer[_drawable->GetZOrder()], [&](const IDrawable* _item)
+				{
+					return _item == _drawable;
+				});
 		}
 
 		INLINE void RemoveDrawable(IDrawable* _toDelete)

@@ -70,6 +70,23 @@ namespace Krampus
 		{
 			return window.getView();
 		}
+		INLINE IVector2 MapCoordsToPixel(const FVector2& _worldPos) const
+		{
+			return window.mapCoordsToPixel(_worldPos);
+		}
+		INLINE IVector2 MapCoordsToPixel(const FVector2& _worldPos, const sf::View& _view) const
+		{
+			return window.mapCoordsToPixel(_worldPos, _view);
+		}
+		INLINE FVector2 MapPixelToCoords(const IVector2& _screenPos) const
+		{
+			return window.mapPixelToCoords(_screenPos);
+		}
+		INLINE FVector2 MapPixelToCoords(const IVector2& _screenPos, const sf::View& _view) const
+		{
+			return window.mapPixelToCoords(_screenPos, _view);
+		}
+
 		virtual void SetView(const CameraComponent* _camera);
 
 		Window() = default;

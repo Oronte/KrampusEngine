@@ -55,10 +55,27 @@ bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
         _other->transform.position, _other->sprite->GetShapeObject()->GetSizeData().radius,
         _hitInfo, _otherHitInfo);
 
-    if (!_collision) return false;
+	if (!_collision)
+	{
+		if (collidingComponents.contains(_other))
+		{
+			collidingComponents.erase(_other);
+			onCollisionExit.Broadcast(_other);
+			_other->onCollisionExit.Broadcast(this);
+		}
+		return false;
+	}
 
 	_hitInfo.collision = _other;
     _otherHitInfo.collision = this;
+
+	if (!collidingComponents.contains(_other))
+	{
+		collidingComponents.insert(_other);
+		onCollisionEnter.Broadcast(_hitInfo);
+		_other->onCollisionEnter.Broadcast(_otherHitInfo);
+
+	}
 
 	onCollision.Broadcast(_hitInfo);
 	_other->onCollision.Broadcast(_otherHitInfo);
@@ -74,10 +91,27 @@ bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
         FRect(_other->transform.position, _other->sprite->GetShapeObject()->GetSizeData().size), _other->transform.rotation,
         _hitInfo, _otherHitInfo);
 
-	if (!_collision) return false;
+	if (!_collision)
+	{
+		if (collidingComponents.contains(_other))
+		{
+			collidingComponents.erase(_other);
+			onCollisionExit.Broadcast(_other);
+			_other->onCollisionExit.Broadcast(this);
+		}
+		return false;
+	}
+
 
     _hitInfo.collision = _other;
 	_otherHitInfo.collision = this;
+
+	if (!collidingComponents.contains(_other))
+	{
+		collidingComponents.insert(_other);
+		onCollisionEnter.Broadcast(_hitInfo);
+		_other->onCollisionEnter.Broadcast(_otherHitInfo);
+	}
 
 	onCollision.Broadcast(_hitInfo);
 	_other->onCollision.Broadcast(_otherHitInfo);
@@ -93,10 +127,26 @@ bool Krampus::CollisionComponent::RectToRectAABB(CollisionComponent* _other)
 		FRect(_other->transform.position, _other->sprite->GetShapeObject()->GetSizeData().size),
 		_hitInfo, _otherHitInfo);
 
-	if (!_collision) return false;
+	if (!_collision)
+	{
+		if (collidingComponents.contains(_other))
+		{
+			collidingComponents.erase(_other);
+			onCollisionExit.Broadcast(_other);
+			_other->onCollisionExit.Broadcast(this);
+		}
+		return false;
+	}
 
 	_hitInfo.collision = _other;
 	_otherHitInfo.collision = this;
+
+	if (!collidingComponents.contains(_other))
+	{
+		collidingComponents.insert(_other);
+		onCollisionEnter.Broadcast(_hitInfo);
+		_other->onCollisionEnter.Broadcast(_otherHitInfo);
+	}
 
 	onCollision.Broadcast(_hitInfo);
 	_other->onCollision.Broadcast(_otherHitInfo);
@@ -112,10 +162,27 @@ bool Krampus::CollisionComponent::CircleToRect(CollisionComponent* _circle, Coll
 		FRect(_rect->transform.position, _rect->sprite->GetShapeObject()->GetSizeData().size), _rect->transform.rotation,
 		_circleInfo, _rectInfo);
 
-	if (!_collision) return false;
+	CollisionComponent* _other = _circle == this ? _rect : _circle;
+	if (!_collision)
+	{
+		if (collidingComponents.contains(_other))
+		{
+			collidingComponents.erase(_other);
+			onCollisionExit.Broadcast(_other);
+			_other->onCollisionExit.Broadcast(this);
+		}
+		return false;
+	}
 
 	_circleInfo.collision = _rect;
 	_rectInfo.collision = _circle;
+
+	if (!collidingComponents.contains(_other))
+	{
+		collidingComponents.insert(_other);
+		_circle->onCollisionEnter.Broadcast(_circleInfo);
+		_rect->onCollisionEnter.Broadcast(_rectInfo);
+	}
 
 	_circle->onCollision.Broadcast(_circleInfo);
 	_rect->onCollision.Broadcast(_rectInfo);

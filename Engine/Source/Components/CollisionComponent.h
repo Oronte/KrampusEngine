@@ -30,12 +30,13 @@ namespace Krampus
 	class CollisionComponent : public Component
 	{
 		SpriteComponent* sprite = nullptr;
+		std::unordered_set<CollisionComponent*> collidingComponents;
 
 	public:
-		// TODO implement
-		//Event<CollisionInfo> onCollisionEnter;
+		// TODO ca dit Enter et Exit 2fois
+		Event<CollisionInfo> onCollisionEnter;
 		Event<CollisionInfo> onCollision;
-		//Event<CollisionInfo> onCollisionExit;
+		Event<CollisionComponent*> onCollisionExit;
 
 		CollisionChannel channel = CollisionChannel::None;
 		CollisionChannel mask = CollisionChannel::None;

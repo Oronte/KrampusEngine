@@ -11,6 +11,7 @@ Krampus::ShapeObject::ShapeObject(const float& _radius, const std::string& _path
 	shapeType = ShapeType::Circle;
 	sizeData.radius = _radius;
 	shape = std::make_unique<CircleShape>(_radius, _pointCount);
+	shape->SetOriginAtMiddle();
 	M_TEXTURE.Load(this, _path, _textureType);
 }
 
@@ -19,5 +20,6 @@ Krampus::ShapeObject::ShapeObject(const FVector2& _size, const std::string& _pat
 	shapeType = ShapeType::Rectangle;
 	sizeData.size = _size;
 	shape = std::make_unique<RectangleShape>(_size);
+	shape->SetOriginAtMiddle();
 	M_TEXTURE.Load(this, _path, _textureType);
 }

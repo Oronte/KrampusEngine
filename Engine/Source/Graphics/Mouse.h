@@ -18,8 +18,8 @@ namespace Krampus
 
 		INLINE IVector2 GetPosition() const noexcept
 		{
-			const sf::View& _view = MAIN_WINDOW.GetView();
-			return IVector2(_view.getCenter() - _view.getSize() / 2.0f) + position;
+			const MainWindow& _mainWindow = MAIN_WINDOW;
+			return _mainWindow.MapCoordsToPixel(position, _mainWindow.GetView());
 		}
 		INLINE IVector2 GetScreenPosition() const noexcept
 		{
@@ -27,8 +27,8 @@ namespace Krampus
 		}
 		INLINE void SetPosition(const IVector2& _position) noexcept
 		{
-			const sf::View& _view = MAIN_WINDOW.GetView();
-			SetScreenPosition(_position - IVector2(_view.getCenter() - _view.getSize() / 2.0f));
+			const MainWindow& _mainWindow = MAIN_WINDOW;
+			SetScreenPosition(_mainWindow.MapCoordsToPixel(_position, _mainWindow.GetView()));
 		}
 		INLINE void SetScreenPosition(const IVector2& _position) noexcept
 		{

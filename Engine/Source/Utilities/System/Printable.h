@@ -12,6 +12,14 @@ namespace Krampus
 			_os << _object.ToString();
 			return _os;
 		}
+		operator std::string()
+		{
+			return ToString();
+		}
+		operator const char*()
+		{
+			return ToString().c_str();
+		}
 	};
 
 }

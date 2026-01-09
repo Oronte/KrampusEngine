@@ -15,15 +15,14 @@ namespace Krampus
         struct Listener
         {
             ListenerId id = 0;
+            void* owner = nullptr;
             Callback callback;
             bool isOnce = false;
-            bool isActive = true;
             int priority = 0;
         };
 
         std::vector<Listener> listeners;
         ListenerId nextId = 1;
-        bool needsCleanup = false;
         
         using Iterator = typename std::vector<Listener>::iterator;
 
@@ -67,7 +66,7 @@ namespace Krampus
 
         template<typename T, typename MemFn>
         INLINE ListenerId AddListener(T* _instance, MemFn _memFn,
-            const bool& once = false, const int& priority = 0)
+            const bool& _once = false, const int& _priority = 0)
         {
             if (!_instance)
             {
@@ -80,7 +79,20 @@ namespace Krampus
                     std::invoke(_memFn, _instance, args...);
                 };
 
-            return AddListener(std::move(_callback), once, priority);
+            ListenerId _id = nextId++;
+            Listener _listener;
+            _listener.id = _id;
+            _listener.owner = _instance;
+            _listener.callback = std::move(_callback);
+            _listener.isOnce = _once;
+            _listener.priority = _priority;
+
+            Iterator _iterator = std::upper_bound(
+                listeners.begin(), listeners.end(), _listener,
+                [](const Listener& _a, const Listener& _b) { return _a.priority > _b.priority; });
+
+            listeners.insert(_iterator, std::move(_listener));
+            return _id;
         }
 
         INLINE void RemoveListener(const ListenerId& _id)
@@ -90,42 +102,43 @@ namespace Krampus
             Iterator _iterator = std::find_if(listeners.begin(), listeners.end(),
                 [_id](const Listener& _listener) { return _listener.id == _id; });
 
-            if (_iterator != listeners.end())
-            {
-                _iterator->isActive = false;
-                needsCleanup = true;
-            }
-            else 
-                LOG(VerbosityType::Error, "Incorrect id, cant remove listener");
+            if (_iterator != listeners.end()) listeners.erase(_iterator);
+            else LOG(VerbosityType::Warning, "Incorrect id, cant remove listener");
+        }
+
+        INLINE void RemoveAllFrom(void* _owner)
+        {
+            if (!_owner) return;
+
+            listeners.erase(
+                std::remove_if(listeners.begin(), listeners.end(),
+                    [_owner](const Listener& _listener)
+                    {
+                        return _listener.owner == _owner;
+                    }),
+                listeners.end());
         }
 
         INLINE void Clear()
         {
+            for (auto& _listener : listeners)
+                _listener.callback = nullptr;
             listeners.clear();
-            needsCleanup = false;
         }
 
         INLINE size_t Count() const
         {
-            size_t _count = 0;
-            for (const Listener& _listener : listeners) if (_listener.isActive) ++_count;
-            return _count;
+            return listeners.size();
         }
 
         INLINE void Broadcast(const Args&... _args)
         {
-            for (Listener& _listener : listeners)
+            for (auto _it = listeners.begin(); _it != listeners.end(); )
             {
-                if (!_listener.isActive) continue;
-                _listener.callback(_args...);
-                if (_listener.isOnce)
-                {
-                    _listener.isActive = false;
-                    needsCleanup = true;
-                }
+                _it->callback(_args...);
+                if (_it->isOnce) _it = listeners.erase(_it);
+                else ++_it;
             }
-
-            CleanupIfNeeded();
         }
 
         INLINE void operator()(const Args&... _args)
@@ -141,17 +154,6 @@ namespace Krampus
         INLINE void operator -= (const ListenerId& _toRemove)
         {
             RemoveListener(_toRemove);
-        }
-
-    private:
-        INLINE void CleanupIfNeeded()
-        {
-            if (!needsCleanup) return;
-
-            listeners.erase(std::remove_if(listeners.begin(), listeners.end(),
-                [](const Listener& _listener) { return !_listener.isActive; }), listeners.end());
-
-            needsCleanup = false;
         }
     };
 

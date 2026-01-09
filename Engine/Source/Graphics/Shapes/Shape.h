@@ -233,6 +233,10 @@ namespace Krampus
             }
             shape->setOrigin(_origin);
         }
+        INLINE void SetOriginAtMiddle()
+        {
+            SetOrigin(GetGeometricCenter());
+        }
         INLINE FVector2 GetOrigin() const
         {
             if (!shape)
@@ -265,14 +269,12 @@ namespace Krampus
         INLINE const Transform& GetTransform() const
         {
             return Transform(
-                GetOrigin(),
                 GetPosition(),
                 GetRotation(),
                 GetScale());
         }
         INLINE void SetTransform(const Transform& _transform)
         {
-            SetOrigin(_transform.origin);
             SetPosition(_transform.position);
             SetRotation(_transform.rotation);
             SetScale(_transform.scale);

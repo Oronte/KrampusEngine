@@ -16,9 +16,6 @@ void Krampus::Widget::Destroy()
 
 void Krampus::Widget::UpdateWorldPos(const sf::View& _view)
 {
-	const Angle& _viewRot = Angle(_view.getRotation());
-	const FVector2& _viewHalfSize = _view.getSize() / 2.0f;
-
-	transform.position = screenPosition + _view.getCenter() - _viewHalfSize.Rotated(_viewRot);
-	transform.rotation = localRotation + _viewRot;
+	transform.position = MAIN_WINDOW.MapPixelToCoords(screenPosition, _view);
+	transform.rotation = localRotation + Angle(_view.getRotation());
 }

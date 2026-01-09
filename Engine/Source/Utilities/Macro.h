@@ -49,8 +49,14 @@
 #ifdef _MSC_VER
 	#define NOMINMAX
 	#include <windows.h>
-	#define new							new(_NORMAL_BLOCK, __FILE__, __LINE__)// Memory leaks
 	#define Super						__super
+#endif
+
+//#define DEBUG_MEMORY_LEAKS
+#ifdef DEBUG_MEMORY_LEAKS
+	#define new							new(_NORMAL_BLOCK, __FILE__, __LINE__)// Memory leaks
+#else
+	#define new							nullptr; static_assert(false, "You cannot use the new operator. This prevents accidentaly memory leaks"); new
 #endif
 
 #define FILE_NAME						std::filesystem::path(__FILE__).filename().string()
