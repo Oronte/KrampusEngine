@@ -1,4 +1,5 @@
 KrampusEngine
+![Texte alternatif](Content/Textures/KrampusEngineBanner.png)
 <p align="center"> <img src="https://img.shields.io/badge/C%2B%2B-20-blue.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/SFML-3.0.0-green.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/Platform-Windows-blueviolet.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/Build-Premake5-orange.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/Status-In%20Development-yellow.svg?style=for-the-badge" /> </p> <p align="center"> A modern <b>2D experimental game engine</b> written in <b>C++20</b>, focused on<br> engine architecture, memory safety, and runtime systems. </p>
 Overview
 
