@@ -1,179 +1,207 @@
-KrampusEngine
-![Texte alternatif](Content/Textures/KrampusEngineBanner.png)
-<p align="center"> <img src="https://img.shields.io/badge/C%2B%2B-20-blue.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/SFML-3.0.0-green.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/Platform-Windows-blueviolet.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/Build-Premake5-orange.svg?style=for-the-badge" /> <img src="https://img.shields.io/badge/Status-In%20Development-yellow.svg?style=for-the-badge" /> </p> <p align="center"> A modern <b>2D experimental game engine</b> written in <b>C++20</b>, focused on<br> engine architecture, memory safety, and runtime systems. </p>
-Overview
+![KrampusEngine](Content/Textures/KrampusEngineBanner.png)
 
-KrampusEngine is a code-driven 2D game engine built on top of SFML 3.0.0.
-It provides a clean and modular engine architecture without any graphical editor,
-designed to explore low-level engine systems and modern C++ practices.
+# KrampusEngine
 
-The engine and the game are strictly separated:
+![C++20](https://img.shields.io/badge/C%2B%2B-20-blue)
+![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
+![Build](https://img.shields.io/badge/Build-Visual%20Studio-blueviolet)
+![Library](https://img.shields.io/badge/Engine-Static%20Library-important)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
-the engine is compiled as a static library (.lib)
+---
 
-the game is compiled as an executable (.exe) linked against the engine
+## Overview
 
-Project Goals
+**KrampusEngine** is an experimental **2D game engine** written in **modern C++20**, built on top of **SFML 3.0.0**.  
+It is a **code-driven engine** with a strict separation between engine runtime systems and game logic.
 
-Design a reusable and extensible engine architecture
+This project is designed as a **learning-focused but production-minded** engine: prioritizing clarity, correctness, and architecture over features or tooling.
 
-Apply modern C++20 features and RAII principles
+The engine is compiled as a **static library**, while games are built as separate executables linked against it.
 
-Implement core engine systems from scratch
+---
 
-Build a complete game without relying on a prebuilt engine
+## Design Goals
 
-This project is primarily focused on learning, technical challenge, and engine design.
+- Clean and maintainable C++20 code
+- Clear separation of responsibilities
+- RAII-first architecture with deterministic lifetime management
+- Explicit control flow over hidden magic
+- Practical engine architecture suitable for technical evaluation
 
-Features
+This project intentionally avoids editor tooling and scripting layers to keep the focus on **engine internals**.
 
-🧩 Hybrid Actor / Component system
-(Unity-style components with Unreal-like actor logic)
+---
 
-🎮 Runtime-defined level system
+## Technology Stack
 
-📡 Synchronous event system (Observer / Listener)
+| Area | Details |
+|-----|--------|
+| Language | C++20 |
+| Platform | Windows |
+| Rendering / Windowing | SFML 3.0.0 |
+| Build System | Premake5 |
+| IDE | Visual Studio |
+| Engine Output | Static Library (`.lib`) |
+| Game Output | Executable (`.exe`) |
 
-🧠 Fully automatic memory management
+---
 
-🧵 Multithreaded logging system
+## Project Structure
 
-🐞 Configurable Debug / Release builds
+### Engine
+- Contains all runtime systems
+- No game-specific logic
+- Owns memory, timing, and execution flow
 
-⌨️ Input handling system
+### Game
+- Depends on the engine
+- Defines actors, components, and levels
+- Contains all gameplay rules and content
 
-💥 Custom 2D collision system
+---
 
-🎞️ Sprite-based animation system
+## Architecture
 
-🧱 Clean Engine / Game separation
+### Actor / Component Model
 
-Architecture
-/Engine   → Core engine systems
-/Game     → Game-specific logic and entry point
+KrampusEngine uses a **hybrid Actor–Component architecture**:
 
+- **Actors**
+  - Own high-level game logic
+  - Control lifecycle and behavior
+- **Components**
+  - Modular, reusable functionality
+  - Unity-style composition
+  - Attached to actors
 
-Engine systems are fully encapsulated
+This hybrid approach allows expressive gameplay code without sacrificing structural clarity.
 
-The game interacts only through the engine’s public API
+---
 
-The engine is designed as a reusable static library
+### Level System
 
-Memory Management
+- Levels are defined as **C++ classes**
+- Initialized explicitly at runtime
+- No data-driven or serialized formats (by design)
 
-Exclusive use of smart pointers
+This keeps level flow explicit and easy to trace during debugging and reviews.
 
-Direct allocation (new) is forbidden on the user side
+---
 
-Ownership and lifetime fully managed by the engine
+## Core Systems
 
-RAII-based architecture
+### Memory Management
 
-Memory leak detection enabled in Debug builds (Windows tools)
+- Fully automatic memory management
+- **Smart pointers only**
+- No raw ownership
+- No direct dynamic allocation by the user
+- RAII-based lifetime control
+- Memory leak detection enabled in Debug builds using Windows diagnostics
 
-Event System
+---
 
-Observer / Listener architecture
+### Event System
 
-Synchronous event dispatch
+- Synchronous observer / listener model
+- Explicit event dispatch
+- No hidden async behavior
+- Designed for predictability and ease of reasoning
 
-Used for communication between engine systems and gameplay logic
+---
 
-Gameplay Systems
-Actors & Components
+### Input System
 
-Actors can contain multiple components
+- Centralized input handling
+- Abstracted from SFML events
+- Accessible from gameplay code
 
-Actors may also implement their own behavior
+---
 
-Hybrid design inspired by Unity and Unreal Engine
+### Collision System (2D)
 
-Levels
+Custom-built collision system supporting:
 
-Levels are defined as C++ classes
+- AABB (Axis-Aligned Bounding Box)
+- OBB (Oriented Bounding Box)
+- Circle–Circle
+- Circle–Rectangle
 
-Created and initialized at runtime
+Focused on correctness and clarity rather than physics simulation.
 
-Offers full control and flexibility
+---
 
-Collision System
+### Animation System
 
-2D-only collision system
+- Sprite-based animation
+- Spritesheets
+- Timer-driven frame control
+- Deterministic playback
 
-Supported collision types:
+---
 
-AABB
+### Logging System
 
-OBB
+- Dedicated logging thread
+- Thread-isolated logging pipeline
+- Colored console output
+- Persistent file output (`log.txt`)
+- Disabled entirely in Release builds
 
-Circle–Circle
+---
 
-Circle–Rectangle
+## Debug and Build Modes
 
-Fully custom implementation (independent of SFML)
+### Debug Build
+- Logging enabled
+- Debug output enabled
+- Memory leak detection enabled
+- Console window enabled
 
-Animation System
+### Release Build
+- Logging disabled
+- No debug output
+- Optimized build
+- No console window
 
-2D sprite-based animations
+---
 
-Spritesheet-driven playback
+## Limitations
 
-Timer-based frame updates
+- Windows-only
+- 2D only
+- No editor or GUI
+- Engine is **not thread-safe**  
+  *(intentional design choice to reduce complexity and improve determinism)*
 
-Lightweight design without state machines
+These constraints are deliberate and aligned with the project’s learning goals.
 
-Debugging & Logging
-Logging
+---
 
-Dedicated logging thread
+## Project Status
 
-Colored console output
+- Actively developed
+- Core engine systems implemented
+- Demo game currently in progress
+- Architecture considered stable, systems evolving
 
-Persistent log file (log.txt)
+---
 
-Build Configurations
-Mode	Logs	Debug Tools	Leak Detection	Console
-Debug	✔️	✔️	✔️	✔️
-Release	❌	❌	❌	❌
-Build & Platform
+## Motivation
 
-🛠 Project generation via Premake5
+KrampusEngine exists as a **personal engineering project** with the following goals:
 
-🧱 Built with Visual Studio
+- Learn and apply engine architecture principles
+- Improve modern C++ design and ownership models
+- Build a complete engine rather than relying on existing ones
+- Create a codebase suitable for technical discussion and review
 
-🪟 Windows only
+This project prioritizes **understanding and correctness** over speed of iteration or feature breadth.
 
-📐 C++ standard: C++20
+---
 
-📦 Dependency: SFML 3.0.0
+## License
 
-Known Limitations
-
-❗ Engine is not thread-safe
-(intentional design choice to simplify architecture)
-
-❗ Windows platform only
-
-❗ No editor or graphical interface
-
-❗ 2D-focused engine
-
-Project Status
-
-🚧 Actively developed
-
-✅ Core systems implemented
-
-🎮 Demo game in progress to showcase engine features
-
-Motivation
-
-KrampusEngine is a personal project created to:
-
-Push my technical limits
-
-Improve my understanding of engine-level programming
-
-Gain experience with large-scale C++ architecture
-
-Build a complete game engine instead of using a prebuilt solution
+This project is intended for educational and personal use.  
+License information will be added once the engine reaches a stable milestone.
