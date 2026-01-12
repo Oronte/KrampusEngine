@@ -4,8 +4,12 @@
 namespace Krampus
 {
 
+	/// <summary>
+	/// Interface used to make objects printable to output streams.
+	/// </summary>
 	struct IPrintable
 	{
+		// Convert the object to a string representation.
 		virtual std::string ToString() const = 0;
 		friend std::ostream& operator << (std::ostream& _os, const IPrintable& _object)
 		{
@@ -16,10 +20,18 @@ namespace Krampus
 		{
 			return ToString();
 		}
-		operator const char*()
-		{
-			return ToString().c_str();
-		}
 	};
 
 }
+
+/////////////////////////////////////////////////
+// 
+// class PrintableClass : public IPrintable
+// {
+//     virtual std::string ToString() const override
+//	   {
+//         return "PrintableClass representation";
+//     }
+// }
+// 
+/////////////////////////////////////////////////

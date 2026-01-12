@@ -98,8 +98,8 @@ Krampus::Animation::Animation(const std::string& _name, ShapeObject* _shape, con
     data = _data;
     timer = M_TIMER.CreateTimer([&]() { Update(); },
         ComputeDuration(),
-        false,
-        true);
+        true,
+        false);
 }
 
 Krampus::Animation::~Animation()
@@ -157,7 +157,7 @@ void Krampus::Animation::Reset()
 void Krampus::Animation::Start()
 {
     Update();
-    timer->Start();
+    timer->Play();
 }
 
 void Krampus::Animation::Resume()

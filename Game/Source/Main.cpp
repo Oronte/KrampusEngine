@@ -6,11 +6,12 @@
 #include "Managers/LevelManager.h"
 #include "Managers/AudioManager.h"
 #include "Managers/InputManager.h"
-#include "UI/Button.h"
+#include "UI/ButtonWidget.h"
 
 
+void Exemple();
 void StartGame();
-void InitConfig();
+//void InitConfig();
 
 #ifdef RELEASE
 
@@ -32,6 +33,7 @@ int main(/*int argc, char** argv*/)
 
 	try
 	{
+		Exemple();
 		StartGame();
 	}
 	catch (const Krampus::Exception& _exception)
@@ -49,41 +51,41 @@ int main(/*int argc, char** argv*/)
 
 
 // Memory leak detection
-#ifdef _MSC_VER
+//#ifdef _MSC_VER
+//
+//int __cdecl HookReport(int _reportType, char* _message, int* _returnValue)
+//{
+//	HANDLE _hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+//	SetConsoleTextAttribute(_hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+//
+//	DWORD _written;
+//	WriteConsoleA(_hOut, _message, (DWORD)strlen(_message), &_written, NULL);
+//
+//	SetConsoleTextAttribute(_hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+//
+//	return false;
+//}
+//void InitConfig()
+//{
+//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//	_CrtSetReportHook(HookReport);
+//}
+//#endif
 
-int __cdecl HookReport(int _reportType, char* _message, int* _returnValue)
-{
-	HANDLE _hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(_hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-
-	DWORD _written;
-	WriteConsoleA(_hOut, _message, (DWORD)strlen(_message), &_written, NULL);
-
-	SetConsoleTextAttribute(_hOut, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-
-	return false;
-}
-void InitConfig()
-{
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	_CrtSetReportHook(HookReport);
-}
 #endif
 
-#endif
-
-void TestFps(Krampus::Level* _level)
-{
-	for (int i = 1; i < 15; i++)
-	{
-		for (int j = 1; j < 100; j++)
-		{
-			Krampus::SpriteActor* _actor = _level->SpawnActor<Krampus::SpriteActor>(false, Krampus::FVector2(21.6f, 38.4f)/*30.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
-			_actor->transform.position = Krampus::FVector2(5.4f * (j - 1), 9.6f * (i - 1));
-			//_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
-		}
-	}
-}
+//void TestFps(Krampus::Level* _level)
+//{
+//	for (int i = 1; i < 15; i++)
+//	{
+//		for (int j = 1; j < 100; j++)
+//		{
+//			Krampus::SpriteActor* _actor = _level->SpawnActor<Krampus::SpriteActor>(false, Krampus::FVector2(21.6f, 38.4f)/*30.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+//			_actor->transform.position = Krampus::FVector2(5.4f * (j - 1), 9.6f * (i - 1));
+//			//_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+//		}
+//	}
+//}
 
 void StartGame()
 {
@@ -93,17 +95,14 @@ void StartGame()
 
 	//TestFps(_level.get());
 
-	Krampus::SpriteActor* _actor = _level->SpawnActor<Krampus::SpriteActor>(true, Krampus::FVector2(125.f, 193.75f) /*150.f*/, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	Krampus::SpriteActor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(200.f, 100.f), "KrampusEngineBanner"));
 	_actor->transform.position += Krampus::FVector2(1600.f, 540.f);
-	//_actor->transform.rotation = Krampus::Angle(-70.f, true);
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
-	_actor->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Player;
-	_actor->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Enemy;
 
-	Krampus::SpriteActor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(false, 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
+	/*Krampus::SpriteActor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(false, 100.f, "RyuGifSheet", Krampus::TextureExtensionType::PNG, Krampus::IRect());
 	_actor2->transform.position = Krampus::FVector2(200.f, 220.f);
+	_actor2->transform.rotation = Krampus::Angle(-70.f, true);
 	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
-	//_actor2->SetActive(false);
 	_actor2->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Enemy;
 	_actor2->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Player;
 
@@ -119,14 +118,17 @@ void StartGame()
 	_actor4->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 	_actor4->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Enemy;
 	_actor4->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Player;
+	_actor4->GetComponent<Krampus::CollisionComponent>()->channel = Krampus::CollisionChannel::Enemy;
+	_actor4->GetComponent<Krampus::CollisionComponent>()->mask = Krampus::CollisionChannel::Player;
 
-	Krampus::Button* _button = _level->SpawnWidget<Krampus::Button>(Krampus::FVector2(200.0f, 300.0f), "KrampusEngineBanner");
+
+	Krampus::ButtonWidget* _button = _level->SpawnWidget<Krampus::ButtonWidget>(Krampus::FVector2(200.0f, 300.0f), "KrampusEngineBanner");
 	_button->onHover.AddListener([]() {LOG_MSG("onHover"); });
 	_button->onUnhover.AddListener([]() {LOG_MSG("onUnhover"); });
 	_button->onPress.AddListener([]() {LOG_MSG("onPress"); });
 	_button->onPerform.AddListener([]() {LOG_MSG("onPerform"); });
 	_button->onRelease.AddListener([]() {LOG_MSG("onRelease"); });
-	_button->screenPosition = Krampus::FVector2(200.0f, 300.0f) / 2.0f;
+	_button->screenPosition = Krampus::FVector2(200.0f, 300.0f) / 2.0f;*/
 
 	//_button->Destroy();
 	//_actor3->Destroy();
@@ -142,4 +144,31 @@ void StartGame()
 	//_sound2.Play();
 
 	_engine.Start();
+}
+
+using namespace Krampus;
+
+void TestTimer()
+{
+	LOG_MSG("Timer finished!");
+}
+
+class MyClass
+{
+public:
+	void TestTimer()
+	{
+		LOG_MSG("Timer finished!");
+	}
+};
+
+#undef new
+
+void Exemple()
+{
+	M_TIMER.CreateTimer([]() { LOG_MSG("Timer finished!"); }, 5.0f);
+	M_TIMER.CreateTimer(&TestTimer, 6.0f);
+	MyClass* _myClass = new MyClass();
+	Timer* _timer = M_TIMER.CreateTimer(_myClass, &MyClass::TestTimer, 7.0f);
+	M_TIMER.DestroyTimer(_timer);
 }

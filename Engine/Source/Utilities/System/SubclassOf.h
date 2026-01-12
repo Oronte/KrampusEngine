@@ -29,7 +29,7 @@ namespace Krampus
 	//	}
 	//	SubclassOf(Type&& _value)
 	//	{
-	//		objectRef = new Type(move(_value));
+	//		objectRef = new Type(std::move(_value));
 	//	}
 	//	~SubclassOf()
 	//	{
@@ -54,7 +54,7 @@ namespace Krampus
 	//			delete objectRef;
 	//		}
 
-	//		objectRef = new Type(move(_other.GetObject()));
+	//		objectRef = new Type(std::move(_other.GetObject()));
 	//		return *this;
 	//	}
 	//};

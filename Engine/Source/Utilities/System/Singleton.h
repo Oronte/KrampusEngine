@@ -4,6 +4,9 @@
 namespace Krampus
 {
 
+	/// <summary>
+	/// Provides a way to create a class that can have only one instance.
+	/// </summary>
 	template <typename Type>
 	class Singleton
 	{

@@ -5,7 +5,7 @@ using namespace Krampus;
 
 Krampus::TimerManager::~TimerManager()
 {
-	allTimers.clear();
+	timers.clear();
 }
 
 std::string Krampus::TimerManager::GetCurrentRealTime() const
@@ -26,18 +26,27 @@ std::string Krampus::TimerManager::GetCurrentRealTime() const
 	return _date + " " + _time;
 }
 
-Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _startRunning, const bool& _isLoop)
+Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
 {
-    return allTimers.emplace_back(
-        std::make_unique<Timer>(_callback, _duration, _startRunning, _isLoop)
+    return timers.emplace_back(
+        std::make_unique<Timer>(_callback, _duration, _isLoop, _startRunning)
     ).get();
 }
 
-Timer* Krampus::TimerManager::CreateTimer(const float& _duration, const bool& _startRunning, const bool& _isLoop)
+Timer* Krampus::TimerManager::CreateTimer(const float& _duration, const bool& _isLoop, const bool& _startRunning)
 {
-    return allTimers.emplace_back(
-        std::make_unique<Timer>(_duration, _startRunning, _isLoop)
+    return timers.emplace_back(
+        std::make_unique<Timer>(_duration, _isLoop, _startRunning)
     ).get();
+}
+
+void Krampus::TimerManager::DestroyTimer(Timer* _toDelete)
+{
+    std::erase_if(timers,
+        [_toDelete](const std::unique_ptr<Timer>& _timer)
+        {
+            return _timer.get() == _toDelete;
+		});
 }
 
 float Krampus::TimerManager::Update()
@@ -60,7 +69,7 @@ float Krampus::TimerManager::Update()
 
     if (maxFrameRate > 0)
     {
-        float _targetFrameTime = 1.0f / static_cast<float>(maxFrameRate);
+        float _targetFrameTime = 1.0f / CAST(float, maxFrameRate);
 
         if (lastFrameDuration > 0.0f && lastFrameDuration < _targetFrameTime)
         {
@@ -97,16 +106,11 @@ float Krampus::TimerManager::Update()
 
 void Krampus::TimerManager::UpdateTimers()
 {
-    for (std::vector<std::unique_ptr<Timer>>::iterator _iterator = allTimers.begin(); _iterator != allTimers.end(); )
+    for (std::vector<std::unique_ptr<Timer>>::iterator _iterator = timers.begin(); _iterator != timers.end(); )
     {
-        Timer* _timer = _iterator->get();
+		Timer* _timer = _iterator->get();
         _timer->Update(deltaTime);
-
-        if (_timer->IsToDelete())
-        {
-            _timer->Stop();
-            _iterator = allTimers.erase(_iterator);
-        }
+        if (_timer->IsToDelete()) _iterator = timers.erase(_iterator);
         else ++_iterator;
     }
 }
@@ -115,19 +119,19 @@ void Krampus::TimerManager::Pause()
 {
 	onPauseTimer.Broadcast();
 
-	for (const std::unique_ptr<Timer>& _timer : allTimers) _timer->Pause();
+	for (const std::unique_ptr<Timer>& _timer : timers) _timer->Pause();
 }
 
 void Krampus::TimerManager::Resume()
 {
 	onResumeTimer.Broadcast();
 
-	for (const std::unique_ptr<Timer>& _timer : allTimers) _timer->Resume();
+	for (const std::unique_ptr<Timer>& _timer : timers) _timer->Resume();
 }
 
 void Krampus::TimerManager::Stop()
 {
 	onStopTimer.Broadcast();
 
-	for (const std::unique_ptr<Timer>& _timer : allTimers) _timer->Stop();
+	for (const std::unique_ptr<Timer>& _timer : timers) _timer->Stop();
 }

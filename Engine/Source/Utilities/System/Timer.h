@@ -5,8 +5,8 @@ namespace Krampus
 {
 	class Timer
 	{
-		bool isToDelete = false;
 		bool isRunning = false;
+		bool isToDelete = false;
 		bool isLoop = false;
 		float currentTime = 0.0f;
 		float duration = 0.0f;
@@ -15,17 +15,25 @@ namespace Krampus
 		Event<> callback;
 
 	public:
-		INLINE void SetDuration(const float& _duration)
-		{
-			duration = _duration;
-		}
 		INLINE bool IsToDelete() const
 		{
 			return isToDelete;
 		}
+		INLINE void SetDuration(const float& _duration)
+		{
+			duration = _duration;
+		}
+		INLINE float GetDuration() const
+		{
+			return duration;
+		}
 		INLINE bool IsRunning() const
 		{
 			return isRunning;
+		}
+		INLINE void SetIsLoop(const bool& _isLoop)
+		{
+			isLoop = _isLoop;
 		}
 		INLINE bool IsLoop() const
 		{
@@ -41,14 +49,27 @@ namespace Krampus
 		}
 
 	public:
-		Timer(const std::function<void()>& _callback, const float& _duration, const bool& _startRunning = true, const bool& _isLoop = false);
-		Timer(const float& _duration, const bool& _startRunning = true, const bool& _isLoop = false);
+		Timer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+		template<typename T, typename MemFn>
+		Timer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
+		{
+			callback.AddListener(_instance, _memFn);
+			isRunning = _startRunning;
+			isLoop = _isLoop;
+			duration = _duration;
+		}
+		Timer(const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
 
 	public:
-		void Start();
+		// Start the timer from zero
+		void Play();
+		// Stop and destroy the timer
 		void Stop();
+		// Start the timer from the current time
 		void Resume();
+		// Reset the timer to zero
 		void Reset();
+		// Pause the timer at the current time
 		void Pause();
 		void Update(const float& _deltaTime);
 	};
@@ -57,17 +78,19 @@ namespace Krampus
 
 /////////////////////////////////////////////////////////////
 // 
-// M_TIMER.CreateTimer([](){ LOG(engine::VerbosityType::Display, "Timer");}, 2.0f);
+//  TimerManager& _timerManager = M_TIMER;
 // 
-// void TestTimer() 
-// {
-//	   LOG(engine::VerbosityType::Display, "Timer");
-// }
+//	_timerManager.CreateTimer([]() { LOG_MSG("Timer finished!"); }, 2.0f);
 // 
-// Timer* _timer = M_TIMER.CreateTimer(TestTimer, 2.0f);
-// _timer->callback.AddListener(TestTimer);
-// _timer->Pause();
-// _timer->Resume();
-// _timer->Stop();
+//	_timerManager.CreateTimer(&TestTimer, 2.0f);
+// 
+//	MyClass _myClass;
+//	Timer* _timer = _timerManager.CreateTimer(&_myClass, &MyClass::TestTimer, 2.0f, true, false);
+// 
+//	_timer->Play();
+//  _timer->Pause();
+//  _timer->Resume();
+//  _timer->Reset();
+//  _timer->Stop();
 // 
 /////////////////////////////////////////////////////////////

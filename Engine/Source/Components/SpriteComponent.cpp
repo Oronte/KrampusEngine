@@ -4,16 +4,16 @@
 #include "GameFramework/Level.h"
 #include "Managers/CameraManager.h"
 
-Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
+Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const CircleShapeData& _data)
 	: Component(_owner)
 {
-	shape = std::make_unique<ShapeObject>(_radius, _path, _textureType, _rect, _pointCount);
+	shape = std::make_unique<ShapeObject>(_data.radius, _data.texturePath, _data.textureType, _data.textureRect, _data.pointCount);
 }
 
-Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
+Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const RectangleShapeData& _data)
 	: Component(_owner)
 {
-	shape = std::make_unique<ShapeObject>(_size, _path, _textureType, _rect, _isRepeated);
+	shape = std::make_unique<ShapeObject>(_data.size, _data.texturePath, _data.textureType, _data.textureRect, _data.isRepeated);
 }
 
 void Krampus::SpriteComponent::Construct()

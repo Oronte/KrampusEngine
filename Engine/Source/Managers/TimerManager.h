@@ -30,7 +30,7 @@ namespace Krampus
 		float fps = 0.0f;						
 		float smoothedFPS = 60.0f;			// Smoothed FPS for stable display
 
-		std::vector<std::unique_ptr<Timer>> allTimers;
+		std::vector<std::unique_ptr<Timer>> timers;
 
 	private:
 		INLINE float GetTime(const sf::Time& _time) const
@@ -87,8 +87,16 @@ namespace Krampus
 	public:
 		std::string GetCurrentRealTime() const;
 
-		Timer* CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _startRunning = true, const bool& _isLoop = false);
-		Timer* CreateTimer(const float& _duration, const bool& _startRunning = true, const bool& _isLoop = false);
+		Timer* CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+		template<typename T, typename MemFn>
+		INLINE Timer* CreateTimer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
+		{
+			return timers.emplace_back(
+				std::make_unique<Timer>(_instance, _memFn, _duration, _isLoop, _startRunning)
+			).get();
+		}
+		Timer* CreateTimer(const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+		void DestroyTimer(Timer* _toDelete);
 
 		void Pause();
 		void Resume();

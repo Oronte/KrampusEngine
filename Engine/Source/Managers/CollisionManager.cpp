@@ -12,7 +12,7 @@ void Krampus::CollisionManager::Update()
 	{
 		CollisionComponent* _currentComponent = collisions[_index];
 		if (!_currentComponent->IsActive()) continue;
-		for (int _i = 0; _i < _collisionCount; _i++)
+		for (int _i = _index; _i < _collisionCount; _i++)
 		{
 			CollisionComponent* _otherComponent = collisions[_i];
 			if (_index == _i || !_otherComponent->IsActive()) continue;

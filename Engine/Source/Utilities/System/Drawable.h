@@ -18,6 +18,9 @@ namespace Krampus
 		Debug = 225
 	};
 
+	/// <summary>
+	/// Interface for drawable objects.
+	/// </summary>
 	class IDrawable
 	{
 		uint8_t zOrder = 0;
@@ -38,3 +41,15 @@ namespace Krampus
 	};
 
 }
+
+/////////////////////////////////////////////////
+// 
+// class DrawableClass : public IDrawable 
+// {
+//     virtual void Draw(Window& _window) override
+//     {
+//         _window.Draw(objectToDraw);
+//     }
+// }
+// 
+/////////////////////////////////////////////////

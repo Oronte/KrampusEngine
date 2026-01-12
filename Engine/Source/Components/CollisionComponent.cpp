@@ -19,6 +19,16 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionCh
 	M_COLLISION.Register(this);
 }
 
+void Krampus::CollisionComponent::ResolveCollision(const CollisionInfo& _info)
+{
+	transform.position += _info.normal * _info.penetration;
+}
+
+void Krampus::CollisionComponent::BindCollisionResolution()
+{
+	onCollision.AddListener(this, &CollisionComponent::ResolveCollision);
+}
+
 void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)
 {
 	if (!CanCollide(_other)) return;

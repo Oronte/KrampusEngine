@@ -47,6 +47,8 @@ namespace Krampus
 			const CollisionChannel& _channel = CollisionChannel::None,
 			const CollisionChannel& _mask = CollisionChannel::None);
 
+		void ResolveCollision(const CollisionInfo& _info);
+		void BindCollisionResolution();
 		void ComputeCollision(CollisionComponent* _other);
 
 	private:

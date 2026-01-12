@@ -1,41 +1,38 @@
-#include "Button.h"
+#include "ButtonWidget.h"
 #include "Graphics/Mouse.h"
 #include "Managers/InputManager.h"
 
-Krampus::Button::Button(Level* _level, const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
-	: Widget(_level)
+Krampus::ButtonWidget::ButtonWidget(Level* _level, const CircleShapeData& _data)
+	: ImageWidget(_level, _data)
 {
-	sprite = CreateComponent<SpriteComponent>(_radius, _path, _textureType, _rect, _pointCount);
 	Init();
 }
 
-Krampus::Button::Button(Level* _level, const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
-	: Widget(_level)
+Krampus::ButtonWidget::ButtonWidget(Level* _level, const RectangleShapeData& _data)
+	: ImageWidget(_level, _data)
 {
-	sprite = CreateComponent<SpriteComponent>(_size, _path, _textureType, _rect, _isRepeated);
 	Init();
 }
 
-void Krampus::Button::Tick(const float& _deltaTime)
+void Krampus::ButtonWidget::Tick(const float& _deltaTime)
 {
 	Widget::Tick(_deltaTime);
 
 	if (isPressed) onPerform.Broadcast();
 }
 
-void Krampus::Button::Init()
+void Krampus::ButtonWidget::Init()
 {
-	sprite->SetZOrder(ZOrder::Widgets);
 	collision = CreateComponent<CollisionComponent>();
 
 	InputManager& _inputManager = M_INPUT;
 
-	_inputManager.MouseMovedScreen.AddListener(this, &Krampus::Button::OnMouseMoved);
-	_inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::Button::OnClick);
-	_inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::Button::OnRelease);
+	_inputManager.MouseMovedScreen.AddListener(this, &Krampus::ButtonWidget::OnMouseMoved);
+	_inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::ButtonWidget::OnClick);
+	_inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::ButtonWidget::OnRelease);
 }
 
-void Krampus::Button::OnMouseMoved(const IVector2& _mousePos)
+void Krampus::ButtonWidget::OnMouseMoved(const IVector2& _mousePos)
 {
 	CollisionInfo _info;
 	bool _colliding = false;
@@ -51,19 +48,19 @@ void Krampus::Button::OnMouseMoved(const IVector2& _mousePos)
 	isHovered = _colliding;
 }
 
-void Krampus::Button::OnClick()
+void Krampus::ButtonWidget::OnClick()
 {
 	if (!isPressed && isHovered) onPress.Broadcast();
 	isPressed = isHovered;
 }
 
-void Krampus::Button::OnRelease()
+void Krampus::ButtonWidget::OnRelease()
 {
 	if (isPressed) onRelease.Broadcast();
 	isPressed = false;
 }
 
-void Krampus::Button::BeginDestroy()
+void Krampus::ButtonWidget::BeginDestroy()
 {
 	Widget::BeginDestroy();
 

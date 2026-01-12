@@ -7,6 +7,9 @@ namespace Krampus
 
     using ListenerId = unsigned int;
 
+    /// <summary>
+	/// Event system that allows adding, removing and broadcasting events with any number of parameters.
+    /// </summary>
     template<typename... Args>
     class Event
     {
@@ -27,25 +30,26 @@ namespace Krampus
         using Iterator = typename std::vector<Listener>::iterator;
 
     public:
+        /// <summary>
+		/// Returns true if there are no listeners registered to the event.
+        /// </summary>
         INLINE bool IsEmpty() const noexcept
         {
-            return listeners.size() == 0;
+            return Count() == 0;
         }
 
         Event() = default;
-        ~Event()
-        {
-            Clear();
-        }
 
         Event(const Event&) = delete;
         Event& operator=(const Event&) = delete;
 
+        /// <param name="_once"> -> if true, when the next broadcast is called this listener is remove from the event</param>
+		/// <returns> The id of the listener added </returns>
         INLINE ListenerId AddListener(Callback _callback, const bool& _once = false, const int& _priority = 0)
         {
             if (!_callback)
             {
-                LOG(VerbosityType::Error, "There is no callback for the event");
+                LOG_ERROR("There is no callback for the event");
                 return 0;
             }
 
@@ -64,13 +68,15 @@ namespace Krampus
             return _id;
         }
 
+        /// <param name="_once"> -> if true, when the next broadcast is called this listener is remove from the event</param>
+		/// <returns> The id of the listener added </returns>
         template<typename T, typename MemFn>
         INLINE ListenerId AddListener(T* _instance, MemFn _memFn,
             const bool& _once = false, const int& _priority = 0)
         {
             if (!_instance)
             {
-                LOG(VerbosityType::Error, "The instance for the callback is nullptr");
+                LOG_ERROR("The instance for the callback is nullptr");
                 return 0;
             }
 
@@ -95,6 +101,7 @@ namespace Krampus
             return _id;
         }
 
+		// Removes a listener from the event using its id.
         INLINE void RemoveListener(const ListenerId& _id)
         {
             if (_id == 0) return;
@@ -103,9 +110,10 @@ namespace Krampus
                 [_id](const Listener& _listener) { return _listener.id == _id; });
 
             if (_iterator != listeners.end()) listeners.erase(_iterator);
-            else LOG(VerbosityType::Warning, "Incorrect id, cant remove listener");
+            else LOG_WARNING("Incorrect id, cant remove listener");
         }
 
+		// Removes all listeners associated with the given owner pointer.
         INLINE void RemoveAllFrom(void* _owner)
         {
             if (!_owner) return;
@@ -119,18 +127,21 @@ namespace Krampus
                 listeners.end());
         }
 
+		// Removes all listeners from the event
         INLINE void Clear()
         {
-            for (auto& _listener : listeners)
-                _listener.callback = nullptr;
             listeners.clear();
         }
 
+        // Returns the number of registered listeners.
         INLINE size_t Count() const
         {
             return listeners.size();
         }
 
+        /// <summary>
+		/// Call the callback of all registered listeners with the provided arguments.
+        /// </summary>
         INLINE void Broadcast(const Args&... _args)
         {
             for (auto _it = listeners.begin(); _it != listeners.end(); )
@@ -141,43 +152,69 @@ namespace Krampus
             }
         }
 
+		// Alias for Broadcast
         INLINE void operator()(const Args&... _args)
         {
             Broadcast(_args...);
         }
 
-        INLINE void operator += (Callback _callback)
+		// Alias for AddListener
+        INLINE ListenerId operator += (Callback _callback)
         {
-            AddListener(std::move(_callback));
+            return AddListener(std::move(_callback));
         }
 
+		// Alias for RemoveListener
         INLINE void operator -= (const ListenerId& _toRemove)
         {
             RemoveListener(_toRemove);
+        }
+
+		// Alias for RemoveAllfrom
+        INLINE void operator -= (void* _owner)
+        {
+            RemoveAllFrom(_owner);
         }
     };
 
     //////////////////////////////////////////////////////////////////
     // 
-    //  void Add(int _x, int _y) { std::cout << _x + _y; }
-    // 
-    //  engine::Event<int, int> _firstEvent;
-    //  _firstEvent.AddListener(Add);
+    //  void TestEvent(int _number, char _letter)
+    //  {
+    //     std::cout << "Number: " << _number << ", Letter: " << _letter << std::endl;
+    //  }
     //
-    //  MyClass _class = MyClass();
-    //  _firstEvent.AddListener(&_class, &MyClass::Test);
+    //  class MyClass
+    //  {
+    //  public:
+    //       void TestEvent(int _number, char _letter)
+    //      {
+    //          std::cout << "Number: " << _number << ", Letter: " << _letter << std::endl;
+    //      }
+    //  };
     // 
-    //  const unsigned long long& _callbackId = 0;
-    //  _callbackId = _firstEvent.AddListener(ToRemove);
-    //  _firstEvent.RemoveListener(_callbackId);
+    // 
+    //  Event<int, char> _myEvent;
     //
-    //  _firstEvent.Broadcast(1, 2);
-    // 
-    //  engine::Event<> _event; // for Func with no parrams and ne returning type
+    //  _myEvent.AddListener([](int _number, char _letter)
+    //        {
+    //         std::cout << "Number: " << _number << ", Letter: " << _letter << std::endl;
+    //        });
+    //
+    //  ListenerId _idToRemove = _myEvent += &TestEvent;
+    //  _myEvent -= _idToRemove; // _myEvent.RemoveListener(_idToRemove)
+    //
+    //  MyClass _myClass;
+    //  _myEvent.AddListener(&_myClass, &MyClass::TestEvent);
+    //
+    //  _myEvent.Broadcast(5, 'A'); // _myEvent(5, 'A);
     // 
     //////////////////////////////////////////////////////////////////
     
     
+    /// <summary>
+	/// Delegate that can hold a single callback with return Type.
+    /// </summary>
     template<typename Signature>
     class Delegate;
     
@@ -188,6 +225,7 @@ namespace Krampus
         Callback callback;
 
     public:
+		// Replace the callback for the delegate
         void SetCallback(Callback&& _callback)
         {
             if (!_callback)
@@ -198,6 +236,8 @@ namespace Krampus
 
             callback = _callback;
         }
+
+		// Replace the callback for the delegate
         template<typename T, typename MemFn>
         void SetCallback(T* _instance, MemFn _memFn)
         {
@@ -215,11 +255,13 @@ namespace Krampus
             SetCallback(std::move(_callback));
         }
 
+		// Remove the callback from the delegate
         void RemoveCallback()
         {
             callback = nullptr;
         }
 
+		// Broadcast the delegate's callback and return the result of the callback
         ReturnType Broadcast(const Args&... _args)
         {
             if (!callback)
