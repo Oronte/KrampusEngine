@@ -10,6 +10,8 @@
 
 ---
 
+[Documentation](https://github.com/Oronte/KrampusEngine/wiki)
+
 ## Overview
 
 **KrampusEngine** is an experimental **2D game engine** written in **modern C++20**, built on top of **SFML 3.0.0**.  
