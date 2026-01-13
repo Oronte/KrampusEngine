@@ -4,29 +4,25 @@
 
 // SpriteData
 
-Krampus::SpriteData::SpriteData(const IVector2& _start, const IVector2& _size, const float& _factor)
+Krampus::SpriteData::SpriteData(const IVector2& _start, const IVector2& _size)
 {
     start = _start;
     size = _size;
-    factor = _factor;
 }
 
-Krampus::SpriteData::SpriteData(const IRect& _rect, const float& _factor)
+Krampus::SpriteData::SpriteData(const IRect& _rect)
 {
     start = _rect.GetPosition();
     size = _rect.GetSize();
-    factor = _factor;
 }
 
 
 
 // AnimationData
 
-Krampus::AnimationData::AnimationData(const int& _count, const float& _duration, const SpriteData& _spriteData, const bool& _hasExitTime, const bool& _canLoop, const ReadDirection& _direction, const bool _isReversed)
+Krampus::AnimationData::AnimationData(const int& _count, const float& _duration, const SpriteData& _spriteData, const bool& _canLoop, const ReadDirection& _direction)
 {
     canLoop = _canLoop;
-    hasExitTime = _hasExitTime;
-    isReversed = _isReversed;
     count = _count;
     duration = _duration;
 
@@ -71,17 +67,14 @@ Krampus::AnimationData::AnimationData(const int& _count, const float& _duration,
     };
 
     for (int _index = 0; _index < _count; _index++)
-    {
-        const SpriteData& _data = SpriteData(_computeStart[(int)_direction](_index), _spriteData.size, _spriteData.factor);
-        sprites.push_back(_data);
-    }
+        sprites.push_back(
+            SpriteData(_computeStart[CAST(int, _direction)](_index), _spriteData.size
+            ));
 }
 
-Krampus::AnimationData::AnimationData(const float& _duration, const std::vector<SpriteData>& _spritesData, const bool& _hasExitTime, const bool& _canLoop, const bool& _isReversed)
+Krampus::AnimationData::AnimationData(const float& _duration, const std::vector<SpriteData>& _spritesData, const bool& _canLoop)
 {
     canLoop = _canLoop;
-    hasExitTime = _hasExitTime;
-    isReversed = _isReversed;
     count = CAST(int, _spritesData.size());
     duration = _duration;
     sprites = _spritesData;
@@ -113,32 +106,22 @@ void Krampus::Animation::Update()
     {
         if (!data.canLoop)
         {
-            onAnimationEnded();
             Stop();
             return;
         }
 
-        //TODO remove
-        onAnimationEnded.Broadcast();
         Reset();
     }
 
-    if (data.isReversed)
-    {
-        shape->GetShape()->SetScale(FVector2(-1.0f, 1.0f));
-    }
+    notifies[currentIndex].Broadcast();
 
     ++currentIndex;
 
-    std::unordered_map<unsigned int, std::function<void()>> _notifies = data.notifies;
-    if (_notifies.contains(currentIndex))
-    {
-        _notifies[currentIndex]();
-    }
+    SpriteData* _spriteData = GetSpriteData();
+    if (!_spriteData) return;
 
-    const SpriteData& _spriteData = *GetSpriteData();
-    UpdateTimer(_spriteData);
-    M_TEXTURE.SetTextureRect(shape->GetShape(), _spriteData.start, _spriteData.size);
+    UpdateTimer(*_spriteData);
+    M_TEXTURE.SetTextureRect(shape->GetShape(), _spriteData->start, _spriteData->size);
 }
 
 void Krampus::Animation::UpdateTimer(const SpriteData& _spriteData)

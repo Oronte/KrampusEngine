@@ -17,31 +17,24 @@ namespace Krampus
     {
         IVector2 start;
         IVector2 size;
-        float factor;
 
-        SpriteData(const IVector2& _start, const IVector2& _size, const float& _factor = 1.0f);
-        SpriteData(const IRect& _rect, const float& _factor = 1.0f);
+        SpriteData(const IVector2& _start, const IVector2& _size);
+        SpriteData(const IRect& _rect);
     };
 
     struct AnimationData
     {
         bool canLoop = false;
-        bool hasExitTime = false;
-        bool isReversed = false;
         int count = 0;
         float duration = 0.0f;
         std::vector<SpriteData> sprites;
-        std::unordered_map<unsigned int, std::function<void()>> notifies;
-        //std::vector<LinkedAnimation> linkedAnimations;
 
         AnimationData() = default;
         AnimationData(const int& _count, const float& _duration, const SpriteData& _spriteData,
-            const bool& _hasExitTime = true, const bool& _canLoop = true,
-            const ReadDirection& _direction = ReadDirection::RD_ROW, const bool _isReversed = false);
+            const bool& _canLoop = true, const ReadDirection& _direction = ReadDirection::RD_ROW);
 
         AnimationData(const float& _duration, const std::vector<SpriteData>& _spritesData,
-            const bool& _hasExitTime = true, const bool& _canLoop = true,
-            const bool& _isReversed = false);
+            const bool& _canLoop = true);
     };
 
     class Animation
@@ -51,9 +44,9 @@ namespace Krampus
         AnimationData data;
         ShapeObject* shape;
         Timer* timer;
-    
+
     public:
-        Event<> onAnimationEnded;
+        std::unordered_map<int, Event<>> notifies;
 
     private:
         INLINE bool IsValidIndex() const
@@ -62,11 +55,23 @@ namespace Krampus
         }
         INLINE float ComputeDuration()
         {
-            return ComputeDuration(*GetSpriteData());
+            SpriteData* _spriteData = GetSpriteData();
+            if (!_spriteData)
+            {
+                LOG_ERROR("There is no sprite data to Compute the duration");
+                return 0.0f;
+            }
+            return ComputeDuration(*_spriteData);
         }
         INLINE float ComputeDuration(const SpriteData& _spriteData) const
         {
-            return data.duration / data.count * _spriteData.factor;
+            const int& _count = data.count;
+            if (_count == 0)
+            {
+                LOG_ERROR("Can't Compute the duration if sprite count == 0");
+                return 0.0f;
+            }
+            return data.duration / CAST(float, _count);
         }
         INLINE SpriteData* GetSpriteData()
         {
@@ -77,24 +82,11 @@ namespace Krampus
         }
 
     public:
-        //FORCEINLINE void AddLinkedAnimation(const function<bool()>& _transition, Animation* animation)
-        //{
-        //    const LinkedAnimation& _linkedAnim = LinkedAnimation(_transition, animation);
-        //    data.linkedAnimations.push_back(_linkedAnim);
-        //}
         INLINE std::string GetName() const
         {
             return name;
         }
-        //FORCEINLINE Animation* GetNextAnimation() const
-        //{
-        //    for (const LinkedAnimation& _linkedAnim : data.linkedAnimations)
-        //    {
-        //        if (_linkedAnim.IsValid()) return _linkedAnim.animation;
-        //    }
 
-        //    return nullptr;
-        //}
 
     public:
         Animation(const std::string& _name, ShapeObject* _shape, const AnimationData& _data);

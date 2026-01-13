@@ -54,7 +54,7 @@ namespace Krampus
 		{
 			if (GetComponent<Type>())
 			{
-				LOG(VerbosityType::Error, "There is already component of this type");
+				LOG_ERROR("There is already component of this type");
 				return nullptr;
 			}
 
@@ -63,6 +63,25 @@ namespace Krampus
 			components.push_back(std::move(_component));
 			_rawComponent->Construct();
 			return _rawComponent;
+		}
+
+		template <typename Type, IS_BASE_OF(Component, Type)>
+		INLINE void RemoveComponent()
+		{
+			Type* _component = GetComponent<Type>();
+			if (!_component)
+			{
+				LOG_WARNING("There is not a component of this type");
+				return;
+			}
+
+			_component->Deconstruct();
+			std::find_if(components, [&](const std::unique_ptr<Component>& _item)
+				{
+					return _item.get() == _component;
+				});
+
+			return _component;
 		}
 
 

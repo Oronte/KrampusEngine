@@ -4,7 +4,7 @@
 namespace Krampus
 {
 	template<typename T>
-	class Rectangle
+	class Rectangle : public IPrintable
 	{
 		static_assert(std::is_arithmetic_v<T>, "Rectangle<T> requires an arithmetic type T");
 
@@ -61,6 +61,13 @@ namespace Krampus
 			return rect;
 		}
 
+		INLINE virtual std::string ToString() const override
+		{
+			return std::format("Position : {} , Size : {} , Center : {}",
+				GetPosition().ToString(), 
+				GetPosition().ToString(), 
+				GetCenter().ToString());
+		}
 	};
 
 	using IRect = Krampus::Rectangle<int>;

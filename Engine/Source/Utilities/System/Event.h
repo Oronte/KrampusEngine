@@ -7,9 +7,7 @@ namespace Krampus
 
     using ListenerId = unsigned int;
 
-    /// <summary>
-	/// Event system that allows adding, removing and broadcasting events with any number of parameters.
-    /// </summary>
+	// Event system that allows adding, removing and broadcasting events with any number of parameters.
     template<typename... Args>
     class Event
     {
@@ -30,9 +28,7 @@ namespace Krampus
         using Iterator = typename std::vector<Listener>::iterator;
 
     public:
-        /// <summary>
-		/// Returns true if there are no listeners registered to the event.
-        /// </summary>
+		// Returns true if there are no listeners registered to the event.
         INLINE bool IsEmpty() const noexcept
         {
             return Count() == 0;
@@ -139,9 +135,7 @@ namespace Krampus
             return listeners.size();
         }
 
-        /// <summary>
-		/// Call the callback of all registered listeners with the provided arguments.
-        /// </summary>
+		// Call the callback of all registered listeners with the provided arguments.
         INLINE void Broadcast(const Args&... _args)
         {
             for (auto _it = listeners.begin(); _it != listeners.end(); )
@@ -212,12 +206,10 @@ namespace Krampus
     //////////////////////////////////////////////////////////////////
     
     
-    /// <summary>
-	/// Delegate that can hold a single callback with return Type.
-    /// </summary>
     template<typename Signature>
     class Delegate;
     
+	// Delegate that can hold a single callback with return Type.
     template<typename ReturnType, typename... Args>
     class Delegate<ReturnType(Args...)>
     {
@@ -273,16 +265,19 @@ namespace Krampus
             return callback(_args...);
         }
 
+		// Alias for Broadcast
         ReturnType operator()(const Args&... _args)
         {
             return Broadcast(_args...);
         }
 
+		// Alias for SetCallback
         void operator = (Callback&& _callback)
         {
             SetCallback(_callback);
         }
 
+		// Alias for RemoveCallback
         void operator -- ()
         {
             RemoveCallback();

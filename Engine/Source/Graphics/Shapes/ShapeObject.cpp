@@ -6,20 +6,22 @@
 using namespace Krampus;
 
 
-Krampus::ShapeObject::ShapeObject(const float& _radius, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const size_t& _pointCount)
+Krampus::ShapeObject::ShapeObject(const CircleShapeData& _data)
 {
 	shapeType = ShapeType::Circle;
+	const float& _radius = _data.radius;
 	sizeData.radius = _radius;
-	shape = std::make_unique<CircleShape>(_radius, _pointCount);
+	shape = std::make_unique<CircleShape>(_radius, _data.pointCount);
 	shape->SetOriginAtMiddle();
-	M_TEXTURE.Load(this, _path, _textureType);
+	M_TEXTURE.Load(this, _data.texturePath, _data.textureType);
 }
 
-Krampus::ShapeObject::ShapeObject(const FVector2& _size, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool& _isRepeated)
+Krampus::ShapeObject::ShapeObject(const RectangleShapeData& _data)
 {
 	shapeType = ShapeType::Rectangle;
+	const FVector2& _size = _data.size;
 	sizeData.size = _size;
 	shape = std::make_unique<RectangleShape>(_size);
 	shape->SetOriginAtMiddle();
-	M_TEXTURE.Load(this, _path, _textureType);
+	M_TEXTURE.Load(this, _data.texturePath, _data.textureType);
 }

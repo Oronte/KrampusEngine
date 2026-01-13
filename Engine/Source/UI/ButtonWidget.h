@@ -1,6 +1,5 @@
 #pragma once
 #include "ImageWidget.h"
-#include "Components/CollisionComponent.h"
 
 namespace Krampus
 {
@@ -8,8 +7,6 @@ namespace Krampus
 	class ButtonWidget : public ImageWidget
 	{
 	protected:
-		CollisionComponent* collision;
-
 		bool isPressed = false;
 		bool isHovered = false;
 

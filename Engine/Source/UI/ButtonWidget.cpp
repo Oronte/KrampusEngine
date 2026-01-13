@@ -1,6 +1,7 @@
 #include "ButtonWidget.h"
 #include "Graphics/Mouse.h"
 #include "Managers/InputManager.h"
+#include "Utilities/Math/Physics.h"
 
 Krampus::ButtonWidget::ButtonWidget(Level* _level, const CircleShapeData& _data)
 	: ImageWidget(_level, _data)
@@ -16,15 +17,13 @@ Krampus::ButtonWidget::ButtonWidget(Level* _level, const RectangleShapeData& _da
 
 void Krampus::ButtonWidget::Tick(const float& _deltaTime)
 {
-	Widget::Tick(_deltaTime);
+	ImageWidget::Tick(_deltaTime);
 
 	if (isPressed) onPerform.Broadcast();
 }
 
 void Krampus::ButtonWidget::Init()
 {
-	collision = CreateComponent<CollisionComponent>();
-
 	InputManager& _inputManager = M_INPUT;
 
 	_inputManager.MouseMovedScreen.AddListener(this, &Krampus::ButtonWidget::OnMouseMoved);
@@ -40,10 +39,10 @@ void Krampus::ButtonWidget::OnMouseMoved(const IVector2& _mousePos)
 	if (_object->GetShapeType() == ShapeType::Circle)
 		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().radius, _info);
 	else
-		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().size, _info);
+		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().size, localRotation, _info);
 
 	if (_colliding && !isHovered) onHover.Broadcast();
-	if (!_colliding && isHovered) onUnhover.Broadcast();
+	else if (!_colliding && isHovered) onUnhover.Broadcast();
 
 	isHovered = _colliding;
 }
@@ -62,7 +61,7 @@ void Krampus::ButtonWidget::OnRelease()
 
 void Krampus::ButtonWidget::BeginDestroy()
 {
-	Widget::BeginDestroy();
+	ImageWidget::BeginDestroy();
 
 	InputManager& _inputManager = M_INPUT;
 

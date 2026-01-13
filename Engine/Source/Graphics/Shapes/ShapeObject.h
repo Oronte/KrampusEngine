@@ -4,6 +4,24 @@
 namespace Krampus
 {
 
+	struct CircleShapeData
+	{
+		float radius = 50.0f;
+		std::string texturePath = "Default";
+		TextureExtensionType textureType = TextureExtensionType::PNG;
+		IRect textureRect;
+		size_t pointCount = 30;
+	};
+
+	struct RectangleShapeData
+	{
+		FVector2 size = FVector2(200.0f, 100.0f);
+		std::string texturePath = "Default";
+		TextureExtensionType textureType = TextureExtensionType::PNG;
+		IRect textureRect;
+		bool isRepeated = false;
+	};
+
 	enum class ShapeType
 	{
 		Circle,
@@ -43,12 +61,8 @@ namespace Krampus
 			return sizeData;
 		}
 
-		// Circle
-		ShapeObject(const float& _radius, const std::string& _path = "Default", const TextureExtensionType& _textureType = TextureExtensionType::PNG,
-			const IRect& _rect = IRect(), const size_t& _pointCount = 30);
-		// Rectangle
-		ShapeObject(const FVector2& _size, const std::string& _path = "Default", const TextureExtensionType& _textureType = TextureExtensionType::PNG,
-			const IRect& _rect = IRect(), const bool& _isRepeated = false);
+		ShapeObject(const CircleShapeData& _data);
+		ShapeObject(const RectangleShapeData& _data);
 	};
 
 }

@@ -29,7 +29,8 @@ namespace Krampus
 
 	class CollisionComponent : public Component
 	{
-		SpriteComponent* sprite = nullptr;
+		ShapeSizeData& sizeData;
+		ShapeType shapeType;
 		std::unordered_set<CollisionComponent*> collidingComponents;
 
 	public:
@@ -44,6 +45,9 @@ namespace Krampus
 	public:
 		// The owner require a SpriteComponent
 		CollisionComponent(Actor* _owner, 
+			const CollisionChannel& _channel = CollisionChannel::None,
+			const CollisionChannel& _mask = CollisionChannel::None);
+		CollisionComponent(Actor* _owner, const ShapeSizeData& _sizeData,
 			const CollisionChannel& _channel = CollisionChannel::None,
 			const CollisionChannel& _mask = CollisionChannel::None);
 

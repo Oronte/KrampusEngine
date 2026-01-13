@@ -7,13 +7,13 @@
 Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const CircleShapeData& _data)
 	: Component(_owner)
 {
-	shape = std::make_unique<ShapeObject>(_data.radius, _data.texturePath, _data.textureType, _data.textureRect, _data.pointCount);
+	shape = std::make_unique<ShapeObject>(_data);
 }
 
 Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const RectangleShapeData& _data)
 	: Component(_owner)
 {
-	shape = std::make_unique<ShapeObject>(_data.size, _data.texturePath, _data.textureType, _data.textureRect, _data.isRepeated);
+	shape = std::make_unique<ShapeObject>(_data);
 }
 
 void Krampus::SpriteComponent::Construct()
@@ -35,13 +35,6 @@ void Krampus::SpriteComponent::Tick(const float& _deltaTime)
 	Component::Tick(_deltaTime);
 
 	shape->GetShape()->SetTransform(transform);
-}
-
-void Krampus::SpriteComponent::BeginDestroy()
-{
-	Component::BeginDestroy();
-
-	level->GetCameraManager().RemoveDrawable(this);
 }
 
 

@@ -39,14 +39,6 @@ namespace Krampus
 				});
 		}
 
-		INLINE void RemoveDrawable(IDrawable* _toDelete)
-		{
-			std::erase_if(drawer[_toDelete->GetZOrder()], [&](const IDrawable* _drawable)
-				{
-					return _drawable == _toDelete;
-				});
-		}
-
 		INLINE void ChangeZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
 		{
 			std::erase_if(drawer[_oldZOrder], [&](const IDrawable* _item)
