@@ -14,7 +14,7 @@ namespace Krampus
 		bool useDebug = false;
 
 	protected:
-		virtual void DrawDebug(Window& _window) = 0;
+		virtual void DrawDebug() = 0;
 	};
 
 }

@@ -42,24 +42,22 @@ void Krampus::SpriteComponent::Draw(Window& _window)
 {
 	if (!isActive) return;
 	_window.Draw(*shape);
-	DrawDebug(_window);
+	DrawDebug();
 }
 
-void Krampus::SpriteComponent::DrawDebug(Window& _window)
+void Krampus::SpriteComponent::DrawDebug()
 {
 #ifdef DEBUG
 	if (!useDebug) return;
 
-	const FVector2& _position = transform.position;
-
 	switch (shape->GetShapeType())
 	{
 	case ShapeType::Circle:
-		Debug::DrawDebugCircle(_window, _position, shape->GetSizeData().radius, 15, Color::Green());
+		Debug::DrawDebugCircle(level, transform.position, shape->GetSizeData().radius, 15, Color::Green());
 		break;
 
 	case ShapeType::Rectangle:
-		Debug::DrawDebugRect(_window, _position, shape->GetSizeData().size, transform.rotation, Color::Green());
+		Debug::DrawDebugRect(level, transform.position, shape->GetSizeData().size, transform.rotation, Color::Green());
 		break;
 	};
 #endif

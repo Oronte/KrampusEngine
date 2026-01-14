@@ -11,14 +11,14 @@ void Krampus::LabelComponent::Draw(Window& _window)
 {
 	if (!isActive) return;
 	_window.Draw(text);
-	DrawDebug(_window);
+	DrawDebug();
 }
 
-void Krampus::LabelComponent::DrawDebug(Window& _window)
+void Krampus::LabelComponent::DrawDebug()
 {
 #ifdef DEBUG
 	if (!useDebug) return;
-	Debug::DrawDebugRect(_window, transform.position, GetLocalBounds().GetSize(), transform.rotation, Color::Green());
+	Debug::DrawDebugRect(level, transform.position, GetLocalBounds().GetSize(), transform.rotation, Color::Green());
 #endif
 
 }

@@ -2,6 +2,7 @@
 #include "Actors/Actor.h"
 #include "Managers/CollisionManager.h"
 #include "SpriteComponent.h"
+#include "Graphics/Window/MainWindow.h"
 
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionChannel& _channel, const CollisionChannel& _mask)
 	: Component(_owner)
@@ -70,12 +71,21 @@ void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)
 	}
 	else if (_otherType == ShapeType::Rectangle)
 	{
-		if (FMath::Abs(transform.rotation) > 0.02f || FMath::Abs(_other->transform.rotation) > 0.02f)
-			RectToRectOBB(_other);
-		else RectToRectAABB(_other);
+		// TODO Remove
+		//if (FMath::Abs(transform.rotation) > 0.02f || FMath::Abs(_other->transform.rotation) > 0.02f)
+		//	RectToRectOBB(_other);
+		//else RectToRectAABB(_other);
+		RectToRectOBB(_other);
 	}
 	else CircleToRect(_other, this);
 
+}
+
+void Krampus::CollisionComponent::Tick(const float& _deltaTime)
+{
+	Component::Tick(_deltaTime);
+
+	DrawDebug();
 }
 
 bool Krampus::CollisionComponent::CanCollide(const CollisionComponent* _other) const
@@ -232,4 +242,22 @@ void Krampus::CollisionComponent::BeginDestroy()
 	Component::BeginDestroy();
 
 	M_COLLISION.RemoveComponent(this);
+}
+
+void Krampus::CollisionComponent::DrawDebug()
+{
+#ifdef DEBUG
+	if (!useDebug) return;
+
+	switch (shapeType)
+	{
+	case ShapeType::Circle:
+		Debug::DrawDebugCircle(level, transform.position, sizeData.radius, 15, Color::Red());
+		break;
+
+	case ShapeType::Rectangle:
+		Debug::DrawDebugRect(level, transform.position, sizeData.size, transform.rotation, Color::Red());
+		break;
+	};
+#endif
 }

@@ -10,6 +10,7 @@ namespace Krampus
 	{
 		CameraComponent* current = nullptr;
 		std::map<uint8_t, std::vector<IDrawable*>> drawer;
+		std::vector<std::shared_ptr<Vertices>> debugs;
 
 	public:
 		INLINE void SetCurrent(CameraComponent* _camera)
@@ -54,6 +55,8 @@ namespace Krampus
 	public:
 		void UpdateView();
 		void Render(Window& _window, const bool& splitScreen);
+
+		friend class Debug;
 	};
 
 }

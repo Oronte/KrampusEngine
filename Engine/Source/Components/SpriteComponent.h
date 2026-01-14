@@ -38,7 +38,7 @@ namespace Krampus
 
 	public:
 		virtual void Draw(Window& _window) override;
-		virtual void DrawDebug(Window& _window) override;
+		virtual void DrawDebug() override;
 		virtual void SetZOrder(const uint8_t& _zOrder) override;
 		virtual void SetZOrder(const ZOrder& _zOrder) override;
 	};

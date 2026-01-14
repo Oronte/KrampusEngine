@@ -2,13 +2,17 @@
 #include "Actor.h"
 #include "Components/SpriteComponent.h"
 #include "Managers/TextureManager.h"
+#include "Components/CollisionComponent.h"
+#include "Components/PhysicsComponent.h"
 
 namespace Krampus
 {
 
 	class SpriteActor : public Actor
 	{
-		SpriteComponent* sprite;
+		SpriteComponent* sprite = nullptr;
+		CollisionComponent* collision = nullptr;
+		PhysicsComponent* physics = nullptr;
 
 	public:
 		INLINE SpriteComponent* GetSprite() const
@@ -25,7 +29,9 @@ namespace Krampus
 		}
 
 		SpriteActor(Level* _level, const CircleShapeData& _data);
-		SpriteActor(Level* _level, const RectangleShapeData& _data);
+		SpriteActor(Level* _level, const RectangleShapeData& _data, bool test);
+
+		virtual void Tick(const float& _deltaTime) override;
 	};
 
 

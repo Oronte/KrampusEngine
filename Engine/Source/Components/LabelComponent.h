@@ -157,7 +157,7 @@ namespace Krampus
 
 	private:
 		void Draw(Window& _window) override;
-        void DrawDebug(Window& _window) override;
+        void DrawDebug() override;
 
     public:
         virtual void Construct() override;

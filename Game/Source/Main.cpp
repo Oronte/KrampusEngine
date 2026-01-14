@@ -9,6 +9,7 @@
 #include "UI/ButtonWidget.h"
 #include "UI/GIFWidget.h"
 #include "UI/LabelWidget.h"
+#include "Actors/Collider2D.h"
 
 
 void StartGame();
@@ -47,7 +48,14 @@ void StartGame()
 	M_LEVEL.SetLevel(_level.get());
 	Krampus::Engine& _engine = ENGINE;
 
-	_level->SpawnWidget<Krampus::ImageWidget>(Krampus::RectangleShapeData())->transform.position = Krampus::FVector2(200);
+	Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(200)), true);
+	_actor->transform.position = Krampus::FVector2(900, 0);
+
+	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(192, 100)), false);
+	_actor2->transform.position = Krampus::FVector2(850, 500);
+
+	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 
 	_engine.Start();
 }

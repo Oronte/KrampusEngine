@@ -10,11 +10,30 @@ Krampus::SpriteActor::SpriteActor(Level* _level, const CircleShapeData& _data)
 {
 	sprite = CreateComponent<SpriteComponent>(_data);
 	sprite->SetZOrder(ZOrder::Actors);
+
+	collision = CreateComponent<CollisionComponent>(CollisionChannel::Player, CollisionChannel::Player);
 }
 
-Krampus::SpriteActor::SpriteActor(Level* _level, const RectangleShapeData& _data)
+Krampus::SpriteActor::SpriteActor(Level* _level, const RectangleShapeData& _data, bool test)
 	: Actor(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(_data);
 	sprite->SetZOrder(ZOrder::Actors);
+
+	collision = CreateComponent<CollisionComponent>(CollisionChannel::Player, CollisionChannel::Player);
+	if (test)
+	{
+		physics = CreateComponent<PhysicsComponent>();
+		collision->BindCollisionResolution();
+		collision->onCollision.AddListener([this](CollisionInfo _info) {Debug::DrawDebugCircle(GetLevel(), _info.contactPoint, 30); });
+		physics->BindCollisionResponse();
+		//physics->AddImpulse(FVector2(0, -500), FVector2(100));
+	}
+}
+
+void Krampus::SpriteActor::Tick(const float& _deltaTime)
+{
+	Actor::Tick(_deltaTime);
+
+	if (physics) physics->AddForce(FVector2(0, -50), FVector2(10, 0));
 }
