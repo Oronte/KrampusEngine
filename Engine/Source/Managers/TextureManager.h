@@ -9,7 +9,11 @@ namespace Krampus
 
 	class TextureManager : public Singleton<TextureManager>
 	{
-		std::string texturePath = CONTENT_PATH + "Textures/";
+#ifdef SHIP
+		std::string texturePath = "../../Content/Textures/";
+#else
+		std::string texturePath = "Content/Textures/";
+#endif
 		std::string defaultTexturePath = "Default";
 		std::string defaultTextureExtension = "png";
 		Texture defaultTexture;

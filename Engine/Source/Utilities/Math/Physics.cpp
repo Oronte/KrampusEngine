@@ -25,59 +25,120 @@ bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadi
 
 bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, const FRect& _bRect, const Angle& _bRot, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
-    const FVector2& _aPos = _aRect.GetPosition();
-    const FVector2& _aSize = _aRect.GetSize();
+    const FVector2& aPos = _aRect.GetPosition();
+    const FVector2& aSize = _aRect.GetSize();
+    const FVector2& bPos = _bRect.GetPosition();
+    const FVector2& bSize = _bRect.GetSize();
 
-    const FVector2& _bPos = _bRect.GetPosition();
-    const FVector2& _bSize = _bRect.GetSize();
+    FVector2 axesA[2], axesB[2];
+    GetAxes(_aRot, axesA);
+    GetAxes(_bRot, axesB);
 
-    // Axes used for the Separating Axis Theorem (2 per OBB)
-    FVector2 _axesA[2];
-    FVector2 _axesB[2];
-    GetAxes(_aRot, _axesA);
-    GetAxes(_bRot, _axesB);
+    FVector2 delta = bPos - aPos;
+    float minPen = FLT_MAX;
+    FVector2 normal;
 
-    float _minPenetration = FLT_MAX;
-    FVector2 _bestAxis;
-
-    FVector2 _delta = _bPos - _aPos;
-
-    const std::function<bool(const FVector2&)> _testOverlap = [&](const FVector2& _axis) -> bool
+    // Projection sur un axe et test de chevauchement
+    auto testOverlap = [&](const FVector2& axis) -> bool
         {
-            float _dist = FMath::Abs(_delta.Dot(_axis));
-            float _projA = ProjectOBB(_aSize, _aRot, _axis);
-            float _projB = ProjectOBB(_bSize, _bRot, _axis);
+            float projA = ProjectOBB(aSize, _aRot, axis);
+            float projB = ProjectOBB(bSize, _bRot, axis);
+            float dist = FMath::Abs(delta.Dot(axis));
+            float overlap = projA + projB - dist;
+            if (overlap <= 0.0f) return false;
+            if (overlap < minPen) { normal = axis; minPen = overlap; }
+            return true;
+        };
 
-            float _overlap = _projA + _projB - _dist;
-            if (_overlap < 0.0f)
-                return false;
+    if (!testOverlap(axesA[0])) return false;
+    if (!testOverlap(axesA[1])) return false;
+    if (!testOverlap(axesB[0])) return false;
+    if (!testOverlap(axesB[1])) return false;
 
-            if (_overlap < _minPenetration)
+    // sens de la normale (de A vers B)
+    if (delta.Dot(normal) < 0.0f) normal *= -1.0f;
+
+    _aInfo.normal = normal * -1;
+    _aInfo.penetration = minPen / 2;
+    _bInfo.normal = normal;
+    _bInfo.penetration = minPen / 2;
+
+    std::vector<FVector2> contacts;
+
+    // Coins de A tournés correctement
+    FVector2 halfA = aSize / 2.0f;
+    FVector2 cornersA[4] = {
+        aPos + FVector2(-halfA.x, -halfA.y).Rotated(_aRot),
+        aPos + FVector2(halfA.x, -halfA.y).Rotated(_aRot),
+        aPos + FVector2(halfA.x,  halfA.y).Rotated(_aRot),
+        aPos + FVector2(-halfA.x,  halfA.y).Rotated(_aRot)
+    };
+
+    // Coins de B tournés correctement
+    FVector2 halfB = bSize / 2.0f;
+    FVector2 cornersB[4] = {
+        bPos + FVector2(-halfB.x, -halfB.y).Rotated(_bRot),
+        bPos + FVector2(halfB.x, -halfB.y).Rotated(_bRot),
+        bPos + FVector2(halfB.x,  halfB.y).Rotated(_bRot),
+        bPos + FVector2(-halfB.x,  halfB.y).Rotated(_bRot)
+    };
+
+    // Test point dans OBB
+    auto pointInOBB = [](const FVector2& p, const FVector2& pos, const FVector2& size, const FVector2 axes[2])
+        {
+            FVector2 d = p - pos;
+            for (int i = 0; i < 2; i++)
             {
-                _minPenetration = _overlap;
-                _bestAxis = _axis;
+                float proj = d.Dot(axes[i]);
+                float half = (i == 0 ? size.x : size.y) / 2.0f;
+                if (proj < -half || proj > half) return false;
             }
             return true;
         };
 
-    if (!_testOverlap(_axesA[0])) return false;
-    if (!_testOverlap(_axesA[1])) return false;
-    if (!_testOverlap(_axesB[0])) return false;
-    if (!_testOverlap(_axesB[1])) return false;
+    // Coins de A dans B
+    for (int i = 0; i < 4; i++)
+        if (pointInOBB(cornersA[i], bPos, bSize, axesB))
+            contacts.push_back(cornersA[i]);
 
-    if (_delta.Dot(_bestAxis) > 0.0f)
-        _bestAxis *= -1;
+    // Coins de B dans A
+    for (int i = 0; i < 4; i++)
+        if (pointInOBB(cornersB[i], aPos, aSize, axesA))
+            contacts.push_back(cornersB[i]);
 
-    const float _minOffset = 0.0001f; // TODO better solution
+    // filtrer doublons
+    std::vector<FVector2> filtered;
+    for (auto& p : contacts)
+    {
+        bool unique = true;
+        for (auto& f : filtered)
+            if (FMath::Abs(p.x - f.x) < 1e-4f && FMath::Abs(p.y - f.y) < 1e-4f)
+            {
+                unique = false; break;
+            }
+        if (unique) filtered.push_back(p);
+    }
 
-    _aInfo.normal = _bestAxis;
-    _aInfo.penetration = _minPenetration + _minOffset;
-    _aInfo.contactPoint = CalculateContactPoint(_aRect, _aRot, _bRect, _bRot, _bestAxis); // TODO Contact Point not precise
+    _aInfo.contacts = filtered;
+    _bInfo.contacts = filtered;
+
+    // POINT DE CONTACT : choisir le plus profond selon la normale
+    FVector2 contactPoint = filtered.empty() ? FVector2{ 0,0 } : filtered[0];
+    float maxDepth = -FLT_MAX;
+    for (auto& p : filtered)
+    {
+        float depth = (p - aPos).Dot(normal);
+        if (depth > maxDepth)
+        {
+            maxDepth = depth;
+            contactPoint = p;
+        }
+    }
+
+    _aInfo.contactPoint = contactPoint + _aInfo.normal * _aInfo.penetration;
+    _bInfo.contactPoint = contactPoint + _bInfo.normal * _bInfo.penetration;
+
     _aInfo.hit = true;
-
-    _bInfo.normal = _bestAxis * -1.0f;
-    _bInfo.penetration = _aInfo.penetration;
-    _bInfo.contactPoint = _aInfo.contactPoint;
     _bInfo.hit = true;
 
     return true;
@@ -325,131 +386,4 @@ float Krampus::Physics::ProjectOBB(const FVector2& _size, const Angle& _rotation
 	return
 		_halfSize.x * FMath::Abs(_axis.Dot(_axes[0])) +
 		_halfSize.y * FMath::Abs(_axis.Dot(_axes[1]));
-}
-
-void Krampus::Physics::GetRectCorners(const FVector2& pos, const FVector2& size, const Angle& rot, FVector2 outCorners[4])
-{
-    FVector2 half = size * 0.5f;
-    FVector2 local[4] = {
-        FVector2(-half.x, -half.y),
-        FVector2(half.x, -half.y),
-        FVector2(half.x,  half.y),
-        FVector2(-half.x,  half.y)
-    };
-
-    float c = FMath::Cos(rot);
-    float s = FMath::Sin(rot);
-
-    for (int i = 0; i < 4; ++i)
-    {
-        FVector2 r(
-            local[i].x * c - local[i].y * s,
-            local[i].x * s + local[i].y * c
-        );
-        outCorners[i] = pos + r;
-    }
-}
-
-bool Krampus::Physics::ClipSegment(FVector2& p1, FVector2& p2, float min, float max, const FVector2& axis)
-{
-    float d1 = p1.Dot(axis) - min;
-    float d2 = p2.Dot(axis) - min;
-
-    if (d1 < 0.f && d2 < 0.f) return false;
-    if (d1 > 0.f && d2 > 0.f) return false;
-
-    if (d1 < 0.f)
-        p1 = p1 + (p2 - p1) * (d1 / (d1 - d2));
-    else if (d2 < 0.f)
-        p2 = p1 + (p2 - p1) * (d1 / (d1 - d2));
-
-    return true;
-}
-
-Krampus::FVector2 Krampus::Physics::CalculateContactPoint(const FRect& aRect, const Angle& aRot, const FRect& bRect, const Angle& bRot, const FVector2& normal)
-{
-    FVector2 aCorners[4], bCorners[4];
-    GetRectCorners(aRect.GetPosition(), aRect.GetSize(), aRot, aCorners);
-    GetRectCorners(bRect.GetPosition(), bRect.GetSize(), bRot, bCorners);
-
-    // Determine reference face (rectangle whose face is most aligned with normal)
-    FVector2 refAxis = normal;
-    FVector2 refMin = aCorners[0], refMax = aCorners[0];
-
-    for (int i = 1; i < 4; ++i)
-    {
-        float proj = aCorners[i].Dot(refAxis);
-        float minProj = refMin.Dot(refAxis);
-        float maxProj = refMax.Dot(refAxis);
-        if (proj < minProj) refMin = aCorners[i];
-        if (proj > maxProj) refMax = aCorners[i];
-    }
-
-    // Clip incident rectangle edges against reference face
-    FVector2 contactSum(0, 0);
-    int contactCount = 0;
-
-    for (int i = 0; i < 4; ++i)
-    {
-        FVector2 p1 = bCorners[i];
-        FVector2 p2 = bCorners[(i + 1) % 4];
-        if (ClipSegment(p1, p2, refMin.Dot(refAxis), refMax.Dot(refAxis), refAxis))
-        {
-            contactSum += p1;
-            contactCount++;
-            contactSum += p2;
-            contactCount++;
-        }
-    }
-
-    if (contactCount == 0)
-        return (aRect.GetPosition() + bRect.GetPosition()) * 0.5f; // fallback
-
-    FVector2 contactPoint = contactSum / float(contactCount);
-
-    // --- Special case: small rectangle side fully touches the reference face ---
-    float aArea = aRect.GetSize().x * aRect.GetSize().y;
-    float bArea = bRect.GetSize().x * bRect.GetSize().y;
-
-    const FRect* smallRect = (aArea < bArea) ? &aRect : &bRect;
-    Angle smallRot = (aArea < bArea) ? aRot : bRot;
-
-    FVector2 smallCorners[4];
-    GetRectCorners(smallRect->GetPosition(), smallRect->GetSize(), smallRot, smallCorners);
-
-    // Find the side of the small rectangle most facing the normal
-    int sideIndex = 0;
-    float maxDot = -FLT_MAX;
-    for (int i = 0; i < 4; ++i)
-    {
-        FVector2 edge = smallCorners[(i + 1) % 4] - smallCorners[i];
-        FVector2 edgeNormal(-edge.y, edge.x);
-        edgeNormal.Normalized();
-        float dotVal = edgeNormal.Dot(normal);
-        if (dotVal > maxDot)
-        {
-            maxDot = dotVal;
-            sideIndex = i;
-        }
-    }
-
-    // Check if the side is fully within reference face projection
-    FVector2 sideP1 = smallCorners[sideIndex];
-    FVector2 sideP2 = smallCorners[(sideIndex + 1) % 4];
-
-    // Project the side onto the reference normal axis
-    float p1Proj = sideP1.Dot(refAxis);
-    float p2Proj = sideP2.Dot(refAxis);
-    float refMinProj = refMin.Dot(refAxis);
-    float refMaxProj = refMax.Dot(refAxis);
-    const float epsilon = 0.001f;
-
-    if ((p1Proj >= refMinProj - epsilon && p1Proj <= refMaxProj + epsilon) &&
-        (p2Proj >= refMinProj - epsilon && p2Proj <= refMaxProj + epsilon))
-    {
-        // Use the midpoint of the side as contact point
-        contactPoint = (sideP1 + sideP2) * 0.5f;
-    }
-
-    return contactPoint;
 }

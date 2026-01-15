@@ -150,22 +150,28 @@ bool Krampus::Logger::CanPrintInConsole(const VerbosityType& _type)
 
 void Logger::Init()
 {
+#ifdef DEBUG
     Reset();
     running = true;
     logThread = std::thread(LoggingThread);
+#endif
 }
 
 void Krampus::Logger::Shutdown()
 {
+#ifdef DEBUG
     running = false;
     cv.notify_all();
     if (logThread.joinable())
         logThread.join();
+#endif
 }
 
 void Logger::Reset()
 {
+#ifdef DEBUG
     std::ofstream(logsPath, std::ios_base::trunc);
+#endif
 }
 
 void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, const std::string& _debug)
@@ -188,15 +194,19 @@ void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, cons
 
 void Krampus::Logger::PrintLog(const VerbosityType& _type, const IPrintable& _object, const std::string& _debug)
 {
+#ifdef DEBUG
     PrintLog(_type, _object.ToString(), _debug);
+#endif
 }
 
 void Krampus::Logger::PrintLog(const VerbosityType& _type, const IPrintable* _object, const std::string& _debug)
 {
+#ifdef DEBUG
     if (!_object)
     {
         LOG(Krampus::VerbosityType::Error, "You try to print a IPrintable ptr but it's nullptr");
         return;
     }
     PrintLog(_type, _object->ToString(), _debug);
+#endif
 }

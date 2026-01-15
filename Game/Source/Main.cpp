@@ -50,8 +50,9 @@ void StartGame()
 
 	Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(200)), true);
 	_actor->transform.position = Krampus::FVector2(900, 0);
+	_actor->transform.rotation = Krampus::Angle(0.7f);
 
-	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(192, 100)), false);
+	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(1920, 100)), false);
 	_actor2->transform.position = Krampus::FVector2(850, 500);
 
 	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;

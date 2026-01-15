@@ -37,4 +37,10 @@ project "Engine"
         optimize "On"
         symbols "On"
 
+    filter "configurations:Ship"
+        defines { "RELEASE", "SHIP" }
+        runtime "Release"
+        optimize "On"
+        symbols "On"
+
     filter {}

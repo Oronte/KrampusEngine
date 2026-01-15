@@ -14,7 +14,7 @@ namespace Krampus
 
 		float linearDamping = 0.1f;
 		float angularDamping = 0.1f;
-		float restitution = 0.f;
+		float restitution = 0.5f;
 		float staticFriction = 0.5f;
 		float dynamicFriction = 0.3f;
 

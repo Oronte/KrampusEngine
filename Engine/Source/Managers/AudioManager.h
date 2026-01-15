@@ -16,7 +16,11 @@ namespace Krampus
 
 	class AudioManager : public Singleton<AudioManager>
 	{
-		std::string audioPath = CONTENT_PATH + "Audio/";
+#ifdef SHIP
+		std::string audioPath = "../../Content/Audio/";
+#else
+		std::string audioPath = "Content/Audio/";
+#endif
 		std::unordered_map<std::string, std::shared_ptr<sf::SoundBuffer>> cache;
 
 	public:

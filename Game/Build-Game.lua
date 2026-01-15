@@ -68,4 +68,24 @@ project "Game"
             'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-window-3.dll" "%{cfg.targetdir}"'
         }
 
+        filter "configurations:Ship"
+        kind "WindowedApp"
+        defines { "RELEASE", "SHIP" }
+        links {
+            "Engine",
+            "sfml-graphics", "sfml-window",
+            "sfml-system", "sfml-audio",
+            "sfml-network"
+        }
+        runtime "Release"
+        optimize "On"
+        symbols "On"
+        postbuildcommands {
+            'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-audio-3.dll" "%{cfg.targetdir}"',
+            'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-graphics-3.dll" "%{cfg.targetdir}"',
+            'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-network-3.dll" "%{cfg.targetdir}"',
+            'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-system-3.dll" "%{cfg.targetdir}"',
+            'copy /Y "%{RootDir}\\ThirdParty\\SFML-3.0.0\\binaries\\sfml-window-3.dll" "%{cfg.targetdir}"'
+        }
+
     filter {}

@@ -4,11 +4,13 @@
 
 namespace Krampus
 {
+
 	struct CollisionInfo
 	{
 		FVector2 normal;
 		float penetration = 0.f;
 		FVector2 contactPoint;
+		std::vector<FVector2> contacts;
 		class CollisionComponent* collision;
 		bool hit = false;
 	};
@@ -47,13 +49,6 @@ namespace Krampus
 	private:
 		static void GetAxes(const Angle& _rotation, FVector2 _axes[2]);
 		static float ProjectOBB(const FVector2& _size, const Angle& _rotation, const FVector2& _axis);
-		static void GetRectCorners(const FVector2& pos, const FVector2& size, const Angle& rot, FVector2 outCorners[4]);
-		static bool ClipSegment(FVector2& p1, FVector2& p2, float min, float max, const FVector2& axis);
-		static FVector2 CalculateContactPoint(
-			const FRect& aRect, const Angle& aRot,
-			const FRect& bRect, const Angle& bRot,
-			const FVector2& normal
-		);
 	};
 
 }

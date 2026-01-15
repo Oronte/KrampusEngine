@@ -2,7 +2,7 @@ RootDir = path.getabsolute(".")
 
 workspace "KrampusEngine"
     architecture "x64"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "Ship" }
     startproject "Game"
 
     filter "system:windows"
