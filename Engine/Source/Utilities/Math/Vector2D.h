@@ -94,6 +94,12 @@ namespace Krampus
             y = FMath::Clamp(y, _min.y, _max.y);
         }
 
+        INLINE NO_DISCARD void ClampMax(const float& _max)
+        {
+            x = x > _max ? _max : x;
+            y = y > _max ? _max : y;
+        }
+
         static INLINE NO_DISCARD Vector2D<CalcType> Clamp(const Vector2D& _vector, const Vector2D& _min, const Vector2D& _max)
         {
             return Vector2D<CalcType>(FMath::Clamp(_vector.x, _min.x, _max.x), FMath::Clamp(_vector.y, _min.y, _max.y));

@@ -5,13 +5,29 @@
 #include"Managers/TimerManager.h"
 #include "Graphics/Mouse.h"
 
-Krampus::SpriteActor::SpriteActor(Level* _level, const CircleShapeData& _data)
+Krampus::SpriteActor::SpriteActor(Level* _level, const CircleShapeData& _data, bool test)
 	: Actor(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(_data);
 	sprite->SetZOrder(ZOrder::Actors);
 
 	collision = CreateComponent<CollisionComponent>(CollisionChannel::Player, CollisionChannel::Player);
+
+	if (test)
+	{
+		//collision->onCollision.AddListener([&](CollisionInfo _info) {
+		//	Debug::DrawDebugCircle(GetLevel(), _info.avrageContactPoint, 30);
+		//	for (FVector2 _point : _info.contacts)
+		//	{
+		//		Debug::DrawDebugCircle(level, _point, 30);
+		//	}
+		//	LOG_MSG(std::to_string(_info.contacts.size())); });
+		//	M_INPUT.MouseMovedScreen.AddListener([this](FVector2 _pos) {transform.position = _pos; });
+	
+			physics = CreateComponent<PhysicsComponent>();
+			physics->BindCollisionResponse();
+			//physics->AddImpulse(FVector2(100, -500), FVector2(100));
+	}
 }
 
 Krampus::SpriteActor::SpriteActor(Level* _level, const RectangleShapeData& _data, bool test)
@@ -23,13 +39,17 @@ Krampus::SpriteActor::SpriteActor(Level* _level, const RectangleShapeData& _data
 	collision = CreateComponent<CollisionComponent>(CollisionChannel::Player, CollisionChannel::Player);
 	if (test)
 	{
-		//physics = CreateComponent<PhysicsComponent>();
-		collision->BindCollisionResolution();
-		collision->onCollision.AddListener([this](CollisionInfo _info) {Debug::DrawDebugCircle(GetLevel(), _info.contactPoint, 30); });
-		collision->BindCollisionResolution();
-		M_INPUT.MouseMovedScreen.AddListener([this](FVector2 _pos) {transform.position = _pos; });
-		//physics->BindCollisionResponse();
-		//physics->AddImpulse(FVector2(0, -500), FVector2(100));
+		physics = CreateComponent<PhysicsComponent>();
+		//collision->BindCollisionResolution();
+		//collision->onCollision.AddListener([&](CollisionInfo _info) {
+		//	Debug::DrawDebugCircle(GetLevel(), _info.avrageContactPoint, 30);
+		//	for (FVector2 _point : _info.contacts)
+		//	{
+		//		Debug::DrawDebugCircle(level, _point, 30);
+		//	} 
+		//	LOG_MSG(std::to_string(_info.contacts.size())); });
+		//M_INPUT.MouseMovedScreen.AddListener([this](FVector2 _pos) {transform.position = _pos; });
+		physics->BindCollisionResponse();
 	}
 }
 

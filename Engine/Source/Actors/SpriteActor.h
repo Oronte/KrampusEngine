@@ -28,7 +28,7 @@ namespace Krampus
 			M_TEXTURE.SetTextureRect(sprite->GetShapeObject()->GetShape(), _rect);
 		}
 
-		SpriteActor(Level* _level, const CircleShapeData& _data);
+		SpriteActor(Level* _level, const CircleShapeData& _data, bool test);
 		SpriteActor(Level* _level, const RectangleShapeData& _data, bool test);
 
 		virtual void Tick(const float& _deltaTime) override;

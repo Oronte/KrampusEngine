@@ -48,15 +48,31 @@ void StartGame()
 	M_LEVEL.SetLevel(_level.get());
 	Krampus::Engine& _engine = ENGINE;
 
-	Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(200)), true);
-	_actor->transform.position = Krampus::FVector2(900, 0);
-	_actor->transform.rotation = Krampus::Angle(0.7f);
+	for (int i = 0; i < 15; i++)
+	{
+		Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100)), true);
+		_actor->transform.position = Krampus::FVector2(i * 150 + 100, 0);
+		_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+		//_actor->GetComponent<Krampus::PhysicsComponent>()->AddImpulse(Krampus::FVector2(-100));
+	}
 
-	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(1920, 100)), false);
+	//Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(200))/*Krampus::CircleShapeData()*/, true);
+	//_actor->transform.position = Krampus::FVector2(900, 0);
+	////_actor->transform.rotation = Krampus::Angle(0.7f);
+
+	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(1920, 100))/*Krampus::CircleShapeData()*/, false);
 	_actor2->transform.position = Krampus::FVector2(850, 500);
+	Krampus::Actor* _actor3 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100, 1080))/*Krampus::CircleShapeData()*/, false);
+	_actor3->transform.position = Krampus::FVector2(10, 0);
+	Krampus::Actor* _actor4 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100, 1080))/*Krampus::CircleShapeData()*/, false);
+	_actor4->transform.position = Krampus::FVector2(1900, 0);
 
-	_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+	//_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+	_actor3->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+	_actor4->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
+
+	M_TIMER.SetMaxFrameRate(0);
 
 	_engine.Start();
 }

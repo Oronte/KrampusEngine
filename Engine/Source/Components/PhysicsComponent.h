@@ -7,14 +7,13 @@ namespace Krampus
 	class PhysicsComponent : public Component
 	{
 	public:
-	public:
 		bool useGravity = true;
 		bool isKinematic = false;
 		float gravity = 980.f;
 
 		float linearDamping = 0.1f;
 		float angularDamping = 0.1f;
-		float restitution = 0.5f;
+		float restitution = 0.2f;
 		float staticFriction = 0.5f;
 		float dynamicFriction = 0.3f;
 

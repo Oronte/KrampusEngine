@@ -9,9 +9,9 @@ namespace Krampus
 	{
 		FVector2 normal;
 		float penetration = 0.f;
-		FVector2 contactPoint;
+		FVector2 avrageContactPoint;
 		std::vector<FVector2> contacts;
-		class CollisionComponent* collision;
+		class CollisionComponent* collision = nullptr;
 		bool hit = false;
 	};
 
@@ -49,6 +49,17 @@ namespace Krampus
 	private:
 		static void GetAxes(const Angle& _rotation, FVector2 _axes[2]);
 		static float ProjectOBB(const FVector2& _size, const Angle& _rotation, const FVector2& _axis);
+        static std::array<FVector2, 4> GetCorners(const FRect& _rect, const Angle& _rot);
+        static bool SegmentIntersect(const FVector2& _p, const FVector2& _r,
+            const FVector2& _q, const FVector2& _s, FVector2& _outPoint);
+		static std::vector<FVector2> CalculateOBBContactPoints(const FRect& _aRect, const Angle& _aRot,
+			const FRect& _bRect, const Angle& _bRot);
+		static FVector2 ComputeAverageContactPoint(const std::vector<FVector2>& _contacts);
+		static std::vector<FVector2> CircleToRectContacts(const FVector2& _circlePos, 
+			float _radius, const FRect& _rect, float _rectRot);
+		static std::vector<FVector2> CircleCircleIntersections(const FVector2& _c1, float _r1,
+			const FVector2& _c2, float _r2);
+		static std::vector<FVector2> RectRectContacts(const FRect& _a, const FRect& _b);
 	};
 
 }
