@@ -50,22 +50,26 @@ void StartGame()
 
 	for (int i = 0; i < 15; i++)
 	{
-		Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100)), true);
-		_actor->transform.position = Krampus::FVector2(i * 150 + 100, 0);
+		Krampus::Actor* _actor;
+		if (Krampus::IMath::RandomRange(0, 1, i+55))
+			_actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(50, 150)), true);
+		else	
+			_actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::CircleShapeData(50), true);
+		
+		_actor->transform.position = Krampus::FVector2((float)i * 150 + 150, 0);
 		_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
-		//_actor->GetComponent<Krampus::PhysicsComponent>()->AddImpulse(Krampus::FVector2(-100));
 	}
 
 	//Krampus::Actor* _actor = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(200))/*Krampus::CircleShapeData()*/, true);
 	//_actor->transform.position = Krampus::FVector2(900, 0);
 	////_actor->transform.rotation = Krampus::Angle(0.7f);
 
-	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(1920, 100))/*Krampus::CircleShapeData()*/, false);
-	_actor2->transform.position = Krampus::FVector2(850, 500);
-	Krampus::Actor* _actor3 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100, 1080))/*Krampus::CircleShapeData()*/, false);
-	_actor3->transform.position = Krampus::FVector2(10, 0);
-	Krampus::Actor* _actor4 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100, 1080))/*Krampus::CircleShapeData()*/, false);
-	_actor4->transform.position = Krampus::FVector2(1900, 0);
+	Krampus::Actor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(1920, 100)), false);
+	_actor2->transform.position = Krampus::FVector2(960, 1080);
+	Krampus::Actor* _actor3 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100, 1080)), false);
+	_actor3->transform.position = Krampus::FVector2(0, 0);
+	Krampus::Actor* _actor4 = _level->SpawnActor<Krampus::SpriteActor>(Krampus::RectangleShapeData(Krampus::FVector2(100, 1080)), false);
+	_actor4->transform.position = Krampus::FVector2(1920, 0);
 
 	//_actor->GetComponent<Krampus::SpriteComponent>()->useDebug = true;
 	_actor2->GetComponent<Krampus::SpriteComponent>()->useDebug = true;

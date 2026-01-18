@@ -9,16 +9,16 @@ namespace Krampus
 	public:
 		bool useGravity = true;
 		bool isKinematic = false;
-		float gravity = 980.f;
+		float gravity = 981.f;
 
 		float linearDamping = 0.1f;
 		float angularDamping = 0.1f;
-		float restitution = 0.2f;
+		float restitution = 0.15f;
 		float staticFriction = 0.5f;
-		float dynamicFriction = 0.3f;
+		float dynamicFriction = 0.4f;
 
-		float maxLinearVelocity = 2000.f;
-		float maxAngularVelocity = 20.f;
+		float maxLinearVelocity = 5000.f;
+		float maxAngularVelocity = 50.f;
 
 	private:
 		float mass = 1.f;

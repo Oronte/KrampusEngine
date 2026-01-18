@@ -4,27 +4,42 @@ bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadi
 {
     _aInfo = _bInfo = CollisionInfo();
 
-	const float _distance = _aPos.Distance(_bPos);
-	const float _radiusSum = _aRadius + _bRadius;
+    FVector2 delta = _bPos - _aPos;
+    float distSq = delta.LengthSquared();
+    float radiusSum = _aRadius + _bRadius;
 
-	if (_distance > _radiusSum) return false;
+    if (distSq > radiusSum * radiusSum)
+        return false;
 
-	const FVector2& _normal = _distance == 0.0f ? FVector2() :
-		(_bPos - _aPos) / -_distance;
+    float dist = FMath::Sqrt(distSq);
 
-	_aInfo.normal = _normal;
-	_aInfo.penetration = _radiusSum - _distance;
-	_aInfo.avrageContactPoint = _bPos + _normal * (_bRadius - _aInfo.penetration);
-	_aInfo.hit = true;
+    FVector2 normal;
+    if (dist > FMath::epsilon)
+        normal = delta / dist;
+    else
+        normal = FVector2(0.f, -1.f);
 
-	_bInfo.normal = _aInfo.normal * -1.0f;
-	_bInfo.penetration = _aInfo.penetration;
-	_bInfo.avrageContactPoint = _aPos + _bInfo.normal * (_aRadius - _aInfo.penetration);
-	_bInfo.hit = true;
+    float penetration = radiusSum - dist;
 
-    _aInfo.contacts = _bInfo.contacts = CircleCircleIntersections(_aPos, _aRadius, _bPos, _bRadius);
+    FVector2 contact = _aPos + normal * (_aRadius - penetration * 0.5f);
 
-	return true;
+    _aInfo.normal = normal * -1.0f;
+    _aInfo.penetration = penetration;
+    _aInfo.avrageContactPoint = contact;
+    _aInfo.hit = true;
+
+    _bInfo.normal = normal;
+    _bInfo.penetration = penetration;
+    _bInfo.avrageContactPoint = contact;
+    _bInfo.hit = true;
+
+    _aInfo.contacts = _bInfo.contacts =
+        CircleCircleIntersections(_aPos, _aRadius, _bPos, _bRadius);
+
+    if (_aInfo.contacts.empty())
+        _aInfo.contacts = _bInfo.contacts = { contact };
+
+    return true;
 }
 
 bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, const FRect& _bRect, const Angle& _bRot, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
@@ -44,14 +59,27 @@ bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
     float _minPen = FLT_MAX;
     FVector2 _normal;
 
-    auto TestOverlap = [&](const FVector2& axis) -> bool
+    auto TestOverlap = [&](FVector2 _axis) -> bool
         {
-            const float _projA = ProjectOBB(_aSize, _aRot, axis);
-            const float _projB = ProjectOBB(_bSize, _bRot, axis);
-            const float _dist = FMath::Abs(_delta.Dot(axis));
+            float _lenSq = _axis.LengthSquared();
+            if (_lenSq < 1e-8f)
+                return true;
+
+            _axis /= FMath::Sqrt(_lenSq);
+
+            const float _projA = ProjectOBB(_aSize, _aRot, _axis);
+            const float _projB = ProjectOBB(_bSize, _bRot, _axis);
+            const float _dist = FMath::Abs(_delta.Dot(_axis));
+
             const float _overlap = _projA + _projB - _dist;
-            if (_overlap <= 0.0f) return false;
-            if (_overlap < _minPen) { _normal = axis; _minPen = _overlap; }
+            if (_overlap <= 0.0f)
+                return false;
+
+            if (_overlap < _minPen)
+            {
+                _minPen = _overlap;
+                _normal = _axis;
+            }
             return true;
         };
 
@@ -72,8 +100,15 @@ bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
     _aInfo.hit = true;
     _bInfo.hit = true;
 
-    _aInfo.contacts = _bInfo.contacts = CalculateOBBContactPoints(_aRect, _aRot, _bRect, _bRot);
-    _aInfo.avrageContactPoint = _bInfo.avrageContactPoint = ComputeAverageContactPoint(_aInfo.contacts);
+    std::vector<FVector2> _contacts = CalculateOBBContactPoints(_aRect, _aRot, _bRect, _bRot);
+    if (_contacts.empty())
+    {
+        FVector2 _mid = (_aPos + _bPos) * 0.5f;
+        _contacts.push_back(_mid);
+    }
+
+    _aInfo.contacts = _bInfo.contacts = _contacts;
+    _aInfo.avrageContactPoint = _bInfo.avrageContactPoint = ComputeAverageContactPoint(_contacts);
 
     return true;
 }
@@ -97,24 +132,25 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
     const FVector2& _bHalfSize = _bRect.GetSize() * 0.5f;
 
     FVector2 _normal;
-    FVector2 _contactPoint;
 
     const FVector2& _delta = _bPos - _aPos;
 
     if (_sizeIntersection.x < _sizeIntersection.y) // Horizontale
     {
         _normal = (_delta.x < 0.f) ? FVector2{ -1.f, 0.f } : FVector2{ 1.f, 0.f };
-        _contactPoint = FVector2(_aPos.x + _aHalfSize.x * _normal.x, _bPos.y);
     }
     else  // Verticale
     {
         _normal = (_delta.y < 0.f) ? FVector2{ 0.f, -1.f } : FVector2{ 0.f,  1.f };
-        _contactPoint = FVector2(_bPos.x, _aPos.y + _aHalfSize.y * _normal.y);
     }
+
+    const FVector2& _contactPoint = FVector2(
+        (_aPos.x - _aHalfSize.x + _bPos.x - _bHalfSize.x) * 0.5f,
+        (_aPos.y - _aHalfSize.y + _bPos.y - _bHalfSize.y) * 0.5f);
 
     _aInfo.normal = _normal * -1;
     _aInfo.penetration = FMath::MinVal(_sizeIntersection.x, _sizeIntersection.y);
-    _aInfo.avrageContactPoint = _contactPoint; // TODO Contact Point not precise
+    _aInfo.avrageContactPoint = _contactPoint; 
     _aInfo.hit = true;
 
     _bInfo.normal = _normal;
@@ -122,9 +158,7 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
     _bInfo.avrageContactPoint = _contactPoint;
     _bInfo.hit = true;
 
-    // TODO ne marche pas 
-    // TODO pour tout les collisions calcule pour detecté les collision faites 2 fois pour avoir les contactPoints
-    _aInfo.contacts = _bInfo.contacts = RectRectContacts(_aRect, _bRect);
+    _aInfo.contacts = _bInfo.contacts = { _contactPoint };
 
     return true;
 }
@@ -147,7 +181,7 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
     float _penetration;
 
     // Outside
-    if (_delta.LengthSquared() > 0.f)
+    if (_delta.LengthSquared() > FMath::epsilon)
     {
         const float _dist = _delta.Length();
         if (_dist > _radius) return false;
@@ -175,8 +209,6 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
             _contactLocal = FVector2(_localPosition.x, _rectHalfSize.y * _normalLocal.y);
         }
     }
-    const float _minOffset = 0.0001f; // TODO better solution
-    _penetration += _minOffset;
 
     const FVector2 normalWorld = _normalLocal.Rotated(_rectRot);
     const FVector2 contactWorld = _contactLocal.Rotated(_rectRot) + _rectPosition;
@@ -192,6 +224,8 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
     _rectInfo.hit = true;
 
     _circleInfo.contacts = _rectInfo.contacts = CircleToRectContacts(_circlePos, _radius, _rect, _rectRot);
+    if (_circleInfo.contacts.empty())
+        _circleInfo.contacts = _rectInfo.contacts = { contactWorld };
 
     return true;
 }
@@ -358,12 +392,14 @@ std::array<Krampus::FVector2, 4> Krampus::Physics::GetCorners(const FRect& _rect
 
 bool Krampus::Physics::SegmentIntersect(const FVector2& _p, const FVector2& _r, const FVector2& _q, const FVector2& _s, FVector2& _outPoint)
 {
-    float _rxs = _r.x * _s.y - _r.y * _s.x;
-    if (_rxs == 0.f) return false;
+    const float _rxs = _r.Cross(_s);
+
+    if (FMath::Abs(_rxs) < FMath::epsilon)
+        return false;
 
     FVector2 _qp = _q - _p;
-    float _t = (_qp.x * _s.y - _qp.y * _s.x) / _rxs;
-    float _u = (_qp.x * _r.y - _qp.y * _r.x) / _rxs;
+    float _t = _qp.Cross(_s) / _rxs;
+    float _u = _qp.Cross(_r) / _rxs;
 
     if (_t >= 0.f && _t <= 1.f && _u >= 0.f && _u <= 1.f)
     {
@@ -407,8 +443,12 @@ std::vector<Krampus::FVector2> Krampus::Physics::CalculateOBBContactPoints(const
 
 Krampus::FVector2 Krampus::Physics::ComputeAverageContactPoint(const std::vector<FVector2>& _contacts)
 {
+    if (_contacts.empty())
+        return FVector2::Zero();
+
     FVector2 _sum;
-    for (const FVector2& _point : _contacts) _sum += _point;
+    for (const FVector2& _p : _contacts)
+        _sum += _p;
 
     return _sum / CAST(float, _contacts.size());
 }
@@ -434,19 +474,27 @@ std::vector<Krampus::FVector2> Krampus::Physics::CircleToRectContacts(const FVec
         FVector2 d = p1 - p0;
         FVector2 f = p0 - _localCircle;
 
-        float a = d.x * d.x + d.y * d.y;
-        float b = 2 * (f.x * d.x + f.y * d.y);
-        float c = f.x * f.x + f.y * f.y - _radius * _radius;
+        float a = d.Dot(d);
+        if (a < FMath::epsilon)
+            continue;
 
-        float discriminant = b * b - 4 * a * c;
-        if (discriminant < 0) continue; // pas d'intersection
+        float b = 2.f * f.Dot(d);
+        float c = f.Dot(f) - _radius * _radius;
 
-        discriminant = sqrt(discriminant);
-        float t1 = (-b - discriminant) / (2 * a);
-        float t2 = (-b + discriminant) / (2 * a);
+        float discriminant = b * b - 4.f * a * c;
+        if (discriminant < 0.f)
+            continue;
 
-        if (t1 >= 0.f && t1 <= 1.f) _contacts.push_back(p0 + d * t1);
-        if (t2 >= 0.f && t2 <= 1.f) _contacts.push_back(p0 + d * t2);
+        discriminant = FMath::Sqrt(discriminant);
+
+        float inv2a = 1.f / (2.f * a);
+        float t1 = (-b - discriminant) * inv2a;
+        float t2 = (-b + discriminant) * inv2a;
+
+        if (t1 >= 0.f && t1 <= 1.f)
+            _contacts.push_back(p0 + d * t1);
+        if (t2 >= 0.f && t2 <= 1.f)
+            _contacts.push_back(p0 + d * t2);
     }
 
     // Transformer en coordonnées monde
@@ -463,46 +511,18 @@ std::vector<Krampus::FVector2> Krampus::Physics::CircleCircleIntersections(const
     float d = v.Length();
 
     // Pas d'intersection
-    if (d > _r1 + _r2 || d < fabs(_r1 - _r2) || d == 0.f) return contacts;
+    if (d > _r1 + _r2 || d < FMath::Abs(_r1 - _r2) || d < FMath::epsilon) return contacts;
 
     float a = (_r1 * _r1 - _r2 * _r2 + d * d) / (2 * d);
     FVector2 p0 = _c1 + v * (a / d);
 
-    float h = sqrt(_r1 * _r1 - a * a);
+    float h = FMath::Sqrt(_r1 * _r1 - a * a);
 
     // Perpendiculaire
     FVector2 perp = FVector2(-v.y, v.x) / d;
 
     contacts.push_back(p0 + perp * h);
     contacts.push_back(p0 - perp * h);
-
-    return contacts;
-}
-
-std::vector<Krampus::FVector2> Krampus::Physics::RectRectContacts(const FRect& _a, const FRect& _b)
-{
-    std::vector<FVector2> contacts;
-
-    FVector2 ha = _a.GetSize() * 0.5f;
-    FVector2 hb = _b.GetSize() * 0.5f;
-
-    FVector2 ca = _a.GetPosition();
-    FVector2 cb = _b.GetPosition();
-
-    // Vérifier collision
-    if (std::abs(ca.x - cb.x) > ha.x + hb.x) return contacts;
-    if (std::abs(ca.y - cb.y) > ha.y + hb.y) return contacts;
-
-    // Rectangle d'intersection
-    float x_min = std::max(ca.x - ha.x, cb.x - hb.x);
-    float x_max = std::min(ca.x + ha.x, cb.x + hb.x);
-    float y_min = std::max(ca.y - ha.y, cb.y - hb.y);
-    float y_max = std::min(ca.y + ha.y, cb.y + hb.y);
-
-    contacts.push_back(FVector2(x_min, y_min));
-    contacts.push_back(FVector2(x_max, y_min));
-    contacts.push_back(FVector2(x_max, y_max));
-    contacts.push_back(FVector2(x_min, y_max));
 
     return contacts;
 }

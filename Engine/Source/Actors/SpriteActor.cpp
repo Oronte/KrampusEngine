@@ -57,5 +57,5 @@ void Krampus::SpriteActor::Tick(const float& _deltaTime)
 {
 	Actor::Tick(_deltaTime);
 
-	//if (physics) physics->AddForce(FVector2(0, -50), FVector2(10, 0));
+	//if (physics) physics->AddForce(FVector2(100, -50), FVector2(10, 0));
 }

@@ -223,11 +223,45 @@ namespace Krampus
 
         static NO_DISCARD Real RandomRange(const Real& _min, const Real& _max)
         {
-            std::random_device _rSeed; // Get a random seed
-            std::mt19937 _gen(_rSeed()); // Init generator with the seed
-            std::uniform_real_distribution<Real> _distr(_min, _max); // Define limits
+            static thread_local std::mt19937 _generator{
+                    []()
+                    {
+                        std::random_device _rd;
+                        std::seed_seq _seed{
+                            _rd(),
+                            _rd(),
+                            _rd(),
+                            _rd()
+                        };
+                        return std::mt19937(_seed);
+                    }()
+            };
 
-            return _distr(_gen); // Generate number
+            if constexpr (std::is_integral_v<Real>)
+            {
+                std::uniform_int_distribution<Real> _dist(_min, _max);
+                return _dist(_generator);
+            }
+            else
+            {
+                std::uniform_real_distribution<Real> _dist(_min, _max);
+                return _dist(_generator);
+            }
+        }
+
+        static NO_DISCARD Real RandomRange(const Real& _min, const Real& _max, uint32_t seed)
+        {
+            thread_local std::mt19937 _generator(seed);
+            if constexpr (std::is_integral_v<Real>)
+            {
+                std::uniform_int_distribution<Real> _dist(_min, _max);
+                return _dist(_generator);
+            }
+            else
+            {
+                std::uniform_real_distribution<Real> _dist(_min, _max);
+                return _dist(_generator);
+            }
         }
 
         #pragma endregion

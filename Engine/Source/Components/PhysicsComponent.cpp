@@ -57,82 +57,137 @@ void Krampus::PhysicsComponent::BindCollisionResponse()
 
 void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
 {
-    if (isKinematic) return; // les objets kinematic ne réagissent pas
+    if (isKinematic)
+        return;
 
-    PhysicsComponent* otherPhys = info.collision ? info.collision->GetOwner()->GetComponent<PhysicsComponent>() : nullptr;
+    PhysicsComponent* physA = this;
+    PhysicsComponent* physB = nullptr;
 
-    float invMassA = inverseMass;
-    float invInertiaA = inverseInertia;
+    if (info.collision)
+        physB = info.collision->GetOwner()->GetComponent<PhysicsComponent>();
 
-    CollisionComponent* col = owner->GetComponent<CollisionComponent>();
-    bool isCircle = col && col->GetShapeType() == ShapeType::Circle;
+    // Masse infinie si pas de PhysicsComponent
+    float invMassA = physA->inverseMass;
+    float invInertiaA = physA->inverseInertia;
 
-    // Traitement de tous les points de contact
+    float invMassB = physB && !physB->isKinematic ? physB->inverseMass : 0.f;
+    float invInertiaB = physB && !physB->isKinematic ? physB->inverseInertia : 0.f;
+
+    const FVector2& normal = info.normal;
+
     for (const FVector2& contact : info.contacts)
     {
-        FVector2 rA = contact - owner->transform.position;
+        FVector2 rA = contact - physA->owner->transform.position;
+        FVector2 rB = FVector2::Zero();
 
-        // Vélocité relative
-        FVector2 vA = velocity + FVector2(-angularVelocity * rA.y, angularVelocity * rA.x);
+        if (physB)
+            rB = contact - physB->owner->transform.position;
+
+        // Vélocité au point de contact
+        FVector2 vA = physA->velocity + FVector2(-physA->angularVelocity * rA.y, physA->angularVelocity * rA.x);
         FVector2 vB = FVector2::Zero();
-        if (otherPhys && !otherPhys->isKinematic)
-        {
-            FVector2 rB = contact - otherPhys->owner->transform.position;
-            vB = otherPhys->velocity + FVector2(-otherPhys->angularVelocity * rB.y, otherPhys->angularVelocity * rB.x);
-        }
+
+        if (physB && !physB->isKinematic)
+            vB = physB->velocity + FVector2(-physB->angularVelocity * rB.y, physB->angularVelocity * rB.x);
 
         FVector2 relativeVel = vA - vB;
-        float velAlongNormal = relativeVel.Dot(info.normal);
+        float velAlongNormal = relativeVel.Dot(normal);
 
-        if (velAlongNormal > 0.f) continue; // objets s'éloignent
+        // Les objets s'éloignent
+        if (velAlongNormal > 0.f)
+            continue;
 
-        // --- IMPULSION NORMALE ---
-        float e = restitution;
-        if (otherPhys) e = FMath::MinVal(restitution, otherPhys->restitution);
+        // ---------------------------
+        // IMPULSION NORMALE
+        // ---------------------------
+        float restitution = physA->restitution;
+        if (physB)
+            restitution = FMath::MinVal(restitution, physB->restitution);
 
-        float rAcrossN_A = rA.Cross(info.normal);
-        float denom = invMassA + rAcrossN_A * rAcrossN_A * invInertiaA;
+        float rAcrossN_A = rA.Cross(normal);
+        float rAcrossN_B = rB.Cross(normal);
 
-        float j = -(1.f + e) * velAlongNormal / denom;
-        FVector2 impulse = info.normal * j;
+        float denom =
+            invMassA + invMassB +
+            rAcrossN_A * rAcrossN_A * invInertiaA +
+            rAcrossN_B * rAcrossN_B * invInertiaB;
 
-        // Appliquer seulement à cet objet
-        AddImpulse(impulse, rA);
+        if (denom <= 0.f)
+            continue;
 
-        // --- FRICTION ---
-        FVector2 tangent = relativeVel - (info.normal * velAlongNormal);
-        float tangentLen2 = tangent.LengthSquared();
+        float j = -(1.f + restitution) * velAlongNormal;
+        j /= denom;
 
-        // Clamp petites valeurs
-        if (tangentLen2 > 1e-6f)
-            tangent = tangent.Normalized();
+        FVector2 impulse = normal * j;
+
+        physA->AddImpulse(impulse, rA);
+        if (physB && !physB->isKinematic)
+            physB->AddImpulse(impulse * -1, rB);
+
+        // ---------------------------
+        // FRICTION
+        // ---------------------------
+        FVector2 tangent = relativeVel - normal * velAlongNormal;
+        float tangentLenSq = tangent.LengthSquared();
+
+        if (tangentLenSq > 1e-6f)
+            tangent /= FMath::Sqrt(tangentLenSq);
         else
-            tangent = FVector2::Zero();
+            continue;
 
-        // Pour les cercles, éviter rotation si quasi immobile
-        if (isCircle && tangentLen2 < 1e-4f)
-            tangent = FVector2::Zero();
+        float jt = -relativeVel.Dot(tangent);
 
-        float jt = -relativeVel.Dot(tangent) / denom;
+        float rAt = rA.Cross(tangent);
+        float rBt = rB.Cross(tangent);
+
+        float denomT =
+            invMassA + invMassB +
+            rAt * rAt * invInertiaA +
+            rBt * rBt * invInertiaB;
+
+        if (denomT <= 0.f)
+            continue;
+
+        jt /= denomT;
+
+        float mu_s = physA->staticFriction;
+        float mu_d = physA->dynamicFriction;
+
+        if (physB)
+        {
+            mu_s = FMath::Sqrt(mu_s * physB->staticFriction);
+            mu_d = FMath::Sqrt(mu_d * physB->dynamicFriction);
+        }
+
         FVector2 frictionImpulse;
-        float mu = dynamicFriction;
 
-        if (FMath::Abs(jt) < j * mu)
-            frictionImpulse = tangent * jt; // statique
+        if (FMath::Abs(jt) < j * mu_s)
+            frictionImpulse = tangent * jt;               // statique
         else
-            frictionImpulse = tangent * -j * mu; // dynamique
+            frictionImpulse = tangent * -j * mu_d;        // dynamique
 
-        AddImpulse(frictionImpulse, rA);
+        physA->AddImpulse(frictionImpulse, rA);
+        if (physB && !physB->isKinematic)
+            physB->AddImpulse(frictionImpulse * -1, rB);
 
-        // --- CORRECTION DE PÉNÉTRATION ---
-        const float percent = 0.8f;
+        // ---------------------------
+        // CORRECTION DE PÉNÉTRATION
+        // ---------------------------
+        const float percent = 0.8f;   // 80%
         const float slop = 0.01f;
-        FVector2 correction = info.normal * FMath::MaxVal(info.penetration - slop, 0.f) * percent * invMassA;
 
-        if (correction.LengthSquared() < 1e-6f) // clamp très petit déplacement
-            correction = FVector2::Zero();
+        float totalInvMass = invMassA + invMassB;
+        if (totalInvMass <= 0.f)
+            continue;
 
-        owner->transform.position += correction;
+        FVector2 correction =
+            normal *
+            (FMath::MaxVal(info.penetration - slop, 0.f) / totalInvMass) *
+            percent;
+
+        physA->owner->transform.position += correction * invMassA;
+        if (physB && !physB->isKinematic)
+            physB->owner->transform.position -= correction * invMassB;
     }
 }
 

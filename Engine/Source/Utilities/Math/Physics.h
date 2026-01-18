@@ -59,7 +59,6 @@ namespace Krampus
 			float _radius, const FRect& _rect, float _rectRot);
 		static std::vector<FVector2> CircleCircleIntersections(const FVector2& _c1, float _r1,
 			const FVector2& _c2, float _r2);
-		static std::vector<FVector2> RectRectContacts(const FRect& _a, const FRect& _b);
 	};
 
 }
