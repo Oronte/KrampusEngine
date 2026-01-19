@@ -27,7 +27,7 @@ void Krampus::LabelComponent::Construct()
 {
 	Component::Construct();
 
-	level->GetCameraManager().AddToWindow(this);
+	level->GetCameraManagerRef().AddToWindow(this);
 }
 
 void Krampus::LabelComponent::Tick(const float& _deltaTime)
@@ -41,19 +41,19 @@ void Krampus::LabelComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	level->GetCameraManager().RemoveToWindow(this);
+	level->GetCameraManagerRef().RemoveToWindow(this);
 }
 
 void Krampus::LabelComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	level->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
 }
 
 void Krampus::LabelComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	level->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
 }

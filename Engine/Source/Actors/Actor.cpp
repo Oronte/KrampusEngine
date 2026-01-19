@@ -76,5 +76,5 @@ void Krampus::Actor::BeginDestroy()
 void Krampus::Actor::Destroy()
 {
 	BeginDestroy();
-	level->GetActorManager().DeleteActor(this);
+	level->GetActorManagerRef().DeleteActor(this);
 }

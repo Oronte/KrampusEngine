@@ -5,18 +5,6 @@
 
 using namespace Krampus;
 
-
-Krampus::Level::Level(const std::string& _name)
-{
-	name = _name;
-
-	M_LEVEL.RegisterLevel(this);
-}
-
-void Krampus::Level::InitLevel()
-{
-}
-
 void Level::Load()
 {
 	if (isLoaded) return;
@@ -26,6 +14,7 @@ void Level::Load()
 
 	actorManager.BeginPlay();
 	hud.BeginPlay();
+	LOG_MSG("Load");
 }
 
 void Krampus::Level::Unload()
@@ -35,6 +24,7 @@ void Krampus::Level::Unload()
 	MAIN_WINDOW.Clear(backgroundColor);
 	actorManager.BeginDestroy();
 	hud.BeginDestroy();
+	LOG_MSG("Unload");
 }
 
 void Level::Update(const float& _deltaTime)
@@ -44,6 +34,12 @@ void Level::Update(const float& _deltaTime)
 	actorManager.Update(_deltaTime);
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
+
+	Render();
+}
+
+void Krampus::Level::Render()
+{
 	cameraManager.Render(MAIN_WINDOW, false); // TODO SplitScreen
 	MAIN_WINDOW.Display();
 }

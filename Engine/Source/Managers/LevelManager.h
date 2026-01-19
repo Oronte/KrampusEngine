@@ -9,49 +9,29 @@ namespace Krampus
 
 	class LevelManager : public Singleton<LevelManager>
 	{
-		std::unordered_map<std::string, Level*> levels;
-		Level* currentLevel;
+		std::unique_ptr<Level> currentLevel = nullptr;
 
 	public:
-		INLINE Level* GetCurrentLevel() const
+		template<typename LevelType = Level>
+		INLINE LevelType* GetCurrentLevel() const
 		{
-			return currentLevel;
-		}
-		INLINE void SetLevel(Level* _level)
-		{
-			if (_level == currentLevel) return;
-
-			if (currentLevel) currentLevel->Unload();
-			currentLevel = _level;
-			if (currentLevel) currentLevel->Load();
-			if (_level && !levels.contains(_level->GetName())) RegisterLevel(_level);
-		}
-		INLINE void SetLevel(const std::string& _name)
-		{
-			if (!levels.contains(_name))
-				LOG(VerbosityType::Fatal, "Level \"" + _name + "\" not found !");
-
-			SetLevel(levels[_name]);
-		}
-		INLINE void RegisterLevel(Level* _level)
-		{
+			LevelType* _level = Cast<LevelType>(currentLevel.get());
 			if (!_level)
 			{
-				LOG_WARNING("You try to register a nullptr level");
-				return;
+				LOG_ERROR("You tried to get the current level with the wrong type");
+				return nullptr;
 			}
-			if (levels.contains(_level->GetName()))
-			{
-				LOG_WARNING("You try to register a level with the same name than a other level");
-				return;
-			}
-			levels.emplace(_level->GetName(), _level);
-		}
-		INLINE void UnregisterLevel(const std::string& _name)
-		{
-			levels.erase(_name);
+			return _level;
 		}
 
+		template<typename LevelType = Level>
+		INLINE LevelType* SetLevel()
+		{
+			if (currentLevel.get()) currentLevel->Unload();
+			currentLevel = std::make_unique<LevelType>();
+			currentLevel->Load();
+			return GetCurrentLevel<LevelType>();
+		}
 
 		LevelManager() = default;
 	};

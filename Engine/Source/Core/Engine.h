@@ -9,6 +9,7 @@ namespace Krampus
 
 	class Engine : public Singleton<Engine>
 	{
+		bool shouldClose = false;
 	public:
 		Event<> onEngineStart;
 		Event<> onEngineStop;

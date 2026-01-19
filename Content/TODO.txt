@@ -1,0 +1,42 @@
+NavMesh,
+UML,
+Doc,
+Save,
+Layer (destroy level),
+PCG,
+3D raycast,
+Forme complexe (Vertex),
+IA State tree,
+Animation avec condition,
+coroutine,
+son spatial,
+light,
+multiplayer,
+tremblement de camera,
+(shader + post processing),
+(squelette + ik),
+(steam),
+(crash reporter),
+Particlues,
+(hotreload),
+Level streaming / world partition,
+Culling,
+Lecteur de gif/video,
+Mettre le logo quand on demarre le jeu et quand on change de level,
+Localisation (Langues),
+Debug avec widget,
+sous titre / dialogue,
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -18,7 +18,7 @@ void Engine::Start()
 
 	M_INPUT.WindowClose.AddListener([this](){
 		MAIN_WINDOW.Close();
-		M_LEVEL.SetLevel(nullptr);
+		shouldClose = true;
 		});
 
 	Logger::Init();
@@ -29,8 +29,11 @@ void Engine::Start()
 
 void Engine::Update()
 {
-	while (Level* _currentLevel = M_LEVEL.GetCurrentLevel())
+	while (!shouldClose)
 	{
+		Level* _currentLevel = M_LEVEL.GetCurrentLevel();
+		if (!_currentLevel) break;
+
 		Mouse::GetInstance().Update();
 		_currentLevel->Update(M_TIMER.Update());
 		const std::optional<sf::Event>& _event = MAIN_WINDOW.PollEvent();

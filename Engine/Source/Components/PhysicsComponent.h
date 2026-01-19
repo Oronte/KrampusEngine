@@ -17,8 +17,8 @@ namespace Krampus
 		float staticFriction = 0.5f;
 		float dynamicFriction = 0.4f;
 
-		float maxLinearVelocity = 5000.f;
-		float maxAngularVelocity = 50.f;
+		float maxLinearVelocity = 2000.f;
+		float maxAngularVelocity = 20.f;
 
 	private:
 		float mass = 1.f;

@@ -20,14 +20,14 @@ void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
-	level->GetCameraManager().AddToWindow(this);
+	level->GetCameraManagerRef().AddToWindow(this);
 }
 
 void Krampus::SpriteComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	level->GetCameraManager().RemoveToWindow(this);
+	level->GetCameraManagerRef().RemoveToWindow(this);
 }
 
 void Krampus::SpriteComponent::Tick(const float& _deltaTime)
@@ -67,13 +67,13 @@ void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	level->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
 }
 
 void Krampus::SpriteComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	level->GetCameraManager().ChangeZOrder(this, _oldZOrder);
+	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
 }
 

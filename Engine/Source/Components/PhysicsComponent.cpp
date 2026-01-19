@@ -60,35 +60,35 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
     if (isKinematic)
         return;
 
-    PhysicsComponent* physA = this;
-    PhysicsComponent* physB = nullptr;
+    PhysicsComponent* _physA = this;
+    PhysicsComponent* _physB = nullptr;
 
     if (info.collision)
-        physB = info.collision->GetOwner()->GetComponent<PhysicsComponent>();
+        _physB = info.collision->GetOwner()->GetComponent<PhysicsComponent>();
 
     // Masse infinie si pas de PhysicsComponent
-    float invMassA = physA->inverseMass;
-    float invInertiaA = physA->inverseInertia;
+    float _invMassA = _physA->inverseMass;
+    float _invInertiaA = _physA->inverseInertia;
 
-    float invMassB = physB && !physB->isKinematic ? physB->inverseMass : 0.f;
-    float invInertiaB = physB && !physB->isKinematic ? physB->inverseInertia : 0.f;
+    float invMassB = _physB && !_physB->isKinematic ? _physB->inverseMass : 0.f;
+    float invInertiaB = _physB && !_physB->isKinematic ? _physB->inverseInertia : 0.f;
 
     const FVector2& normal = info.normal;
 
     for (const FVector2& contact : info.contacts)
     {
-        FVector2 rA = contact - physA->owner->transform.position;
+        FVector2 rA = contact - _physA->owner->transform.position;
         FVector2 rB = FVector2::Zero();
 
-        if (physB)
-            rB = contact - physB->owner->transform.position;
+        if (_physB)
+            rB = contact - _physB->owner->transform.position;
 
         // Vélocité au point de contact
-        FVector2 vA = physA->velocity + FVector2(-physA->angularVelocity * rA.y, physA->angularVelocity * rA.x);
+        FVector2 vA = _physA->velocity + FVector2(-_physA->angularVelocity * rA.y, _physA->angularVelocity * rA.x);
         FVector2 vB = FVector2::Zero();
 
-        if (physB && !physB->isKinematic)
-            vB = physB->velocity + FVector2(-physB->angularVelocity * rB.y, physB->angularVelocity * rB.x);
+        if (_physB && !_physB->isKinematic)
+            vB = _physB->velocity + FVector2(-_physB->angularVelocity * rB.y, _physB->angularVelocity * rB.x);
 
         FVector2 relativeVel = vA - vB;
         float velAlongNormal = relativeVel.Dot(normal);
@@ -100,16 +100,16 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
         // ---------------------------
         // IMPULSION NORMALE
         // ---------------------------
-        float restitution = physA->restitution;
-        if (physB)
-            restitution = FMath::MinVal(restitution, physB->restitution);
+        float restitution = _physA->restitution;
+        if (_physB)
+            restitution = FMath::MinVal(restitution, _physB->restitution);
 
         float rAcrossN_A = rA.Cross(normal);
         float rAcrossN_B = rB.Cross(normal);
 
         float denom =
-            invMassA + invMassB +
-            rAcrossN_A * rAcrossN_A * invInertiaA +
+            _invMassA + invMassB +
+            rAcrossN_A * rAcrossN_A * _invInertiaA +
             rAcrossN_B * rAcrossN_B * invInertiaB;
 
         if (denom <= 0.f)
@@ -120,9 +120,9 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
 
         FVector2 impulse = normal * j;
 
-        physA->AddImpulse(impulse, rA);
-        if (physB && !physB->isKinematic)
-            physB->AddImpulse(impulse * -1, rB);
+        _physA->AddImpulse(impulse, rA);
+        if (_physB && !_physB->isKinematic)
+            _physB->AddImpulse(impulse * -1, rB);
 
         // ---------------------------
         // FRICTION
@@ -141,8 +141,8 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
         float rBt = rB.Cross(tangent);
 
         float denomT =
-            invMassA + invMassB +
-            rAt * rAt * invInertiaA +
+            _invMassA + invMassB +
+            rAt * rAt * _invInertiaA +
             rBt * rBt * invInertiaB;
 
         if (denomT <= 0.f)
@@ -150,13 +150,13 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
 
         jt /= denomT;
 
-        float mu_s = physA->staticFriction;
-        float mu_d = physA->dynamicFriction;
+        float mu_s = _physA->staticFriction;
+        float mu_d = _physA->dynamicFriction;
 
-        if (physB)
+        if (_physB)
         {
-            mu_s = FMath::Sqrt(mu_s * physB->staticFriction);
-            mu_d = FMath::Sqrt(mu_d * physB->dynamicFriction);
+            mu_s = FMath::Sqrt(mu_s * _physB->staticFriction);
+            mu_d = FMath::Sqrt(mu_d * _physB->dynamicFriction);
         }
 
         FVector2 frictionImpulse;
@@ -166,9 +166,9 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
         else
             frictionImpulse = tangent * -j * mu_d;        // dynamique
 
-        physA->AddImpulse(frictionImpulse, rA);
-        if (physB && !physB->isKinematic)
-            physB->AddImpulse(frictionImpulse * -1, rB);
+        _physA->AddImpulse(frictionImpulse, rA);
+        if (_physB && !_physB->isKinematic)
+            _physB->AddImpulse(frictionImpulse * -1, rB);
 
         // ---------------------------
         // CORRECTION DE PÉNÉTRATION
@@ -176,7 +176,7 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
         const float percent = 0.8f;   // 80%
         const float slop = 0.01f;
 
-        float totalInvMass = invMassA + invMassB;
+        float totalInvMass = _invMassA + invMassB;
         if (totalInvMass <= 0.f)
             continue;
 
@@ -185,9 +185,9 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
             (FMath::MaxVal(info.penetration - slop, 0.f) / totalInvMass) *
             percent;
 
-        physA->owner->transform.position += correction * invMassA;
-        if (physB && !physB->isKinematic)
-            physB->owner->transform.position -= correction * invMassB;
+        _physA->owner->transform.position += correction * _invMassA;
+        if (_physB && !_physB->isKinematic)
+            _physB->owner->transform.position -= correction * invMassB;
     }
 }
 

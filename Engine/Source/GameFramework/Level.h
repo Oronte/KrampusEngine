@@ -9,7 +9,7 @@ namespace Krampus
 
 	class Level
 	{
-		std::string name = "Level";
+	protected:
 		CameraManager cameraManager;
 		ActorManager actorManager;
 		HUD hud;
@@ -17,31 +17,27 @@ namespace Krampus
 		bool isLoaded = false;
 
 	public:
-		Level(const std::string& _name);
+		Level() = default;
 
 		INLINE void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
 		}
-		INLINE std::string GetName() const
-		{
-			return name;
-		}
-		INLINE CameraManager& GetCameraManager()
+		INLINE CameraManager& GetCameraManagerRef()
 		{
 			return cameraManager;
 		}
-		INLINE ActorManager& GetActorManager()
+		INLINE ActorManager& GetActorManagerRef()
 		{
 			return actorManager;
 		}
-		INLINE HUD& GetHUD()
+		INLINE HUD& GetHUDRef()
 		{
 			return hud;
 		}
 
 	protected:
-		virtual void InitLevel();
+		virtual void InitLevel() {}
 
 	public:
 		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
@@ -57,6 +53,9 @@ namespace Krampus
 		virtual void Load();
 		virtual void Unload();
 		void Update(const float& _deltaTime);
+
+	private:
+		void Render();
 	};
 
 }

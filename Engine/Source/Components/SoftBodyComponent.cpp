@@ -165,13 +165,13 @@ SoftBodyComponent::SoftBodyComponent(Actor* _owner, int width, int height, const
 void SoftBodyComponent::Construct()
 {
     Component::Construct();
-    owner->GetLevel()->GetCameraManager().AddToWindow(this);
+    owner->GetLevel()->GetCameraManagerRef().AddToWindow(this);
 }
 
 void SoftBodyComponent::Deconstruct()
 {
     Component::Deconstruct();
-    owner->GetLevel()->GetCameraManager().RemoveToWindow(this);
+    owner->GetLevel()->GetCameraManagerRef().RemoveToWindow(this);
 }
 
 /* ---------- simulation ---------- */

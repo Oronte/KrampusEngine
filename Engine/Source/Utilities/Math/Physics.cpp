@@ -2,7 +2,7 @@
 
 bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadius, const FVector2& _bPos, const float& _bRadius, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
-    _aInfo = _bInfo = CollisionInfo();
+    //_aInfo = _bInfo = CollisionInfo();
 
     FVector2 delta = _bPos - _aPos;
     float distSq = delta.LengthSquared();
@@ -44,7 +44,7 @@ bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadi
 
 bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, const FRect& _bRect, const Angle& _bRot, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
-    _aInfo = _bInfo = CollisionInfo();
+    //_aInfo = _bInfo = CollisionInfo();
 
     const FVector2& _aPos = _aRect.GetPosition();
     const FVector2& _aSize = _aRect.GetSize();
@@ -115,7 +115,7 @@ bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
 
 bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
-    _aInfo = _bInfo = CollisionInfo();
+    //_aInfo = _bInfo = CollisionInfo();
 
     std::optional<FRect> _result = _aRect.FindIntersection(_bRect);
 
@@ -165,7 +165,7 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
 
 bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _radius, const FRect& _rect, const Angle& _rectRot, CollisionInfo& _circleInfo, CollisionInfo& _rectInfo)
 {
-    _circleInfo = _rectInfo = CollisionInfo();
+    //_circleInfo = _rectInfo = CollisionInfo();
 
     const FVector2 _rectPosition = _rect.GetPosition();
     const FVector2 _rectHalfSize = _rect.GetSize() * 0.5f;
@@ -232,7 +232,7 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
 
 bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circlePos, const float& _radius, CollisionInfo& _info)
 {
-    _info = CollisionInfo();
+    //_info = CollisionInfo();
 
     const float _distance = _point.Distance(_circlePos);
 
@@ -252,7 +252,7 @@ bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circleP
 
 bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, CollisionInfo& _info)
 {
-    _info = CollisionInfo();
+    //_info = CollisionInfo();
 
     const FVector2 _halfSize = _size * 0.5f;
 
@@ -300,7 +300,7 @@ bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, co
 
 bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, const Angle& _rot, CollisionInfo& _info)
 {
-    _info = CollisionInfo();
+    //_info = CollisionInfo();
 
     const FVector2 _halfSize = _size * 0.5f;
 

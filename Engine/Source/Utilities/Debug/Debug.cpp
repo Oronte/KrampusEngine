@@ -22,7 +22,7 @@ void Krampus::Debug::DrawDebugCircle(Level* _level, const FVector2& _position, c
 		_vert->Append(_initialPoint.RotateAround(_position, _rotateRad * _index), _color);
 	}
 
-	_level->GetCameraManager().debugs.push_back(_vert);
+	_level->GetCameraManagerRef().debugs.push_back(_vert);
 #endif
 }
 
@@ -46,7 +46,7 @@ void Krampus::Debug::DrawFillCircle(Level* _level, const FVector2& _position, co
 		_vert->Append(_position, _color);
 	}
 
-	_level->GetCameraManager().debugs.push_back(_vert); 
+	_level->GetCameraManagerRef().debugs.push_back(_vert); 
 #endif
 }
 
@@ -70,7 +70,7 @@ void Krampus::Debug::DrawPointCircle(Level* _level, const FVector2& _position, c
 	}
 	_vert->Append(_position, _color);
 
-	_level->GetCameraManager().debugs.push_back(_vert);
+	_level->GetCameraManagerRef().debugs.push_back(_vert);
 #endif
 }
 
@@ -97,7 +97,7 @@ void Krampus::Debug::DrawDebugRect(Level* _level, const FVector2& _position, con
 	_vert->Append(FVector2(_position.x - _size.x / 2.f, _position.y + _size.y / 2.f).RotateAround(_position, _rotation.ToRadians()), _color);
 	_vert->Append(_initialPos, _color);
 
-	_level->GetCameraManager().debugs.push_back(_vert);
+	_level->GetCameraManagerRef().debugs.push_back(_vert);
 #endif
 }
 
@@ -134,7 +134,7 @@ void Krampus::Debug::DrawFillRect(Level* _level, const FVector2& _position, cons
 	_vert->Append(FVector2(_position.x - _size.x / 2.f, _position.y + _size.y / 2.f).RotateAround(_position, _rotation.ToRadians()), _color);
 	_vert->Append(_initialPos, _color);
 
-	_level->GetCameraManager().debugs.push_back(_vert);
+	_level->GetCameraManagerRef().debugs.push_back(_vert);
 #endif
 }
 
@@ -167,7 +167,7 @@ void Krampus::Debug::DrawPointRect(Level* _level, const FVector2& _position, con
 	_vert->Append(_initialPos, _color);
 	_vert->Append(_position, _color);
 
-	_level->GetCameraManager().debugs.push_back(_vert);
+	_level->GetCameraManagerRef().debugs.push_back(_vert);
 #endif
 }
 

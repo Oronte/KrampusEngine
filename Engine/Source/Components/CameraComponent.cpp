@@ -7,7 +7,7 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner)
 	: Component(_owner)
 {
 	view = std::make_unique<sf::View>(transform.position, FVector2(MAIN_WINDOW.GetSize()));
-	level->GetCameraManager().SetCurrent(this);
+	level->GetCameraManagerRef().SetCurrent(this);
 }
 
 Krampus::CameraComponent::CameraComponent(Actor* _owner, const FVector2& _center, const FVector2& _size)
