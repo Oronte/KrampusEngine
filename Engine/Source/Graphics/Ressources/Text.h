@@ -32,7 +32,7 @@ namespace Krampus
             SetOriginAtMiddle();
         }
 
-        INLINE void SetString(const std::string& _string) 
+        INLINE virtual void SetString(const std::string& _string)
         { 
             text.setString(_string);
             SetOriginAtMiddle();
