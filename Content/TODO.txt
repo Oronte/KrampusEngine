@@ -1,31 +1,35 @@
-NavMesh,
-UML,
-Doc,
-Save,
-Layer (destroy level),
-PCG,
-3D raycast,
-Forme complexe (Vertex),
-IA State tree,
-Animation avec condition,
-coroutine,
-son spatial,
-light,
-multiplayer,
-tremblement de camera,
-(shader + post processing),
-(squelette + ik),
-(steam),
-(crash reporter),
-Particlues,
-(hotreload),
-Level streaming / world partition,
-Culling,
-Lecteur de gif/video,
-Mettre le logo quand on demarre le jeu et quand on change de level,
-Localisation (Langues),
-Debug avec widget,
-sous titre / dialogue,
+High Priority:
+	Save,
+	Ajout d'UI (canvas, vertical box, ...)
+	Debug avec widget,
+	son spatial,
+	Localisation (Langues),
+	Particlues,
+	NavMesh,
+	Forme complexe (Vertex),
+	multiplayer,
+	PCG,
+	tremblement de camera,
+	Mettre le logo quand on demarre le jeu et quand on change de level,
+
+Low Priority:
+	Lecteur de gif/video,
+	Level streaming / world partition,
+	steam,
+	Culling,
+	Animation avec condition,
+	IA State tree,
+	sous titre / dialogue,
+	shader + post processing (sf::Shader) ,
+	light,
+	coroutine,
+	3D raycast,
+	squelette + ik,
+
+Other:
+	UML,
+	Doc
+
 
 
 

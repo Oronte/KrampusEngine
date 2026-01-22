@@ -1,8 +1,6 @@
 #pragma once
 #include "GameFramework/Level.h"
 #include "Utilities/System/Singleton.h"
-#include "Utilities/System/Language.h"
-#include "Managers/TranslationManager.h"
 
 #define ENGINE Krampus::Engine::GetInstance()
 
@@ -12,8 +10,6 @@ namespace Krampus
 	class Engine : public Singleton<Engine>
 	{
 		bool shouldClose = false;
-		Language language = Language::English;
-		TranslationManager translationManager;
 	public:
 
 		Event<> onEngineStart;
