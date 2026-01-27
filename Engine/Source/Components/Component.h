@@ -13,7 +13,7 @@ namespace Krampus
 		Transform& transform;
 
 	public:
-		INLINE Actor* GetOwner() const
+		inlin Actor* GetOwner() const
 		{
 			return owner;
 		}

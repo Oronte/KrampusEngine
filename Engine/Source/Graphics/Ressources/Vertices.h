@@ -14,21 +14,21 @@ namespace Krampus
 
     public:
 
-        NO_DISCARD INLINE std::size_t GetVertexCount() const
+        NO_DISCARD inlin std::size_t GetVertexCount() const
         {
             const std::size_t& _size = vertices.getVertexCount();
             return _size;
         }
-        NO_DISCARD INLINE PrimitiveType GetPrimitiveType() const
+        NO_DISCARD inlin PrimitiveType GetPrimitiveType() const
         {
             const PrimitiveType& _type = vertices.getPrimitiveType();
             return _type;
         }
-        INLINE void SetPrimitiveType(const PrimitiveType& _type)
+        inlin void SetPrimitiveType(const PrimitiveType& _type)
         {
             return vertices.setPrimitiveType(_type);
         }
-        NO_DISCARD INLINE FRect GetBounds() const
+        NO_DISCARD inlin FRect GetBounds() const
         {
             return FRect(vertices.getBounds());
         }
@@ -41,16 +41,16 @@ namespace Krampus
         void Append(const FVector2& _position, const Color& _color = Color::Magenta(), const FVector2& _textureCoords = FVector2());;
         void Append(const Vertex& _vertex);
 
-        NO_DISCARD INLINE Vertex& operator[](const std::size_t& _index)
+        NO_DISCARD inlin Vertex& operator[](const std::size_t& _index)
         {
             return vertices[_index];
         }
-        NO_DISCARD INLINE const Vertex& operator[](const std::size_t& _index) const
+        NO_DISCARD inlin const Vertex& operator[](const std::size_t& _index) const
         {
             return vertices[_index];
         }
 
-        INLINE operator sf::VertexArray() const noexcept
+        inlin operator sf::VertexArray() const noexcept
         {
             return vertices;
         }

@@ -1,16 +1,5 @@
 ﻿#include "Core/Engine.h"
-#include "Actors/SpriteActor.h"
-#include "Actors/SoftBodyActor.h"
-#include "GameFramework/Level.h"
-#include "Managers/TimerManager.h"
 #include "Managers/LevelManager.h"
-#include "Managers/AudioManager.h"
-#include "Managers/InputManager.h"
-#include "UI/ButtonWidget.h"
-#include "UI/GIFWidget.h"
-#include "UI/LabelWidget.h"
-#include "Actors/Collider2D.h"
-#include "TestPhysicsLevel.h"
 
 
 void StartGame();
@@ -46,13 +35,7 @@ int main(/*int argc, char** argv*/)
 void StartGame()
 {
 	Krampus::Level* _level = M_LEVEL.SetLevel<Krampus::Level>();
-	Krampus::Engine& _engine = ENGINE;
-
-	_level->SpawnWidget<Krampus::ButtonWidget>(Krampus::CircleShapeData());
-
-	M_INPUT.A.onPress.AddListener([&]() {M_LEVEL.SetLevel<Krampus::TestPhysicsLevel>(); });
-
-	M_TIMER.SetMaxFrameRate(0);
+	Krampus::Engine _engine;
 
 	_engine.Start();
 }

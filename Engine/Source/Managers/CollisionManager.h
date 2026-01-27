@@ -18,7 +18,7 @@ namespace Krampus
 
 		void Update();
 
-		INLINE void RemoveComponent(CollisionComponent* _toDelete)
+		inlin void RemoveComponent(CollisionComponent* _toDelete)
 		{
 			std::erase_if(collisions, [&](const CollisionComponent* _component)
 				{

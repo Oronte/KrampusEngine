@@ -11,23 +11,23 @@ namespace Krampus
 		sf::Rect<T> rect;
 
 	public:
-		INLINE constexpr Vector2D<T> GetPosition() const noexcept
+		inlin constexpr Vector2D<T> GetPosition() const noexcept
 		{
 			return Vector2D<T>(rect.position);
 		}
-		INLINE void SetPosition(const Vector2D<T>& _position) noexcept
+		inlin void SetPosition(const Vector2D<T>& _position) noexcept
 		{
 			rect.position = _position;
 		}
-		INLINE constexpr Vector2D<T> GetSize() const noexcept
+		inlin constexpr Vector2D<T> GetSize() const noexcept
 		{
 			return Vector2D<T>(rect.size);
 		}
-		INLINE void SetSize(const Vector2D<T>& _position) noexcept
+		inlin void SetSize(const Vector2D<T>& _position) noexcept
 		{
 			rect.size = _position;
 		}
-		INLINE constexpr Vector2D<T> GetCenter() const
+		inlin constexpr Vector2D<T> GetCenter() const
 		{
 			return Vector2D<T>(rect.getCenter());
 		}
@@ -42,26 +42,26 @@ namespace Krampus
 			rect = _rect;
 		}
 
-		INLINE constexpr bool Contains(const Vector2D<T>& _point) const
+		inlin constexpr bool Contains(const Vector2D<T>& _point) const
 		{
 			return rect.contains(_point);
 		}
-		INLINE constexpr std::optional<Rectangle<T>> FindIntersection(const Rectangle<T> _rect) const
+		inlin constexpr std::optional<Rectangle<T>> FindIntersection(const Rectangle<T> _rect) const
 		{
 			return rect.findIntersection(_rect);
 		}
 
-		INLINE bool operator == (const Rectangle<T> _other)
+		inlin bool operator == (const Rectangle<T> _other)
 		{
 			return _other.rect == rect;
 		}
 
-		INLINE operator sf::Rect<T>() const noexcept
+		inlin operator sf::Rect<T>() const noexcept
 		{
 			return rect;
 		}
 
-		INLINE virtual std::string ToString() const override
+		inlin virtual std::string ToString() const override
 		{
 			return std::format("Position : {} , Size : {} , Center : {}",
 				GetPosition().ToString(), 

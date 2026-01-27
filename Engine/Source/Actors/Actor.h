@@ -21,7 +21,7 @@ namespace Krampus
 		Transform transform;
 
 		template<typename Type = Level, IS_BASE_OF(Level, Type)>
-		INLINE Type* GetLevel()
+		inlin Type* GetLevel()
 		{
 			if (InstanceOf<Type>(level))
 			{
@@ -31,14 +31,14 @@ namespace Krampus
 			return Cast<Type>(level);
 		}
 
-		INLINE void AddChild(Actor* _actor)
+		inlin void AddChild(Actor* _actor)
 		{
 			if (std::find(children.begin(), children.end(), _actor) == children.end())
 			{
 				children.push_back(_actor);
 			}
 		}
-		INLINE void RemoveChild(Actor* _toRemove)
+		inlin void RemoveChild(Actor* _toRemove)
 		{
 			std::erase_if(children, [&](Actor* _actor)
 				{
@@ -50,7 +50,7 @@ namespace Krampus
 
 	protected:
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
-		INLINE Type* CreateComponent(Args&&... _args)
+		inlin Type* CreateComponent(Args&&... _args)
 		{
 			if (GetComponent<Type>())
 			{
@@ -66,7 +66,7 @@ namespace Krampus
 		}
 
 		template <typename Type, IS_BASE_OF(Component, Type)>
-		INLINE void RemoveComponent()
+		inlin void RemoveComponent()
 		{
 			Type* _component = GetComponent<Type>();
 			if (!_component)
@@ -95,7 +95,7 @@ namespace Krampus
 		virtual void SetActive(const bool& _status) override;
 
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
-		INLINE Type* GetComponent()
+		inlin Type* GetComponent()
 		{
 			for (const std::unique_ptr<Component>& _component : components)
 				if (Type* _castedComponent = Cast<Type>(_component.get())) return _castedComponent;

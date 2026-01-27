@@ -8,7 +8,7 @@ namespace Krampus
 	class CircleShape : public Shape
 	{
 	public:
-        INLINE void SetRadius(const float& _radius)
+        inlin void SetRadius(const float& _radius)
         {
             if (!shape)
             {
@@ -17,7 +17,7 @@ namespace Krampus
             }
             Cast<sf::CircleShape>(shape.get())->setRadius(_radius);
         }
-        INLINE float GetRadius() const
+        inlin float GetRadius() const
         {
             if (!shape)
             {
@@ -27,7 +27,7 @@ namespace Krampus
             return Cast<const sf::CircleShape>(shape.get())->getRadius();
         }
 
-        INLINE void SetPointCount(const std::size_t& _count)
+        inlin void SetPointCount(const std::size_t& _count)
         {
             if (!shape)
             {
@@ -36,7 +36,7 @@ namespace Krampus
             }
             Cast<sf::CircleShape>(shape.get())->setPointCount(_count);
         }
-        INLINE std::size_t GetPointCount() const
+        inlin std::size_t GetPointCount() const
         {
             if (!shape)
             {

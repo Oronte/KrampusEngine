@@ -1,5 +1,6 @@
 #pragma once
 #include "Shape.h"
+#include "Graphics/Ressources/Shader.h"
 
 namespace Krampus
 {
@@ -44,19 +45,19 @@ namespace Krampus
 		ShapeSizeData sizeData;
 
 	public:
-		INLINE ShapeType GetShapeType()
+		inlin ShapeType GetShapeType()
 		{
 			return shapeType;
 		}
-		INLINE Texture& GetTextureRef()
+		inlin Texture& GetTextureRef()
 		{
 			return texture;
 		}
-		INLINE Shape* GetShape() const
+		inlin Shape* GetShape() const
 		{
 			return shape.get();
 		}
-		INLINE ShapeSizeData& GetSizeData()
+		inlin ShapeSizeData& GetSizeData()
 		{
 			return sizeData;
 		}

@@ -5,7 +5,7 @@
 Krampus::Widget::Widget(Level* _level)
 	: Actor(_level)
 {
-	MAIN_WINDOW.onViewChange.AddListener(this, &Widget::UpdateWorldPos);
+	onViewChangeHandle = MAIN_WINDOW.onViewChange.AddListener(this, &Widget::UpdateWorldPos);
 }
 
 void Krampus::Widget::SetScreenPosition(const FVector2& _screenPos)
@@ -30,10 +30,4 @@ void Krampus::Widget::UpdateWorldPos(const sf::View& _view)
 {
 	transform.position = MAIN_WINDOW.MapPixelToCoords(screenPosition, _view);
 	transform.rotation = localRotation + Angle(_view.getRotation());
-}
-
-void Krampus::Widget::BeginDestroy()
-{
-	Actor::BeginDestroy();
-	MAIN_WINDOW.onViewChange.RemoveAllFrom(this);
 }

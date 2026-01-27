@@ -12,16 +12,16 @@ namespace Krampus
 		std::unordered_map<std::string, std::unique_ptr<Animation>> animations;
 
 	public:
-		INLINE void SetCurrentAnimation(const std::string& _name)
+		inlin void SetCurrentAnimation(const std::string& _name)
 		{
 			if (!animations.contains(_name)) return;
 			current = animations[_name].get();
 		}
-		INLINE Animation* GetCurrentAnimation() const
+		inlin Animation* GetCurrentAnimation() const
 		{
 			return current;
 		}
-		INLINE Animation* GetAnimation(const std::string _animationName) const
+		inlin Animation* GetAnimation(const std::string _animationName) const
 		{
 			auto _iterator = animations.find(_animationName);
 			if (_iterator == animations.end())
@@ -31,22 +31,22 @@ namespace Krampus
 			}
 			return _iterator->second.get();
 		}
-		INLINE void StartAnimation()
+		inlin void StartAnimation()
 		{
 			if (!current) return;
 			current->Start();
 		}
-		INLINE void StopAnimation()
+		inlin void StopAnimation()
 		{
 			if (!current) return;
 			current->Stop();
 		}
-		INLINE void ResumeAnimation()
+		inlin void ResumeAnimation()
 		{
 			if (!current) return;
 			current->Resume();
 		}
-		INLINE void PauseAnimation()
+		inlin void PauseAnimation()
 		{
 			if (!current) return;
 			current->Pause();

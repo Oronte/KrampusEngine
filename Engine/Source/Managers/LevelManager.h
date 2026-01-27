@@ -13,7 +13,7 @@ namespace Krampus
 
 	public:
 		template<typename LevelType = Level>
-		INLINE LevelType* GetCurrentLevel() const
+		inlin LevelType* GetCurrentLevel() const
 		{
 			LevelType* _level = Cast<LevelType>(currentLevel.get());
 			if (!_level)
@@ -25,7 +25,7 @@ namespace Krampus
 		}
 
 		template<typename LevelType = Level>
-		INLINE LevelType* SetLevel()
+		inlin LevelType* SetLevel()
 		{
 			if (currentLevel.get()) currentLevel->Unload();
 			currentLevel = std::make_unique<LevelType>();

@@ -12,7 +12,7 @@ namespace Krampus
 		AnimationComponent* animation = nullptr;
 
 	public:
-		INLINE std::string GetAnimationName() const
+		inlin std::string GetAnimationName() const
 		{
 			return animationName;
 		}

@@ -54,21 +54,21 @@ namespace Krampus
 
     class Logger
     {
-        static INLINE std::string logsDir = "Content/Logs/";
-        static INLINE std::string logsFileName = "log.txt";
+        static inlin std::string logsDir = "Content/Logs/";
+        static inlin std::string logsFileName = "log.txt";
 
-        static INLINE std::string logsPath = logsDir + logsFileName;
+        static inlin std::string logsPath = logsDir + logsFileName;
 
-        static INLINE std::queue<std::string> logQueue;
-        static INLINE std::queue<std::string> consoleQueue;
-        static INLINE std::mutex queueMutex;
-        static INLINE std::condition_variable cv;
-        static INLINE std::atomic<bool> running = false;
-        static INLINE std::thread logThread;
+        static inlin std::queue<std::string> logQueue;
+        static inlin std::queue<std::string> consoleQueue;
+        static inlin std::mutex queueMutex;
+        static inlin std::condition_variable cv;
+        static inlin std::atomic<bool> running = false;
+        static inlin std::thread logThread;
 
     public:
-        static INLINE bool verboseLogging = false;
-        static INLINE bool veryVerboseLogging = false;
+        static inlin bool verboseLogging = false;
+        static inlin bool veryVerboseLogging = false;
 
     private:
         static void LoggingThread();

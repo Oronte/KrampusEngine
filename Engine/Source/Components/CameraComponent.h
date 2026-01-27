@@ -12,43 +12,43 @@ namespace Krampus
 		bool attachedToOwner = true;
 
 
-		INLINE sf::View* GetView() const
+		inlin sf::View* GetView() const
 		{
 			return view.get();
 		}
-		INLINE FRect GetViewport() const
+		inlin FRect GetViewport() const
 		{
 			return view->getViewport();
 		}
-		INLINE void SetViewport(const FRect& _rect)
+		inlin void SetViewport(const FRect& _rect)
 		{
 			view->setViewport(_rect);
 		}
-		INLINE void SetCenter(const FVector2& _center)
+		inlin void SetCenter(const FVector2& _center)
 		{
 			view->setCenter(_center);
 		}
-		INLINE void SetRotation(const Angle& _angle)
+		inlin void SetRotation(const Angle& _angle)
 		{
 			view->setRotation(_angle);
 		}
-		INLINE void SetSize(const FVector2& _size)
+		inlin void SetSize(const FVector2& _size)
 		{
 			view->setSize(_size);
 		}
-		INLINE void SetScissor(const FRect& _rect)
+		inlin void SetScissor(const FRect& _rect)
 		{
 			view->setScissor(_rect);
 		}
-		INLINE void Move(const FVector2& _offset)
+		inlin void Move(const FVector2& _offset)
 		{
 			view->move(_offset);
 		}
-		INLINE void Rotate(const Angle& _angle)
+		inlin void Rotate(const Angle& _angle)
 		{
 			view->rotate(_angle);
 		}
-		INLINE void Zoom(const float _factor)
+		inlin void Zoom(const float _factor)
 		{
 			view->zoom(_factor);
 		}

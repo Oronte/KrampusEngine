@@ -89,7 +89,7 @@ namespace Krampus
 		constexpr Color(const sf::Color& _color) noexcept
 			: r(_color.r), g(_color.g), b(_color.b), a(_color.a) { }
 
-		INLINE constexpr std::uint32_t ToInteger() const noexcept
+		inlin constexpr std::uint32_t ToInteger() const noexcept
 		{
 			return std::uint32_t(
 				CAST(std::uint32_t, r << 24) |
@@ -100,45 +100,45 @@ namespace Krampus
 		}
 		std::string ToString(const bool& _textOnly) const noexcept;
 
-		INLINE operator sf::Color() const
+		inlin operator sf::Color() const
 		{
 			return sf::Color(r, g, b, a);
 		}
 
 		
-		INLINE static constexpr Color Black() noexcept
+		inlin static constexpr Color Black() noexcept
 		{
 			return Color();
 		}
-		INLINE static constexpr Color White() noexcept 
+		inlin static constexpr Color White() noexcept 
 		{ 
 			return Color(255, 255, 255);
 		};
-		INLINE static constexpr Color Red() noexcept 
+		inlin static constexpr Color Red() noexcept 
 		{ 
 			return Color(255, 0, 0);
 		};
-		INLINE static constexpr Color Green() noexcept 
+		inlin static constexpr Color Green() noexcept 
 		{ 
 			return Color(0, 255, 0);
 		};
-		INLINE static constexpr Color Blue() noexcept 
+		inlin static constexpr Color Blue() noexcept 
 		{ 
 			return Color(0, 0, 255);
 		};
-		INLINE static constexpr Color Yellow() noexcept 
+		inlin static constexpr Color Yellow() noexcept 
 		{ 
 			return Color(255, 255, 0);
 		};
-		INLINE static constexpr Color Magenta() noexcept 
+		inlin static constexpr Color Magenta() noexcept 
 		{ 
 			return Color(255, 0, 255);
 		};
-		INLINE static constexpr Color Cyan() noexcept 
+		inlin static constexpr Color Cyan() noexcept 
 		{ 
 			return Color(0, 255, 255);
 		};
-		INLINE static constexpr Color Transparent() noexcept 
+		inlin static constexpr Color Transparent() noexcept 
 		{ 
 			return Color(0, 0, 0, 0);
 		};

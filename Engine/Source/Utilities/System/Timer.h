@@ -15,35 +15,35 @@ namespace Krampus
 		Event<> callback;
 
 	public:
-		INLINE bool IsToDelete() const
+		inlin bool IsToDelete() const
 		{
 			return isToDelete;
 		}
-		INLINE void SetDuration(const float& _duration)
+		inlin void SetDuration(const float& _duration)
 		{
 			duration = _duration;
 		}
-		INLINE float GetDuration() const
+		inlin float GetDuration() const
 		{
 			return duration;
 		}
-		INLINE bool IsRunning() const
+		inlin bool IsRunning() const
 		{
 			return isRunning;
 		}
-		INLINE void SetIsLoop(const bool& _isLoop)
+		inlin void SetIsLoop(const bool& _isLoop)
 		{
 			isLoop = _isLoop;
 		}
-		INLINE bool IsLoop() const
+		inlin bool IsLoop() const
 		{
 			return isLoop;
 		}
-		INLINE float GetTime() const
+		inlin float GetTime() const
 		{
 			return currentTime;
 		}
-		INLINE float GetRemainingTime() const
+		inlin float GetRemainingTime() const
 		{
 			return duration - currentTime;
 		}

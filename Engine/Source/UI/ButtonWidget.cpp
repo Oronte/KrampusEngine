@@ -26,9 +26,9 @@ void Krampus::ButtonWidget::Init()
 {
 	InputManager& _inputManager = M_INPUT;
 
-	_inputManager.MouseMovedScreen.AddListener(this, &Krampus::ButtonWidget::OnMouseMoved);
-	_inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::ButtonWidget::OnClick);
-	_inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::ButtonWidget::OnRelease);
+	onMouseMovedHandle = _inputManager.MouseMovedScreen.AddListener(this, &Krampus::ButtonWidget::OnMouseMoved);
+	onClickHandle = _inputManager.MouseLeftClick.onPress.AddListener(this, &Krampus::ButtonWidget::OnClick);
+	onReleaseHandle = _inputManager.MouseLeftClick.onRelease.AddListener(this, &Krampus::ButtonWidget::OnRelease);
 }
 
 void Krampus::ButtonWidget::OnMouseMoved(const IVector2& _mousePos)
@@ -57,15 +57,4 @@ void Krampus::ButtonWidget::OnRelease()
 {
 	if (isPressed) onRelease.Broadcast();
 	isPressed = false;
-}
-
-void Krampus::ButtonWidget::BeginDestroy()
-{
-	ImageWidget::BeginDestroy();
-
-	InputManager& _inputManager = M_INPUT;
-
-	_inputManager.MouseMovedScreen.RemoveAllFrom(this);
-	_inputManager.MouseLeftClick.onPress.RemoveAllFrom(this);
-	_inputManager.MouseLeftClick.onRelease.RemoveAllFrom(this);
 }

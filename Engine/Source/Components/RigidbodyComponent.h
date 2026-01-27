@@ -4,7 +4,7 @@
 namespace Krampus
 {
 
-	class PhysicsComponent : public Component
+	class RigidbodyComponent : public Component
 	{
 	public:
 		bool useGravity = true;
@@ -32,8 +32,10 @@ namespace Krampus
 		FVector2 accumulatedForces = FVector2::Zero();
 		float accumulatedTorque = 0.f;
 
+		Event<CollisionInfo>::ListenerHandle onCollisionHandle;
+
 	public:
-		PhysicsComponent(Actor* _owner, const float& _mass = 1.0f);
+		RigidbodyComponent(Actor* _owner, const float& _mass = 1.0f);
 
 		// Adds a continuous force to be applied during integration
 		void AddForce(const FVector2& _force, const FVector2& _applyPoint = FVector2::Zero());

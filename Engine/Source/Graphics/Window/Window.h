@@ -18,71 +18,71 @@ namespace Krampus
 		Event<sf::View> onViewChange;
 
 	public:
-		virtual INLINE sf::RenderWindow& GetRenderWindow() noexcept
+		virtual inlin sf::RenderWindow& GetRenderWindow() noexcept
 		{
 			return window;
 		}
-		virtual INLINE bool IsOpen() const noexcept
+		virtual inlin bool IsOpen() const noexcept
 		{
 			return window.isOpen();
 		}
-		virtual INLINE void SetFramerateLimit(const unsigned int& _limit)
+		virtual inlin void SetFramerateLimit(const unsigned int& _limit)
 		{
 			window.setFramerateLimit(_limit);
 		}
-		virtual INLINE void SetVerticalSyncEnabled(const bool& _enabled)
+		virtual inlin void SetVerticalSyncEnabled(const bool& _enabled)
 		{
 			window.setVerticalSyncEnabled(_enabled);
 		}
-		virtual INLINE void SetTitle(const std::string& _title)
+		virtual inlin void SetTitle(const std::string& _title)
 		{
 			window.setTitle(sf::String(_title.c_str()));
 		}
-		virtual INLINE void SetSize(const UVector2& _size)
+		virtual inlin void SetSize(const UVector2& _size)
 		{
 			window.setSize(_size);
 		}
-		virtual INLINE UVector2 GetSize() const noexcept
+		virtual inlin UVector2 GetSize() const noexcept
 		{
 			return UVector2(window.getSize());
 		}
-		virtual INLINE void SetPosition(const IVector2& _position)
+		virtual inlin void SetPosition(const IVector2& _position)
 		{
 			window.setPosition(_position);
 		}
-		virtual INLINE IVector2 GetPosition() const
+		virtual inlin IVector2 GetPosition() const
 		{
 			return IVector2(window.getPosition());
 		}
-		virtual INLINE void SetIcon(const Image& _image)
+		virtual inlin void SetIcon(const Image& _image)
 		{
 			window.setIcon(_image);
 		}
-		virtual INLINE bool HasFocus() const
+		virtual inlin bool HasFocus() const
 		{
 			return window.hasFocus();
 		}
-		virtual INLINE void RequestFocus()
+		virtual inlin void RequestFocus()
 		{
 			window.requestFocus();
 		}
-		virtual INLINE sf::View GetView() const
+		virtual inlin sf::View GetView() const
 		{
 			return window.getView();
 		}
-		INLINE IVector2 MapCoordsToPixel(const FVector2& _worldPos) const
+		inlin IVector2 MapCoordsToPixel(const FVector2& _worldPos) const
 		{
 			return window.mapCoordsToPixel(_worldPos);
 		}
-		INLINE IVector2 MapCoordsToPixel(const FVector2& _worldPos, const sf::View& _view) const
+		inlin IVector2 MapCoordsToPixel(const FVector2& _worldPos, const sf::View& _view) const
 		{
 			return window.mapCoordsToPixel(_worldPos, _view);
 		}
-		INLINE FVector2 MapPixelToCoords(const IVector2& _screenPos) const
+		inlin FVector2 MapPixelToCoords(const IVector2& _screenPos) const
 		{
 			return window.mapPixelToCoords(_screenPos);
 		}
-		INLINE FVector2 MapPixelToCoords(const IVector2& _screenPos, const sf::View& _view) const
+		inlin FVector2 MapPixelToCoords(const IVector2& _screenPos, const sf::View& _view) const
 		{
 			return window.mapPixelToCoords(_screenPos, _view);
 		}

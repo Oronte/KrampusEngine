@@ -1,7 +1,7 @@
-﻿#include "PhysicsComponent.h"
+﻿#include "RigidbodyComponent.h"
 #include "Actors/Actor.h"
 
-Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const float& _mass)
+Krampus::RigidbodyComponent::RigidbodyComponent(Actor* _owner, const float& _mass)
 	: Component(_owner)
 {
 	mass = FMath::MaxVal(0.001f, _mass);
@@ -9,7 +9,7 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const float& _mass)
     ComputeInertia();
 }
 
-void Krampus::PhysicsComponent::AddForce(const FVector2& _force, const FVector2& _applyPoint)
+void Krampus::RigidbodyComponent::AddForce(const FVector2& _force, const FVector2& _applyPoint)
 {
 	if (isKinematic) return;
 	accumulatedForces += _force;
@@ -21,20 +21,20 @@ void Krampus::PhysicsComponent::AddForce(const FVector2& _force, const FVector2&
     }
 }
 
-void Krampus::PhysicsComponent::AddImpulse(const FVector2& _impulse, const FVector2& contactVector)
+void Krampus::RigidbodyComponent::AddImpulse(const FVector2& _impulse, const FVector2& contactVector)
 {
 	if (isKinematic) return;
 	velocity += _impulse * inverseMass;
     angularVelocity += inverseInertia * contactVector.Cross(_impulse);
 }
 
-void Krampus::PhysicsComponent::ClearForces()
+void Krampus::RigidbodyComponent::ClearForces()
 {
     accumulatedForces = FVector2::Zero();
     accumulatedTorque = 0.f;
 }
 
-void Krampus::PhysicsComponent::Tick(const float& _deltaTime)
+void Krampus::RigidbodyComponent::Tick(const float& _deltaTime)
 {
 	if (isKinematic) return;
 
@@ -44,7 +44,7 @@ void Krampus::PhysicsComponent::Tick(const float& _deltaTime)
 	Integrate(_deltaTime);
 }
 
-void Krampus::PhysicsComponent::BindCollisionResponse()
+void Krampus::RigidbodyComponent::BindCollisionResponse()
 {
 	CollisionComponent* _collision = owner->GetComponent<CollisionComponent>();
 	if (!_collision)
@@ -52,19 +52,19 @@ void Krampus::PhysicsComponent::BindCollisionResponse()
 		LOG_ERROR("You try to bind a response to the collision component that is nullptr");
 		return;
 	}
-	_collision->onCollision.AddListener(this, &PhysicsComponent::OnCollision);
+    onCollisionHandle = _collision->onCollision.AddListener(this, &RigidbodyComponent::OnCollision);
 }
 
-void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
+void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
 {
     if (isKinematic)
         return;
 
-    PhysicsComponent* _physA = this;
-    PhysicsComponent* _physB = nullptr;
+    RigidbodyComponent* _physA = this;
+    RigidbodyComponent* _physB = nullptr;
 
     if (info.collision)
-        _physB = info.collision->GetOwner()->GetComponent<PhysicsComponent>();
+        _physB = info.collision->GetOwner()->GetComponent<RigidbodyComponent>();
 
     // Masse infinie si pas de PhysicsComponent
     float _invMassA = _physA->inverseMass;
@@ -191,7 +191,7 @@ void Krampus::PhysicsComponent::OnCollision(const CollisionInfo& info)
     }
 }
 
-void Krampus::PhysicsComponent::Integrate(const float& _deltaTime)
+void Krampus::RigidbodyComponent::Integrate(const float& _deltaTime)
 {
     velocity += (accumulatedForces * inverseMass) * _deltaTime;
     float _speedSq = velocity.Dot(velocity);
@@ -209,7 +209,7 @@ void Krampus::PhysicsComponent::Integrate(const float& _deltaTime)
     ClearForces();
 }
 
-void Krampus::PhysicsComponent::ComputeInertia()
+void Krampus::RigidbodyComponent::ComputeInertia()
 {
     CollisionComponent* _collision = owner->GetComponent<CollisionComponent>();
     if (!_collision)

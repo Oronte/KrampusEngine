@@ -16,9 +16,11 @@ void Engine::Start()
 {
 	onEngineStart.Broadcast();
 
-	M_INPUT.WindowClose.AddListener([this](){
-		MAIN_WINDOW.Close();
-		shouldClose = true;
+	onWindowCloseHandle = 
+		M_INPUT.WindowClose.AddListener([this]()
+		{
+			MAIN_WINDOW.Close();
+			shouldClose = true;
 		});
 
 	Logger::Init();

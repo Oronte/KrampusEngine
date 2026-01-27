@@ -49,11 +49,11 @@ namespace Krampus
         std::unordered_map<int, Event<>> notifies;
 
     private:
-        INLINE bool IsValidIndex() const
+        inlin bool IsValidIndex() const
         {
             return currentIndex < data.count;
         }
-        INLINE float ComputeDuration()
+        inlin float ComputeDuration()
         {
             SpriteData* _spriteData = GetSpriteData();
             if (!_spriteData)
@@ -63,7 +63,7 @@ namespace Krampus
             }
             return ComputeDuration(*_spriteData);
         }
-        INLINE float ComputeDuration(const SpriteData& _spriteData) const
+        inlin float ComputeDuration(const SpriteData& _spriteData) const
         {
             const int& _count = data.count;
             if (_count == 0)
@@ -73,7 +73,7 @@ namespace Krampus
             }
             return data.duration / CAST(float, _count);
         }
-        INLINE SpriteData* GetSpriteData()
+        inlin SpriteData* GetSpriteData()
         {
             if (data.sprites.empty()) return nullptr;
 
@@ -82,7 +82,7 @@ namespace Krampus
         }
 
     public:
-        INLINE std::string GetName() const
+        inlin std::string GetName() const
         {
             return name;
         }

@@ -14,15 +14,15 @@ namespace Krampus
 		std::unique_ptr<ShapeObject> shape;
 
 	public:
-		INLINE ShapeObject* GetShapeObject()
+		inlin ShapeObject* GetShapeObject()
 		{
 			return shape.get();
 		}
-		INLINE ShapeSizeData& GetShapeSizeData()
+		inlin ShapeSizeData& GetShapeSizeData()
 		{
 			return shape->GetSizeData();
 		}
-		INLINE ShapeType GetShapeType() const
+		inlin ShapeType GetShapeType() const
 		{
 			return shape->GetShapeType();
 		}

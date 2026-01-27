@@ -13,12 +13,14 @@ High Priority:
 	Mettre le logo quand on demarre le jeu et quand on change de level,
 
 Low Priority:
+	Ship,
 	Lecteur de gif/video,
 	Level streaming / world partition,
 	steam,
 	Culling,
+	HotReload,
 	Animation avec condition,
-	IA State tree,
+	IA FSM,
 	sous titre / dialogue,
 	shader + post processing (sf::Shader) ,
 	light,

@@ -55,7 +55,7 @@ void Krampus::CollisionComponent::ResolveCollision(const CollisionInfo& _info)
 
 void Krampus::CollisionComponent::BindCollisionResolution()
 {
-	onCollision.AddListener(this, &CollisionComponent::ResolveCollision);
+	onCollisionHandle = onCollision.AddListener(this, &CollisionComponent::ResolveCollision);
 }
 
 void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)

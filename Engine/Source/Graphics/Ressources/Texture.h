@@ -17,11 +17,11 @@ namespace Krampus
 		std::shared_ptr<sf::Texture> texture;
 
 	public:
-        INLINE sf::Texture* Get() const noexcept
+        inlin sf::Texture* Get() const noexcept
         {
             return texture.get();
         }
-        INLINE UVector2 GetSize() const
+        inlin UVector2 GetSize() const
         {
             if (!texture)
             {
@@ -30,7 +30,7 @@ namespace Krampus
             }
             return UVector2(texture->getSize());
         }
-        INLINE bool IsRepeated() const
+        inlin bool IsRepeated() const
         {
             if (!texture)
             {
@@ -39,7 +39,7 @@ namespace Krampus
             }
             return texture->isRepeated();
         }
-        INLINE void SetRepeated(bool _repeated)
+        inlin void SetRepeated(bool _repeated)
         {
             if (!texture)
             {
@@ -48,7 +48,7 @@ namespace Krampus
             }
             texture->setRepeated(_repeated);
         }
-        INLINE bool IsSmooth() const
+        inlin bool IsSmooth() const
         {
             if (!texture)
             {
@@ -57,7 +57,7 @@ namespace Krampus
             }
             return texture->isSmooth();
         }
-        INLINE void SetSmooth(bool _smooth)
+        inlin void SetSmooth(bool _smooth)
         {
             if (!texture)
             {
@@ -66,7 +66,7 @@ namespace Krampus
             }
             texture->setSmooth(_smooth);
         }
-        INLINE bool IsSrgb() const
+        inlin bool IsSrgb() const
         {
             if (!texture)
             {
@@ -101,31 +101,31 @@ namespace Krampus
 
         bool GenerateMipmap();
 
-        INLINE static unsigned int GetMaximumSize()
+        inlin static unsigned int GetMaximumSize()
         {
             return sf::Texture::getMaximumSize();
         }
 
 
-        INLINE Texture& operator = (const Texture& _other) noexcept
+        inlin Texture& operator = (const Texture& _other) noexcept
         {
             this->texture = _other.texture;
             return *this;
         }
 
-        INLINE Texture& operator = (Texture&& _other) noexcept
+        inlin Texture& operator = (Texture&& _other) noexcept
         {
             this->texture = std::move(_other.texture);
             return *this;
         }
 
-        INLINE operator sf::Texture() const noexcept
+        inlin operator sf::Texture() const noexcept
         {
             if (!texture) return sf::Texture();
             return *texture.get();
         }
 
-        INLINE void SetSharedTexture(std::shared_ptr<sf::Texture> _texture) noexcept
+        inlin void SetSharedTexture(std::shared_ptr<sf::Texture> _texture) noexcept
         {
             texture = std::move(_texture);
         }

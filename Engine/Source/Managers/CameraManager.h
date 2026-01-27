@@ -13,12 +13,12 @@ namespace Krampus
 		std::vector<std::shared_ptr<Vertices>> debugs;
 
 	public:
-		INLINE void SetCurrent(CameraComponent* _camera)
+		inlin void SetCurrent(CameraComponent* _camera)
 		{
 			if (!_camera) return;
 			current = _camera;
 		}
-		INLINE void AddToWindow(IDrawable* _drawable)
+		inlin void AddToWindow(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -27,7 +27,7 @@ namespace Krampus
 			}
 			drawer[_drawable->GetZOrder()].push_back(_drawable);
 		}
-		INLINE void RemoveToWindow(IDrawable* _drawable)
+		inlin void RemoveToWindow(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -40,7 +40,7 @@ namespace Krampus
 				});
 		}
 
-		INLINE void ChangeZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
+		inlin void ChangeZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
 		{
 			std::erase_if(drawer[_oldZOrder], [&](const IDrawable* _item)
 				{
