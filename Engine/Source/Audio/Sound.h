@@ -74,6 +74,15 @@ namespace Krampus
 			return sound->getStatus() == SoundStatus::Stopped;
 		}
 
+		inline virtual void SetAttenuation(float _attenuation)
+		{
+			sound->setAttenuation(_attenuation);
+		}
+		inline virtual float GetAttenuation() const
+		{
+			return sound->getAttenuation();
+		}
+
 		inline Sound(std::shared_ptr<sf::SoundBuffer> _buffer)
 		{
 			buffer = std::move(_buffer);
