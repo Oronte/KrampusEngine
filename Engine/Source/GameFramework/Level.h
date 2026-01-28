@@ -19,19 +19,19 @@ namespace Krampus
 	public:
 		Level() = default;
 
-		inlin void SetBackgroundColor(const Color& _bgColor)
+		inline void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
 		}
-		inlin CameraManager& GetCameraManagerRef()
+		inline CameraManager& GetCameraManagerRef()
 		{
 			return cameraManager;
 		}
-		inlin ActorManager& GetActorManagerRef()
+		inline ActorManager& GetActorManagerRef()
 		{
 			return actorManager;
 		}
-		inlin HUD& GetHUDRef()
+		inline HUD& GetHUDRef()
 		{
 			return hud;
 		}
@@ -41,12 +41,12 @@ namespace Krampus
 
 	public:
 		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
-		inlin Type* SpawnActor(Args&&... _args)
+		inline Type* SpawnActor(Args&&... _args)
 		{
 			return actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
 		}
 		template <typename Type, typename ...Args, IS_BASE_OF(Widget, Type)>
-		inlin Type* SpawnWidget(Args&&... _args)
+		inline Type* SpawnWidget(Args&&... _args)
 		{
 			return hud.CreateWidget<Type>(this, std::forward<Args>(_args)...);
 		}

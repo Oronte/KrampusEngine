@@ -9,12 +9,12 @@ namespace Krampus
 		std::vector<std::unique_ptr<Widget>> widgets;
 
 	public:
-		inlin const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
+		inline const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
 		{
 			return widgets;
 		}
 		template <typename Type, IS_BASE_OF(Widget, Type)>
-		inlin std::vector<Type*> GetAllWidgetOfClass()
+		inline std::vector<Type*> GetAllWidgetOfClass()
 		{
 			std::vector<Type*> _finalVector;
 
@@ -27,7 +27,7 @@ namespace Krampus
 			return _finalVector;
 		}
 		template <typename Type, typename ...Args, IS_BASE_OF(Widget, Type)>
-		inlin Type* CreateWidget(Args&&... _args)
+		inline Type* CreateWidget(Args&&... _args)
 		{
 			std::unique_ptr<Type> _widget = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _rawWidget = _widget.get();
@@ -36,7 +36,7 @@ namespace Krampus
 			return _rawWidget;
 		}
 
-		inlin void DeleteWidget(Widget* _toDelete)
+		inline void DeleteWidget(Widget* _toDelete)
 		{
 			std::erase_if(widgets, [&](const std::unique_ptr<Widget>& _widget)
 				{

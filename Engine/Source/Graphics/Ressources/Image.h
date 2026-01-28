@@ -9,19 +9,19 @@ namespace Krampus
 		sf::Image image;
 
 	public:
-        inlin UVector2 GetSize() const
+        inline UVector2 GetSize() const
         {
             return UVector2(image.getSize());
         }
-        inlin void SetPixel(const UVector2& _coords, const Color& _color)
+        inline void SetPixel(const UVector2& _coords, const Color& _color)
         {
             image.setPixel(_coords, _color);
         }
-        inlin Color GetPixel(const UVector2& _coords) const
+        inline Color GetPixel(const UVector2& _coords) const
         {
             return Krampus::Color(image.getPixel(_coords));
         }
-        inlin const std::uint8_t* GetPixelsPtr() const
+        inline const std::uint8_t* GetPixelsPtr() const
         {
             return image.getPixelsPtr();
         }
@@ -51,7 +51,7 @@ namespace Krampus
         void FlipHorizontally();
         void FlipVertically();
 
-		inlin operator sf::Image() const noexcept
+        inline operator sf::Image() const noexcept
 		{
 			return image;
 		}

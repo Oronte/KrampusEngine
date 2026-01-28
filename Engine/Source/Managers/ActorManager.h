@@ -10,12 +10,12 @@ namespace Krampus
 		std::vector<std::unique_ptr<Actor>> actors;
 
 	public:
-		inlin const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept
+		inline const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept
 		{
 			return actors;
 		}
 		template <typename Type, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
-		inlin std::vector<Type*> GetAllActorOfClass()
+		inline std::vector<Type*> GetAllActorOfClass()
 		{
 			std::vector<Type*> _finalVector;
 
@@ -28,7 +28,7 @@ namespace Krampus
 			return _finalVector;
 		}
 		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
-		inlin Type* CreateActor(Args&&... _args)
+		inline Type* CreateActor(Args&&... _args)
 		{
 			std::unique_ptr<Type> _actor = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _rawActor = _actor.get();
@@ -37,7 +37,7 @@ namespace Krampus
 			return _rawActor;
 		}
 		
-		inlin void DeleteActor(Actor* _toDelete)
+		inline void DeleteActor(Actor* _toDelete)
 		{
 			std::erase_if(actors, [&](const std::unique_ptr<Actor>& _actor)
 				{

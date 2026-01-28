@@ -19,12 +19,12 @@ namespace Krampus
 		All = Wall | Player | Enemy | Projectile | Trigger
 	};
 
-	inlin CollisionChannel operator|(CollisionChannel _a, CollisionChannel _b)
+	inline CollisionChannel operator|(CollisionChannel _a, CollisionChannel _b)
 	{
 		return CAST(CollisionChannel, (CAST(uint32_t, _a) | CAST(uint32_t, _b)));
 	}
 
-	inlin CollisionChannel operator&(CollisionChannel _a, CollisionChannel _b)
+	inline CollisionChannel operator&(CollisionChannel _a, CollisionChannel _b)
 	{
 		return CAST(CollisionChannel, (CAST(uint32_t, _a) & CAST(uint32_t, _b)));
 	}
@@ -48,11 +48,11 @@ namespace Krampus
 		CollisionChannel mask = CollisionChannel::None;
 
 	public:
-		inlin ShapeType GetShapeType() const
+		inline ShapeType GetShapeType() const
 		{
 			return shapeType;
 		}
-		inlin float GetRadius() const
+		inline float GetRadius() const
 		{
 			if (shapeType != ShapeType::Circle)
 			{
@@ -61,7 +61,7 @@ namespace Krampus
 			}
 			return sizeData.radius;
 		}
-		inlin FVector2 GetSize() const
+		inline FVector2 GetSize() const
 		{
 			if (shapeType != ShapeType::Rectangle)
 			{

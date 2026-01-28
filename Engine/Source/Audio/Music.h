@@ -13,77 +13,77 @@ namespace Krampus
 		std::unique_ptr<sf::Music> music;
 
 	public:
-		inlin virtual float GetVolume() const override
+		inline virtual float GetVolume() const override
 		{
 			return music->getVolume();
 		}
-		inlin virtual void SetVolume(const float& _volume) override
+		inline virtual void SetVolume(const float& _volume) override
 		{
 			return music->setVolume(_volume);
 		}
 
-		inlin virtual bool IsLooping() const override
+		inline virtual bool IsLooping() const override
 		{
 			return music->isLooping();
 		}
-		inlin virtual void SetLoop(const bool& _loop) override
+		inline virtual void SetLoop(const bool& _loop) override
 		{
 			music->setLooping(_loop);
 		}
-		inlin virtual float GetPitch() const override
+		inline virtual float GetPitch() const override
 		{
 			return music->getPitch();
 		}
-		inlin virtual void SetPitch(const float& _pitch) override
+		inline virtual void SetPitch(const float& _pitch) override
 		{
 			music->setPitch(_pitch);
 		}
-		inlin virtual void AddPitch(const float& _pitch) override
+		inline virtual void AddPitch(const float& _pitch) override
 		{
 			SetPitch(GetPitch() + _pitch);
 		}
 
-		inlin virtual bool IsAvaliable() const override
+		inline virtual bool IsAvaliable() const override
 		{
 			return !IsPlaying();
 		}
-		inlin bool IsPlaying() const override
+		inline bool IsPlaying() const override
 		{
 			return music->getStatus() == MusicStatus::Playing;
 		}
-		inlin bool IsPaused() const override
+		inline bool IsPaused() const override
 		{
 			return music->getStatus() == MusicStatus::Paused;
 		}
-		inlin bool IsStopped() const override
+		inline bool IsStopped() const override
 		{
 			return music->getStatus() == MusicStatus::Stopped;
 		}
 
-		inlin float GetDuration() const 
+		inline float GetDuration() const
 		{ 
 			return music->getDuration().asSeconds();
 		}
 
-		inlin Music() 
+		inline Music()
 			: music(std::make_unique<sf::Music>()) { }
 
-		inlin void Play()
+		inline void Play()
 		{
 			music->play();
 		}
 
-		inlin void Pause()
+		inline void Pause()
 		{
 			music->pause();
 		}
 
-		inlin void Stop()
+		inline void Stop()
 		{
 			music->stop();
 		}
 
-		inlin bool Open(const std::string& _path)
+		inline bool Open(const std::string& _path)
 		{
 			return music->openFromFile(_path);
 		}

@@ -3,45 +3,23 @@
 
 using namespace Krampus;
 
-Krampus::VerbosityData::VerbosityData(const VerbosityType& _type, const std::string& _text, const std::string& _debug, const bool& _useDebug)
+std::string VerbosityData::RetrieveFullText(bool _useColor) const
 {
-    ComputeUseDebug(_type);
-    ComputeColor(_type);
-    ComputePrefix(_type);
-    text = _text;
-    debug = _debug;
-}
-
-/// VerbosityData
-std::string VerbosityData::RetrieveFullText(const bool& _useColor, const bool& _useTime) const
-{
-    std::string _fullText;
-
-    if (_useTime)
+    static constexpr const char* _table[] =
     {
-        _fullText += "[" + M_TIMER.GetCurrentRealTime() + "]";
-    }
+        "VeryVerbose", "Verbose", "Log", "Display",
+        "Warning", "Error", "Fatal"
+    };
 
-    _fullText += " " + prefix + ": " + text;
+    std::string _outString =
+        "[" + M_TIMER.GetCurrentRealTime() + "]" +
+        " " + _table[type] + ": " + text + " " + debug;
 
-    if (USE_DEBUG || useDebug)
-    {
-        _fullText += " " + debug;
-    }
-
-    return _useColor ? color.GradientString(_fullText) : _fullText;
+    return _useColor ? color.GradientString(_outString) : _outString;
 }
 
-void Krampus::VerbosityData::ComputeUseDebug(const VerbosityType& _type)
+void Krampus::VerbosityData::ComputeColor()
 {
-    useDebug = std::set<VerbosityType>({ VerbosityType::Error, VerbosityType::Error }).contains(_type);
-}
-
-void Krampus::VerbosityData::ComputeColor(const VerbosityType& _type)
-{
-    if (_type >= VerbosityType::COUNT)
-        THROW_EXCEPTION(std::format("Invalid VerbosityType, _type = {} and must be < {}", CAST(int, _type), CAST(int, VerbosityType::COUNT)));
-
     const std::vector<Gradient>& _verbosityColors =
     {
         Gradient(Color(27, 27, 33), Color(37, 37, 51)),         //VERY VERBOSE
@@ -53,30 +31,14 @@ void Krampus::VerbosityData::ComputeColor(const VerbosityType& _type)
         Gradient(Color(255, 0, 95), Color(118, 37, 184)),       //FATAL
     };
 
-    color = _verbosityColors[CAST(int, _type)];
-}
-
-void Krampus::VerbosityData::ComputePrefix(const VerbosityType& _type)
-{
-    if (_type >= VerbosityType::COUNT)
-        THROW_EXCEPTION(std::format("Invalid VerbosityType ! _type = {} and must be < {}", CAST(int, _type), CAST(int, VerbosityType::COUNT)));
-
-    const std::vector<std::string>& _verbosityTexts =
-    {
-        "VeryVerbose",
-        "Verbose",
-        "Log",
-        "Display",
-        "Warning",
-        "Error",
-        "Fatal",
-    };
-
-    prefix = _verbosityTexts[CAST(int, _type)];
+    color = _verbosityColors[type];
 }
 
 
-/// Logger
+
+
+
+
 void Krampus::Logger::LoggingThread()
 {
     std::filesystem::create_directories(logsDir);

@@ -59,7 +59,6 @@
 	#define new							nullptr; static_assert(false, "You cannot use the new operator. This prevents accidentaly memory leaks"); new
 #endif
 
-#define inlin inline
 #define FILE_NAME						std::filesystem::path(__FILE__).filename().string()
 #define DEBUG_INFO						std::string("(File : " + FILE_NAME + " | Func : " + CAST(std::string, PATH) + " | Line : " + std::to_string(__LINE__) + ")")						
 #define CAST(_type, _expr)				static_cast<_type>(_expr)

@@ -32,161 +32,161 @@ namespace Krampus
             SetOriginAtMiddle();
         }
 
-        inlin virtual void SetString(const std::string& _string)
+        inline virtual void SetString(const std::string& _string)
         { 
             text.setString(_string);
             SetOriginAtMiddle();
         }
-        inlin const std::string& GetString() const
+        inline const std::string& GetString() const
         {
             return text.getString();
         }
 
-        inlin void SetFont(const std::string& _fileName, const FontExtensionType& _type)
+        inline void SetFont(const std::string& _fileName, const FontExtensionType& _type)
         {
             M_FONT.LoadFont(font, _fileName, _type);
             SetOriginAtMiddle();
         }
-        inlin const Font& GetFont() const
+        inline const Font& GetFont() const
         {
             return font;
         }
 
-        inlin void SetCharacterSize(unsigned int& _size)
+        inline void SetCharacterSize(unsigned int& _size)
         {
             text.setCharacterSize(_size);
             SetOriginAtMiddle();
         }
-        inlin unsigned int GetCharacterSize() const
+        inline unsigned int GetCharacterSize() const
         {
             return text.getCharacterSize();
         }
 
-        inlin void SetFillColor(const Color& _color)
+        inline void SetFillColor(const Color& _color)
         {
             text.setFillColor(_color);
         }
-        inlin Color GetFillColor() const
+        inline Color GetFillColor() const
         {
             return text.getFillColor();
         }
 
-        inlin void SetOutlineColor(const Color& _color)
+        inline void SetOutlineColor(const Color& _color)
         {
             text.setOutlineColor(_color);
         }
-        inlin Color GetOutlineColor() const
+        inline Color GetOutlineColor() const
         {
             return text.getOutlineColor();
         }
 
-        inlin void SetOutlineThickness(const float& _thickness)
+        inline void SetOutlineThickness(const float& _thickness)
         {
             text.setOutlineThickness(_thickness);
             SetOriginAtMiddle();
         }
-        inlin float GetOutlineThickness() const
+        inline float GetOutlineThickness() const
         {
             return text.getOutlineThickness();
         }
 
-        inlin void SetStyle(const unsigned int& _style)
+        inline void SetStyle(const unsigned int& _style)
         {
             text.setStyle(_style);
             SetOriginAtMiddle();
         }
-        inlin unsigned int GetStyle() const
+        inline unsigned int GetStyle() const
         {
             return CAST(TextStyle, text.getStyle());
         }
 
-        inlin void SetLetterSpacing(const float& _spacing)
+        inline void SetLetterSpacing(const float& _spacing)
         {
             text.setLetterSpacing(_spacing);
             SetOriginAtMiddle();
         }
-        inlin float GetLetterSpacing() const
+        inline float GetLetterSpacing() const
         {
             return text.getLetterSpacing();
         }
 
-        inlin void SetLineSpacing(const float& _spacing)
+        inline void SetLineSpacing(const float& _spacing)
         {
             text.setLineSpacing(_spacing);
             SetOriginAtMiddle();
         }
-        inlin float GetLineSpacing() const 
+        inline float GetLineSpacing() const
         { 
             return text.getLineSpacing();
         }
 
-        inlin void SetPosition(const FVector2& _position) 
+        inline void SetPosition(const FVector2& _position)
         {
             text.setPosition(_position);
         }
-        inlin FVector2 GetPosition() const 
+        inline FVector2 GetPosition() const
         { 
             return text.getPosition();
         }
 
-        inlin void SetOrigin(const FVector2& _origin) 
+        inline void SetOrigin(const FVector2& _origin)
         { 
             text.setOrigin(_origin);
         }
-        inlin void SetOriginAtMiddle()
+        inline void SetOriginAtMiddle()
         {
             sf::Rect<float> _bounds = text.getLocalBounds();
             SetOrigin(_bounds.position + _bounds.size / 2.0f);
         }
-        inlin FVector2 GetOrigin() const 
+        inline FVector2 GetOrigin() const
         { 
             return text.getOrigin();
         }
 
-        inlin void SetScale(const FVector2& _factors) 
+        inline void SetScale(const FVector2& _factors)
         { 
             text.setScale(_factors);
         }
-        inlin FVector2 GetScale() const 
+        inline FVector2 GetScale() const
         { 
             return text.getScale();
         }
 
-        inlin void SetRotation(const Angle& _angle) 
+        inline void SetRotation(const Angle& _angle)
         { 
             text.setRotation(_angle);
         }
-        inlin Angle GetRotation() const 
+        inline Angle GetRotation() const
         { 
             return Angle(text.getRotation());
         }
 
-        inlin void SetTransform(const Transform& _transform)
+        inline void SetTransform(const Transform& _transform)
         {
             SetPosition(_transform.position); 
             SetRotation(_transform.rotation);
             SetScale(_transform.scale);
         }
-        inlin Transform GetTransform() const
+        inline Transform GetTransform() const
         {
             return Transform(GetPosition(), GetRotation(), GetScale());
         }
 
 
-        inlin FRect GetLocalBounds() const 
+        inline FRect GetLocalBounds() const
         { 
             return text.getLocalBounds();
         }
-        inlin FRect GetGlobalBounds() const 
+        inline FRect GetGlobalBounds() const
         { 
             return text.getGlobalBounds();
         }
-        inlin FVector2 FindCharacterPos(const std::size_t& _index) const 
+        inline FVector2 FindCharacterPos(const std::size_t& _index) const
         { 
             return text.findCharacterPos(_index);
         }
 
-        inlin operator const sf::Text& () const noexcept 
+        inline operator const sf::Text& () const noexcept
         { 
             return text;
         }

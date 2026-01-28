@@ -3,13 +3,6 @@
 #include "Color.h"
 #include "Utilities/System/Printable.h"
 
-#define CAN_DEBUG
-#ifdef CAN_DEBUG
-#define USE_DEBUG 1
-#else
-#define USE_DEBUG 0
-#endif // DEBUG
-
 #define LOG(_verbosity, _msg)   Krampus::Logger::PrintLog(_verbosity, _msg, DEBUG_INFO)
 #define LOG_MSG(_msg)           Krampus::Logger::PrintLog(Krampus::VerbosityType::Display, _msg, DEBUG_INFO)
 #define LOG_WARNING(_msg)       Krampus::Logger::PrintLog(Krampus::VerbosityType::Warning, _msg, DEBUG_INFO)
@@ -19,7 +12,7 @@
 namespace Krampus
 {
 
-    enum class VerbosityType
+    enum VerbosityType
     {
         VeryVerbose,    // Prints a verbose message to a log file (if veryVerboseLogging is enabled).
         Verbose,        // Prints a verbose message to a log file (if verboseLogging is enabled).
@@ -28,47 +21,42 @@ namespace Krampus
         Warning,        // Prints a warning to console (and log file).
         Error,          // Prints an error to console (and log file).
         Fatal,          // Always prints a fatal error to console (and log file) and throw an exception.
-
-        COUNT
     };
 
     class VerbosityData
     {
-        Gradient color;
-        std::string prefix;
-        std::string text;
-        std::string debug;
-        bool useDebug;
+        std::string     text;
+        std::string     debug;
+        Gradient        color;
+        VerbosityType   type;
 
     public:
-        VerbosityData(const VerbosityType& _type, const std::string& _text, const std::string& _debug,
-            const bool& _useDebug = false);
+        VerbosityData(VerbosityType _type, const std::string& _text, const std::string& _debug)
+            : type(_type), text(_text), debug(_debug) { }
 
-        std::string RetrieveFullText(const bool& _useColor = true, const bool& _useTime = true) const;
+        std::string RetrieveFullText(bool _useColor = true) const;
 
     private:
-        void ComputeUseDebug(const VerbosityType& _type);
-        void ComputeColor(const VerbosityType& _type);
-        void ComputePrefix(const VerbosityType& _type);
+        void ComputeColor();
     };
 
     class Logger
     {
-        static inlin std::string logsDir = "Content/Logs/";
-        static inlin std::string logsFileName = "log.txt";
+        static inline std::string               logsDir = "Content/Logs/";
+        static inline std::string               logsFileName = "log.txt";
 
-        static inlin std::string logsPath = logsDir + logsFileName;
+        static inline std::string               logsPath = logsDir + logsFileName;
 
-        static inlin std::queue<std::string> logQueue;
-        static inlin std::queue<std::string> consoleQueue;
-        static inlin std::mutex queueMutex;
-        static inlin std::condition_variable cv;
-        static inlin std::atomic<bool> running = false;
-        static inlin std::thread logThread;
+        static inline std::queue<std::string>   logQueue;
+        static inline std::queue<std::string>   consoleQueue;
+        static inline std::mutex                queueMutex;
+        static inline std::condition_variable   cv;
+        static inline std::atomic<bool>         running = false;
+        static inline std::thread               logThread;
 
     public:
-        static inlin bool verboseLogging = false;
-        static inlin bool veryVerboseLogging = false;
+        static inline bool                      verboseLogging = false;
+        static inline bool                      veryVerboseLogging = false;
 
     private:
         static void LoggingThread();

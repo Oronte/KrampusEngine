@@ -11,15 +11,15 @@ namespace Krampus
 		SpriteComponent* sprite = nullptr;
 
 	public:
-		inlin SpriteComponent* GetSprite() const
+		inline SpriteComponent* GetSprite() const
 		{
 			return sprite;
 		}
-		inlin void SetTextureRect(const IVector2& _start, const IVector2& _size)
+		inline void SetTextureRect(const IVector2& _start, const IVector2& _size)
 		{
 			M_TEXTURE.SetTextureRect(sprite->GetShapeObject()->GetShape(), _start, _size);
 		}
-		inlin void SetTextureRect(const IRect& _rect)
+		inline void SetTextureRect(const IRect& _rect)
 		{
 			M_TEXTURE.SetTextureRect(sprite->GetShapeObject()->GetShape(), _rect);
 		}

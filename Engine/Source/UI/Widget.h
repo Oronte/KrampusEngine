@@ -16,11 +16,11 @@ namespace Krampus
 		Angle localRotation;
 
 	protected:
-		inlin FVector2 GetScreenPosition() const
+		inline FVector2 GetScreenPosition() const
 		{
 			return screenPosition;
 		}
-		inlin Angle GetLocalRotation() const
+		inline Angle GetLocalRotation() const
 		{
 			return localRotation;
 		}

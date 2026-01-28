@@ -10,7 +10,7 @@ namespace Krampus
 		SoftBodyComponent* softBody;
 
 	public:
-		inlin SoftBodyComponent* GetSoftBody() const
+		inline SoftBodyComponent* GetSoftBody() const
 		{
 			return softBody;
 		}

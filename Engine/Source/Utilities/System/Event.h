@@ -13,8 +13,9 @@ namespace Krampus
 
         struct ListenerHandle
         {
-            Event* owner = nullptr;
-            ListenerId id = 0;
+            Event*          owner = nullptr;
+            ListenerId      id = 0;
+
 
             ListenerHandle() = default;
             ListenerHandle(Event* _event, ListenerId _id) : id(_id), owner(_event) {}
@@ -23,8 +24,10 @@ namespace Krampus
             ListenerHandle& operator=(const ListenerHandle&) = delete;
 
             ListenerHandle(ListenerHandle&& _other) noexcept
+                : owner(_other.owner), id(_other.id)
             {
-                *this = std::move(_other);
+                _other.owner = nullptr;
+                _other.id = 0;
             }
 
             ListenerHandle& operator=(ListenerHandle&& _other) noexcept
@@ -32,10 +35,10 @@ namespace Krampus
                 if (this != &_other)
                 {
                     Reset();
-                    id = _other.id;
                     owner = _other.owner;
-                    _other.id = 0;
+                    id = _other.id;
                     _other.owner = nullptr;
+                    _other.id = 0;
                 }
                 return *this;
             }
@@ -67,39 +70,48 @@ namespace Krampus
 
         struct Listener
         {
-            ListenerId id;
-            Callback callback;
-            bool once;
+            ListenerId  id;
+            Callback    callback;
+            bool        once;
         };
 
-        std::vector<Listener> listeners;
-        std::vector<ListenerId> pendingRemove;
-        std::vector<Listener> pendingAdd;
-        ListenerId nextId = 1;
-        bool broadcasting = false;
+        std::vector<Listener>       listeners;
+        std::vector<ListenerId>     pendingRemove;
+        std::vector<Listener>       pendingAdd;
+
+        ListenerId                  nextId = 1;
+        bool                        broadcasting = false;
 
     public:
         NO_DISCARD
         ListenerHandle AddListener(Callback _callback, bool _once = false)
         {
-            const ListenerId _id = nextId++;
+            if (!_callback)
+            {
+                LOG_WARNING("A null callback is detected; a potentially invalid ListenerHandle is returned");
+                return ListenerHandle();
+            }
 
-            Listener _listener{ _id, _callback, _once };
+            const ListenerId _id = nextId++; // TODO security
 
-            broadcasting ? pendingAdd.push_back(_listener) :
-                listeners.push_back(_listener);
+            Listener _listener{ _id, std::move(_callback), _once };
+
+            broadcasting ? pendingAdd.push_back(std::move(_listener)) :
+                listeners.push_back(std::move(_listener));
 
             return ListenerHandle(this, _id);
         }
 
         template<typename T, typename MemFn>
         NO_DISCARD
-        ListenerHandle AddListener(
-            T* _instance,
-            MemFn _memFn,
-            bool _once = false
-        )
+        ListenerHandle AddListener(T* _instance, MemFn _memFn, bool _once = false)
         {
+            if (!_instance)
+            {
+                LOG_WARNING("A null instance is detected; a potentially invalid ListenerHandle is returned");
+                return ListenerHandle();
+            }
+
             return AddListener(
                 [_instance, _memFn](Args... _args)
                 {
@@ -128,7 +140,15 @@ namespace Krampus
             for (Listener& _listener : listeners)
             {
                 if (std::ranges::find(pendingRemove, _listener.id) == pendingRemove.end())
-                    _listener.callback(_args...);
+                {
+                    const Callback& _callback = _listener.callback;
+                    if (!_callback)
+                    {
+                        LOG_WARNING("A null callback is detected");
+                        continue;
+                    }
+                    _callback(_args...);
+                }
             }
 
             broadcasting = false;

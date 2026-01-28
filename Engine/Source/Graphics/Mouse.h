@@ -16,40 +16,40 @@ namespace Krampus
 	public:
 		Mouse() = default;
 
-		inlin IVector2 GetPosition() const noexcept
+		inline IVector2 GetPosition() const noexcept
 		{
 			const MainWindow& _mainWindow = MAIN_WINDOW;
 			return _mainWindow.MapCoordsToPixel(position, _mainWindow.GetView());
 		}
-		inlin IVector2 GetScreenPosition() const noexcept
+		inline IVector2 GetScreenPosition() const noexcept
 		{
 			return position;
 		}
-		inlin void SetPosition(const IVector2& _position) noexcept
+		inline void SetPosition(const IVector2& _position) noexcept
 		{
 			const MainWindow& _mainWindow = MAIN_WINDOW;
 			SetScreenPosition(_mainWindow.MapCoordsToPixel(_position, _mainWindow.GetView()));
 		}
-		inlin void SetScreenPosition(const IVector2& _position) noexcept
+		inline void SetScreenPosition(const IVector2& _position) noexcept
 		{
 			sf::Mouse::setPosition(_position);
 			Update();
 		}
-		inlin bool HasMoved() const noexcept
+		inline bool HasMoved() const noexcept
 		{
 			return position != lastPosition;
 		}
 
-		inlin void Show()
+		inline void Show()
 		{
 			MAIN_WINDOW.GetRenderWindow().setMouseCursorVisible(true);
 		}
-		inlin void Hide()
+		inline void Hide()
 		{
 			MAIN_WINDOW.GetRenderWindow().setMouseCursorVisible(false);
 		}
 
-		inlin void Update()
+		inline void Update()
 		{
 			lastPosition = position;
 			position = sf::Mouse::getPosition();

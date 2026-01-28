@@ -33,43 +33,43 @@ namespace Krampus
 		std::vector<std::unique_ptr<Timer>> timers;
 
 	private:
-		inlin float GetTime(const sf::Time& _time) const
+		inline float GetTime(const sf::Time& _time) const
 		{
 			return _time.asSeconds();
 		}
-		inlin std::string TwoDigitsTime(const int& _value) const
+		inline std::string TwoDigitsTime(const int& _value) const
 		{
 			if (_value >= 10) return std::to_string(_value);
 			return "0" + std::to_string(_value);
 		}
 	
 	public:
-		inlin float GetDeltaTime() const
+		inline float GetDeltaTime() const
 		{
 			return deltaTime;
 		}
-		inlin float GetElapsedTime() const
+		inline float GetElapsedTime() const
 		{
 			return elapsedTime;
 		}
-		inlin float GetInstantFPS() const
+		inline float GetInstantFPS() const
 		{
 			return fps;
 		}
 		// Use for display
-		inlin float GetSmoothedFPS() const
+		inline float GetSmoothedFPS() const
 		{
 			return smoothedFPS;
 		}
-		inlin void SetTimerScale(const float& _timeScale)
+		inline void SetTimerScale(const float& _timeScale)
 		{
 			timeScale = _timeScale;
 		}
-		inlin void SetMaxFrameRate(const unsigned short& _fps)
+		inline void SetMaxFrameRate(const unsigned short& _fps)
 		{
 			maxFrameRate = _fps;
 		}
-		inlin unsigned short GetMaxFrameRate() const
+		inline unsigned short GetMaxFrameRate() const
 		{
 			return maxFrameRate;
 		}
@@ -89,7 +89,7 @@ namespace Krampus
 
 		Timer* CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
 		template<typename T, typename MemFn>
-		inlin Timer* CreateTimer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
+		inline Timer* CreateTimer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
 		{
 			return timers.emplace_back(
 				std::make_unique<Timer>(_instance, _memFn, _duration, _isLoop, _startRunning)

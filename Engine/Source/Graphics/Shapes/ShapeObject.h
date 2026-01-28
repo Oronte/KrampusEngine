@@ -45,19 +45,19 @@ namespace Krampus
 		ShapeSizeData sizeData;
 
 	public:
-		inlin ShapeType GetShapeType()
+		inline ShapeType GetShapeType()
 		{
 			return shapeType;
 		}
-		inlin Texture& GetTextureRef()
+		inline Texture& GetTextureRef()
 		{
 			return texture;
 		}
-		inlin Shape* GetShape() const
+		inline Shape* GetShape() const
 		{
 			return shape.get();
 		}
-		inlin ShapeSizeData& GetSizeData()
+		inline ShapeSizeData& GetSizeData()
 		{
 			return sizeData;
 		}

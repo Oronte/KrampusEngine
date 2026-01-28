@@ -25,15 +25,15 @@ namespace Krampus
 	{
 		uint8_t zOrder = 0;
 	public:
-		inlin uint8_t GetZOrder() const
+		inline uint8_t GetZOrder() const
 		{
 			return zOrder;
 		}
-		inlin virtual void SetZOrder(const uint8_t& _zOrder)
+		inline virtual void SetZOrder(const uint8_t& _zOrder)
 		{
 			zOrder = _zOrder;
 		}
-		inlin virtual void SetZOrder(const ZOrder& _zOrder)
+		inline virtual void SetZOrder(const ZOrder& _zOrder)
 		{
 			zOrder = CAST(uint8_t, _zOrder);
 		}

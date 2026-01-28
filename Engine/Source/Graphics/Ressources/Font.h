@@ -16,11 +16,11 @@ namespace Krampus
 		sf::Font font;
 
 	public:
-		inlin bool IsSmooth() const
+		inline bool IsSmooth() const
 		{
 			return font.isSmooth();
 		}
-		inlin void SetSmooth(const bool& _smooth)
+		inline void SetSmooth(const bool& _smooth)
 		{
 			return font.setSmooth(_smooth);
 		}
@@ -29,7 +29,7 @@ namespace Krampus
 		Font(const std::string& _path) : font(_path) {}
 		Font(const sf::Font& _font) : font(_font) {}
 
-		inlin bool Open(const std::string& _path)
+		inline bool Open(const std::string& _path)
 		{
 			return font.openFromFile(_path);
 		}

@@ -11,12 +11,12 @@ namespace Krampus
 		std::unique_ptr<sf::Shape> shape;
 
 	public:
-        inlin sf::Shape* Get() const noexcept
+        inline sf::Shape* Get() const noexcept
         {
             return shape.get();
         }
 
-        inlin const Texture GetTexture() const
+        inline const Texture GetTexture() const
         {
             if (!shape)
             {
@@ -25,7 +25,7 @@ namespace Krampus
             }
             return Texture(*(shape->getTexture()));
         }
-        inlin void SetTexture(const Texture* _texture, const bool& _resetRect = false)
+        inline void SetTexture(const Texture* _texture, const bool& _resetRect = false)
         {
             if (!shape || !_texture)
             {
@@ -35,7 +35,7 @@ namespace Krampus
             shape->setTexture(_texture->Get(), _resetRect);
         }
 
-        inlin const IRect& GetTextureRect() const
+        inline const IRect& GetTextureRect() const
         {
             if (!shape)
             {
@@ -44,7 +44,7 @@ namespace Krampus
             }
             return shape->getTextureRect();
         }
-        inlin void SetTextureRect(const IRect& _rect)
+        inline void SetTextureRect(const IRect& _rect)
         {
             if (!shape)
             {
@@ -54,7 +54,7 @@ namespace Krampus
             shape->setTextureRect(_rect);
         }
 
-        inlin Color GetFillColor() const
+        inline Color GetFillColor() const
         {
             if (!shape)
             {
@@ -63,7 +63,7 @@ namespace Krampus
             }
             return shape->getFillColor();
         }
-        inlin void SetFillColor(const Color& _color)
+        inline void SetFillColor(const Color& _color)
         {
             if (!shape)
             {
@@ -73,7 +73,7 @@ namespace Krampus
             shape->setFillColor(_color);
         }
 
-        inlin void SetOutlineColor(const Color& _color)
+        inline void SetOutlineColor(const Color& _color)
         {
             if (!shape)
             {
@@ -82,7 +82,7 @@ namespace Krampus
             }
             shape->setOutlineColor(_color);
         }
-        inlin Color GetOutlineColor() const
+        inline Color GetOutlineColor() const
         {
             if (!shape)
             {
@@ -92,7 +92,7 @@ namespace Krampus
             return shape->getOutlineColor();
         }
 
-        inlin void SetOutlineThickness(const float& _thickness)
+        inline void SetOutlineThickness(const float& _thickness)
         {
             if (!shape)
             {
@@ -101,7 +101,7 @@ namespace Krampus
             }
             shape->setOutlineThickness(_thickness);
         }
-        inlin float GetOutlineThickness() const
+        inline float GetOutlineThickness() const
         {
             if (!shape)
             {
@@ -111,7 +111,7 @@ namespace Krampus
             return shape->getOutlineThickness();
         }
 
-        inlin std::size_t GetPointCount() const
+        inline std::size_t GetPointCount() const
         {
             if (!shape)
             {
@@ -120,7 +120,7 @@ namespace Krampus
             }
             return shape->getPointCount();
         }
-        inlin FVector2 GetPoint(const std::size_t& _index) const
+        inline FVector2 GetPoint(const std::size_t& _index) const
         {
             if (!shape)
             {
@@ -130,7 +130,7 @@ namespace Krampus
             return FVector2(shape->getPoint(_index));
         }
 
-        inlin FVector2 GetGeometricCenter() const
+        inline FVector2 GetGeometricCenter() const
         {
             if (!shape)
             {
@@ -140,7 +140,7 @@ namespace Krampus
             return FVector2(shape->getGeometricCenter());
         }
 
-        inlin void SetPosition(const FVector2& _position)
+        inline void SetPosition(const FVector2& _position)
         {
             if (!shape)
             {
@@ -149,7 +149,7 @@ namespace Krampus
             }
             shape->setPosition(_position);
         }
-        inlin FVector2 GetPosition() const
+        inline FVector2 GetPosition() const
         {
             if (!shape)
             {
@@ -158,7 +158,7 @@ namespace Krampus
             }
             return FVector2(shape->getPosition());
         }
-        inlin void Move(const FVector2& _offset)
+        inline void Move(const FVector2& _offset)
         {
             if (!shape)
             {
@@ -168,7 +168,7 @@ namespace Krampus
             shape->move(_offset);
         }
 
-        inlin void SetRotation(const Angle& _angle)
+        inline void SetRotation(const Angle& _angle)
         {
             if (!shape)
             {
@@ -177,7 +177,7 @@ namespace Krampus
             }
             shape->setRotation(_angle);
         }
-        inlin Angle GetRotation() const
+        inline Angle GetRotation() const
         {
             if (!shape)
             {
@@ -186,7 +186,7 @@ namespace Krampus
             }
             return Angle(shape->getRotation());
         }
-        inlin void Rotate(const Angle& _angle)
+        inline void Rotate(const Angle& _angle)
         {
             if (!shape)
             {
@@ -196,7 +196,7 @@ namespace Krampus
             shape->rotate(_angle);
         }
 
-        inlin void SetScale(const FVector2& _scale)
+        inline void SetScale(const FVector2& _scale)
         {
             if (!shape)
             {
@@ -205,7 +205,7 @@ namespace Krampus
             }
             shape->setScale(_scale);
         }
-        inlin FVector2 GetScale() const
+        inline FVector2 GetScale() const
         {
             if (!shape)
             {
@@ -214,7 +214,7 @@ namespace Krampus
             }
             return FVector2(shape->getScale());
         }
-        inlin void Scale(const FVector2& _factor)
+        inline void Scale(const FVector2& _factor)
         {
             if (!shape)
             {
@@ -224,7 +224,7 @@ namespace Krampus
             shape->scale(_factor);
         }
 
-        inlin void SetOrigin(const FVector2& _origin)
+        inline void SetOrigin(const FVector2& _origin)
         {
             if (!shape)
             {
@@ -233,11 +233,11 @@ namespace Krampus
             }
             shape->setOrigin(_origin);
         }
-        inlin void SetOriginAtMiddle()
+        inline void SetOriginAtMiddle()
         {
             SetOrigin(GetGeometricCenter());
         }
-        inlin FVector2 GetOrigin() const
+        inline FVector2 GetOrigin() const
         {
             if (!shape)
             {
@@ -247,7 +247,7 @@ namespace Krampus
             return FVector2(shape->getOrigin());
         }
 
-        inlin FRect GetLocalBounds() const
+        inline FRect GetLocalBounds() const
         {
             if (!shape)
             {
@@ -256,7 +256,7 @@ namespace Krampus
             }
             return shape->getLocalBounds();
         }
-        inlin FRect GetGlobalBounds() const
+        inline FRect GetGlobalBounds() const
         {
             if (!shape)
             {
@@ -266,14 +266,14 @@ namespace Krampus
             return shape->getGlobalBounds();
         }
 
-        inlin const Transform& GetTransform() const
+        inline const Transform& GetTransform() const
         {
             return Transform(
                 GetPosition(),
                 GetRotation(),
                 GetScale());
         }
-        inlin void SetTransform(const Transform& _transform)
+        inline void SetTransform(const Transform& _transform)
         {
             SetPosition(_transform.position);
             SetRotation(_transform.rotation);
