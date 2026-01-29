@@ -1,7 +1,7 @@
 #include "Debug.h"
 #include "actors/Actor.h"
 #include "GameFramework/Level.h"
-#include "Graphics/Window/MainWindow.h"
+#include "Graphics/Window.h"
 
 void Krampus::Debug::DrawDebugCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
 {

@@ -1,11 +1,9 @@
 #include "CameraManager.h"
-#include "Graphics/Window/MainWindow.h"
-#include "Graphics/Window/MainWindow.h"
 
 void Krampus::CameraManager::UpdateView()
 {
 	if (!current) return;
-	MAIN_WINDOW.SetView(current);
+	GetWorld()->GetWindowRef().SetView(current);
 }
 
 void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)

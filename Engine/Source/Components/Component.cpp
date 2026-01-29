@@ -5,6 +5,11 @@
 
 using namespace Krampus;
 
+Engine* Component::GetWorld() const
+{
+	return level->GetWorld();
+}
+
 Component::Component(Actor* _owner)
 	: transform(_owner->transform)
 {

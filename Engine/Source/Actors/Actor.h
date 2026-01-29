@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Object.h"
+#include "Core/GameObject.h"
 #include "components/Component.h"
 #include "Utilities/Math/Transform.h"
 
@@ -8,7 +8,7 @@ namespace Krampus
 
 	class Level;
 
-	class Actor : public KObject
+	class Actor : public IGameObject
 	{
 		std::vector<Actor*> children;
 
@@ -19,6 +19,8 @@ namespace Krampus
 		Transform oldTransform;
 	public:
 		Transform transform;
+
+		inline Engine* GetWorld() const;
 
 		template<typename Type = Level, IS_BASE_OF(Level, Type)>
 		inline Type* GetLevel()

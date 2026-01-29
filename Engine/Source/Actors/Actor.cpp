@@ -2,6 +2,11 @@
 #include "GameFramework/Level.h"
 
 
+Krampus::Engine* Krampus::Actor::GetWorld() const
+{
+	return level->GetWorld();
+}
+
 Krampus::Actor::Actor(Level* _level)
 {
 	level = _level;
@@ -9,7 +14,7 @@ Krampus::Actor::Actor(Level* _level)
 
 void Krampus::Actor::SetActive(const bool& _status)
 {
-	KObject::SetActive(_status);
+	IGameObject::SetActive(_status);
 
 	for (const std::unique_ptr<Component>& _component : components)
 	{

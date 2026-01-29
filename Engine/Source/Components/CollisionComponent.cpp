@@ -1,8 +1,8 @@
 #include "CollisionComponent.h"
 #include "Actors/Actor.h"
+#include "GameFramework/Level.h"
 #include "Managers/CollisionManager.h"
 #include "SpriteComponent.h"
-#include "Graphics/Window/MainWindow.h"
 
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionChannel& _channel, const CollisionChannel& _mask)
 	: Component(_owner)
@@ -21,7 +21,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionCh
 	if (shapeType == ShapeType::Circle) sizeData.radius = _sprite->GetShapeSizeData().radius;
 	else sizeData.size = _sprite->GetShapeSizeData().size;
 
-	M_COLLISION.Register(this);
+	level->GetCollisionManagerRef().Register(this);
 }
 
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const float& _radius, const CollisionChannel& _channel, const CollisionChannel& _mask)
@@ -33,7 +33,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const float& _rad
 	sizeData.radius = _radius;
 	shapeType = ShapeType::Circle;
 
-	M_COLLISION.Register(this);
+	level->GetCollisionManagerRef().Register(this);
 }
 
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _size, const CollisionChannel& _channel, const CollisionChannel& _mask)
@@ -45,7 +45,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _
 	sizeData.size = _size;
 	shapeType = ShapeType::Circle;
 
-	M_COLLISION.Register(this);
+	level->GetCollisionManagerRef().Register(this);
 }
 
 void Krampus::CollisionComponent::ResolveCollision(const CollisionInfo& _info)
@@ -241,7 +241,7 @@ void Krampus::CollisionComponent::BeginDestroy()
 {
 	Component::BeginDestroy();
 
-	M_COLLISION.RemoveComponent(this);
+	level->GetCollisionManagerRef().RemoveComponent(this);
 }
 
 void Krampus::CollisionComponent::DrawDebug()

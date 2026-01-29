@@ -3,7 +3,7 @@
 
 namespace Krampus
 {
-	//TODO implement spacial sound
+
 
 	class Sound : public Sample
 	{
@@ -82,6 +82,131 @@ namespace Krampus
 		{
 			return sound->getAttenuation();
 		}
+
+		inline void SetSpatializationEnabled(bool _enable) const
+		{
+			sound->setSpatializationEnabled(_enable);
+		}
+		inline bool IsSpatializationEnabled() const
+		{
+			return sound->isSpatializationEnabled();
+		}
+
+		inline void SetRelativeToListener(bool _relative) const
+		{
+			sound->setRelativeToListener(_relative);
+		}
+		inline bool IsRelativeToListener() const
+		{
+			return sound->isRelativeToListener();
+		}
+
+		inline void SetVelocity(const FVector3& _velocity) const
+		{
+			sound->setVelocity(_velocity);
+		}
+		inline FVector3 GetVelocity() const
+		{
+			return sound->getVelocity();
+		}
+
+		inline void SetPosition(const FVector3& _position) const
+		{
+			sound->setPosition(_position);
+		}
+		inline FVector3 GetPosition() const
+		{
+			return sound->getPosition();
+		}
+
+		inline void SetPlayingOffset(float _time) const
+		{
+			sound->setPlayingOffset(sf::seconds(_time));
+		}
+		inline float GetPlayingOffset() const
+		{
+			return sound->getPlayingOffset().asSeconds();
+		}
+
+		inline void SetPan(float _pan) const
+		{
+			sound->setPan(_pan);
+		}
+		inline float GetPan() const
+		{
+			return sound->getPan();
+		}
+
+		inline void SetMinGain(float _gain) const
+		{
+			sound->setMinGain(_gain);
+		}
+		inline float GetMinGain() const
+		{
+			return sound->getMinGain();
+		}
+		inline void SetMaxGain(float _gain) const
+		{
+			sound->setMaxGain(_gain);
+		}
+		inline float GetMaxGain() const
+		{
+			return sound->getMaxGain();
+		}
+
+		inline void SetMinDistance(float _distance) const
+		{
+			sound->setMinDistance(_distance);
+		}
+		inline float GetMinDistance() const
+		{
+			return sound->getMinDistance();
+		}
+		inline void SetMaxDistance(float _distance) const
+		{
+			sound->setMaxDistance(_distance);
+		}
+		inline float GetMaxDistance() const
+		{
+			return sound->getMaxDistance();
+		}
+
+		inline void SetDopplerFactor(float _factor) const
+		{
+			sound->setDopplerFactor(_factor);
+		}
+		inline float GetDopplerFactor() const
+		{
+			return sound->getDopplerFactor();
+		}
+
+		inline void SetDirectionalAttenuationFactor(float _factor) const
+		{
+			sound->setDirectionalAttenuationFactor(_factor);
+		}
+		inline float GetDirectionalAttenuationFactor() const
+		{
+			return sound->getDirectionalAttenuationFactor();
+		}
+
+		inline void SetCone(const sf::SoundSource::Cone& _cont)
+		{
+			return sound->setCone(_cont);
+		}
+		inline sf::SoundSource::Cone GetCone() const
+		{
+			return sound->getCone();
+		}
+
+		inline void SetDirection(const FVector3& _direction) const
+		{
+			sound->setDirection(_direction);
+		}
+		inline FVector3 GetDirection() const
+		{
+			return sound->getDirection();
+		}
+
 
 		inline Sound(std::shared_ptr<sf::SoundBuffer> _buffer)
 		{

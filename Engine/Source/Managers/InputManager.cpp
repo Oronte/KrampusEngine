@@ -1,6 +1,6 @@
 #include "InputManager.h"
 #include "Graphics/Mouse.h"
-#include "Graphics/Window/MainWindow.h"
+#include "Graphics/Window.h"
 
 void Krampus::InputManager::Update(const std::optional<sf::Event>& _event)
 {
@@ -98,12 +98,15 @@ void Krampus::InputManager::Update(const std::optional<sf::Event>& _event)
 
     if (!_event.has_value()) return;
 
-    const Mouse& _mouse = Mouse::GetInstance();
-    const sf::View _view = MAIN_WINDOW.GetView();
-    if (_mouse.HasMoved() && MAIN_WINDOW.HasFocus())
+    Engine* _world = GetWorld();
+
+    const Mouse* _mouse = _world->GetMouse();
+    const Window& _window = _world->GetWindowRef();
+    const sf::View _view = _window.GetView();
+    if (_mouse->HasMoved() && _window.HasFocus())
     {
-        MouseMovedWorld.Broadcast(_mouse.GetPosition());
-        MouseMovedScreen.Broadcast(_mouse.GetScreenPosition());
+        MouseMovedWorld.Broadcast(_mouse->GetPosition());
+        MouseMovedScreen.Broadcast(_mouse->GetScreenPosition());
     }
 
     if (const sf::Event::MouseWheelScrolled* _mouseWheelScrolled = _event->getIf<sf::Event::MouseWheelScrolled>())

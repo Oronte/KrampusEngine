@@ -1,13 +1,10 @@
 #pragma once
-#include "Utilities/System/Singleton.h"
 #include "Components/CollisionComponent.h"
-
-#define M_COLLISION Krampus::CollisionManager::GetInstance()
 
 namespace Krampus
 {
 
-	class CollisionManager : public Singleton<CollisionManager>
+	class CollisionManager
 	{
 		std::vector<CollisionComponent*> collisions;
 

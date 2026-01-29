@@ -1,26 +1,50 @@
 #pragma once
-#include "GameFramework/Level.h"
+#include "Graphics/Window.h"
 
 namespace Krampus
 {
 
+	class LevelManager;
+	class InputManager;
+	class Mouse;
+
 	class Engine
 	{
-		bool shouldClose = false;
+		bool						shouldClose = false;
+		LevelManager*				levelManager = nullptr;
+		InputManager*				inputManager = nullptr;
+		Window						window;
+		Mouse*						mouse = nullptr;
+		Event<>::ListenerHandle		handle;
 
-		Event<>::ListenerHandle onWindowCloseHandle;
 	public:
-
-		Event<> onEngineStart;
-		Event<> onEngineStop;
+		Event<>						onEngineStart;
+		Event<>						onEngineStop;
 		
 	public:
+		LevelManager* GetLevelManager()
+		{
+			return levelManager;
+		}
+		InputManager* GetInputManagerRef()
+		{
+			return inputManager;
+		}
+		inline Window& GetWindowRef()
+		{
+			return window;
+		}
+		Mouse* GetMouse()
+		{
+			return mouse;
+		}
+
 		Engine();
+		~Engine();
 
 		void Start();
 		void Update();
 		void Stop();
 	};
-
 }
 

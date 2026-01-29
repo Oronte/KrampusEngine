@@ -1,9 +1,11 @@
 #include "Level.h"
-#include "Graphics/Window/MainWindow.h"
 #include "Managers/LevelManager.h"
 #include "Managers/CollisionManager.h"
 
 using namespace Krampus;
+
+Krampus::Level::Level(Engine* _engine)
+	: KrampusObject(_engine), cameraManager(_engine) { }
 
 void Level::Load()
 {
@@ -14,23 +16,21 @@ void Level::Load()
 
 	actorManager.BeginPlay();
 	hud.BeginPlay();
-	LOG_MSG("Load");
 }
 
 void Krampus::Level::Unload()
 {
 	if (!isLoaded) return;
 	isLoaded = false;
-	MAIN_WINDOW.Clear(backgroundColor);
+	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	actorManager.BeginDestroy();
 	hud.BeginDestroy();
-	LOG_MSG("Unload");
 }
 
 void Level::Update(const float& _deltaTime)
 {
-	MAIN_WINDOW.Clear(backgroundColor);
-	M_COLLISION.Update(); 
+	GetWorld()->GetWindowRef().Clear(backgroundColor);
+	collisionManager.Update(); 
 	actorManager.Update(_deltaTime);
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
@@ -40,6 +40,7 @@ void Level::Update(const float& _deltaTime)
 
 void Krampus::Level::Render()
 {
-	cameraManager.Render(MAIN_WINDOW, false); // TODO SplitScreen
-	MAIN_WINDOW.Display();
+	Window& _window = GetWorld()->GetWindowRef();
+	cameraManager.Render(_window, false); // TODO SplitScreen
+	_window.Display();
 }

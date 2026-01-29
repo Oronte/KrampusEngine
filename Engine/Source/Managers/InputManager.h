@@ -1,13 +1,12 @@
 #pragma once
-#include "Core/Engine.h"
+#include "Core/KrampusObject.h"
 
-#define M_INPUT Krampus::InputManager::GetInstance()
 
 namespace Krampus
 {
 
 	// TODO make std::unordored_map with automatic creation
-	class InputManager : public Singleton<InputManager>
+	class InputManager : public KrampusObject
 	{
 		using Key = sf::Keyboard::Key;
 		using MouseButton = sf::Mouse::Button;
@@ -170,7 +169,8 @@ namespace Krampus
 		Event<IVector2> WindowResize;
 		Event<> WindowClose;
 
-		InputManager() = default;
+		InputManager(Engine* _engine)
+			: KrampusObject(_engine) { }
 
 	private:
 		void Update(const std::optional<sf::Event>& _event);

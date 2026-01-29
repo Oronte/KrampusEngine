@@ -2,11 +2,12 @@
 #include "Components/CameraComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Actors/Actor.h"
+#include "Core/KrampusObject.h"
 
 namespace Krampus
 {
 
-	class CameraManager
+	class CameraManager : public KrampusObject
 	{
 		CameraComponent* current = nullptr;
 		std::map<uint8_t, std::vector<IDrawable*>> drawer;
@@ -50,7 +51,8 @@ namespace Krampus
 			AddToWindow(_drawable);
 		}
 
-		CameraManager() = default;
+		CameraManager(Engine* _engine)
+			: KrampusObject(_engine) { }
 
 	public:
 		void UpdateView();

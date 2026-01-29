@@ -4,7 +4,7 @@ using namespace Krampus;
 
 Krampus::Timer::Timer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
 {
-	callback.AddListener(_callback);
+	handle = callback.AddListener(_callback);
 	isRunning = _startRunning;
 	isLoop = _isLoop;
 	duration = _duration;

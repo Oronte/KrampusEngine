@@ -1,12 +1,11 @@
 #include "CameraComponent.h"
 #include "Actors/Actor.h"
 #include "GameFramework/Level.h"
-#include "Graphics/Window/MainWindow.h"
 
 Krampus::CameraComponent::CameraComponent(Actor* _owner)
 	: Component(_owner)
 {
-	view = std::make_unique<sf::View>(transform.position, FVector2(MAIN_WINDOW.GetSize()));
+	view = std::make_unique<sf::View>(transform.position, FVector2(level->GetWindowRef().GetSize()));
 	level->GetCameraManagerRef().SetCurrent(this);
 }
 

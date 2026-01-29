@@ -1,23 +1,25 @@
 #pragma once
-#include "Graphics/Window/Window.h"
+#include "Core/KrampusObject.h"
 #include "Managers/ActorManager.h"
 #include "Managers/CameraManager.h"
+#include "Managers/CollisionManager.h"
 #include "Managers/HUD.h"
 
 namespace Krampus
 {
 
-	class Level
+	class Level : public KrampusObject
 	{
 	protected:
 		CameraManager cameraManager;
+		CollisionManager collisionManager;
 		ActorManager actorManager;
 		HUD hud;
 		Color backgroundColor = Color::Black();
 		bool isLoaded = false;
 
 	public:
-		Level() = default;
+		Level(Engine* _engine);
 
 		inline void SetBackgroundColor(const Color& _bgColor)
 		{
@@ -27,6 +29,10 @@ namespace Krampus
 		{
 			return cameraManager;
 		}
+		inline CollisionManager& GetCollisionManagerRef()
+		{
+			return collisionManager;
+		}
 		inline ActorManager& GetActorManagerRef()
 		{
 			return actorManager;
@@ -34,6 +40,10 @@ namespace Krampus
 		inline HUD& GetHUDRef()
 		{
 			return hud;
+		}
+		inline Window& GetWindowRef()
+		{
+			return GetWorld()->GetWindowRef();
 		}
 
 	protected:

@@ -2,24 +2,33 @@
 #include "Managers/TimerManager.h"
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
-#include "Graphics/Window/MainWindow.h"
 #include "Graphics/Mouse.h"
 
 using namespace Krampus;
+#undef new
 
 Engine::Engine()
 {
-	MAIN_WINDOW.Create("EngineSFML", UVector2(1920, 1080));
+	levelManager = new LevelManager(this);
+	inputManager = new InputManager(this);
+	mouse = new Mouse(this);
+	window.Create("EngineSFML", UVector2(1920, 1080));
+}
+
+Engine::~Engine()
+{
+	delete levelManager;
+	delete inputManager;
+	delete mouse;
 }
 
 void Engine::Start()
 {
 	onEngineStart.Broadcast();
 
-	onWindowCloseHandle = 
-		M_INPUT.WindowClose.AddListener([this]()
+	handle = inputManager->WindowClose.AddListener([this]()
 		{
-			MAIN_WINDOW.Close();
+			window.Close();
 			shouldClose = true;
 		});
 
@@ -33,14 +42,14 @@ void Engine::Update()
 {
 	while (!shouldClose)
 	{
-		Level* _currentLevel = M_LEVEL.GetCurrentLevel();
+		Level* _currentLevel = levelManager->GetCurrentLevel();
 		if (!_currentLevel) break;
 
-		Mouse::GetInstance().Update();
+		mouse->Update();
 		_currentLevel->Update(M_TIMER.Update());
-		const std::optional<sf::Event>& _event = MAIN_WINDOW.PollEvent();
-		M_INPUT.Update(_event);
-		M_INPUT.UpdateSystemEvent(_event);
+		const std::optional<sf::Event>& _event = window.PollEvent();
+		inputManager->Update(_event);
+		inputManager->UpdateSystemEvent(_event);
 	}
 }
 

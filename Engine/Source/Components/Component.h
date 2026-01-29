@@ -1,11 +1,12 @@
 #pragma once
-#include "Core/Object.h"
+#include "Core/GameObject.h"
 
 namespace Krampus
 {
 	class Transform;
+	class Engine;
 
-	class Component : public KObject
+	class Component : public IGameObject
 	{
 	protected:
 		class Actor* owner;
@@ -17,6 +18,7 @@ namespace Krampus
 		{
 			return owner;
 		}
+		inline Engine* GetWorld() const;
 
 	protected:
 		Component(Actor* _owner);

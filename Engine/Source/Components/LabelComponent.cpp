@@ -1,6 +1,6 @@
 #include "LabelComponent.h"
 #include "Actors/Actor.h"
-#include "Graphics/Window/Window.h"
+#include "Graphics/Window.h"
 #include "GameFramework/Level.h"
 
 Krampus::LabelComponent::LabelComponent(Actor* _owner, const TextData& _data)

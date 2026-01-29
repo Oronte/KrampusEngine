@@ -1,4 +1,5 @@
 ﻿#include "Core/Engine.h"
+#include "Managers/AudioManager.h"
 #include "Managers/LevelManager.h"
 
 
@@ -34,8 +35,15 @@ int main(/*int argc, char** argv*/)
 
 void StartGame()
 {
-	Krampus::Level* _level = M_LEVEL.SetLevel<Krampus::Level>();
 	Krampus::Engine _engine;
+	Krampus::Level* _level = _engine.GetLevelManager()->SetLevel<Krampus::Level>();
+
+	//Krampus::Music _sound = M_AUDIO.CreateMusic("Shoryuken", Krampus::AudioExtensionType::MP3);
+	//_sound.SetRelativeToListener(false);
+	//_sound.SetPosition(Krampus::FVector3(10.0f));
+	//_sound.SetLoop(true);
+	//_sound.SetVolume(100.0f);
+	//_sound.Play();
 
 	_engine.Start();
 }

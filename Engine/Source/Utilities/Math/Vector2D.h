@@ -429,6 +429,11 @@ namespace Krampus
             return !(*this == _other);
         }
 
+        constexpr Vector2D operator-() const
+        {
+            return { -x, -y };
+        }
+
         #pragma endregion
     };
 
@@ -438,11 +443,6 @@ namespace Krampus
     using DVector2 = Krampus::Vector2D<double>;
     using LVector2 = Krampus::Vector2D<long>;
     using SVector2 = Krampus::Vector2D<short>;
-
-    //Vector3D for sound TODO move somewhere else
-    using IVector3 = sf::Vector3<int>;
-    using FVector3 = sf::Vector3f;
-
 }
 
 ///////////////////////////////////////////////////////////

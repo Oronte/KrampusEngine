@@ -1,13 +1,11 @@
 #pragma once
-#include "Utilities/System/Singleton.h"
 #include "GameFramework/Level.h"
-
-#define M_LEVEL Krampus::LevelManager::GetInstance()
+#include "Core/KrampusObject.h"
 
 namespace Krampus
 {
 
-	class LevelManager : public Singleton<LevelManager>
+	class LevelManager : public KrampusObject
 	{
 		std::unique_ptr<Level> currentLevel = nullptr;
 
@@ -28,12 +26,13 @@ namespace Krampus
 		inline LevelType* SetLevel()
 		{
 			if (currentLevel.get()) currentLevel->Unload();
-			currentLevel = std::make_unique<LevelType>();
+			currentLevel = std::make_unique<LevelType>(GetWorld());
 			currentLevel->Load();
 			return GetCurrentLevel<LevelType>();
 		}
 
-		LevelManager() = default;
+		LevelManager(Engine* _engine)
+			: KrampusObject(_engine) { }
 	};
 
 }

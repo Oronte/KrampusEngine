@@ -11,6 +11,8 @@ namespace Krampus
 		float currentTime = 0.0f;
 		float duration = 0.0f;
 
+		Event<>::ListenerHandle handle;
+
 	public:
 		Event<> callback;
 
@@ -53,7 +55,7 @@ namespace Krampus
 		template<typename T, typename MemFn>
 		Timer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
 		{
-			callback.AddListener(_instance, _memFn);
+			handle = callback.AddListener(_instance, _memFn);
 			isRunning = _startRunning;
 			isLoop = _isLoop;
 			duration = _duration;

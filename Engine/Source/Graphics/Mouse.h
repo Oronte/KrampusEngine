@@ -1,25 +1,24 @@
 #pragma once
 #include "Utilities/Math/Vector2D.h"
-#include "Utilities/System/Singleton.h"
-#include "Graphics/Window/MainWindow.h"
+#include "Core/KrampusObject.h"
 
-#define MOUSE Krampus::Mouse::GetInstance()
 
 namespace Krampus
 {
 
-	class Mouse : public Singleton<Mouse>
+	class Mouse : public KrampusObject
 	{
 		IVector2 position;
 		IVector2 lastPosition;
 
 	public:
-		Mouse() = default;
+		Mouse(Engine* _engine)
+			: KrampusObject(_engine) { }
 
 		inline IVector2 GetPosition() const noexcept
 		{
-			const MainWindow& _mainWindow = MAIN_WINDOW;
-			return _mainWindow.MapCoordsToPixel(position, _mainWindow.GetView());
+			const Window& _window = GetWorld()->GetWindowRef();
+			return _window.MapCoordsToPixel(position, _window.GetView());
 		}
 		inline IVector2 GetScreenPosition() const noexcept
 		{
@@ -27,8 +26,8 @@ namespace Krampus
 		}
 		inline void SetPosition(const IVector2& _position) noexcept
 		{
-			const MainWindow& _mainWindow = MAIN_WINDOW;
-			SetScreenPosition(_mainWindow.MapCoordsToPixel(_position, _mainWindow.GetView()));
+			const Window& _window = GetWorld()->GetWindowRef();
+			SetScreenPosition(_window.MapCoordsToPixel(_position, _window.GetView()));
 		}
 		inline void SetScreenPosition(const IVector2& _position) noexcept
 		{
@@ -42,11 +41,11 @@ namespace Krampus
 
 		inline void Show()
 		{
-			MAIN_WINDOW.GetRenderWindow().setMouseCursorVisible(true);
+			GetWorld()->GetWindowRef().GetRenderWindow().setMouseCursorVisible(true);
 		}
 		inline void Hide()
 		{
-			MAIN_WINDOW.GetRenderWindow().setMouseCursorVisible(false);
+			GetWorld()->GetWindowRef().GetRenderWindow().setMouseCursorVisible(false);
 		}
 
 		inline void Update()

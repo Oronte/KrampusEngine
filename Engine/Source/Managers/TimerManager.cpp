@@ -1,5 +1,4 @@
 #include "TimerManager.h"
-#include "Graphics/Window/MainWindow.h"
 
 using namespace Krampus;
 

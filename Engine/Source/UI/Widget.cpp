@@ -1,23 +1,23 @@
 #include "Widget.h"
 #include "GameFramework/Level.h"
-#include "Graphics/Window/MainWindow.h"
+#include "Graphics/Window.h"
 
 Krampus::Widget::Widget(Level* _level)
 	: Actor(_level)
 {
-	onViewChangeHandle = MAIN_WINDOW.onViewChange.AddListener(this, &Widget::UpdateWorldPos);
+	onViewChangeHandle = level->GetWindowRef().onViewChange.AddListener(this, &Widget::UpdateWorldPos);
 }
 
 void Krampus::Widget::SetScreenPosition(const FVector2& _screenPos)
 {
 	screenPosition = _screenPos;
-	UpdateWorldPos(MAIN_WINDOW.GetView());
+	UpdateWorldPos(level->GetWindowRef().GetView());
 }
 
 void Krampus::Widget::SetLocalRotation(const Angle& _rotation)
 {
 	localRotation = _rotation;
-	UpdateWorldPos(MAIN_WINDOW.GetView());
+	UpdateWorldPos(level->GetWindowRef().GetView());
 }
 
 void Krampus::Widget::Destroy()
@@ -28,6 +28,6 @@ void Krampus::Widget::Destroy()
 
 void Krampus::Widget::UpdateWorldPos(const sf::View& _view)
 {
-	transform.position = MAIN_WINDOW.MapPixelToCoords(screenPosition, _view);
+	transform.position = level->GetWindowRef().MapPixelToCoords(screenPosition, _view);
 	transform.rotation = localRotation + Angle(_view.getRotation());
 }

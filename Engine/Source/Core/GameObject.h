@@ -4,7 +4,7 @@
 namespace Krampus
 {
 
-	class KObject : public IPrintable
+	class IGameObject : public IPrintable
 	{
 	protected:
 		bool isActive = true;
@@ -19,8 +19,8 @@ namespace Krampus
 			return isActive;
 		}
 
-		KObject() = default;
-		virtual ~KObject() = default;
+		IGameObject() = default;
+		virtual ~IGameObject() = default;
 
 		virtual void Construct() = 0;
 		virtual void Deconstruct() = 0;

@@ -1,5 +1,5 @@
 #include "SpriteComponent.h"
-#include "Graphics/Window/Window.h"
+#include "Graphics/Window.h"
 #include "Actors/Actor.h"
 #include "GameFramework/Level.h"
 #include "Managers/CameraManager.h"
