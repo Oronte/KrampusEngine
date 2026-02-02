@@ -1,15 +1,12 @@
 #pragma once
-#include "Utilities/System/Singleton.h"
 #include "Utilities/System/Timer.h"
-#include "Core/Engine.h"
-
-#define M_TIMER Krampus::TimerManager::GetInstance()
+#include "Core/KrampusObject.h"
 
 namespace Krampus
 {
 	class Timer;
 
-	class TimerManager : public Singleton<TimerManager>
+	class TimerManager : public KrampusObject
 	{
 	public:
 		Event<> onPauseTimer;
@@ -33,11 +30,11 @@ namespace Krampus
 		std::vector<std::unique_ptr<Timer>> timers;
 
 	private:
-		inline float GetTime(const sf::Time& _time) const
+		static inline float GetTime(const sf::Time& _time) 
 		{
 			return _time.asSeconds();
 		}
-		inline std::string TwoDigitsTime(const int& _value) const
+		static inline std::string TwoDigitsTime(const int& _value)
 		{
 			if (_value >= 10) return std::to_string(_value);
 			return "0" + std::to_string(_value);
@@ -68,6 +65,7 @@ namespace Krampus
 		inline void SetMaxFrameRate(const unsigned short& _fps)
 		{
 			maxFrameRate = _fps;
+			GetWorld()->GetWindowRef().SetFramerateLimit(maxFrameRate);
 		}
 		inline unsigned short GetMaxFrameRate() const
 		{
@@ -76,7 +74,7 @@ namespace Krampus
 		
 
 	public:
-		TimerManager() = default;
+		TimerManager(Engine* _engine);
 		~TimerManager();
 
 
@@ -85,7 +83,7 @@ namespace Krampus
 		void UpdateTimers();
 
 	public:
-		std::string GetCurrentRealTime() const;
+		static std::string GetCurrentRealTime();
 
 		Timer* CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
 		template<typename T, typename MemFn>

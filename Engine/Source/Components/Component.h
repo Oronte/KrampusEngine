@@ -18,7 +18,7 @@ namespace Krampus
 		{
 			return owner;
 		}
-		inline Engine* GetWorld() const;
+		Engine* GetWorld() const;
 
 	protected:
 		Component(Actor* _owner);

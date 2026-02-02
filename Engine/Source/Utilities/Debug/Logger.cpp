@@ -12,7 +12,7 @@ std::string VerbosityData::RetrieveFullText(bool _useColor) const
     };
 
     std::string _outString =
-        "[" + M_TIMER.GetCurrentRealTime() + "]" +
+        "[" + TimerManager::GetCurrentRealTime() + "]" +
         " " + _table[type] + ": " + text + " " + debug;
 
     return _useColor ? color.GradientString(_outString) : _outString;

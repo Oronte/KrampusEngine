@@ -28,11 +28,11 @@ namespace Krampus
         {
             radians = 0.0f;
         }
-        inline explicit Angle(const float& _radians, const bool& _isDegrees = false) noexcept
+        inline Angle(const float& _radians, const bool& _isDegrees = false) noexcept
         {
             radians = _isDegrees ? FMath::DegToRad(_radians) : _radians;
         }
-        inline explicit Angle(const sf::Angle& _angle)
+        inline Angle(const sf::Angle& _angle)
         {
             radians = _angle.asRadians();
         }

@@ -14,7 +14,7 @@ void Krampus::AnimationComponent::AddAnimation(const std::string& _name, const A
 	if (!_sprite)
 		LOG(VerbosityType::Error, "You need to have a sprite component for this Component");
 
-	animations[_name] = std::make_unique<Animation>(_name, _sprite->GetShapeObject(), _data);
+	animations[_name] = std::make_unique<Animation>(GetWorld(), _name, _sprite->GetShapeObject(), _data);
 
 	if (!current) SetCurrentAnimation(_name);
 }

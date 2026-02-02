@@ -1,6 +1,6 @@
 #pragma once
-#include "Core/CoreMinimal.h"
 #include "Graphics/Ressources/Image.h"
+#include "Utilities/System/Event.h"
 
 
 namespace Krampus

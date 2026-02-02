@@ -1,6 +1,7 @@
 #pragma once
 #include "Actor.h"
 #include "Components/SpriteComponent.h"
+#include "Components/CollisionComponent.h"
 #include "Managers/TextureManager.h"
 
 namespace Krampus
@@ -9,6 +10,7 @@ namespace Krampus
 	class SpriteActor : public Actor
 	{
 		SpriteComponent* sprite = nullptr;
+		CollisionComponent* collision = nullptr;
 
 	public:
 		inline SpriteComponent* GetSprite() const

@@ -11,6 +11,7 @@ Engine::Engine()
 {
 	levelManager = new LevelManager(this);
 	inputManager = new InputManager(this);
+	timerManager = new TimerManager(this);
 	mouse = new Mouse(this);
 	window.Create("EngineSFML", UVector2(1920, 1080));
 }
@@ -46,7 +47,7 @@ void Engine::Update()
 		if (!_currentLevel) break;
 
 		mouse->Update();
-		_currentLevel->Update(M_TIMER.Update());
+		_currentLevel->Update(timerManager->Update());
 		const std::optional<sf::Event>& _event = window.PollEvent();
 		inputManager->Update(_event);
 		inputManager->UpdateSystemEvent(_event);

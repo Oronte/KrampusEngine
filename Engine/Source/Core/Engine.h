@@ -6,6 +6,7 @@ namespace Krampus
 
 	class LevelManager;
 	class InputManager;
+	class TimerManager;
 	class Mouse;
 
 	class Engine
@@ -13,6 +14,7 @@ namespace Krampus
 		bool						shouldClose = false;
 		LevelManager*				levelManager = nullptr;
 		InputManager*				inputManager = nullptr;
+		TimerManager*				timerManager = nullptr;
 		Window						window;
 		Mouse*						mouse = nullptr;
 		Event<>::ListenerHandle		handle;
@@ -22,13 +24,17 @@ namespace Krampus
 		Event<>						onEngineStop;
 		
 	public:
-		LevelManager* GetLevelManager()
+		inline LevelManager* GetLevelManager()
 		{
 			return levelManager;
 		}
-		InputManager* GetInputManagerRef()
+		inline InputManager* GetInputManager()
 		{
 			return inputManager;
+		}
+		inline TimerManager* GetTimerManager()
+		{
+			return timerManager;
 		}
 		inline Window& GetWindowRef()
 		{

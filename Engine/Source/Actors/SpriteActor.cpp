@@ -10,6 +10,8 @@ Krampus::SpriteActor::SpriteActor(Level* _level, const CircleShapeData& _data)
 {
 	sprite = CreateComponent<SpriteComponent>(_data);
 	sprite->SetZOrder(ZOrder::Actors);
+	collision = CreateComponent<CollisionComponent>(CollisionChannel::All, CollisionChannel::All);
+	sprite->useDebug = true;
 }
 
 Krampus::SpriteActor::SpriteActor(Level* _level, const RectangleShapeData& _data)
@@ -17,4 +19,6 @@ Krampus::SpriteActor::SpriteActor(Level* _level, const RectangleShapeData& _data
 {
 	sprite = CreateComponent<SpriteComponent>(_data);
 	sprite->SetZOrder(ZOrder::Actors);
+	collision = CreateComponent<CollisionComponent>(CollisionChannel::All, CollisionChannel::All);
+	sprite->useDebug = true;
 }

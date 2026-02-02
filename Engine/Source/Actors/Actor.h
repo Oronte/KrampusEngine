@@ -20,7 +20,7 @@ namespace Krampus
 	public:
 		Transform transform;
 
-		inline Engine* GetWorld() const;
+		Engine* GetWorld() const;
 
 		template<typename Type = Level, IS_BASE_OF(Level, Type)>
 		inline Type* GetLevel()

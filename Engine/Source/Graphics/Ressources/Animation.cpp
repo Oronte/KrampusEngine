@@ -84,12 +84,13 @@ Krampus::AnimationData::AnimationData(const float& _duration, const std::vector<
 
 // Animation
 
-Krampus::Animation::Animation(const std::string& _name, ShapeObject* _shape, const AnimationData& _data)
+Krampus::Animation::Animation(Engine* _engine, const std::string& _name, ShapeObject* _shape, const AnimationData& _data)
+    : KrampusObject(_engine)
 {
     name = _name;
     shape = _shape;
     data = _data;
-    timer = M_TIMER.CreateTimer([&]() { Update(); },
+    timer = GetWorld()->GetTimerManager()->CreateTimer([&]() { Update(); },
         ComputeDuration(),
         true,
         false);

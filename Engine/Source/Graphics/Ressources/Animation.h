@@ -1,6 +1,7 @@
 #pragma once
 #include "Graphics/Shapes/ShapeObject.h"
 #include "Utilities/System/Timer.h"
+#include "Core/KrampusObject.h"
 
 namespace Krampus
 {
@@ -37,7 +38,7 @@ namespace Krampus
             const bool& _canLoop = true);
     };
 
-    class Animation
+    class Animation : public KrampusObject
     {
         int currentIndex = 0;
         std::string name;
@@ -89,7 +90,7 @@ namespace Krampus
 
 
     public:
-        Animation(const std::string& _name, ShapeObject* _shape, const AnimationData& _data);
+        Animation(Engine* _engine, const std::string& _name, ShapeObject* _shape, const AnimationData& _data);
         ~Animation();
 
     private:

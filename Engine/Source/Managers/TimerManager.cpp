@@ -2,12 +2,15 @@
 
 using namespace Krampus;
 
+Krampus::TimerManager::TimerManager(Engine* _engine)
+    : KrampusObject(_engine) { }
+
 Krampus::TimerManager::~TimerManager()
 {
 	timers.clear();
 }
 
-std::string Krampus::TimerManager::GetCurrentRealTime() const
+std::string Krampus::TimerManager::GetCurrentRealTime()
 {
 	const time_t& _now = std::time(nullptr);
 

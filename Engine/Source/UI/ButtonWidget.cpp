@@ -24,7 +24,7 @@ void Krampus::ButtonWidget::Tick(const float& _deltaTime)
 
 void Krampus::ButtonWidget::Init()
 {
-	InputManager* _inputManager = GetWorld()->GetInputManagerRef();
+	InputManager* _inputManager = GetWorld()->GetInputManager();
 
 	onMouseMovedHandle = _inputManager->MouseMovedScreen.AddListener(this, &Krampus::ButtonWidget::OnMouseMoved);
 	onClickHandle = _inputManager->MouseLeftClick.onPress.AddListener(this, &Krampus::ButtonWidget::OnClick);
