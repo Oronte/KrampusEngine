@@ -10,6 +10,8 @@ namespace Krampus
 
 	public:
 		bool attachedToOwner = true;
+		bool freezePostition = false;
+		bool freezeRotation = false;
 
 
 		inline sf::View* GetView() const

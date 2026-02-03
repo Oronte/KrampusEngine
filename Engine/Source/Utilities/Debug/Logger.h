@@ -32,7 +32,10 @@ namespace Krampus
 
     public:
         VerbosityData(VerbosityType _type, const std::string& _text, const std::string& _debug)
-            : type(_type), text(_text), debug(_debug) { }
+            : type(_type), text(_text), debug(_debug) 
+        {
+            ComputeColor();
+        }
 
         std::string RetrieveFullText(bool _useColor = true) const;
 

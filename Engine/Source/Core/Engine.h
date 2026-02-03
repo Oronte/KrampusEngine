@@ -20,7 +20,6 @@ namespace Krampus
 		Event<>::ListenerHandle		handle;
 
 	public:
-		Event<>						onEngineStart;
 		Event<>						onEngineStop;
 		
 	public:

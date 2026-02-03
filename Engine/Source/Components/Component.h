@@ -1,9 +1,9 @@
 #pragma once
 #include "Core/GameObject.h"
+#include "Utilities/Math/Transform.h"
 
 namespace Krampus
 {
-	class Transform;
 	class Engine;
 
 	class Component : public IGameObject

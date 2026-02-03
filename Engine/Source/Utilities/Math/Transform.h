@@ -12,11 +12,11 @@ namespace Krampus
 		Angle rotation;
 		FVector2 scale;
 
-		inline FVector2 Forward() const
+		inline FVector2 Up() const
 		{
 			return FVector2::Up().Rotated(rotation.ToRadians());
 		}
-		inline FVector2 Back() const
+		inline FVector2 Down() const
 		{
 			return FVector2::Down().Rotated(rotation.ToRadians());
 		}

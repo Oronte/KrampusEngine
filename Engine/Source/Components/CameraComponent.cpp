@@ -31,9 +31,10 @@ void Krampus::CameraComponent::Tick(const float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
-	if (attachedToOwner)
-	{
+	if (!attachedToOwner) return;
+	
+	if (!freezePostition) 
 		SetCenter(transform.position);
+	if (!freezeRotation)
 		SetRotation(transform.rotation);
-	}
 }

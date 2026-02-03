@@ -25,8 +25,6 @@ Engine::~Engine()
 
 void Engine::Start()
 {
-	onEngineStart.Broadcast();
-
 	handle = inputManager->WindowClose.AddListener([this]()
 		{
 			window.Close();
