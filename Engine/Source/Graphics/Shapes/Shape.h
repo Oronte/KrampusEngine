@@ -16,7 +16,7 @@ namespace Krampus
             return shape.get();
         }
 
-        inline const Texture GetTexture() const
+        inline const Texture& GetTexture() const
         {
             if (!shape)
             {

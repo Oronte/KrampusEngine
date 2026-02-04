@@ -13,18 +13,19 @@ namespace Krampus
 
         struct ListenerHandle
         {
-            Event*          owner = nullptr;
+            std::shared_ptr<bool> ownerAlive;
+            Event* owner = nullptr;
             ListenerId      id = 0;
 
 
             ListenerHandle() = default;
-            ListenerHandle(Event* _event, ListenerId _id) : id(_id), owner(_event) {}
+            ListenerHandle(Event* _event, ListenerId _id, std::shared_ptr<bool> _alive) : id(_id), owner(_event), ownerAlive(_alive) {}
 
             ListenerHandle(const ListenerHandle&) = delete;
             ListenerHandle& operator=(const ListenerHandle&) = delete;
 
             ListenerHandle(ListenerHandle&& _other) noexcept
-                : owner(_other.owner), id(_other.id)
+                : owner(_other.owner), id(_other.id), ownerAlive(_other.ownerAlive)
             {
                 _other.owner = nullptr;
                 _other.id = 0;
@@ -37,8 +38,10 @@ namespace Krampus
                     Reset();
                     owner = _other.owner;
                     id = _other.id;
+                    ownerAlive = _other.ownerAlive;
                     _other.owner = nullptr;
                     _other.id = 0;
+                    _other.ownerAlive = nullptr;
                 }
                 return *this;
             }
@@ -56,7 +59,7 @@ namespace Krampus
         private:
             void Reset()
             {
-                if (!owner) return;
+                if (!owner || !ownerAlive.get() || !*ownerAlive.get()) return;
 
                 owner->RemoveListener(id);
                 owner = nullptr;
@@ -79,12 +82,23 @@ namespace Krampus
         std::vector<ListenerId>     pendingRemove;
         std::vector<Listener>       pendingAdd;
 
+        std::shared_ptr<bool>       isAlive = nullptr;
+
         ListenerId                  nextId = 1;
         bool                        broadcasting = false;
 
     public:
+        Event()
+        {
+            isAlive = std::make_shared<bool>(true);
+        }
+        ~Event()
+        {
+            *isAlive = false;
+        }
+
         NO_DISCARD
-        ListenerHandle AddListener(Callback _callback, bool _once = false)
+            ListenerHandle AddListener(Callback _callback, bool _once = false)
         {
             if (!_callback)
             {
@@ -99,12 +113,12 @@ namespace Krampus
             broadcasting ? pendingAdd.push_back(std::move(_listener)) :
                 listeners.push_back(std::move(_listener));
 
-            return ListenerHandle(this, _id);
+            return ListenerHandle(this, _id, isAlive);
         }
 
         template<typename T, typename MemFn>
         NO_DISCARD
-        ListenerHandle AddListener(T* _instance, MemFn _memFn, bool _once = false)
+            ListenerHandle AddListener(T* _instance, MemFn _memFn, bool _once = false)
         {
             if (!_instance)
             {

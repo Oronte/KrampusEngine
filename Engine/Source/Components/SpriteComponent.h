@@ -26,6 +26,34 @@ namespace Krampus
 		{
 			return shape->GetShapeType();
 		}
+		void SetSize(const FVector2& _size)
+		{
+			shape->SetSize(_size);
+		}
+		FVector2 GetSize() const
+		{
+			return shape->GetSize();
+		}
+		void SetRadius(const float& _radius)
+		{
+			shape->SetRadius(_radius);
+		}
+		float GetRadius() const
+		{
+			return shape->GetRadius();
+		}
+		void SetPointCount(const size_t& _pointCount)
+		{
+			shape->SetPointCount(_pointCount);
+		}
+		size_t GetPointCount() const
+		{
+			return shape->GetPointCount();
+		}
+		void SetTexture(const std::string& _path, TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const bool _isRepeated = false, const bool _smooth = true)
+		{
+			shape->SetTexture(_path, _textureType, _rect, _isRepeated, _smooth);
+		}
 
 		SpriteComponent(Actor* _owner, const CircleShapeData& _data);
 		SpriteComponent(Actor* _owner, const RectangleShapeData& _data);

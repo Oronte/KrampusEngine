@@ -64,6 +64,14 @@ namespace Krampus
 
 		ShapeObject(const CircleShapeData& _data);
 		ShapeObject(const RectangleShapeData& _data);
+
+		void SetSize(const FVector2& _size);
+		FVector2 GetSize() const;
+		void SetRadius(const float& _radius);
+		float GetRadius() const;
+		void SetPointCount(const size_t& _pointCount);
+		size_t GetPointCount() const;
+		void SetTexture(const std::string& _path, TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const bool _isRepeated = false, const bool _smooth = true);
 	};
 
 }
