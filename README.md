@@ -17,21 +17,9 @@
 **KrampusEngine** is an experimental **2D game engine** written in **modern C++20**, built on top of **SFML 3.0.0**.  
 It is a **code-driven engine** with a strict separation between engine runtime systems and game logic.
 
-This project is designed as a **learning-focused but production-minded** engine: prioritizing clarity, correctness, and architecture over features or tooling.
+This project is designed as a **learning-focused** engine: prioritizing clarity, correctness, and architecture over features or tooling.
 
 The engine is compiled as a **static library**, while games are built as separate executables linked against it.
-
----
-
-## Design Goals
-
-- Clean and maintainable C++20 code
-- Clear separation of responsibilities
-- RAII-first architecture with deterministic lifetime management
-- Explicit control flow over hidden magic
-- Practical engine architecture suitable for technical evaluation
-
-This project intentionally avoids editor tooling and scripting layers to keep the focus on **engine internals**.
 
 ---
 
@@ -74,7 +62,6 @@ KrampusEngine uses a **hybrid Actor–Component architecture**:
   - Control lifecycle and behavior
 - **Components**
   - Modular, reusable functionality
-  - Unity-style composition
   - Attached to actors
 
 This hybrid approach allows expressive gameplay code without sacrificing structural clarity.
@@ -104,15 +91,6 @@ This keeps level flow explicit and easy to trace during debugging and reviews.
 
 ---
 
-### Event System
-
-- Synchronous observer / listener model
-- Explicit event dispatch
-- No hidden async behavior
-- Designed for predictability and ease of reasoning
-
----
-
 ### Input System
 
 - Centralized input handling
@@ -130,7 +108,25 @@ Custom-built collision system supporting:
 - Circle–Circle
 - Circle–Rectangle
 
-Focused on correctness and clarity rather than physics simulation.
+---
+
+### Basic Physics (2D)
+
+- Linear and angular motion using force and impulse-based integration
+- Optional gravity, damping, and velocity clamping
+- Impulse-based collision response (restitution, friction, rotation)
+- Deterministic penetration correction with kinematic body support
+
+---
+
+### 3D Spatial Sound
+
+The audio system supports basic 3D spatial sound using SFML's audio features.
+
+- Listener-based spatialization
+- Position-based attenuation
+- Stereo panning relative to the camera
+- Runtime control of sound sources
 
 ---
 
@@ -139,7 +135,6 @@ Focused on correctness and clarity rather than physics simulation.
 - Sprite-based animation
 - Spritesheets
 - Timer-driven frame control
-- Deterministic playback
 
 ---
 
@@ -172,7 +167,7 @@ Focused on correctness and clarity rather than physics simulation.
 ## Limitations
 
 - Windows-only
-- 2D only
+- 2D only (maybe 3D later)
 - No editor or GUI
 - Engine is **not thread-safe**  
   *(intentional design choice to reduce complexity and improve determinism)*
@@ -207,5 +202,3 @@ This project prioritizes **understanding and correctness** over speed of iterati
 
 This project is intended for educational and personal use.  
 License information will be added once the engine reaches a stable milestone.
-
-[Test Marckdown](Docs/Event.md)
