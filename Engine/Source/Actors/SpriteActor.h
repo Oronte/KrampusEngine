@@ -9,6 +9,7 @@ namespace Krampus
 
 	class SpriteActor : public Actor
 	{
+	protected:
 		SpriteComponent* sprite = nullptr;
 		CollisionComponent* collision = nullptr;
 

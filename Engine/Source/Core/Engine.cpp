@@ -13,7 +13,6 @@ Engine::Engine()
 	inputManager = new InputManager(this);
 	timerManager = new TimerManager(this);
 	mouse = new Mouse(this);
-	window.Create("EngineSFML", UVector2(1920, 1080));
 }
 
 Engine::~Engine()
@@ -25,6 +24,10 @@ Engine::~Engine()
 
 void Engine::Start()
 {
+	window.Create();
+	window.SetVerticalSyncEnabled(false);
+	window.SetFramerateLimit(60);
+
 	handle = inputManager->WindowClose.AddListener([this]()
 		{
 			window.Close();

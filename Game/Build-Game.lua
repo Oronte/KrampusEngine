@@ -36,7 +36,8 @@ project "Game"
             "Engine", 
             "sfml-graphics-d", "sfml-window-d",
             "sfml-system-d", "sfml-audio-d",
-            "sfml-network-d"
+            "sfml-network-d",
+            "opengl32"
         }
         runtime "Debug"
         symbols "On"
@@ -55,7 +56,8 @@ project "Game"
             "Engine",
             "sfml-graphics", "sfml-window",
             "sfml-system", "sfml-audio",
-            "sfml-network"
+            "sfml-network",
+            "opengl32"
         }
         runtime "Release"
         optimize "On"
@@ -75,7 +77,8 @@ project "Game"
             "Engine",
             "sfml-graphics", "sfml-window",
             "sfml-system", "sfml-audio",
-            "sfml-network"
+            "sfml-network",
+            "opengl32"
         }
         runtime "Release"
         optimize "On"

@@ -1,4 +1,5 @@
 High Priority:
+	Capture d'ecran / video,
 	Save,
 	Ajout d'UI (canvas, vertical box, ...)
 	Debug avec widget,

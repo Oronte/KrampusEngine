@@ -11,6 +11,8 @@ namespace Krampus
 		std::unique_ptr<sf::Shape> shape;
 
 	public:
+        virtual ~Shape() = default;
+
         inline sf::Shape* Get() const noexcept
         {
             return shape.get();

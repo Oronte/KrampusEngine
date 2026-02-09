@@ -41,12 +41,22 @@ void StartGame()
 	
 	for (int _x = 0; _x < 10; _x++)
 	{
-		for (int _y = 0; _y < 3; _y++)
+		for (int _y = 0; _y < 2; _y++)
 		{
 			Krampus::Actor* _actor = nullptr;
 			bool _rect = Krampus::IMath::RandomRange(0, 1);
-			if (_rect) _actor = _level->SpawnActor<Krampus::PhysicsActor>(Krampus::RectangleShapeData());
-			else _actor = _level->SpawnActor<Krampus::PhysicsActor>(Krampus::CircleShapeData());
+			if (_rect)
+			{
+				Krampus::RectangleShapeData _data;
+				_data.texturePath = "KrampusEngineBanner";
+				_actor = _level->SpawnActor<Krampus::PhysicsActor>(_data);
+			}
+			else
+			{
+				Krampus::CircleShapeData _data;
+				_data.texturePath = "Player";
+				_actor = _level->SpawnActor<Krampus::PhysicsActor>(_data);
+			}
 			_actor->transform.position = Krampus::FVector2(200.f + 200 * _x, 200.f + 150 * _y);
 			_actor->transform.rotation = Krampus::FMath::RandomRange(0, Krampus::FMath::pi * 2);
 		}
