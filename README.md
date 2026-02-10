@@ -97,6 +97,8 @@ This keeps level flow explicit and easy to trace during debugging and reviews.
 - Abstracted from SFML events
 - Accessible from gameplay code
 
+![InputExemple](ReadMe/Input.gif)
+
 ---
 
 ### Collision System (2D)
