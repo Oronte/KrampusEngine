@@ -199,12 +199,20 @@ void Krampus::RigidbodyComponent::Integrate(const float& _deltaTime)
         velocity *= maxLinearVelocity / FMath::Sqrt(_speedSq);
 
     velocity *= FMath::Clamp(1.f - linearDamping * _deltaTime, 0.f, 1.f);
-    owner->transform.position += velocity * _deltaTime;
+    const FVector2& _force = FVector2
+    (
+        freezeMovementX ? 0.0f : velocity.x,
+        freezeMovementY ? 0.0f : velocity.y
+    );
+    owner->transform.position += _force * _deltaTime;
 
-    angularVelocity += accumulatedTorque * inverseInertia * _deltaTime;
-    angularVelocity *= FMath::Clamp(1.f - angularDamping * _deltaTime, 0.f, 1.f);
-    angularVelocity = FMath::Clamp(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
-    owner->transform.rotation += angularVelocity * _deltaTime;
+    if (!freezeRotation)
+    {
+        angularVelocity += accumulatedTorque * inverseInertia * _deltaTime;
+        angularVelocity *= FMath::Clamp(1.f - angularDamping * _deltaTime, 0.f, 1.f);
+        angularVelocity = FMath::Clamp(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
+        owner->transform.rotation += angularVelocity * _deltaTime;
+    }
 
     ClearForces();
 }

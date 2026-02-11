@@ -1,7 +1,7 @@
 ﻿#include "Core/Engine.h"
 #include "Managers/AudioManager.h"
 #include "Managers/LevelManager.h"
-#include "Actors/PhysicsActor.h"
+#include "Actors/Character.h"
 
 
 void StartGame();
@@ -63,6 +63,15 @@ void StartGame()
 	_actor2->transform.position = Krampus::FVector2(1900, 0);
 	Krampus::Actor * _actor3 = _level->SpawnActor<Krampus::SpriteActor>(_data);
 	_actor3->transform.position = Krampus::FVector2(960, 1000);
-	
+
+	//Krampus::RectangleShapeData _data;
+	//Krampus::Character* _actor = _level->SpawnActor<Krampus::Character>(_data);
+	//_actor->transform.position = _engine.GetWindowRef().GetSize() / 2;
+	//
+	//Krampus::RectangleShapeData _data2;
+	//_data2.size = Krampus::FVector2(1000, 200);
+	//Krampus::SpriteActor* _actor2 = _level->SpawnActor<Krampus::SpriteActor>(_data2);
+	//_actor2->transform.position = Krampus::FVector2(1000, 900);
+
 	_engine.Start();
 }

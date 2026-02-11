@@ -7,6 +7,7 @@ namespace Krampus
 
 	class PhysicsActor : public SpriteActor
 	{
+	protected:
 		RigidbodyComponent* rigidbody = nullptr;
 
 	public:

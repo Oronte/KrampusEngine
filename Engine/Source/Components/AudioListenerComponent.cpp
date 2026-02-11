@@ -22,7 +22,7 @@ void Krampus::AudioListenerComponent::Tick(const float& _deltaTime)
 void Krampus::AudioListenerComponent::UpdateListener()
 {
 	const FVector2& _position = transform.position;
-	const FVector2& _forward = transform.Forward();
+	const FVector2& _forward = transform.Up();
 	const FVector2& _up = transform.Right();
 
 

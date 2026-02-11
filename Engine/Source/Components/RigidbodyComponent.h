@@ -11,6 +11,10 @@ namespace Krampus
 		bool isKinematic = false;
 		float gravity = 981.f;
 
+		bool freezeRotation = false;
+		bool freezeMovementX = false;
+		bool freezeMovementY = false;
+
 		float linearDamping = 0.1f;
 		float angularDamping = 0.1f;
 		float restitution = 0.15f;
