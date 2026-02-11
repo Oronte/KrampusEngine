@@ -6,8 +6,10 @@ void Krampus::CameraManager::UpdateView()
 	GetWorld()->GetWindowRef().SetView(current);
 }
 
-void Krampus::CameraManager::Render(Window& _window, const bool& splitScreen)
+void Krampus::CameraManager::Render(const bool& splitScreen)
 {
+	Window& _window = GetWorld()->GetWindowRef();
+
 	for (std::pair<int, std::vector<IDrawable*>> _pair : drawer)
 	{
 		const std::vector<IDrawable*>& _sprites = _pair.second;

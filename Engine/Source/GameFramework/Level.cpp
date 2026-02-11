@@ -1,6 +1,7 @@
 #include "Level.h"
 #include "Managers/LevelManager.h"
 #include "Managers/CollisionManager.h"
+#include <SFML/OpenGL.hpp>
 
 using namespace Krampus;
 
@@ -40,7 +41,7 @@ void Level::Update(const float& _deltaTime)
 
 void Krampus::Level::Render()
 {
-	Window& _window = GetWorld()->GetWindowRef();
-	cameraManager.Render(_window, false); // TODO SplitScreen
-	_window.Display();
+	cameraManager.Render(false); // TODO SplitScreen
+	GetWorld()->GetWindowRef().Display();
+	//glFinish();
 }

@@ -56,7 +56,7 @@ namespace Krampus
 
 	public:
 		void UpdateView();
-		void Render(Window& _window, const bool& splitScreen);
+		void Render(const bool& splitScreen);
 
 		friend class Debug;
 	};

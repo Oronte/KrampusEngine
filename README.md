@@ -97,6 +97,8 @@ This keeps level flow explicit and easy to trace during debugging and reviews.
 - Abstracted from SFML events
 - Accessible from gameplay code
 
+![InputExemple](ReadMe/Input.gif)
+
 ---
 
 ### Collision System (2D)
@@ -116,6 +118,8 @@ Custom-built collision system supporting:
 - Optional gravity, damping, and velocity clamping
 - Impulse-based collision response (restitution, friction, rotation)
 - Deterministic penetration correction with kinematic body support
+
+![Physics Exemple](ReadMe/Physics.gif)
 
 ---
 

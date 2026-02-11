@@ -10,6 +10,8 @@ namespace Krampus
 
 	class Level : public KrampusObject
 	{
+		int frameCount = 0;
+
 	protected:
 		CameraManager cameraManager;
 		CollisionManager collisionManager;
