@@ -43,5 +43,4 @@ void Krampus::Level::Render()
 {
 	cameraManager.Render(false); // TODO SplitScreen
 	GetWorld()->GetWindowRef().Display();
-	//glFinish();
 }

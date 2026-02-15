@@ -150,6 +150,9 @@ The audio system supports basic 3D spatial sound using SFML's audio features.
 - Persistent file output (`log.txt`)
 - Disabled entirely in Release builds
 
+![ConsoleLogExemple](ReadMe/ConsoleLog.png)
+![TxtLogExemple](ReadMe/TxtLog.png)
+
 ---
 
 ## Debug and Build Modes

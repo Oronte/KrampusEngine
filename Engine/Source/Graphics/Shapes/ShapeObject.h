@@ -12,6 +12,9 @@ namespace Krampus
 		TextureExtensionType textureType = TextureExtensionType::PNG;
 		IRect textureRect;
 		size_t pointCount = 30;
+
+		CircleShapeData(float _radius = 50.0f, const std::string& _texturePath = "Default", TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _textureRect = IRect(), size_t _pointCount = 30)
+			: radius(_radius), texturePath(_texturePath), textureType(_textureType), textureRect(_textureRect), pointCount(_pointCount) { }
 	};
 
 	struct RectangleShapeData
@@ -21,6 +24,9 @@ namespace Krampus
 		TextureExtensionType textureType = TextureExtensionType::PNG;
 		IRect textureRect;
 		bool isRepeated = false;
+
+		RectangleShapeData(const FVector2& _size = FVector2(200.0f, 100.0f), const std::string& _texturePath = "Default", TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _textureRect = IRect(), bool _isRepeated = false)
+			: size(_size), texturePath(_texturePath), textureType(_textureType), textureRect(_textureRect), isRepeated(_isRepeated) { }
 	};
 
 	enum class ShapeType

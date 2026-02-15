@@ -9,9 +9,6 @@ namespace Krampus
 
 	class SpriteActor : public Actor
 	{
-		std::vector<Event<>::ListenerHandle> handle;
-		Event<IVector2>::ListenerHandle h;
-		
 	protected:
 		SpriteComponent* sprite = nullptr;
 		CollisionComponent* collision = nullptr;
@@ -32,13 +29,6 @@ namespace Krampus
 
 		SpriteActor(Level* _level, const CircleShapeData& _data);
 		SpriteActor(Level* _level, const RectangleShapeData& _data);
-
-		void MoveUp();
-		void MoveRight();
-		void MoveDown();
-		void MoveLeft();
-		void Rotate(IVector2 _pos);
-		void Shoot();
 	};
 
 

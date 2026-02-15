@@ -76,12 +76,6 @@ void StartGame()
 	//Krampus::Actor * _actor3 = _level->SpawnActor<Krampus::SpriteActor>(_data);
 	//_actor3->transform.position = Krampus::FVector2(960, 1000);
 
-	Krampus::CircleShapeData _data;
-	_data.texturePath = "Player";
-	_data.pointCount = 60;
-	_data.radius = 75.0f;
-	_level->SpawnActor<Krampus::SpriteActor>(_data);
-
 	Krampus::RectangleShapeData _rectData;
 	_rectData.texturePath = "ZQSD";
 	_rectData.size = FVector2(300.0f, 200.0f);
