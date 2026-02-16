@@ -8,7 +8,7 @@ namespace Krampus
 
 	class AnimationComponent : public Component
 	{
-		Animation* current;
+		Animation* current = nullptr;
 		std::unordered_map<std::string, std::unique_ptr<Animation>> animations;
 
 	public:

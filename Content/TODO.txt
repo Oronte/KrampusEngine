@@ -1,4 +1,5 @@
 High Priority:
+	Multiple ligne animation + GIF Reader,
 	Capture d'ecran / video,
 	Save,
 	Ajout d'UI (canvas, vertical box, ...)

@@ -9,7 +9,13 @@ namespace Krampus
     {
         PNG,
         JPG,
-        GIF
+        GIF,
+        BMP,
+        TGA,
+        PSD,
+        HDR,
+        PIC,
+        PNM
     };
 
 	class Texture

@@ -62,6 +62,12 @@ std::string Krampus::TextureManager::GetExtensionNameByType(const TextureExtensi
 		"png",
 		"jpg",
 		"gif",
+		"bmp",
+		"tga",
+		"psd",
+		"hdr",
+		"pic",
+		"pnm"
 	};
 
 	return _extensionNames[CAST(int, _textureType)];
