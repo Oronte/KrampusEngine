@@ -1,6 +1,6 @@
 ﻿#include "Core/Engine.h"
-#include "Managers/AudioManager.h"
 #include "Managers/LevelManager.h"
+#include "Player.h"
 
 using namespace Krampus;
 
@@ -75,7 +75,7 @@ void StartGame()
 	//Krampus::Actor * _actor3 = _level->SpawnActor<Krampus::SpriteActor>(_data);
 	//_actor3->transform.position = Krampus::FVector2(960, 1000);
 
-
+	_level->SpawnActor<Player>()->transform.position = FVector2(500.0f);
 	
 	_engine.Start();
 }

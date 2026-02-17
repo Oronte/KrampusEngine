@@ -40,13 +40,27 @@ namespace Krampus
 
     class Animation : public KrampusObject
     {
+    public:
+        enum class State
+        {
+            Playing,
+            Stoped
+        };
+
+    private:
         int currentIndex = 0;
         std::string name;
         AnimationData data;
         ShapeObject* shape;
         Timer* timer;
+        State state;
 
     public:
+        State GetState()
+        {
+            return state;
+        }
+
         std::unordered_map<int, Event<>> notifies;
 
     private:

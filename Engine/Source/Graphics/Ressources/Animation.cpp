@@ -94,6 +94,7 @@ Krampus::Animation::Animation(Engine* _engine, const std::string& _name, ShapeOb
         ComputeDuration(),
         true,
         false);
+    state = State::Stoped;
 }
 
 Krampus::Animation::~Animation()
@@ -142,16 +143,19 @@ void Krampus::Animation::Start()
 {
     Update();
     timer->Play();
+    state = State::Playing;
 }
 
 void Krampus::Animation::Resume()
 {
     timer->Resume();
+    state = State::Playing;
 }
 
 void Krampus::Animation::Pause()
 {
     timer->Pause();
+    state = State::Stoped;
 }
 
 void Krampus::Animation::Stop()

@@ -48,6 +48,30 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _
 	level->GetCollisionManagerRef().Register(this);
 }
 
+void Krampus::CollisionComponent::UpdateShapeValues(const SpriteComponent* _sprite)
+{
+	if (!_sprite)
+	{
+		LOG_ERROR("Cannot update values because sprite is nullptr");
+		return;
+	}
+	_sprite->GetShapeType() == ShapeType::Circle ?
+		SetRadius(_sprite->GetRadius()) :
+		SetSize(_sprite->GetSize());
+}
+
+void Krampus::CollisionComponent::SetSize(const FVector2& _size)
+{
+	sizeData.size = _size;
+	shapeType = ShapeType::Rectangle;
+}
+
+void Krampus::CollisionComponent::SetRadius(const float _radius)
+{
+	sizeData.radius = _radius;
+	shapeType = ShapeType::Circle;
+}
+
 void Krampus::CollisionComponent::ResolveCollision(const CollisionInfo& _info)
 {
 	transform.position += _info.normal * _info.penetration;

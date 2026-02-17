@@ -140,6 +140,8 @@ The audio system supports basic 3D spatial sound using SFML's audio features.
 - Spritesheets
 - Timer-driven frame control
 
+![AnimationExemple](ReadMe/Anim.gif)
+
 ---
 
 ### Logging System

@@ -13,6 +13,7 @@ High Priority:
 	tremblement de camera,
 	Mettre le logo quand on demarre le jeu et quand on change de level,
 	Algo (Regex, noise ...),
+	Lanceur (Python + qt)
 
 Low Priority:
 	Ship,

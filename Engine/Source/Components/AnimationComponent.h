@@ -15,6 +15,8 @@ namespace Krampus
 		inline void SetCurrentAnimation(const std::string& _name)
 		{
 			if (!animations.contains(_name)) return;
+
+			if (current) current->Stop();
 			current = animations[_name].get();
 		}
 		inline Animation* GetCurrentAnimation() const
