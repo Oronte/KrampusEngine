@@ -12,14 +12,22 @@ class Player : public Actor
 	CollisionComponent* collision = nullptr;
 	InputComponent* inputs = nullptr;
 
+	Event<CollisionInfo>::ListenerHandle handleEnter;
+	Event<CollisionComponent*>::ListenerHandle handleExit;
+
 public:
 	Player(Level* _level);
 	Player(Level* _level, CircleShapeData _data);
 	Player(Level* _level, RectangleShapeData _data);
 
-	void MoveLeft();
-	void MoveRight();
-	void MoveUp();
-	void MoveDown();
+	//void MoveLeft();
+	//void MoveRight();
+	//void MoveUp();
+	//void MoveDown();
+
+	void SetPosition(FVector2 _pos)
+	{
+		transform.position = _pos;
+	}
 };
 

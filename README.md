@@ -110,6 +110,8 @@ Custom-built collision system supporting:
 - Circle–Circle
 - Circle–Rectangle
 
+![Collision Exemple](ReadMe/Collision.gif)
+
 ---
 
 ### Basic Physics (2D)
