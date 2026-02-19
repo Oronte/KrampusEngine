@@ -209,7 +209,11 @@ This project prioritizes **understanding and correctness** over speed of iterati
 
 ---
 
-## License
+## Coming Soon
 
-This project is intended for educational and personal use.  
-License information will be added once the engine reaches a stable milestone.
+- NavMesh (pathfinding)
+- Complexe shapes
+- Multiplayer
+- Procedural generation
+- Shaders
+- KrampusEngine Launcher
