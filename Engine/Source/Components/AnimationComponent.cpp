@@ -18,3 +18,11 @@ void Krampus::AnimationComponent::AddAnimation(const std::string& _name, const A
 
 	if (!current) SetCurrentAnimation(_name);
 }
+
+void Krampus::AnimationComponent::Deconstruct()
+{
+	Component::Deconstruct();
+
+	StopAnimation();
+	current = nullptr;
+}

@@ -75,11 +75,12 @@ void Krampus::Actor::BeginDestroy()
 	{
 		_component->BeginDestroy();
 	}
-	components.clear();
+	//components.clear();
 }
 
 void Krampus::Actor::Destroy()
 {
+	Deconstruct();
 	BeginDestroy();
-	level->GetActorManagerRef().DeleteActor(this);
+	level->GetActorManagerRef().MarkForDeleteActor(this);
 }

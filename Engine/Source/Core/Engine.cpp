@@ -25,8 +25,7 @@ Engine::~Engine()
 void Engine::Start()
 {
 	window.Create();
-	window.SetVerticalSyncEnabled(false);
-	window.SetFramerateLimit(60);
+	window.SetFramerateLimit(0);
 
 	handle = inputManager->WindowClose.AddListener([this]()
 		{

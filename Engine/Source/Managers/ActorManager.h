@@ -8,6 +8,7 @@ namespace Krampus
 	class ActorManager
 	{
 		std::vector<std::unique_ptr<Actor>> actors;
+		std::vector<std::unique_ptr<Actor>> pendingDeleteActors;
 
 	public:
 		inline const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept
@@ -36,13 +37,28 @@ namespace Krampus
 			_rawActor->Construct();
 			return _rawActor;
 		}
-		
-		inline void DeleteActor(Actor* _toDelete)
+
+		inline void MarkForDeleteActor(Actor* toMark)
 		{
-			std::erase_if(actors, [&](const std::unique_ptr<Actor>& _actor)
+			auto it = std::find_if(
+				actors.begin(),
+				actors.end(),
+				[&](const std::unique_ptr<Actor>& actor)
 				{
-					return _actor.get() == _toDelete;
+					return actor.get() == toMark;
 				});
+
+			if (it == actors.end())
+				return;
+
+			pendingDeleteActors.push_back(std::move(*it));
+
+			actors.erase(it);
+		}
+
+		inline void DestroyPendingDeleteActors()
+		{
+			pendingDeleteActors.clear();
 		}
 
 		ActorManager() = default;

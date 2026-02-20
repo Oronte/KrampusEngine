@@ -3,6 +3,7 @@
 #include "Components/SpriteComponent.h"
 #include "Components/CollisionComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/AnimationComponent.h"
 
 using namespace Krampus;
 
@@ -11,23 +12,19 @@ class Player : public Actor
 	SpriteComponent* sprite = nullptr;
 	CollisionComponent* collision = nullptr;
 	InputComponent* inputs = nullptr;
+	AnimationComponent* animation = nullptr;
 
-	Event<CollisionInfo>::ListenerHandle handleEnter;
-	Event<CollisionComponent*>::ListenerHandle handleExit;
+	//Data
+	float moveSpeed = 200.0f;
+	float health = 1000.0f;
+	float maxHealth = 1000.0f;
 
 public:
 	Player(Level* _level);
-	Player(Level* _level, CircleShapeData _data);
-	Player(Level* _level, RectangleShapeData _data);
 
-	//void MoveLeft();
-	//void MoveRight();
-	//void MoveUp();
-	//void MoveDown();
-
-	void SetPosition(FVector2 _pos)
-	{
-		transform.position = _pos;
-	}
+	void MoveLeft();
+	void MoveRight();
+	void MoveUp();
+	void MoveDown();
 };
 

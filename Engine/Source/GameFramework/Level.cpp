@@ -35,6 +35,7 @@ void Level::Update(const float& _deltaTime)
 	actorManager.Update(_deltaTime);
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
+	actorManager.DestroyPendingDeleteActors();
 
 	Render();
 }

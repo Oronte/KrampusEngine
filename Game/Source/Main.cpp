@@ -76,11 +76,6 @@ void StartGame()
 	//_actor3->transform.position = Krampus::FVector2(960, 1000);
 
 	_level->SpawnActor<Player>()->transform.position = FVector2(500.0f);
-	_level->SpawnActor<Player>(RectangleShapeData())->transform.position = FVector2(700.0f);
-	Actor* _actor = _level->SpawnActor<Player>(RectangleShapeData());
-	_actor->transform.position = FVector2(1000.0f, 500.0f);
-	_actor->transform.rotation = Angle(45, true);
-	_level->SpawnActor<Player>(CircleShapeData())->transform.position = FVector2(500.0f);
 	
 	_engine.Start();
 }

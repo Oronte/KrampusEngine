@@ -19,7 +19,7 @@ void Krampus::Window::Create(const std::string& _name, const UVector2& _windowSi
 void Krampus::Window::Create(const std::string& _name)
 {
 	window.create(sf::VideoMode::getDesktopMode(),
-		CAST(sf::String, _name.c_str()), sf::Style::Default);
+		CAST(sf::String, _name.c_str()), sf::Style::None);
 }
 
 void Krampus::Window::Clear(const Color& _color)
