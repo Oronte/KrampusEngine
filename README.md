@@ -10,7 +10,7 @@
 
 ---
 
-[Documentation](https://github.com/Oronte/KrampusEngine/wiki)
+[GoToVideos](#core-systems)
 
 ## Overview
 
