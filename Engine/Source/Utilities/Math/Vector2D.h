@@ -1,6 +1,5 @@
 #pragma once
 #include "Math.h"
-#include "Utilities/System/Printable.h"
 
 namespace Krampus
 {
@@ -109,10 +108,18 @@ namespace Krampus
         {
             return CAST(CalcType, x) * CAST(CalcType, _other.x) + CAST(CalcType, y) * CAST(CalcType, _other.y);
         }
+        static inline NO_DISCARD CalcType Dot(const Vector2D& _a, const Vector2D& _b) noexcept
+        {
+            return CAST(CalcType, _a.x) * CAST(CalcType, _b.x) + CAST(CalcType, _a.y) * CAST(CalcType, _b.y);
+        }
 
         inline NO_DISCARD CalcType Cross(const Vector2D& _other) const noexcept
         {
             return CAST(CalcType, x) * CAST(CalcType, _other.y) - CAST(CalcType, y) * CAST(CalcType, _other.x);
+        }
+        static inline NO_DISCARD CalcType Cross(const Vector2D& _a, const Vector2D& _b) noexcept
+        {
+            return CAST(CalcType, _a.x) * CAST(CalcType, _b.y) - CAST(CalcType, _a.y) * CAST(CalcType, _b.x);
         }
 
         inline NO_DISCARD Vector2D Perp() const noexcept
@@ -124,9 +131,17 @@ namespace Krampus
         { 
             return (*this - _other).LengthSquared();
         }
+        static inline NO_DISCARD CalcType DistanceSquared(const Vector2D& _a, const Vector2D& _b) noexcept
+        { 
+            return (_a - _b).LengthSquared();
+        }
         inline NO_DISCARD CalcType Distance(const Vector2D& _other) const noexcept
         { 
             return Math::Sqrt(DistanceSquared(_other));
+        }
+        static inline NO_DISCARD CalcType Distance(const Vector2D& _a, const Vector2D& _b) noexcept
+        { 
+            return Math::Sqrt(_a.DistanceSquared(_b));
         }
 
         inline NO_DISCARD Vector2D<CalcType> ClampMagnitude(CalcType _maxLength) const noexcept
@@ -183,6 +198,18 @@ namespace Krampus
         {
             CalcType _thisAngle = AtanToRadian();
             CalcType _otherAngle = _other.AtanToRadian();
+
+            CalcType _deltaAngle = _otherAngle - _thisAngle;
+
+            while (_deltaAngle <= -Math::pi) _deltaAngle += Math::tau;
+            while (_deltaAngle > Math::pi)  _deltaAngle -= Math::tau;
+
+            return _deltaAngle;
+        }
+        static inline NO_DISCARD CalcType AngleBetweenRadians(const Vector2D& _a, const Vector2D& _b) noexcept
+        {
+            CalcType _thisAngle = _a.AtanToRadian();
+            CalcType _otherAngle = _b.AtanToRadian();
 
             CalcType _deltaAngle = _otherAngle - _thisAngle;
 

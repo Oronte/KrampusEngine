@@ -3,7 +3,7 @@
 
 namespace Krampus
 {
-    class Angle
+    class Angle : IPrintable
     {
     private:
         float radians;
@@ -225,6 +225,11 @@ namespace Krampus
         friend inline Angle operator*(const float& _scalar, const Angle& _angle) noexcept
         {
             return _angle * _scalar;
+        }
+
+        virtual std::string ToString() const override
+        {
+            return std::format("Radians : {}, Degrees : {}", radians, ToDegrees());
         }
     };
 }

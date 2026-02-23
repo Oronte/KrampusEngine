@@ -69,7 +69,7 @@
 namespace Krampus
 {
 
-	class Color
+	class Color : public IPrintable
 	{
 	public:
 		std::uint8_t r;
@@ -142,6 +142,11 @@ namespace Krampus
 		{ 
 			return Color(0, 0, 0, 0);
 		};
+
+		virtual std::string ToString() const override
+		{
+			return std::format("R : {}, G : {}, B : {}, A : {}", r, g, b, a);
+		}
 	};
 
 

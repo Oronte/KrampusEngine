@@ -3,7 +3,7 @@
 
 namespace Krampus
 {
-	class Timer
+	class Timer : public IPrintable
 	{
 		bool isRunning = false;
 		bool isToDelete = false;
@@ -74,6 +74,13 @@ namespace Krampus
 		// Pause the timer at the current time
 		void Pause();
 		void Update(const float& _deltaTime);
+
+		virtual std::string ToString() const override
+		{
+			return std::format("Time : {} / {}", currentTime, duration) +
+				"IsRunning = " + std::string(isRunning ? "True, " : "False, ") +
+				"IsLoop = " + std::string(isLoop ? "True" : "False");
+		}
 	};
 
 }

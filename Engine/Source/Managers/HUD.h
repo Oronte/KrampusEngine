@@ -7,6 +7,7 @@ namespace Krampus
 	class HUD
 	{
 		std::vector<std::unique_ptr<Widget>> widgets;
+		std::vector<std::unique_ptr<Widget>> pendingDeleteWidgets;
 
 	public:
 		inline const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
@@ -36,12 +37,27 @@ namespace Krampus
 			return _rawWidget;
 		}
 
-		inline void DeleteWidget(Widget* _toDelete)
+		inline void MarkForDeleteWidget(Widget* toMark)
 		{
-			std::erase_if(widgets, [&](const std::unique_ptr<Widget>& _widget)
+			auto it = std::find_if(
+				widgets.begin(),
+				widgets.end(),
+				[&](const std::unique_ptr<Widget>& actor)
 				{
-					return _widget.get() == _toDelete;
+					return actor.get() == toMark;
 				});
+
+			if (it == widgets.end())
+				return;
+
+			pendingDeleteWidgets.push_back(std::move(*it));
+
+			widgets.erase(it);
+		}
+
+		inline void DestroyPendingDeleteWidgets()
+		{
+			pendingDeleteWidgets.clear();
 		}
 
 		HUD() = default;
@@ -49,6 +65,7 @@ namespace Krampus
 	public:
 		void BeginPlay();
 		void Update(const float& _deltaTime);
+		void Deconstruct();
 		void BeginDestroy();
 	};
 

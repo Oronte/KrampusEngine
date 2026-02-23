@@ -6,7 +6,6 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner)
 	: Component(_owner)
 {
 	view = std::make_unique<sf::View>(transform.position, FVector2(level->GetWindowRef().GetSize()));
-	level->GetCameraManagerRef().SetCurrent(this);
 }
 
 Krampus::CameraComponent::CameraComponent(Actor* _owner, const FVector2& _center, const FVector2& _size)
@@ -25,6 +24,11 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner, const FRect& _rect)
 	: Component(_owner)
 {
 	view = std::make_unique<sf::View>(_rect);
+}
+
+void Krampus::CameraComponent::SetCurrent()
+{
+	level->GetCameraManagerRef().SetCurrent(this);
 }
 
 void Krampus::CameraComponent::Tick(const float& _deltaTime)

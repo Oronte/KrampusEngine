@@ -9,7 +9,7 @@ namespace Krampus
 		std::unique_ptr<sf::View> view;
 
 	public:
-		bool attachedToOwner = true;
+		bool attachedToOwner = false;
 		bool freezePostition = false;
 		bool freezeRotation = false;
 
@@ -59,6 +59,8 @@ namespace Krampus
 		CameraComponent(Actor* _owner, const FVector2& _center, const FVector2& _size);
 		CameraComponent(Actor* _owner, const FVector2& _size);
 		CameraComponent(Actor* _owner, const FRect& _rect);
+
+		void SetCurrent();
 
 	private:
 		virtual void Tick(const float& _deltaTime) override;

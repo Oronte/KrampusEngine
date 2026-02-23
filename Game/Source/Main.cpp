@@ -1,6 +1,6 @@
 ﻿#include "Core/Engine.h"
 #include "Managers/LevelManager.h"
-#include "Player.h"
+#include "CustomLevel.h"
 
 using namespace Krampus;
 
@@ -37,45 +37,7 @@ int main(/*int argc, char** argv*/)
 void StartGame()
 {
 	Krampus::Engine _engine;
-	Krampus::Level* _level = _engine.GetLevelManager()->SetLevel<Krampus::Level>();
-	
-
-	//for (int _x = 0; _x < 10; _x++)
-	//{
-	//	for (int _y = 0; _y < 2; _y++)
-	//	{
-	//		Krampus::Actor* _actor = nullptr;
-	//		bool _rect = Krampus::IMath::RandomRange(0, 1);
-	//		if (_rect)
-	//		{
-	//			Krampus::RectangleShapeData _data;
-	//			_data.texturePath = "KrampusEngineBanner";
-	//			_actor = _level->SpawnActor<Krampus::PhysicsActor>(_data);
-	//		}
-	//		else
-	//		{
-	//			Krampus::CircleShapeData _data;
-	//			_data.texturePath = "Player";
-	//			_actor = _level->SpawnActor<Krampus::PhysicsActor>(_data);
-	//		}
-	//		_actor->transform.position = Krampus::FVector2(200.f + 200 * _x, 200.f + 150 * _y);
-	//		_actor->transform.rotation = Krampus::FMath::RandomRange(0, Krampus::FMath::pi * 2);
-	//	}
-	//}
-	//
-	//Krampus::RectangleShapeData _data;
-	//_data.size = Krampus::FVector2(1920, 100);
-	//
-	//Krampus::Actor* _actor1 = _level->SpawnActor<Krampus::SpriteActor>(_data);
-	//_actor1->transform.rotation = Krampus::FMath::pi / 2.0f;
-	//_actor1->transform.position = Krampus::FVector2(50, 0);
-	//Krampus::Actor * _actor2 = _level->SpawnActor<Krampus::SpriteActor>(_data);
-	//_actor2->transform.rotation = Krampus::FMath::pi / 2.0f;
-	//_actor2->transform.position = Krampus::FVector2(1900, 0);
-	//Krampus::Actor * _actor3 = _level->SpawnActor<Krampus::SpriteActor>(_data);
-	//_actor3->transform.position = Krampus::FVector2(960, 1000);
-
-	_level->SpawnActor<Player>()->transform.position = FVector2(500.0f);
+	CustomLevel* _level = _engine.GetLevelManager()->SetLevel<CustomLevel>();
 	
 	_engine.Start();
 }

@@ -49,7 +49,7 @@ namespace Krampus
 		}
 
 	protected:
-		virtual void InitLevel() {}
+		virtual void InitLevel() = 0;
 
 	public:
 		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>

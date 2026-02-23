@@ -12,6 +12,12 @@ void Krampus::HUD::Update(const float& _deltaTime)
 		if (_widget->IsActive()) _widget->Tick(_deltaTime);
 }
 
+void Krampus::HUD::Deconstruct()
+{
+	for (const std::unique_ptr<Widget>& _widget : widgets)
+		if (_widget->IsActive()) _widget->Deconstruct();
+}
+
 void Krampus::HUD::BeginDestroy()
 {
 	for (const std::unique_ptr<Widget>& _widget : widgets)

@@ -5,7 +5,7 @@
 namespace Krampus
 {
 	template<typename T>
-	struct Vector3D
+	struct Vector3D : public IPrintable
 	{
 		static_assert(std::is_arithmetic_v<T>, "Vector2D<T> requires an arithmetic type T");
 
@@ -222,7 +222,12 @@ namespace Krampus
         }
 
 #pragma endregion
-    };
+
+        std::string ToString() const override
+        {
+            return std::format("X : {}, Y : {}, Z : {}", x, y, z);
+        }
+};
 
     template<typename T>
     constexpr Vector3D<T> operator*(T _scalar, const Vector3D<T>& _vector)

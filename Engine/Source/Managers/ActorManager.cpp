@@ -12,6 +12,12 @@ void Krampus::ActorManager::Update(const float& _deltaTime)
 		if (_actor->IsActive()) _actor->Tick(_deltaTime);
 }
 
+void Krampus::ActorManager::Deconstruct()
+{
+	for (const std::unique_ptr<Actor>& _actor : actors)
+		_actor->Deconstruct();
+}
+
 void Krampus::ActorManager::BeginDestroy()
 {
 	for (const std::unique_ptr<Actor>& _actor : actors)

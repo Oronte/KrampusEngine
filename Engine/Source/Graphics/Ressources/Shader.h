@@ -11,7 +11,7 @@ namespace Krampus
 		std::unique_ptr<sf::Shader> shader;
 
 	public:
-        sf::Shader* GetShaderPtr()
+        sf::Shader* GetSFShader()
         {
             return shader.get();
         }
@@ -23,6 +23,8 @@ namespace Krampus
 
 		static bool IsAvaliable();
 		static bool IsGeometryAvaliable();
+        static void Bind(const Shader* _shader);
+        void Bind();
 		bool Load(const std::string& _vertexShaderFileName, const std::string& _fragmentShaderFileName);
 		bool Load(const std::string& _vertexShaderFileName, const std::string& _geometryShaderFileName, const std::string& _fragmentShaderFileName);
 		bool Load(const std::string& _fileName, const ShaderType& _type);

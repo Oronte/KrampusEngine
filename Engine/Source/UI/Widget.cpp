@@ -22,8 +22,9 @@ void Krampus::Widget::SetLocalRotation(const Angle& _rotation)
 
 void Krampus::Widget::Destroy()
 {
+	Deconstruct();
 	BeginDestroy();
-	level->GetHUDRef().DeleteWidget(this);
+	level->GetHUDRef().MarkForDeleteWidget(this);
 }
 
 void Krampus::Widget::UpdateWorldPos(const sf::View& _view)

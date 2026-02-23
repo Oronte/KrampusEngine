@@ -1,7 +1,6 @@
 #include "Level.h"
 #include "Managers/LevelManager.h"
 #include "Managers/CollisionManager.h"
-#include <SFML/OpenGL.hpp>
 
 using namespace Krampus;
 
@@ -24,7 +23,9 @@ void Krampus::Level::Unload()
 	if (!isLoaded) return;
 	isLoaded = false;
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
+	actorManager.Deconstruct();
 	actorManager.BeginDestroy();
+	hud.Deconstruct();
 	hud.BeginDestroy();
 }
 
@@ -36,6 +37,7 @@ void Level::Update(const float& _deltaTime)
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
 	actorManager.DestroyPendingDeleteActors();
+	hud.DestroyPendingDeleteWidgets();
 
 	Render();
 }

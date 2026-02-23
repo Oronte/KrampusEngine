@@ -28,6 +28,16 @@ bool Krampus::Shader::IsGeometryAvaliable()
 	return sf::Shader::isGeometryAvailable();
 }
 
+void Krampus::Shader::Bind(const Shader* _shader)
+{
+	sf::Shader::bind(!_shader ? nullptr : _shader->shader.get());
+}
+
+void Krampus::Shader::Bind()
+{
+	sf::Shader::bind(shader.get());
+}
+
 bool Krampus::Shader::Load(const std::string& _vertexShaderFileName, const std::string& _fragmentShaderFileName)
 {
 	return shader->loadFromFile(std::filesystem::path(_vertexShaderFileName),

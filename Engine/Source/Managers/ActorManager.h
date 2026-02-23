@@ -66,6 +66,7 @@ namespace Krampus
 	public:
 		void BeginPlay();
 		void Update(const float& _deltaTime);
+		void Deconstruct();
 		void BeginDestroy();
 	};
 

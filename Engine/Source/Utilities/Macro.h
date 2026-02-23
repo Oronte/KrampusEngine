@@ -38,6 +38,9 @@
 #include "SFML/Audio.hpp"
 #include "SFML/Network.hpp"
 
+// Krampus
+#include "Utilities/System/Printable.h"
+
 
 #define DEBUG_PATH
 #ifdef DEBUG_PATH

@@ -29,6 +29,7 @@ void Engine::Start()
 
 	handle = inputManager->WindowClose.AddListener([this]()
 		{
+			levelManager->GetCurrentLevel()->Unload();
 			window.Close();
 			shouldClose = true;
 		});
