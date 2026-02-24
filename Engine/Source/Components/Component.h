@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/GameObject.h"
 #include "Utilities/Math/Transform.h"
+#include "Utilities/System/Timer.h"
 
 namespace Krampus
 {
@@ -19,9 +20,12 @@ namespace Krampus
 			return owner;
 		}
 		Engine* GetWorld() const;
+		float GetDeltaTime() const;
 
 	protected:
 		Component(Actor* _owner);
+
+		Timer* CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
 
 	public:
 		virtual ~Component() = default;

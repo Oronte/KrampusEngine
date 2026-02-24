@@ -37,7 +37,7 @@ int main(/*int argc, char** argv*/)
 void StartGame()
 {
 	Krampus::Engine _engine;
-	CustomLevel* _level = _engine.GetLevelManager()->SetLevel<CustomLevel>();
+	_engine.GetLevelManager()->SetLevel<CustomLevel>();
 	
 	_engine.Start();
 }

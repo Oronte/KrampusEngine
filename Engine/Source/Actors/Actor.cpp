@@ -1,10 +1,15 @@
 #include "Actor.h"
 #include "GameFramework/Level.h"
-
+#include "Managers/TimerManager.h"
 
 Krampus::Engine* Krampus::Actor::GetWorld() const
 {
 	return level->GetWorld();
+}
+
+float Krampus::Actor::GetDeltaTime() const
+{
+	return GetWorld()->GetTimerManager()->GetDeltaTime();
 }
 
 Krampus::Actor::Actor(Level* _level)
@@ -20,6 +25,11 @@ void Krampus::Actor::SetActive(const bool& _status)
 	{
 		_component->SetActive(_status);
 	}
+}
+
+Krampus::Timer* Krampus::Actor::CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
+{
+	return GetWorld()->GetTimerManager()->CreateTimer(_callback, _duration, _isLoop, _startRunning);
 }
 
 void Krampus::Actor::Construct()

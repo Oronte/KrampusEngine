@@ -4,14 +4,7 @@ using namespace Krampus;
 
 Krampus::Timer::Timer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
 {
-	handle = callback.AddListener(_callback);
-	isRunning = _startRunning;
-	isLoop = _isLoop;
-	duration = _duration;
-}
-
-Timer::Timer(const float& _duration, const bool& _isLoop, const bool& _startRunning)
-{
+	callback = _callback;
 	isRunning = _startRunning;
 	isLoop = _isLoop;
 	duration = _duration;
@@ -31,7 +24,7 @@ void Timer::Update(const float& _deltaTime)
 
 	if (currentTime >= duration)
 	{
-		callback.Broadcast();
+		callback();
 
 		isLoop ? Reset() : Stop();
 	}

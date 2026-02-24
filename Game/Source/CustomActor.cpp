@@ -1,18 +1,16 @@
 #include "CustomActor.h"
+#include "CustomComponent.h"
 #include "Managers/InputManager.h"
-#include "GameFramework/Level.h"
-#include "Managers/TimerManager.h"
-
-using namespace Krampus;
 
 CustomActor::CustomActor(Level* _level)
 	: Actor(_level)
 {
-	sprite = CreateComponent<SpriteComponent>(RectangleShapeData(FVector2(150.0f, 150.0f), "Character/JumpPack_CharacterSpriteSheet"));
+	sprite = CreateComponent<SpriteComponent>(RectangleShapeData(FVector2(100.0f, 100.0f), "Character/JumpPack_CharacterSpriteSheet"));
 	collision = CreateComponent<CollisionComponent>(CollisionChannel::All, CollisionChannel::All);
 	inputs = CreateComponent<InputComponent>();
 	animation = CreateComponent<AnimationComponent>();
-	camera = CreateComponent<CameraComponent>(/*FVector2(1920, 1080) / 2, FVector2(1920, 1080)*/);
+	camera = CreateComponent<CameraComponent>();
+	CreateComponent<CustomComponent>();
 }
 
 void CustomActor::Construct()
@@ -39,7 +37,8 @@ void CustomActor::Construct()
 	animation->AddAnimation("Sleep", AnimationData(4, 0.3f, SpriteData(IVector2(0, 32 * 6), IVector2(32))));
 
 	camera->SetCurrent();
-	//camera->attachedToOwner = true;
+	camera->freezeRotation = true;
+	camera->attachedToOwner = true;
 }
 
 void CustomActor::BeginPlay()
@@ -49,14 +48,14 @@ void CustomActor::BeginPlay()
 	LOG_MSG(NAME_OF(CustomActor::BeginPlay));
 
 	animation->StartAnimation();
-	LOG_MSG(GetWorld()->GetTimerManager()->CreateTimer(5.5f));
+	camera->SetCenter(transform.position);
 }
 
 void CustomActor::Tick(const float& _deltaTime)
 {
 	Actor::Tick(_deltaTime);
 
-	LOG_MSG(NAME_OF(CustomActor::Tick));
+	//LOG_MSG(NAME_OF(CustomActor::Tick));
 }
 
 void CustomActor::Deconstruct()
@@ -81,7 +80,7 @@ void CustomActor::MoveLeft()
 		animation->SetCurrentAnimation("Move");
 		animation->StartAnimation();
 	}
-	transform.position += FVector2(-200.0f, 0) * GetWorld()->GetTimerManager()->GetDeltaTime();
+	transform.position += transform.Left() * 200.0f * GetDeltaTime();
 }
 
 void CustomActor::MoveRight()
@@ -92,7 +91,7 @@ void CustomActor::MoveRight()
 		animation->SetCurrentAnimation("Move");
 		animation->StartAnimation();
 	}
-	transform.position += FVector2(200.0f, 0) * GetWorld()->GetTimerManager()->GetDeltaTime();
+	transform.position += transform.Right() * 200.0f * GetDeltaTime();
 }
 
 void CustomActor::Stop()

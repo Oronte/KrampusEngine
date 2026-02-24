@@ -10,11 +10,7 @@ namespace Krampus
 		bool isLoop = false;
 		float currentTime = 0.0f;
 		float duration = 0.0f;
-
-		Event<>::ListenerHandle handle;
-
-	public:
-		Event<> callback;
+		std::function<void()> callback;
 
 	public:
 		inline bool IsToDelete() const
@@ -55,12 +51,14 @@ namespace Krampus
 		template<typename T, typename MemFn>
 		Timer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
 		{
-			handle = callback.AddListener(_instance, _memFn);
+			callback = [_instance, _memFn]()
+				{
+					std::invoke(_memFn, _instance);
+				};
 			isRunning = _startRunning;
 			isLoop = _isLoop;
 			duration = _duration;
 		}
-		Timer(const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
 
 	public:
 		// Start the timer from zero
@@ -78,8 +76,8 @@ namespace Krampus
 		virtual std::string ToString() const override
 		{
 			return std::format("Time : {} / {}", currentTime, duration) +
-				"IsRunning = " + std::string(isRunning ? "True, " : "False, ") +
-				"IsLoop = " + std::string(isLoop ? "True" : "False");
+				", IsRunning = " + std::string(isRunning ? "True" : "False") +
+				", IsLoop = " + std::string(isLoop ? "True" : "False");
 		}
 	};
 

@@ -35,13 +35,6 @@ Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback,
     ).get();
 }
 
-Timer* Krampus::TimerManager::CreateTimer(const float& _duration, const bool& _isLoop, const bool& _startRunning)
-{
-    return timers.emplace_back(
-        std::make_unique<Timer>(_duration, _isLoop, _startRunning)
-    ).get();
-}
-
 void Krampus::TimerManager::DestroyTimer(Timer* _toDelete)
 {
     std::erase_if(timers,

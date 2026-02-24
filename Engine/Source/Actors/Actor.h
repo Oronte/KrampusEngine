@@ -47,6 +47,7 @@ namespace Krampus
 					return _actor == _toRemove;
 				});
 		}
+		float GetDeltaTime() const;
 
 		Actor(Level* _level);
 
@@ -86,6 +87,8 @@ namespace Krampus
 			return _component;
 		}
 
+		Timer* CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+
 
 		void Construct() override;
 		void Deconstruct() override;
@@ -107,6 +110,7 @@ namespace Krampus
 		virtual void Destroy();
 
 		friend class ActorManager;
+		friend class Component;
 	};
 
 }

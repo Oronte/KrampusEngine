@@ -22,7 +22,7 @@ namespace Krampus
 		float elapsedTime = 0.0f;					// Raw frame duration
 		float timeScale = 1.0f;				// Time speed multiplier
 
-		long long framesCount = 0;				// Total number of frames since program start
+		unsigned long long framesCount = 0;				// Total number of frames since program start
 		unsigned short maxFrameRate = 60;	// Frame rate cap (0 = unlimited)
 		float fps = 0.0f;						
 		float smoothedFPS = 60.0f;			// Smoothed FPS for stable display
@@ -93,7 +93,6 @@ namespace Krampus
 				std::make_unique<Timer>(_instance, _memFn, _duration, _isLoop, _startRunning)
 			).get();
 		}
-		Timer* CreateTimer(const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
 		void DestroyTimer(Timer* _toDelete);
 
 		void Pause();

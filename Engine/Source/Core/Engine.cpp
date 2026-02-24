@@ -13,17 +13,7 @@ Engine::Engine()
 	inputManager = new InputManager(this);
 	timerManager = new TimerManager(this);
 	mouse = new Mouse(this);
-}
 
-Engine::~Engine()
-{
-	delete levelManager;
-	delete inputManager;
-	delete mouse;
-}
-
-void Engine::Start()
-{
 	window.Create();
 	window.SetFramerateLimit(0);
 
@@ -35,7 +25,17 @@ void Engine::Start()
 		});
 
 	Logger::Init();
+}
 
+Engine::~Engine()
+{
+	delete levelManager;
+	delete inputManager;
+	delete mouse;
+}
+
+void Engine::Start()
+{
 	Update();
 	Stop();
 }

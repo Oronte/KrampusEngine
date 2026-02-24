@@ -13,6 +13,14 @@ namespace Krampus
         unsigned int characterSize = 30u;
         std::string fontFileName = "DefaultFont";
         FontExtensionType extentionType = FontExtensionType::OTF;
+
+        TextData(const std::string& _text = "Unknown", const unsigned int _characterSize = 30u, const std::string& _fontFileName = "DefaultFont", const FontExtensionType _extentionType = FontExtensionType::OTF)
+        {
+            text = _text;
+            characterSize = _characterSize;
+            fontFileName = _fontFileName;
+            extentionType = _extentionType;
+        }
     };
 
     using TextStyle = sf::Text::Style;

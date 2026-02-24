@@ -54,6 +54,10 @@ namespace Krampus
 		{
 			return IVector2(window.getPosition());
 		}
+		virtual inline IVector2 GetCenter() const
+		{
+			return GetPosition() + GetSize() / 2;
+		}
 		virtual inline void SetIcon(const Image& _image)
 		{
 			window.setIcon(_image);
