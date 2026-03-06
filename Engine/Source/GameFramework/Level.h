@@ -57,6 +57,11 @@ namespace Krampus
 		{
 			return actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
 		}
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+		inline Type* SpawnActorAt(const Transform& _transform, Args&&... _args)
+		{
+			return actorManager.CreateActorAt<Type>(_transform, this, std::forward<Args>(_args)...);
+		}
 		template <typename Type, typename ...Args, IS_BASE_OF(Widget, Type)>
 		inline Type* SpawnWidget(Args&&... _args)
 		{

@@ -14,27 +14,18 @@ namespace Krampus
         RD_COLUMN_REVERSE,
     };
 
-    struct SpriteData
-    {
-        IVector2 start;
-        IVector2 size;
-
-        SpriteData(const IVector2& _start, const IVector2& _size);
-        SpriteData(const IRect& _rect);
-    };
-
     struct AnimationData
     {
         bool canLoop = false;
         int count = 0;
         float duration = 0.0f;
-        std::vector<SpriteData> sprites;
+        std::vector<IRect> sprites;
 
         AnimationData() = default;
-        AnimationData(const int& _count, const float& _duration, const SpriteData& _spriteData,
+        AnimationData(const int& _count, const float& _duration, const IRect& _spriteData,
             const bool& _canLoop = true, const ReadDirection& _direction = ReadDirection::RD_ROW);
 
-        AnimationData(const float& _duration, const std::vector<SpriteData>& _spritesData,
+        AnimationData(const float& _duration, const std::vector<IRect>& _spritesData,
             const bool& _canLoop = true);
     };
 
@@ -70,7 +61,7 @@ namespace Krampus
         }
         inline float ComputeDuration()
         {
-            SpriteData* _spriteData = GetSpriteData();
+            IRect* _spriteData = GetSpriteData();
             if (!_spriteData)
             {
                 LOG_ERROR("There is no sprite data to Compute the duration");
@@ -78,7 +69,7 @@ namespace Krampus
             }
             return ComputeDuration(*_spriteData);
         }
-        inline float ComputeDuration(const SpriteData& _spriteData) const
+        inline float ComputeDuration(const IRect& _spriteData) const
         {
             const int& _count = data.count;
             if (_count == 0)
@@ -88,7 +79,7 @@ namespace Krampus
             }
             return data.duration / CAST(float, _count);
         }
-        inline SpriteData* GetSpriteData()
+        inline IRect* GetSpriteData()
         {
             if (data.sprites.empty()) return nullptr;
 
@@ -109,7 +100,7 @@ namespace Krampus
 
     private:
         void Update();
-        void UpdateTimer(const SpriteData& _spriteData);
+        void UpdateTimer(const IRect& _spriteData);
         void Reset();
 
     public:

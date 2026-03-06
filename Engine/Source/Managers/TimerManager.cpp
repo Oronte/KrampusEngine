@@ -101,13 +101,16 @@ float Krampus::TimerManager::Update()
 
 void Krampus::TimerManager::UpdateTimers()
 {
-    for (std::vector<std::unique_ptr<Timer>>::iterator _iterator = timers.begin(); _iterator != timers.end(); )
-    {
-		Timer* _timer = _iterator->get();
+    timers.erase(
+        std::remove_if(timers.begin(), timers.end(),
+            [](const std::unique_ptr<Timer>& _timer)
+            {
+                return _timer->IsToDelete();
+            }),
+        timers.end());
+
+    for (auto& _timer : timers)
         _timer->Update(deltaTime);
-        if (_timer->IsToDelete()) _iterator = timers.erase(_iterator);
-        else ++_iterator;
-    }
 }
 
 void Krampus::TimerManager::Pause()

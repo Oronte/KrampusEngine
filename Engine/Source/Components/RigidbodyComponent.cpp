@@ -57,7 +57,7 @@ void Krampus::RigidbodyComponent::BindCollisionResponse()
 
 void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
 {
-    if (isKinematic)
+    if (isKinematic || !isActive)
         return;
 
     RigidbodyComponent* _physA = this;

@@ -32,6 +32,7 @@ namespace Krampus
 		Transform();
 		Transform(const FVector2& _position, const Angle& _rotation, const FVector2& _scale = FVector2(1.0f));
 
+		Angle GetAngleTo(const FVector2& _target) const;
 		void LookAt(const FVector2& _target);
 
 		virtual std::string ToString() const override;

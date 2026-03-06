@@ -180,3 +180,14 @@ void Krampus::Debug::DrawDebugPoint(Level* _level, const FVector2& _position, co
 {
 	DrawFillCircle(_level, _position, _thickness, 30, _color);
 }
+
+void Krampus::Debug::DrawDebugLine(Actor* _context, const FVector2& _start, const FVector2& _direction, const float _length, const float _thickness, const Color& _color)
+{
+	DrawDebugLine(_context->GetLevel(), _start, _direction, _length, _thickness, _color);
+}
+
+void Krampus::Debug::DrawDebugLine(Level* _level, const FVector2& _start, const FVector2& _direction, const float _length, const float _thickness, const Color& _color)
+{
+	const FVector2& _pos = _start + _direction * (_length * 0.5f);
+	DrawFillRect(_level, _pos, FVector2(_length, _thickness), FVector2::AngleBetweenRadians(FVector2::Right(), _direction), _color);
+}

@@ -40,12 +40,13 @@ namespace Krampus
 	
 
 		// Point
-		static void DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness, const Color& _color = Color::Magenta());
-		static void DrawDebugPoint(Level* _level, const FVector2& _position, const float& _thickness, const Color& _color = Color::Magenta());
+		static void DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness = 5.0f, const Color& _color = Color::Magenta());
+		static void DrawDebugPoint(Level* _level, const FVector2& _position, const float& _thickness = 5.0f, const Color& _color = Color::Magenta());
 	
 	
 		// Line
-		// TODO Line
+		static void DrawDebugLine(Actor* _context, const FVector2& _start, const FVector2& _direction, const float _length = 75.0f, const float _thickness = 2.5f, const Color& _color = Color::Magenta());
+		static void DrawDebugLine(Level* _level, const FVector2& _start, const FVector2& _direction, const float _length = 75.0f, const float _thickness = 2.5f, const Color& _color = Color::Magenta());
 	};
 
 }

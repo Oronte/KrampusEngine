@@ -16,10 +16,14 @@ Krampus::Transform::Transform(const FVector2& _position, const Angle& _rotation,
 	scale = _scale;
 }
 
+Krampus::Angle Krampus::Transform::GetAngleTo(const FVector2& _target) const
+{
+	return Angle((_target - position).AtanToRadian());
+}
+
 void Krampus::Transform::LookAt(const FVector2& _target)
 {
-	const FVector2 _direction = _target - position;
-	rotation = Angle(_direction.AtanToRadian());
+	rotation = GetAngleTo(_target);
 }
 
 std::string Krampus::Transform::ToString() const

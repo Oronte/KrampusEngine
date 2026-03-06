@@ -1,8 +1,12 @@
-﻿#include "Core/Engine.h"
-#include "Managers/LevelManager.h"
-#include "CustomLevel.h"
+﻿//Core engine includes
+#include "Core/Engine.h"
+#include "Utilities/MemoryLeaksDetection.h"
 
-using namespace Krampus;
+//Custom game includes
+#include "Managers/LevelManager.h"
+#include "DemoLevel.h"
+
+#define _CRTDBG_MAP_ALLOC
 
 void StartGame();
 
@@ -20,6 +24,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 int main(/*int argc, char** argv*/)
 {
+	Krampus::SetupMemoryLeakDetection();
+
 	try
 	{
 		StartGame();
@@ -29,6 +35,8 @@ int main(/*int argc, char** argv*/)
 		std::cerr << TXT_DARK_RED << _exception.What() << COLOR_RESET << std::endl;
 	}
 
+	Krampus::TeardownMemoryLeakDetection();
+
 	return EXIT_SUCCESS;
 }
 
@@ -37,7 +45,7 @@ int main(/*int argc, char** argv*/)
 void StartGame()
 {
 	Krampus::Engine _engine;
-	_engine.GetLevelManager()->SetLevel<CustomLevel>();
+	_engine.GetLevelManager()->SetLevel<DemoLevel>();
 	
 	_engine.Start();
 }

@@ -72,6 +72,13 @@ namespace Krampus
         static void Init();
         static void Shutdown();
         static void Reset();
+        template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<std::decay_t<T>, bool> >>
+        static void PrintLog(const VerbosityType& _type, const T& _number, const std::string& _debug = "")
+        {
+        #ifdef DEBUG
+            PrintLog(_type, std::to_string(_number), _debug);
+        #endif
+        }
         static void PrintLog(const VerbosityType& _type, const std::string& _text, const std::string& _debug = "");
         static void PrintLog(const VerbosityType& _type, const IPrintable& _object, const std::string& _debug = "");
         static void PrintLog(const VerbosityType& _type, const IPrintable* _object, const std::string& _debug = "");

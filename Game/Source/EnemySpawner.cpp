@@ -1,0 +1,19 @@
+#include "EnemySpawner.h"
+#include "Enemy.h"
+#include "GameFramework/Level.h"
+
+EnemySpawner::EnemySpawner(Level* _level, Actor* _player)
+	: Actor(_level), player(_player)
+{
+	CreateTimer([this]() {Spawn(); }, spawnTime, true);
+}
+
+void EnemySpawner::Spawn()
+{
+	Level* _level = GetLevel();
+
+	for (int _index = 0; _index < spawnCount; _index++)
+	{
+		_level->SpawnActorAt<Enemy>(Transform(spawnPoint + offset * _index, Angle()), player);
+	}
+}

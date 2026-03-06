@@ -18,7 +18,7 @@ namespace Krampus
 		inline IVector2 GetPosition() const noexcept
 		{
 			const Window& _window = GetWorld()->GetWindowRef();
-			return _window.MapCoordsToPixel(position, _window.GetView());
+			return _window.MapPixelToCoords(position);
 		}
 		inline IVector2 GetScreenPosition() const noexcept
 		{

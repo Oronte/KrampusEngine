@@ -8,12 +8,14 @@ Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const CircleShapeData& 
 	: Component(_owner)
 {
 	shape = std::make_unique<ShapeObject>(_data);
+	SetZOrder(ZOrder::Actors);
 }
 
 Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const RectangleShapeData& _data)
 	: Component(_owner)
 {
 	shape = std::make_unique<ShapeObject>(_data);
+	SetZOrder(ZOrder::Actors);
 }
 
 void Krampus::SpriteComponent::Construct()

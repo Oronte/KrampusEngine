@@ -60,7 +60,8 @@ void Krampus::Actor::Tick(const float& _deltaTime)
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
-		_component->Tick(_deltaTime);
+		if (_component->IsActive()) 
+			_component->Tick(_deltaTime);
 	}
 
 	for (Actor* _actor : children)
@@ -85,12 +86,10 @@ void Krampus::Actor::BeginDestroy()
 	{
 		_component->BeginDestroy();
 	}
-	//components.clear();
 }
 
 void Krampus::Actor::Destroy()
 {
 	Deconstruct();
-	BeginDestroy();
 	level->GetActorManagerRef().MarkForDeleteActor(this);
 }

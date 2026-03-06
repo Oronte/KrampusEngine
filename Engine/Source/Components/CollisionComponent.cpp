@@ -43,7 +43,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _
 	mask = _mask;
 
 	sizeData.size = _size;
-	shapeType = ShapeType::Circle;
+	shapeType = ShapeType::Rectangle;
 
 	level->GetCollisionManagerRef().Register(this);
 }

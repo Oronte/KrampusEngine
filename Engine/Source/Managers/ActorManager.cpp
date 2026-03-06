@@ -2,6 +2,8 @@
 
 void Krampus::ActorManager::BeginPlay()
 {
+	isPlaying = true;
+
 	for (const std::unique_ptr<Actor>& _actor : actors) 
 		_actor->BeginPlay();
 }
@@ -20,6 +22,8 @@ void Krampus::ActorManager::Deconstruct()
 
 void Krampus::ActorManager::BeginDestroy()
 {
+	isPlaying = false;
+
 	for (const std::unique_ptr<Actor>& _actor : actors)
 		_actor->BeginDestroy();
 }
