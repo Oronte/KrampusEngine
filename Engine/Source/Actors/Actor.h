@@ -79,12 +79,13 @@ namespace Krampus
 			}
 
 			_component->Deconstruct();
-			std::find_if(components, [&](const std::unique_ptr<Component>& _item)
+			_component->BeginDestroy();
+
+			std::erase_if(components,
+				[&](const std::unique_ptr<Component>& _item)
 				{
 					return _item.get() == _component;
 				});
-
-			return _component;
 		}
 
 		Timer* CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);

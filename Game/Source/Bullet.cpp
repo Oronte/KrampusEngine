@@ -49,11 +49,16 @@ void Bullet::OnCollision(CollisionInfo _info)
 {
 	if (isDying) return;
 	isDying = true;
-	lifeSpanTimer->Stop();
+	if (lifeSpanTimer)
+	{
+		lifeSpanTimer->Stop();
+		lifeSpanTimer = nullptr;
+	}
 	canMove = false;
 	animation->StartAnimation();
 	CreateTimer([this]()
 		{
+			animation->StopAnimation();
 			Destroy();
 		}, 0.25f);
 

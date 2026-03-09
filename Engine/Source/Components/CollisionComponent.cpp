@@ -114,8 +114,8 @@ void Krampus::CollisionComponent::Tick(const float& _deltaTime)
 
 bool Krampus::CollisionComponent::CanCollide(const CollisionComponent* _other) const
 {
-	return CAST(uint32_t, mask & _other->channel) != 0 &&
-		CAST(uint32_t, _other->mask & channel) != 0;
+	return ContainsCollisionChannel(mask, _other->channel) &&
+		ContainsCollisionChannel(_other->mask, channel);
 }
 
 bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)

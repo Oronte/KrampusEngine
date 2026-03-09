@@ -31,6 +31,7 @@ Engine::~Engine()
 {
 	delete levelManager;
 	delete inputManager;
+	delete timerManager;
 	delete mouse;
 }
 

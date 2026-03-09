@@ -42,3 +42,10 @@ void Krampus::CameraComponent::Tick(const float& _deltaTime)
 	if (!freezeRotation)
 		SetRotation(transform.rotation);
 }
+
+void Krampus::CameraComponent::BeginDestroy()
+{
+	Component::BeginDestroy();
+
+	level->GetCameraManagerRef().SetCurrent(nullptr);
+}

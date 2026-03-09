@@ -38,7 +38,7 @@ namespace Krampus
             Stoped
         };
 
-    private:
+    protected:
         int currentIndex = 0;
         std::string name;
         AnimationData data;
@@ -54,7 +54,7 @@ namespace Krampus
 
         std::unordered_map<int, Event<>> notifies;
 
-    private:
+    protected:
         inline bool IsValidIndex() const
         {
             return currentIndex < data.count;
@@ -98,7 +98,7 @@ namespace Krampus
         Animation(Engine* _engine, const std::string& _name, ShapeObject* _shape, const AnimationData& _data);
         ~Animation();
 
-    private:
+    protected:
         void Update();
         void UpdateTimer(const IRect& _spriteData);
         void Reset();

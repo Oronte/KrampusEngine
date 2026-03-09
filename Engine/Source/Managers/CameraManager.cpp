@@ -8,6 +8,12 @@ void Krampus::CameraManager::UpdateView()
 
 void Krampus::CameraManager::Render(const bool& splitScreen)
 {
+	if (!current)
+	{
+		LOG_WARNING("There is no current camera ! Objects cannot be drawn on the screen.");
+		return;
+	}
+
 	Window& _window = GetWorld()->GetWindowRef();
 
 	for (std::pair<int, std::vector<IDrawable*>> _pair : drawer)

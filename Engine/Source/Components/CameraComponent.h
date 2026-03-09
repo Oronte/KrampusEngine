@@ -64,6 +64,7 @@ namespace Krampus
 
 	private:
 		virtual void Tick(const float& _deltaTime) override;
+		virtual void BeginDestroy() override;
 	};
 
 }

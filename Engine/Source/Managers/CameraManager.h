@@ -16,7 +16,6 @@ namespace Krampus
 	public:
 		inline void SetCurrent(CameraComponent* _camera)
 		{
-			if (!_camera) return;
 			current = _camera;
 		}
 		inline void AddToWindow(IDrawable* _drawable)

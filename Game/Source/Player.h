@@ -4,10 +4,11 @@
 #include "Components/CollisionComponent.h"
 #include "Components/RigidbodyComponent.h"
 #include "Components/InputComponent.h"
-#include "Components/AnimationComponent.h"
+#include "Components/AnimationComponentSM.h"
 #include "Components/CameraComponent.h"
 #include "Components/AudioListenerComponent.h"
 #include "HealthComponent.h"
+
 
 using namespace Krampus;
 
@@ -17,19 +18,22 @@ class Player : public Actor
 	CollisionComponent*			collision	= nullptr;
 	RigidbodyComponent*			rigidbody	= nullptr;
 	InputComponent*				inputs		= nullptr;
-	AnimationComponent*			animation	= nullptr;
 	CameraComponent*			camera		= nullptr;
 	AudioListenerComponent*		listener	= nullptr;
 	HealthComponent*			health		= nullptr;
+	AnimationComponentSM*		animationSM = nullptr;
 
 	float						moveSpeed	= 200.0f;
 	float						jumpForce	= 500.0f;
 	bool						isRunning	= false;
 	bool						canMove		= true;
 	bool						isJumping	= false;
+	bool						isHit		= false;
+	bool						isDying		= false;
 
 	Event<CollisionInfo>::ListenerHandle handle;
 	Event<CollisionInfo>::ListenerHandle handleTemp;
+	Event<>::ListenerHandle deathHandle;
 
 public:
 	Player(Level* _level);
@@ -42,5 +46,7 @@ public:
 	void MoveRight();
 	void Stop();
 	void Jump();
+
+	void Die();
 };
 

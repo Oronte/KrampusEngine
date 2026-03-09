@@ -57,7 +57,7 @@ namespace Krampus
 		// The owner require a SpriteComponent
 		AnimationComponent(Actor* _owner);
 
-		void AddAnimation(const std::string& _name, const AnimationData& _data);
+		virtual void AddAnimation(const std::string& _name, const AnimationData& _data);
 
 		virtual void Deconstruct() override;
 	};

@@ -1,6 +1,7 @@
 #include "AnimationComponent.h"
 #include "SpriteComponent.h"
 #include "Actors/Actor.h"
+#include "AnimationComponentSM.h"
 
 Krampus::AnimationComponent::AnimationComponent(Actor* _owner)
 	: Component(_owner)

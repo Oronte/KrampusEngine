@@ -5,7 +5,7 @@
 
 void Krampus::Window::SetView(const CameraComponent* _camera)
 {
-	const sf::View _view = *_camera->GetView();
+	sf::View _view = *_camera->GetView();
 	window.setView(_view);
 	onViewChange.Broadcast(_view);
 }

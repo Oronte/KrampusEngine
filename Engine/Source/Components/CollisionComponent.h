@@ -71,6 +71,11 @@ namespace Krampus
 			return sizeData.size;
 		}
 
+		static inline bool ContainsCollisionChannel(const CollisionChannel& _a, const CollisionChannel& _b)
+		{
+			return CAST(uint32_t, _a & _b) != 0;
+		}
+
 		// The owner require a SpriteComponent
 		CollisionComponent(Actor* _owner, 
 			const CollisionChannel& _channel = CollisionChannel::None,
@@ -89,18 +94,17 @@ namespace Krampus
 		void ResolveCollision(const CollisionInfo& _info);
 		void BindCollisionResolution();
 		void ComputeCollision(CollisionComponent* _other);
-
-	private:
-		virtual void Tick(const float& _deltaTime) override;
-
 		bool CanCollide(const CollisionComponent* _other) const;
 
+		virtual void Tick(const float& _deltaTime) override;
+		virtual void BeginDestroy() override;
+
+	private:
 		bool CircleToCircle(CollisionComponent* _other);
 		bool RectToRectOBB(CollisionComponent* _other);
 		bool RectToRectAABB(CollisionComponent* _other);
 		bool CircleToRect(CollisionComponent* _circle, CollisionComponent* _rect);
 
-		virtual void BeginDestroy() override;
 
 		void DrawDebug() override;
 	};

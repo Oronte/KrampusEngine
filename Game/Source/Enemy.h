@@ -18,6 +18,7 @@ class Enemy : public Actor
 
 	Actor* player = nullptr;
 	Event<CollisionInfo>::ListenerHandle handle;
+	Event<>::ListenerHandle deathHandle;
 
 public:
 	Enemy(Level* _level, Actor* _player);

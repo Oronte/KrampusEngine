@@ -8,7 +8,7 @@ Enemy::Enemy(Level* _level, Actor* _player)
 	sprite = CreateComponent<SpriteComponent>(CircleShapeData(50.0f, "FlyingEnemy"));
 	animation = CreateComponent<AnimationComponent>();
 	collision = CreateComponent<CollisionComponent>(CollisionChannel::Enemy,
-		 CollisionChannel::Projectile | CollisionChannel::Wall | CollisionChannel::Trigger);
+		 CollisionChannel::Projectile | CollisionChannel::Wall | CollisionChannel::Trigger | CollisionChannel::Player);
 	rigidbody = CreateComponent<RigidbodyComponent>();
 	health = CreateComponent<HealthComponent>();
 }
@@ -28,9 +28,11 @@ void Enemy::Construct()
 			HealthComponent* _compo = _info.collision->GetOwner()->GetComponent<HealthComponent>();
 			if ((_info.collision->channel == CollisionChannel::Player) && _compo)
 			{
-				_compo->Damage(25.0f);
+				Die();
 			}
 		});
+
+	deathHandle = health->onDeath.AddListener(this, &Enemy::Die);
 }
 
 void Enemy::Tick(const float& _deltaTime)
