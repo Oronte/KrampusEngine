@@ -49,12 +49,5 @@ void StartGame()
 	Krampus::Engine _engine;
 	_engine.GetLevelManager()->SetLevel<DemoLevel>();
 
-	//int _int = 5;
-	//_int.Add(int::Parse("8"));
-	//LOG_WARNING(_int);
-	//
-	//bool _test = bool::True();
-	//LOG_MSG(_test);
-
 	_engine.Start();
 }
