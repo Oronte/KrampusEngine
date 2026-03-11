@@ -8,6 +8,8 @@
 
 #define _CRTDBG_MAP_ALLOC
 
+//#include "Utilities/KrampusInclude.h"
+
 void StartGame();
 
 #ifdef RELEASE
@@ -46,6 +48,6 @@ void StartGame()
 {
 	Krampus::Engine _engine;
 	_engine.GetLevelManager()->SetLevel<DemoLevel>();
-	
+
 	_engine.Start();
 }

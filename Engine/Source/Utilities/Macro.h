@@ -39,7 +39,7 @@
 #include "SFML/Network.hpp"
 
 // Krampus
-#include "Utilities/System/Printable.h"
+#include "Utilities/System/Type/Types.h"
 
 
 #define DEBUG_PATH

@@ -1,5 +1,6 @@
 #pragma once
-#include "Utilities/Macro.h"
+#include <ostream>
+#include <string>
 
 namespace Krampus
 {
