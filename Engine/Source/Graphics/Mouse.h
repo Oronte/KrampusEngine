@@ -8,8 +8,8 @@ namespace Krampus
 
 	class Mouse : public KrampusObject
 	{
-		IVector2 position;
-		IVector2 lastPosition;
+		IVector2	position;
+		IVector2	lastPosition;
 
 	public:
 		Mouse(Engine* _engine)
@@ -34,7 +34,7 @@ namespace Krampus
 			sf::Mouse::setPosition(_position);
 			Update();
 		}
-		inline bool HasMoved() const noexcept
+		inline Bool HasMoved() const noexcept
 		{
 			return position != lastPosition;
 		}

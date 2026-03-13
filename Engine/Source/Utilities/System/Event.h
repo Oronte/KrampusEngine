@@ -6,20 +6,20 @@ namespace Krampus
 {
 
     template<typename... Args>
-    class Event
+    class Event : public IPrintable
     {
     public:
-        using ListenerId = uint32_t;
+        using ListenerId = UInt;
 
         struct ListenerHandle
         {
-            std::shared_ptr<bool> ownerAlive;
+            std::shared_ptr<Bool> ownerAlive;
             Event* owner = nullptr;
             ListenerId      id = 0;
 
 
             ListenerHandle() = default;
-            ListenerHandle(Event* _event, ListenerId _id, std::shared_ptr<bool> _alive) : id(_id), owner(_event), ownerAlive(_alive) {}
+            ListenerHandle(Event* _event, ListenerId _id, std::shared_ptr<Bool> _alive) : id(_id), owner(_event), ownerAlive(_alive) {}
 
             ListenerHandle(const ListenerHandle&) = delete;
             ListenerHandle& operator=(const ListenerHandle&) = delete;
@@ -68,29 +68,28 @@ namespace Krampus
         };
 
     private:
-
         using Callback = std::function<void(Args...)>;
 
         struct Listener
         {
             ListenerId  id;
             Callback    callback;
-            bool        once;
+            Bool        once;
         };
 
         std::vector<Listener>       listeners;
         std::vector<ListenerId>     pendingRemove;
         std::vector<Listener>       pendingAdd;
 
-        std::shared_ptr<bool>       isAlive = nullptr;
+        std::shared_ptr<Bool>       isAlive         = nullptr;
 
-        ListenerId                  nextId = 1;
-        bool                        broadcasting = false;
+        ListenerId                  nextId          = UInt(1u);
+        Bool                        broadcasting    = false;
 
     public:
         Event()
         {
-            isAlive = std::make_shared<bool>(true);
+            isAlive = std::make_shared<Bool>(true);
         }
         ~Event()
         {
@@ -98,7 +97,7 @@ namespace Krampus
         }
 
         NO_DISCARD
-            ListenerHandle AddListener(Callback _callback, bool _once = false)
+            ListenerHandle AddListener(Callback _callback, const Bool& _once = false)
         {
             if (!_callback)
             {
@@ -106,7 +105,7 @@ namespace Krampus
                 return ListenerHandle();
             }
 
-            const ListenerId _id = nextId++; // TODO security
+            const ListenerId _id = nextId++; 
 
             Listener _listener{ _id, std::move(_callback), _once };
 
@@ -118,7 +117,7 @@ namespace Krampus
 
         template<typename T, typename MemFn>
         NO_DISCARD
-            ListenerHandle AddListener(T* _instance, MemFn _memFn, bool _once = false)
+            ListenerHandle AddListener(T* _instance, MemFn _memFn, const Bool& _once = false)
         {
             if (!_instance)
             {
@@ -170,8 +169,8 @@ namespace Krampus
             std::erase_if(listeners,
                 [&](const Listener& _listener)
                 {
-                    return _listener.once ||
-                        std::ranges::find(pendingRemove, _listener.id) != pendingRemove.end();
+                    return _listener.once.Or(
+                        std::ranges::find(pendingRemove, _listener.id) != pendingRemove.end());
                 });
 
             pendingRemove.clear();
@@ -179,6 +178,13 @@ namespace Krampus
             listeners.insert(listeners.end(), pendingAdd.begin(), pendingAdd.end());
 
             pendingAdd.clear();
+        }
+
+        virtual std::string ToString() const override
+        {
+            std::string _types;
+            ((_types += (_types.empty() ? "" : ", ") + std::string(typeid(Args).name())), ...);
+            return std::format("Event of type(s) {} with {} listener(s)", _types, listeners.size());
         }
     };
 

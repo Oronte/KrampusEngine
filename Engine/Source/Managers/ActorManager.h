@@ -7,9 +7,9 @@ namespace Krampus
 
 	class ActorManager
 	{
-		std::vector<std::unique_ptr<Actor>> actors;
-		std::vector<std::unique_ptr<Actor>> pendingDeleteActors;
-		bool isPlaying = false;
+		std::vector<std::unique_ptr<Actor>>		actors;
+		std::vector<std::unique_ptr<Actor>>		pendingDeleteActors;
+		Bool									isPlaying				= false;
 
 	public:
 		inline const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept
@@ -80,7 +80,7 @@ namespace Krampus
 
 	public:
 		void BeginPlay();
-		void Update(const float& _deltaTime);
+		void Update(const Float& _deltaTime);
 		void Deconstruct();
 		void BeginDestroy();
 	};

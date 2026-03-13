@@ -1,10 +1,11 @@
 #pragma once
+#include <functional>
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include <type_traits>
 #include <limits>
 #include <cmath>
 #include <string>
-#include "Utilities/System/Printable.h"
 
 class Float : public Krampus::IPrintable
 {
@@ -14,6 +15,7 @@ public:
     // ── Constructors ─────────────────────────────────────────────────────────
     Float() = default;
     Float(const Float& _o) : value(_o.value) {}
+    Float& operator=(const Float&) = default;
 
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
     Float(T _v) : value(static_cast<float>(_v)) {}
@@ -77,6 +79,7 @@ public:
     // ── Operators (member) ───────────────────────────────────────────────────
     Float  operator+ (const Float& o) const { return Float(value + o.value); }
     Float  operator- (const Float& o) const { return Float(value - o.value); }
+    Float  operator- ()               const { return Float(-value); }  // unary minus
     Float  operator* (const Float& o) const { return Float(value * o.value); }
     Float  operator/ (const Float& o) const;
     Float& operator+=(const Float& o)       { value += o.value; return *this; }
@@ -92,9 +95,9 @@ public:
     Bool operator>=(const Float& o) const { return Bool(value >= o.value); }
 
     Float& operator++()    { ++value; return *this; }
-    Float  operator++(int) { Float t(*this); value++; return t; }
+    Float operator++(int) { Float _t(*this); value++; return _t; }
     Float& operator--()    { --value; return *this; }
-    Float  operator--(int) { Float t(*this); value--; return t; }
+    Float operator--(int) { Float _t(*this); value--; return _t; }
 
     // ── Template overloads ────────────────────────────────────────────────────
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -167,4 +170,32 @@ public:
     operator float()              const { return (float)(value); }
     operator double()             const { return (double)(value); }
     operator long double()        const { return (long double)(value); }
+
+    // ── Cross-type conversions ──────────────────────────────────────────────
+    Byte ToByte() const;
+    Short ToShort() const;
+    UShort ToUShort() const;
+    Int ToInt() const;
+    UInt ToUInt() const;
+    Long ToLong() const;
+    ULong ToULong() const;
+    LongLong ToLongLong() const;
+    ULongLong ToULongLong() const;
+    Double ToDouble() const;
+    LongDouble ToLongDouble() const;
+
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows Float to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<Float>
+    {
+        std::size_t operator()(const Float& _v) const noexcept
+        {
+            return std::hash<float>{}(static_cast<float>(_v));
+        }
+    };
+}

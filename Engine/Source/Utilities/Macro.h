@@ -1,6 +1,5 @@
 #pragma once
 #pragma warning (disable : 4275) // non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
-//#pragma warning( disable : 4244)
 
 // STL
 #include <iostream>
@@ -39,7 +38,7 @@
 #include "SFML/Network.hpp"
 
 // Krampus
-#include "Utilities/System/Type/Types.h"
+#include "Utilities/System/Types/Types.h"
 
 
 #define DEBUG_PATH

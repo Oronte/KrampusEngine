@@ -9,9 +9,9 @@ namespace Krampus
 
 	class CameraManager : public KrampusObject
 	{
-		CameraComponent* current = nullptr;
-		std::map<uint8_t, std::vector<IDrawable*>> drawer;
-		std::vector<std::shared_ptr<Vertices>> debugs;
+		CameraComponent*							current		= nullptr;
+		std::map<uint8_t, std::vector<IDrawable*>>	drawer;
+		std::vector<std::shared_ptr<Vertices>>		debugs;
 
 	public:
 		inline void SetCurrent(CameraComponent* _camera)
@@ -55,7 +55,7 @@ namespace Krampus
 
 	public:
 		void UpdateView();
-		void Render(const bool& splitScreen);
+		void Render(const Bool& splitScreen);
 
 		friend class Debug;
 	};

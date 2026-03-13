@@ -9,11 +9,11 @@ namespace Krampus
 
 	class Widget : public Actor
 	{
-		Event<sf::View>::ListenerHandle onViewChangeHandle;
+		Event<sf::View>::ListenerHandle		onViewChangeHandle;
 
 	protected:
-		FVector2 screenPosition;
-		Angle localRotation;
+		FVector2							screenPosition;
+		Angle								localRotation;
 
 	protected:
 		inline FVector2 GetScreenPosition() const
@@ -34,6 +34,9 @@ namespace Krampus
 
 	private:
 		void UpdateWorldPos(const sf::View& _view);
+
+	public:
+		virtual std::string ToString() const override;
 
 		friend class HUD;
 	};

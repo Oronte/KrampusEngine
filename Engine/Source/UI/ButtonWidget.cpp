@@ -6,16 +6,18 @@
 Krampus::ButtonWidget::ButtonWidget(Level* _level, const CircleShapeData& _data)
 	: ImageWidget(_level, _data)
 {
+	name = NAME_OF(ButtonWidget);
 	Init();
 }
 
 Krampus::ButtonWidget::ButtonWidget(Level* _level, const RectangleShapeData& _data)
 	: ImageWidget(_level, _data)
 {
+	name = NAME_OF(ButtonWidget);
 	Init();
 }
 
-void Krampus::ButtonWidget::Tick(const float& _deltaTime)
+void Krampus::ButtonWidget::Tick(const Float& _deltaTime)
 {
 	ImageWidget::Tick(_deltaTime);
 
@@ -34,7 +36,7 @@ void Krampus::ButtonWidget::Init()
 void Krampus::ButtonWidget::OnMouseMoved(const IVector2& _mousePos)
 {
 	CollisionInfo _info;
-	bool _colliding = false;
+	Bool _colliding = false;
 	ShapeObject* _object = sprite->GetShapeObject();
 	if (_object->GetShapeType() == ShapeType::Circle)
 		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().radius, _info);
@@ -57,4 +59,9 @@ void Krampus::ButtonWidget::OnRelease()
 {
 	if (isPressed) onRelease.Broadcast();
 	isPressed = false;
+}
+
+std::string Krampus::ButtonWidget::ToString() const
+{
+	return name + " -> IsHovered = " + isHovered.ToString() + ", IsPressed = " + isPressed.ToString();
 }

@@ -11,7 +11,7 @@ namespace Krampus
 
 	class SpriteComponent : public Component, public IDebuggable, public IDrawable
 	{
-		std::unique_ptr<ShapeObject> shape;
+		std::unique_ptr<ShapeObject>	shape;
 
 	public:
 		inline ShapeObject* GetShapeObject()
@@ -34,11 +34,11 @@ namespace Krampus
 		{
 			return shape->GetSize();
 		}
-		void SetRadius(const float& _radius)
+		void SetRadius(const Float& _radius)
 		{
 			shape->SetRadius(_radius);
 		}
-		float GetRadius() const
+		Float GetRadius() const
 		{
 			return shape->GetRadius();
 		}
@@ -50,7 +50,7 @@ namespace Krampus
 		{
 			return shape->GetPointCount();
 		}
-		void SetTexture(const std::string& _path, TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const bool _isRepeated = false, const bool _smooth = true)
+		void SetTexture(const std::string& _path, TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const Bool& _isRepeated = false, const Bool& _smooth = true)
 		{
 			shape->SetTexture(_path, _textureType, _rect, _isRepeated, _smooth);
 		}
@@ -62,13 +62,15 @@ namespace Krampus
 		virtual void Deconstruct() override;
 
 	protected:
-		virtual void Tick(const float& _deltaTime) override;
+		virtual void Tick(const Float& _deltaTime) override;
 
 	public:
 		virtual void Draw(Window& _window) override;
 		virtual void DrawDebug() override;
 		virtual void SetZOrder(const uint8_t& _zOrder) override;
 		virtual void SetZOrder(const ZOrder& _zOrder) override;
+
+		virtual std::string ToString() const override;
 	};
 
 }

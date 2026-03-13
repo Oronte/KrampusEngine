@@ -93,7 +93,7 @@ namespace Krampus
             y = CalcTypeMath::Clamp(y, _min.y, _max.y);
         }
 
-        inline NO_DISCARD void ClampMax(const float& _max)
+        inline NO_DISCARD void ClampMax(const Float& _max)
         {
             x = x > _max ? _max : x;
             y = y > _max ? _max : y;
@@ -321,13 +321,13 @@ namespace Krampus
             return CAST(CalcType, _ab.Cross(_thisVector - _calcTypeA) / _denominator);
         }
 
-        inline bool IsOnSegment(const Vector2D& _a, const Vector2D& _b, CalcType _epsVal = Math::epsilon) const noexcept
+        inline Bool IsOnSegment(const Vector2D& _a, const Vector2D& _b, CalcType _epsVal = Math::epsilon) const noexcept
         {
             return DistanceToSegment(_a, _b) <= _epsVal;
         }
 
 
-        inline static bool ComputeLineIntersection(const Vector2D& _lineAOrigin, const Vector2D& _lineADirection,
+        inline static Bool ComputeLineIntersection(const Vector2D& _lineAOrigin, const Vector2D& _lineADirection,
             const Vector2D& _lineBOrigin, const Vector2D& _lineBDirection,
             CalcType& _outLineAParam, CalcType& _outLineBParam) noexcept
         {
@@ -349,7 +349,7 @@ namespace Krampus
             return true;
         }
 
-        inline static bool ComputeSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentADirection,
+        inline static Bool ComputeSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentADirection,
             const Vector2D& _segmentBStart, const Vector2D& _segmentBDirection,
             Vector2D<double>* _intersectionPoint = nullptr) noexcept
         {
@@ -369,7 +369,7 @@ namespace Krampus
             return true;
         }
 
-        inline static bool FindSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentAEnd,
+        inline static Bool FindSegmentIntersection(const Vector2D& _segmentAStart, const Vector2D& _segmentAEnd,
             const Vector2D& _segmentBStart, const Vector2D& _segmentBEnd,
             Vector2D<double>* _intersectionPoint = nullptr) noexcept
         {
@@ -476,11 +476,36 @@ namespace Krampus
             return *this;
         }
 
-        bool operator == (const Vector2D& _other) const noexcept
+        constexpr Vector2D<T> operator * (const Float& _scalar) const noexcept
+        {
+            return Vector2D<T>(CAST(T, x * _scalar), (CAST(T, y * _scalar)));
+        }
+        constexpr Vector2D<T> operator/(const Float& _scalar) const
+        {
+            if (_scalar.IsZero()) THROW_EXCEPTION("Can't divide by zero !");
+
+            return Vector2D<T>(CAST(T, x / _scalar), CAST(T, y / _scalar));
+        }
+        Vector2D& operator*=(const Float& _scalar) noexcept
+        {
+            x = x * CAST(T, _scalar);
+            y = y * CAST(T, _scalar);
+            return *this;
+        }
+        Vector2D& operator/=(const Float& _scalar)
+        {
+            if (_scalar.IsZero()) THROW_EXCEPTION("Can't divide by zero !");
+
+            x = x / CAST(T, _scalar);
+            y = y / CAST(T, _scalar);
+            return *this;
+        }
+
+        Bool operator == (const Vector2D& _other) const noexcept
         {
             return x == _other.x && y == _other.y;
         }
-        bool operator != (const Vector2D& _other) const noexcept
+        Bool operator != (const Vector2D& _other) const noexcept
         {
             return !(*this == _other);
         }

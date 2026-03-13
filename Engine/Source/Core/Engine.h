@@ -11,7 +11,7 @@ namespace Krampus
 
 	class Engine
 	{
-		bool						shouldClose = false;
+		Bool						shouldClose = false;
 		LevelManager*				levelManager = nullptr;
 		InputManager*				inputManager = nullptr;
 		TimerManager*				timerManager = nullptr;
@@ -48,7 +48,10 @@ namespace Krampus
 		~Engine();
 
 		void Start();
+		void QuitGame();
 		void Update();
+
+	private:
 		void Stop();
 	};
 }

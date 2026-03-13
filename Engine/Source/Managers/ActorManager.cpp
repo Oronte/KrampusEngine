@@ -8,7 +8,7 @@ void Krampus::ActorManager::BeginPlay()
 		_actor->BeginPlay();
 }
 
-void Krampus::ActorManager::Update(const float& _deltaTime)
+void Krampus::ActorManager::Update(const Float& _deltaTime)
 {
 	for (const std::unique_ptr<Actor>& _actor : actors)
 		if (_actor->IsActive()) _actor->Tick(_deltaTime);

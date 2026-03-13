@@ -10,7 +10,7 @@ Krampus::TimerManager::~TimerManager()
 	timers.clear();
 }
 
-std::string Krampus::TimerManager::GetCurrentRealTime()
+String Krampus::TimerManager::GetCurrentRealTime()
 {
 	const time_t& _now = std::time(nullptr);
 
@@ -28,7 +28,7 @@ std::string Krampus::TimerManager::GetCurrentRealTime()
 	return _date + " " + _time;
 }
 
-Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
+Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
 {
     return timers.emplace_back(
         std::make_unique<Timer>(_callback, _duration, _isLoop, _startRunning)
@@ -44,7 +44,7 @@ void Krampus::TimerManager::DestroyTimer(Timer* _toDelete)
 		});
 }
 
-float Krampus::TimerManager::Update()
+Float Krampus::TimerManager::Update()
 {
 	float _currentTime = GetTime(clock.getElapsedTime());
 

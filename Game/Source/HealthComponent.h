@@ -5,14 +5,25 @@ using namespace Krampus;
 
 class HealthComponent : public Component
 {
-	float health = 100.0f;
+	Int				health		= 100;
+	Int				maxHealth	= 100;
 
 public:
-	Event<> onDeath;
+	Event<>			onDeath;
+	Event<Int>	onHealthUpdate;
 
 public:
-	HealthComponent(Actor* _owner, float _health = 100.0f);
+	Int GetCurrentHealth() const
+	{
+		return health;
+	}
+	Int GetMaxHealth() const
+	{
+		return maxHealth;
+	}
 
-	bool Damage(float _damage);
+	HealthComponent(Actor* _owner, Int _health = 100);
+
+	bool Damage(Int _damage);
 };
 

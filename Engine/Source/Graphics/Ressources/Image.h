@@ -6,7 +6,7 @@ namespace Krampus
 {
 	class Image
 	{
-		sf::Image image;
+		sf::Image   image;
 
 	public:
         inline UVector2 GetSize() const
@@ -30,23 +30,23 @@ namespace Krampus
 		Image();
         explicit Image(const UVector2& _size, const Color& _color = Color::Black());
         Image(const UVector2& _size, const std::uint8_t* _pixels);
-        explicit Image(const std::string& _path);
+        Image(const String& _path);
         Image(const void* _data, const std::size_t& _size);
         Image(const sf::Image& _image);
 
         void Resize(const UVector2& _size, const Color& _color = Color::Black());
         void ResizeFromPixels(const UVector2& _size, const std::uint8_t* _pixels);
 
-        bool LoadFromFile(const std::string& _filename);
-        bool LoadFromMemory(const void* _data, const std::size_t& _size);
+        Bool LoadFromFile(const String& _filename);
+        Bool LoadFromMemory(const void* _data, const std::size_t& _size);
 
-        bool SaveToFile(const std::string& _filename) const;
+        Bool SaveToFile(const String& _filename) const;
         std::optional<std::vector<std::uint8_t>> SaveToMemory(const std::string_view& _format) const;
 
         void CreateMaskFromColor(const Color& _color, const std::uint8_t& _alpha = 0);
 
-        bool Copy(const Image& _source, const UVector2& _dest,
-            const IRect& _sourceRect = IRect(), const bool& _applyAlpha = false);
+        Bool Copy(const Image& _source, const UVector2& _dest,
+            const IRect& _sourceRect = IRect(), const Bool& _applyAlpha = false);
 
         void FlipHorizontally();
         void FlipVertically();

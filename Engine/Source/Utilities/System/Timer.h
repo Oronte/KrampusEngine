@@ -5,51 +5,51 @@ namespace Krampus
 {
 	class Timer : public IPrintable
 	{
-		bool isRunning = false;
-		bool isToDelete = false;
-		bool isLoop = false;
-		float currentTime = 0.0f;
-		float duration = 0.0f;
-		std::function<void()> callback;
+		Bool					isRunning	= false;
+		Bool					isToDelete	= false;
+		Bool					isLoop		= false;
+		Float					currentTime = 0.0f;
+		Float					duration	= 0.0f;
+		std::function<void()>	callback;
 
 	public:
-		inline bool IsToDelete() const
+		inline Bool IsToDelete() const
 		{
 			return isToDelete;
 		}
-		inline void SetDuration(const float& _duration)
+		inline void SetDuration(const Float& _duration)
 		{
 			duration = _duration;
 		}
-		inline float GetDuration() const
+		inline Float GetDuration() const
 		{
 			return duration;
 		}
-		inline bool IsRunning() const
+		inline Bool IsRunning() const
 		{
 			return isRunning;
 		}
-		inline void SetIsLoop(const bool& _isLoop)
+		inline void SetIsLoop(const Bool& _isLoop)
 		{
 			isLoop = _isLoop;
 		}
-		inline bool IsLoop() const
+		inline Bool IsLoop() const
 		{
 			return isLoop;
 		}
-		inline float GetTime() const
+		inline Float GetTime() const
 		{
 			return currentTime;
 		}
-		inline float GetRemainingTime() const
+		inline Float GetRemainingTime() const
 		{
 			return duration - currentTime;
 		}
 
 	public:
-		Timer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+		Timer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true);
 		template<typename T, typename MemFn>
-		Timer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
+		Timer(T* _instance, MemFn _memFn, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true)
 		{
 			callback = [_instance, _memFn]()
 				{
@@ -71,13 +71,13 @@ namespace Krampus
 		void Reset();
 		// Pause the timer at the current time
 		void Pause();
-		void Update(const float& _deltaTime);
+		void Update(const Float& _deltaTime);
 
 		virtual std::string ToString() const override
 		{
-			return std::format("Time : {} / {}", currentTime, duration) +
-				", IsRunning = " + std::string(isRunning ? "True" : "False") +
-				", IsLoop = " + std::string(isLoop ? "True" : "False");
+			return std::format("Time : {} / {}", currentTime.ToString(), duration.ToString()) +
+				", IsRunning = " + isRunning.ToString() +
+				", IsLoop = " + isLoop.ToString();
 		}
 	};
 

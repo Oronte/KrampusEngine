@@ -16,58 +16,58 @@ namespace Krampus
 	private:
 		sf::Clock clock;					// An object that contains all the time data.
 
-		float lastTimeStamp = -1.0f;		// Timestamp of previous frame (seconds)
-		float lastFrameDuration = 0.0f;			// Duration of last frame (raw, seconds)
-		float deltaTime = 0.0f;					// Scaled frame duration (lastFrameDuration * timeScale)
-		float elapsedTime = 0.0f;					// Raw frame duration
-		float timeScale = 1.0f;				// Time speed multiplier
+		Float lastTimeStamp = -1.0f;		// Timestamp of previous frame (seconds)
+		Float lastFrameDuration = 0.0f;		// Duration of last frame (raw, seconds)
+		Float deltaTime = 0.0f;				// Scaled frame duration (lastFrameDuration * timeScale)
+		Float elapsedTime = 0.0f;			// Raw frame duration
+		Float timeScale = 1.0f;				// Time speed multiplier
 
-		unsigned long long framesCount = 0;				// Total number of frames since program start
-		unsigned short maxFrameRate = 60;	// Frame rate cap (0 = unlimited)
-		float fps = 0.0f;						
-		float smoothedFPS = 60.0f;			// Smoothed FPS for stable display
+		ULongLong framesCount = 0;			// Total number of frames since program start
+		UInt maxFrameRate = 60;				// Frame rate cap (0 = unlimited)
+		Float fps = 0.0f;					// Frames Per Seconds
+		Float smoothedFPS = 60.0f;			// Smoothed FPS for stable display
 
 		std::vector<std::unique_ptr<Timer>> timers;
 
 	private:
-		static inline float GetTime(const sf::Time& _time) 
+		static inline Float GetTime(const sf::Time& _time) 
 		{
 			return _time.asSeconds();
 		}
-		static inline std::string TwoDigitsTime(const int& _value)
+		static inline String TwoDigitsTime(const Int& _value)
 		{
-			if (_value >= 10) return std::to_string(_value);
-			return "0" + std::to_string(_value);
+			if (_value >= 10) return _value.ToString();
+			return "0" + _value.ToString();
 		}
 	
 	public:
-		inline float GetDeltaTime() const
+		inline Float GetDeltaTime() const
 		{
 			return deltaTime;
 		}
-		inline float GetElapsedTime() const
+		inline Float GetElapsedTime() const
 		{
 			return elapsedTime;
 		}
-		inline float GetInstantFPS() const
+		inline Float GetInstantFPS() const
 		{
 			return fps;
 		}
 		// Use for display
-		inline float GetSmoothedFPS() const
+		inline Float GetSmoothedFPS() const
 		{
 			return smoothedFPS;
 		}
-		inline void SetTimerScale(const float& _timeScale)
+		inline void SetTimerScale(const Float& _timeScale)
 		{
 			timeScale = _timeScale;
 		}
-		inline void SetMaxFrameRate(const unsigned short& _fps)
+		inline void SetMaxFrameRate(const UInt& _fps)
 		{
 			maxFrameRate = _fps;
 			GetWorld()->GetWindowRef().SetFramerateLimit(maxFrameRate);
 		}
-		inline unsigned short GetMaxFrameRate() const
+		inline UInt GetMaxFrameRate() const
 		{
 			return maxFrameRate;
 		}
@@ -79,15 +79,15 @@ namespace Krampus
 
 
 	private:
-		float Update();
+		Float Update();
 		void UpdateTimers();
 
 	public:
-		static std::string GetCurrentRealTime();
+		static String GetCurrentRealTime();
 
-		Timer* CreateTimer(const std::function<void()> _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+		Timer* CreateTimer(const std::function<void()> _callback, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true);
 		template<typename T, typename MemFn>
-		inline Timer* CreateTimer(T* _instance, MemFn _memFn, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true)
+		inline Timer* CreateTimer(T* _instance, MemFn _memFn, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true)
 		{
 			return timers.emplace_back(
 				std::make_unique<Timer>(_instance, _memFn, _duration, _isLoop, _startRunning)

@@ -8,11 +8,11 @@ namespace Krampus
 
 	class AnimationComponent : public Component
 	{
-		Animation* current = nullptr;
-		std::unordered_map<std::string, std::unique_ptr<Animation>> animations;
+		Animation*														current		= nullptr;
+		std::unordered_map<String, std::unique_ptr<Animation>>			animations;
 
 	public:
-		inline void SetCurrentAnimation(const std::string& _name)
+		inline void SetCurrentAnimation(const String& _name)
 		{
 			if (!animations.contains(_name)) return;
 
@@ -23,7 +23,7 @@ namespace Krampus
 		{
 			return current;
 		}
-		inline Animation* GetAnimation(const std::string _animationName) const
+		inline Animation* GetAnimation(const String& _animationName) const
 		{
 			auto _iterator = animations.find(_animationName);
 			if (_iterator == animations.end())
@@ -57,9 +57,11 @@ namespace Krampus
 		// The owner require a SpriteComponent
 		AnimationComponent(Actor* _owner);
 
-		virtual void AddAnimation(const std::string& _name, const AnimationData& _data);
+		virtual void AddAnimation(const String& _name, const AnimationData& _data);
 
 		virtual void Deconstruct() override;
+
+		virtual std::string ToString() const override;
 	};
 
 

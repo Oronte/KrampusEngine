@@ -11,13 +11,13 @@ namespace Krampus
 	class FontManager : public Singleton<FontManager>
 	{
 #ifdef SHIP
-		std::string fontPath = "../../Content/Fonts/";
+		String	fontPath				= "../../Content/Fonts/";
 #else
-		std::string fontPath = "Content/Fonts/";
+		String	fontPath				= "Content/Fonts/";
 #endif
-		std::string defaultFontPath = "DefaultFont";
-		std::string defaultFontExtension = "otf";
-		Font defaultFont;
+		String	defaultFontPath			= "_internal/DefaultFont";
+		String	defaultFontExtension	= "otf";
+		Font	defaultFont;
 
 	public:
 		FontManager();
@@ -25,11 +25,11 @@ namespace Krampus
 	private:
 		void LoadDefaultFont();
 		void SetFontToDefault(Font& _font);
-		std::string GetExtensionNameByType(const FontExtensionType& _fontType) const;
+		String GetExtensionNameByType(const FontExtensionType& _fontType) const;
 
 	public:
-		void LoadFont(Font& _font, const std::string& _fullName);
-		void LoadFont(Font& _font, const std::string& _fileName, const FontExtensionType& _fontType);
+		void LoadFont(Font& _font, const String& _fullName);
+		void LoadFont(Font& _font, const String& _fileName, const FontExtensionType& _fontType);
 	};
 
 

@@ -8,19 +8,19 @@ namespace Krampus
 	// TODO make std::unordored_map with automatic creation
 	class InputManager : public KrampusObject
 	{
-		using Key = sf::Keyboard::Key;
-		using MouseButton = sf::Mouse::Button;
-		using MouseWheel = sf::Mouse::Wheel;
-		using JoystickAxis = sf::Joystick::Axis;
+		using Key			= sf::Keyboard::Key;
+		using MouseButton	= sf::Mouse::Button;
+		using MouseWheel	= sf::Mouse::Wheel;
+		using JoystickAxis	= sf::Joystick::Axis;
 
 		struct Input
 		{
-			Event<> onPress;
-			Event<> onPerform; // Called every framewhile holding
-			Event<> onRelease;
+			Event<>			onPress;
+			Event<>			onPerform; // Called every framewhile holding
+			Event<>			onRelease;
 
 		private:
-			bool isPressed = false;
+			Bool			isPressed	= false;
 
 			void Press()
 			{
@@ -139,7 +139,7 @@ namespace Krampus
 		Event<IVector2> MouseMovedScreen;
 
 		// MOUSE WHEEL 
-		Event<float> MouseWheelScroll;      // 1 / -1 for each scroll
+		Event<Float> MouseWheelScroll;      // 1 / -1 for each scroll
 
 		// OTHER MOUSE EVENTS
 		Event<> FocusGain;
@@ -150,8 +150,8 @@ namespace Krampus
 		// JOYSTICK / GAMEPAD 
 		Event<FVector2> LeftJoystick;       // [-100 ; 100]
 		Event<FVector2> RightJoystick;      // [-100 ; 100]
-		Event<float> BackTriggerLeft;       // LT [0 ; 100]
-		Event<float> BackTriggerRight;      // RT [0 ; 100]
+		Event<Float> BackTriggerLeft;       // LT [0 ; 100]
+		Event<Float> BackTriggerRight;      // RT [0 ; 100]
 		Event<FVector2> DPad;				// [-100 ; 100]
 
 		Input ButtonA;

@@ -12,31 +12,31 @@ namespace Krampus
 
 	class Window
 	{
-		sf::RenderWindow window;
+		sf::RenderWindow	window;
 
 	public:
-		Event<sf::View> onViewChange;
+		Event<sf::View>		onViewChange;
 
 	public:
 		virtual inline sf::RenderWindow& GetRenderWindow() noexcept
 		{
 			return window;
 		}
-		virtual inline bool IsOpen() const noexcept
+		virtual inline Bool IsOpen() const noexcept
 		{
 			return window.isOpen();
 		}
-		virtual inline void SetFramerateLimit(const unsigned int& _limit)
+		virtual inline void SetFramerateLimit(const UInt& _limit)
 		{
 			window.setFramerateLimit(_limit);
 		}
-		virtual inline void SetVerticalSyncEnabled(const bool& _enabled)
+		virtual inline void SetVerticalSyncEnabled(const Bool& _enabled)
 		{
 			window.setVerticalSyncEnabled(_enabled);
 		}
-		virtual inline void SetTitle(const std::string& _title)
+		virtual inline void SetTitle(const String& _title)
 		{
-			window.setTitle(sf::String(_title.c_str()));
+			window.setTitle(sf::String(_title.ToCharPtr()));
 		}
 		virtual inline void SetSize(const UVector2& _size)
 		{
@@ -62,7 +62,7 @@ namespace Krampus
 		{
 			window.setIcon(_image);
 		}
-		virtual inline bool HasFocus() const
+		virtual inline Bool HasFocus() const
 		{
 			return window.hasFocus();
 		}
@@ -95,8 +95,8 @@ namespace Krampus
 
 		Window() = default;
 
-		virtual void Create(const std::string& _name, const UVector2& _windowSize);
-		virtual void Create(const std::string& _name = "KrampusEngine");
+		virtual void Create(const String& _name, const UVector2& _windowSize);
+		virtual void Create(const String& _name = "KrampusEngine");
 		virtual void Clear(const Color& _color);
 		virtual void Display();
 		virtual void Close();

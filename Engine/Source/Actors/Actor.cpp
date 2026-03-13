@@ -14,10 +14,11 @@ float Krampus::Actor::GetDeltaTime() const
 
 Krampus::Actor::Actor(Level* _level)
 {
+	name = NAME_OF(Actor);
 	level = _level;
 }
 
-void Krampus::Actor::SetActive(const bool& _status)
+void Krampus::Actor::SetActive(const Bool& _status)
 {
 	IGameObject::SetActive(_status);
 
@@ -27,7 +28,7 @@ void Krampus::Actor::SetActive(const bool& _status)
 	}
 }
 
-Krampus::Timer* Krampus::Actor::CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
+Krampus::Timer* Krampus::Actor::CreateTimer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
 {
 	return GetWorld()->GetTimerManager()->CreateTimer(_callback, _duration, _isLoop, _startRunning);
 }
@@ -56,7 +57,7 @@ void Krampus::Actor::BeginPlay()
 	}
 }
 
-void Krampus::Actor::Tick(const float& _deltaTime)
+void Krampus::Actor::Tick(const Float& _deltaTime)
 {
 	for (const std::unique_ptr<Component>& _component : components)
 	{
@@ -92,4 +93,9 @@ void Krampus::Actor::Destroy()
 {
 	Deconstruct();
 	level->GetActorManagerRef().MarkForDeleteActor(this);
+}
+
+std::string Krampus::Actor::ToString() const
+{
+	return name + " -> Transform = " + transform.ToString();
 }

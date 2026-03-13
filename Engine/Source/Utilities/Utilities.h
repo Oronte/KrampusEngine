@@ -20,8 +20,8 @@ namespace Krampus
     /// </summary>
     /// <param name="_object"> -> The item that will be checked</param>
     template<typename T, typename K>
-    bool InstanceOf(K _object)
+    Bool InstanceOf(K _object)
     {
-        return std::is_same<T, decltype(_object)>::value;
+        return Bool(std::is_same<T, decltype(_object)>::value);
     }
 }

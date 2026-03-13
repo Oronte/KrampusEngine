@@ -7,12 +7,13 @@ namespace Krampus
 
 	class GIFWidget : public ImageWidget
 	{
-		std::string animationName = "InitialGIFAnimation";
+		String					animationName	= "InitialGIFAnimation";
+
 	protected:
-		AnimationComponent* animation = nullptr;
+		AnimationComponent*		animation		= nullptr;
 
 	public:
-		inline std::string GetAnimationName() const
+		inline String GetAnimationName() const
 		{
 			return animationName;
 		}
@@ -27,6 +28,9 @@ namespace Krampus
 
 	private:
 		void Init(const AnimationData& _data);
+
+	public:
+		virtual std::string ToString() const override;
 	};
 
 

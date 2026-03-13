@@ -1,9 +1,9 @@
 #pragma once
+#include <functional>
 #include "Bool.h"
 #include <string>
 #include <cctype>
 #include <limits>
-#include "Utilities/System/Printable.h"
 
 class Char : public Krampus::IPrintable
 {
@@ -50,3 +50,17 @@ public:
     operator bool()  const { return value != '\0'; }
     operator Bool()  const { return Bool(value != '\0'); }
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows Char to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<Char>
+    {
+        std::size_t operator()(const Char& _v) const noexcept
+        {
+            return std::hash<char>{}(static_cast<char>(_v));
+        }
+    };
+}

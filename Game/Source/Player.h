@@ -23,24 +23,42 @@ class Player : public Actor
 	HealthComponent*			health		= nullptr;
 	AnimationComponentSM*		animationSM = nullptr;
 
-	float						moveSpeed	= 200.0f;
-	float						jumpForce	= 500.0f;
-	bool						isRunning	= false;
-	bool						canMove		= true;
-	bool						isJumping	= false;
-	bool						isHit		= false;
-	bool						isDying		= false;
+	Float						moveSpeed	= 200.0f;
+	Float						jumpForce	= 500.0f;
+	Bool						isRunning	= false;
+	Bool						canMove		= true;
+	Bool						isJumping	= false;
+	Bool						isHit		= false;
+	Bool						isDying		= false;
+	Int							score		= 0;
+
+	Sound						footStep;
+	Sound						hurtSound;
 
 	Event<CollisionInfo>::ListenerHandle handle;
 	Event<CollisionInfo>::ListenerHandle handleTemp;
-	Event<>::ListenerHandle deathHandle;
+	Event<>::ListenerHandle		deathHandle;
+	Event<>::ListenerHandle		footstepHandle;
+	Event<Int>::ListenerHandle	hurtHandle;
 
 public:
+	Event<>						onDeath;
+
+public:
+	inline void AddScore(const int _score)
+	{
+		score += _score;
+	}
+	inline Int GetScore() const
+	{
+		return score;
+	}
+
 	Player(Level* _level);
 
 	virtual void Construct() override;
 	virtual void BeginPlay() override;
-	virtual void Tick(const float& _deltaTime) override;
+	virtual void Tick(const Float& _deltaTime) override;
 
 	void MoveLeft();
 	void MoveRight();

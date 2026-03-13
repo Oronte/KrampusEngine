@@ -5,6 +5,7 @@
 Krampus::Widget::Widget(Level* _level)
 	: Actor(_level)
 {
+	name = NAME_OF(Widget);
 	onViewChangeHandle = level->GetWindowRef().onViewChange.AddListener(this, &Widget::UpdateWorldPos);
 }
 
@@ -31,4 +32,9 @@ void Krampus::Widget::UpdateWorldPos(const sf::View& _view)
 {
 	transform.position = level->GetWindowRef().MapPixelToCoords(screenPosition, _view);
 	transform.rotation = localRotation + Angle(_view.getRotation());
+}
+
+std::string Krampus::Widget::ToString() const
+{
+	return name + " -> Screan Position = " + screenPosition.ToString();
 }

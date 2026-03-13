@@ -1,17 +1,17 @@
 ﻿#include "Physics.h"
 
-bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadius, const FVector2& _bPos, const float& _bRadius, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
+Bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const Float& _aRadius, const FVector2& _bPos, const Float& _bRadius, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
     //_aInfo = _bInfo = CollisionInfo();
 
     FVector2 delta = _bPos - _aPos;
-    float distSq = delta.LengthSquared();
-    float radiusSum = _aRadius + _bRadius;
+    Float distSq = delta.LengthSquared();
+    Float radiusSum = _aRadius + _bRadius;
 
     if (distSq > radiusSum * radiusSum)
         return false;
 
-    float dist = FMath::Sqrt(distSq);
+    Float dist = FMath::Sqrt(distSq);
 
     FVector2 normal;
     if (dist > FMath::epsilon)
@@ -19,7 +19,7 @@ bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadi
     else
         normal = FVector2(0.f, -1.f);
 
-    float penetration = radiusSum - dist;
+    Float penetration = radiusSum - dist;
 
     FVector2 contact = _aPos + normal * (_aRadius - penetration * 0.5f);
 
@@ -42,7 +42,7 @@ bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const float& _aRadi
     return true;
 }
 
-bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, const FRect& _bRect, const Angle& _bRot, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
+Bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, const FRect& _bRect, const Angle& _bRot, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
     //_aInfo = _bInfo = CollisionInfo();
 
@@ -113,7 +113,7 @@ bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
     return true;
 }
 
-bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
+Bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, CollisionInfo& _aInfo, CollisionInfo& _bInfo)
 {
     //_aInfo = _bInfo = CollisionInfo();
 
@@ -163,7 +163,7 @@ bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
     return true;
 }
 
-bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _radius, const FRect& _rect, const Angle& _rectRot, CollisionInfo& _circleInfo, CollisionInfo& _rectInfo)
+Bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const Float& _radius, const FRect& _rect, const Angle& _rectRot, CollisionInfo& _circleInfo, CollisionInfo& _rectInfo)
 {
     //_circleInfo = _rectInfo = CollisionInfo();
 
@@ -230,7 +230,7 @@ bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const float& _ra
     return true;
 }
 
-bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circlePos, const float& _radius, CollisionInfo& _info)
+Bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circlePos, const Float& _radius, CollisionInfo& _info)
 {
     //_info = CollisionInfo();
 
@@ -250,7 +250,7 @@ bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circleP
     return true;
 }
 
-bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, CollisionInfo& _info)
+Bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, CollisionInfo& _info)
 {
     //_info = CollisionInfo();
 
@@ -298,7 +298,7 @@ bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, co
     return true;
 }
 
-bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, const Angle& _rot, CollisionInfo& _info)
+Bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, const FVector2& _size, const Angle& _rot, CollisionInfo& _info)
 {
     //_info = CollisionInfo();
 
@@ -363,7 +363,7 @@ void Krampus::Physics::GetAxes(const Angle& _rotation, FVector2 _axes[2])
 	_axes[1] = FVector2(-_sin, _cos);
 }
 
-float Krampus::Physics::ProjectOBB(const FVector2& _size, const Angle& _rotation, const FVector2& _axis)
+Float Krampus::Physics::ProjectOBB(const FVector2& _size, const Angle& _rotation, const FVector2& _axis)
 {
 	FVector2 _axes[2];
 	GetAxes(_rotation, _axes);
@@ -390,7 +390,7 @@ std::array<Krampus::FVector2, 4> Krampus::Physics::GetCorners(const FRect& _rect
     };
 }
 
-bool Krampus::Physics::SegmentIntersect(const FVector2& _p, const FVector2& _r, const FVector2& _q, const FVector2& _s, FVector2& _outPoint)
+Bool Krampus::Physics::SegmentIntersect(const FVector2& _p, const FVector2& _r, const FVector2& _q, const FVector2& _s, FVector2& _outPoint)
 {
     const float _rxs = _r.Cross(_s);
 
@@ -453,7 +453,7 @@ Krampus::FVector2 Krampus::Physics::ComputeAverageContactPoint(const std::vector
     return _sum / CAST(float, _contacts.size());
 }
 
-std::vector<Krampus::FVector2> Krampus::Physics::CircleToRectContacts(const FVector2& _circlePos, float _radius, const FRect& _rect, float _rectRot)
+std::vector<Krampus::FVector2> Krampus::Physics::CircleToRectContacts(const FVector2& _circlePos, Float _radius, const FRect& _rect, Float _rectRot)
 {
     std::vector<FVector2> _contacts;
 
@@ -503,7 +503,7 @@ std::vector<Krampus::FVector2> Krampus::Physics::CircleToRectContacts(const FVec
     return _contacts;
 }
 
-std::vector<Krampus::FVector2> Krampus::Physics::CircleCircleIntersections(const FVector2& _c1, float _r1, const FVector2& _c2, float _r2)
+std::vector<Krampus::FVector2> Krampus::Physics::CircleCircleIntersections(const FVector2& _c1, Float _r1, const FVector2& _c2, Float _r2)
 {
     std::vector<FVector2> contacts;
 
@@ -511,7 +511,7 @@ std::vector<Krampus::FVector2> Krampus::Physics::CircleCircleIntersections(const
     float d = v.Length();
 
     // Pas d'intersection
-    if (d > _r1 + _r2 || d < FMath::Abs(_r1 - _r2) || d < FMath::epsilon) return contacts;
+    if (((d > _r1 + _r2).Or(d < FMath::Abs(_r1 - _r2))).Or(d < FMath::epsilon)) return contacts;
 
     float a = (_r1 * _r1 - _r2 * _r2 + d * d) / (2 * d);
     FVector2 p0 = _c1 + v * (a / d);

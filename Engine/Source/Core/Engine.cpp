@@ -17,12 +17,7 @@ Engine::Engine()
 	window.Create();
 	window.SetFramerateLimit(0);
 
-	handle = inputManager->WindowClose.AddListener([this]()
-		{
-			levelManager->GetCurrentLevel()->Unload();
-			window.Close();
-			shouldClose = true;
-		});
+	handle = inputManager->WindowClose.AddListener(this, &Engine::QuitGame);
 
 	Logger::Init();
 }
@@ -41,10 +36,16 @@ void Engine::Start()
 	Stop();
 }
 
+void Krampus::Engine::QuitGame()
+{
+	shouldClose = true;
+}
+
 void Engine::Update()
 {
 	while (!shouldClose)
 	{
+		levelManager->ChangeLevel();
 		Level* _currentLevel = levelManager->GetCurrentLevel();
 		if (!_currentLevel) break;
 
@@ -59,5 +60,10 @@ void Engine::Update()
 void Engine::Stop()
 {
 	onEngineStop.Broadcast();
+
+	if (Level* _level = levelManager->GetCurrentLevel())
+		_level->Unload();
+
+	window.Close();
 	Logger::Shutdown();
 }

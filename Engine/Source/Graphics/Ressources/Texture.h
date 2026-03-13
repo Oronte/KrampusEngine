@@ -20,7 +20,7 @@ namespace Krampus
 
 	class Texture
 	{
-		std::shared_ptr<sf::Texture> texture;
+		std::shared_ptr<sf::Texture>    texture;
 
 	public:
         inline sf::Texture* Get() const noexcept
@@ -36,7 +36,7 @@ namespace Krampus
             }
             return UVector2(texture->getSize());
         }
-        inline bool IsRepeated() const
+        inline Bool IsRepeated() const
         {
             if (!texture)
             {
@@ -45,7 +45,7 @@ namespace Krampus
             }
             return texture->isRepeated();
         }
-        inline void SetRepeated(bool _repeated)
+        inline void SetRepeated(const Bool& _repeated)
         {
             if (!texture)
             {
@@ -54,7 +54,7 @@ namespace Krampus
             }
             texture->setRepeated(_repeated);
         }
-        inline bool IsSmooth() const
+        inline Bool IsSmooth() const
         {
             if (!texture)
             {
@@ -63,7 +63,7 @@ namespace Krampus
             }
             return texture->isSmooth();
         }
-        inline void SetSmooth(bool _smooth)
+        inline void SetSmooth(const Bool& _smooth)
         {
             if (!texture)
             {
@@ -72,7 +72,7 @@ namespace Krampus
             }
             texture->setSmooth(_smooth);
         }
-        inline bool IsSrgb() const
+        inline Bool IsSrgb() const
         {
             if (!texture)
             {
@@ -86,28 +86,28 @@ namespace Krampus
         Texture() = default;
         explicit Texture(std::shared_ptr<sf::Texture> _texture) noexcept
             : texture(std::move(_texture)) { }
-        explicit Texture(const std::string& _path, const bool& _rgb = false);
-        Texture(const std::string& _path, const bool& _rgb, const IRect& _area);
-        Texture(const void* data, std::size_t _size, const bool& _rgb = false);
-        Texture(const void* data, std::size_t _size, const bool& _rgb, const IRect& _area);
-        explicit Texture(const Image& _image, const bool& _rgb = false);
-        Texture(const Image& _image, const bool& _rgb, const IRect& _area);
-        explicit Texture(const UVector2& _size, const bool& _rgb = false);
+        Texture(const String& _path, const Bool& _rgb = false);
+        Texture(const String& _path, const Bool& _rgb, const IRect& _area);
+        Texture(const void* data, const ULongLong& _size, const Bool& _rgb = false);
+        Texture(const void* data, const ULongLong& _size, const Bool& _rgb, const IRect& _area);
+        explicit Texture(const Image& _image, const Bool& _rgb = false);
+        Texture(const Image& _image, const Bool& _rgb, const IRect& _area);
+        explicit Texture(const UVector2& _size, const Bool& _rgb = false);
         explicit Texture(const sf::Texture& _texture);
 
-        bool Resize(const UVector2& _size, const bool& _sRgb = false);
+        Bool Resize(const UVector2& _size, const Bool& _sRgb = false);
 
-        bool LoadFromFile(const std::string& _filename, const bool& _sRgb = false, const IRect& _area = IRect());
-        bool LoadFromMemory(const void* _data, const std::size_t& _size, const bool& _rgb = false, const IRect& _area = IRect());
-        bool LoadFromImage(const Image& _image, const bool& _rgb = false, const IRect& _area = IRect());
+        Bool LoadFromFile(const String& _filename, const Bool& _sRgb = false, const IRect& _area = IRect());
+        Bool LoadFromMemory(const void* _data, const std::size_t& _size, const Bool& _rgb = false, const IRect& _area = IRect());
+        Bool LoadFromImage(const Image& _image, const Bool& _rgb = false, const IRect& _area = IRect());
 
-        void Bind(const Texture* _texture, const bool& _isNoralize = true);
+        void Bind(const Texture* _texture, const Bool& _isNoralize = true);
 
         Image CopyToImage() const;
 
-        bool GenerateMipmap();
+        Bool GenerateMipmap();
 
-        inline static unsigned int GetMaximumSize()
+        inline static UInt GetMaximumSize()
         {
             return sf::Texture::getMaximumSize();
         }

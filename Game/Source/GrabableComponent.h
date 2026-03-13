@@ -1,20 +1,25 @@
 #pragma once
 #include "Components/Component.h"
+#include "Player.h"
 
 using namespace Krampus;
 
 class GrabableComponent : public Component
 {
-	Actor* graber = nullptr;
+	Player*	graber		= nullptr;
+	Bool	canTrack	= true;
+
+	Event<>::ListenerHandle handle;
 
 public:
-	void SetGraber(Actor* _graber)
+	void SetGraber(Player* _graber)
 	{
 		graber = _graber;
 	}
 
-	GrabableComponent(Actor* _owner, Actor* _graber);
+	GrabableComponent(Actor* _owner, Player* _graber);
 
-	virtual void Tick(const float& _deltaTime) override;
+	virtual void Construct() override;
+	virtual void Tick(const Float& _deltaTime) override;
 };
 

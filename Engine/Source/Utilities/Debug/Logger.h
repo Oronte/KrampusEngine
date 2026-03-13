@@ -2,6 +2,7 @@
 #include "Exception.h"
 #include "Color.h"
 #include "Utilities/System/Printable.h"
+#include "Audio/Sound.h"
 
 #define LOG(_verbosity, _msg)   Krampus::Logger::PrintLog(_verbosity, _msg, DEBUG_INFO)
 #define LOG_MSG(_msg)           Krampus::Logger::PrintLog(Krampus::VerbosityType::Display, _msg, DEBUG_INFO)
@@ -37,7 +38,7 @@ namespace Krampus
             ComputeColor();
         }
 
-        std::string RetrieveFullText(bool _useColor = true) const;
+        std::string RetrieveFullText(Bool _useColor = true) const;
 
     private:
         void ComputeColor();
@@ -45,21 +46,31 @@ namespace Krampus
 
     class Logger
     {
-        static inline std::string               logsDir = "Content/Logs/";
-        static inline std::string               logsFileName = "log.txt";
+        static inline std::string               logsDir             = "Content/Logs/";
+        static inline std::string               logsFileName        = "log.txt";
 
-        static inline std::string               logsPath = logsDir + logsFileName;
+        static inline std::string               logsPath            = logsDir + logsFileName;
 
         static inline std::queue<std::string>   logQueue;
         static inline std::queue<std::string>   consoleQueue;
         static inline std::mutex                queueMutex;
         static inline std::condition_variable   cv;
-        static inline std::atomic<bool>         running = false;
+        static inline std::atomic<bool>         running             = false;
         static inline std::thread               logThread;
 
+        static inline Sound                     msgNotif;
+        static inline Sound                     warningNotif;
+        static inline Sound                     errorNotif;
+        static inline Sound                     fatalNotif;
+
     public:
-        static inline bool                      verboseLogging = false;
-        static inline bool                      veryVerboseLogging = false;
+        static inline Bool                      verboseLogging      = false;
+        static inline Bool                      veryVerboseLogging  = false;
+        static inline Bool                      canPlaySound        = true;
+        static inline Bool                      canPlayMsgSound     = false;
+        static inline Bool                      canPlayWarningSound = true;
+        static inline Bool                      canPlayErrorSound   = true;
+        static inline Bool                      canPlayFatalSound   = true;
 
     private:
         static void LoggingThread();
@@ -82,6 +93,10 @@ namespace Krampus
         static void PrintLog(const VerbosityType& _type, const std::string& _text, const std::string& _debug = "");
         static void PrintLog(const VerbosityType& _type, const IPrintable& _object, const std::string& _debug = "");
         static void PrintLog(const VerbosityType& _type, const IPrintable* _object, const std::string& _debug = "");
+
+        static void Clear();
+
+        static void PlayDebugSound(const VerbosityType& _type);
     };
 
 }

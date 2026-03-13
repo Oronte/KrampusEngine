@@ -6,7 +6,7 @@ void Krampus::HUD::BeginPlay()
 		if (_widget->IsActive()) _widget->BeginPlay();
 }
 
-void Krampus::HUD::Update(const float& _deltaTime)
+void Krampus::HUD::Update(const Float& _deltaTime)
 {
 	for (const std::unique_ptr<Widget>& _widget : widgets)
 		if (_widget->IsActive()) _widget->Tick(_deltaTime);

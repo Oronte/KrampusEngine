@@ -12,14 +12,14 @@ namespace Krampus
 	{
 	public:
 		// Circle
-		static void DrawDebugCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount = 15, const Color& _color = Color::Magenta());
-		static void DrawDebugCircle(Level* _level, const FVector2& _position, const float& _radius, const int& _pointCount = 15, const Color& _color = Color::Magenta());
+		static void DrawDebugCircle(Actor* _context, const FVector2& _position, const Float& _radius, const Int& _pointCount = 15, const Color& _color = Color::Magenta());
+		static void DrawDebugCircle(Level* _level, const FVector2& _position, const Float& _radius, const Int& _pointCount = 15, const Color& _color = Color::Magenta());
 		
-		static void DrawFillCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount = 15, const Color& _color = Color::Magenta());
-		static void DrawFillCircle(Level* _level, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color = Color::Magenta());
+		static void DrawFillCircle(Actor* _context, const FVector2& _position, const Float& _radius, const Int& _pointCount = 15, const Color& _color = Color::Magenta());
+		static void DrawFillCircle(Level* _level, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color = Color::Magenta());
 		
-		static void DrawPointCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount = 15, const Color& _color = Color::Magenta());
-		static void DrawPointCircle(Level* _level, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color = Color::Magenta());
+		static void DrawPointCircle(Actor* _context, const FVector2& _position, const Float& _radius, const Int& _pointCount = 15, const Color& _color = Color::Magenta());
+		static void DrawPointCircle(Level* _level, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color = Color::Magenta());
 
 
 		// Rectangle
@@ -40,13 +40,13 @@ namespace Krampus
 	
 
 		// Point
-		static void DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness = 5.0f, const Color& _color = Color::Magenta());
-		static void DrawDebugPoint(Level* _level, const FVector2& _position, const float& _thickness = 5.0f, const Color& _color = Color::Magenta());
+		static void DrawDebugPoint(Actor* _context, const FVector2& _position, const Float& _thickness = 5.0f, const Color& _color = Color::Magenta());
+		static void DrawDebugPoint(Level* _level, const FVector2& _position, const Float& _thickness = 5.0f, const Color& _color = Color::Magenta());
 	
 	
 		// Line
-		static void DrawDebugLine(Actor* _context, const FVector2& _start, const FVector2& _direction, const float _length = 75.0f, const float _thickness = 2.5f, const Color& _color = Color::Magenta());
-		static void DrawDebugLine(Level* _level, const FVector2& _start, const FVector2& _direction, const float _length = 75.0f, const float _thickness = 2.5f, const Color& _color = Color::Magenta());
+		static void DrawDebugLine(Actor* _context, const FVector2& _start, const FVector2& _direction, const Float& _length = 75.0f, const Float& _thickness = 2.5f, const Color& _color = Color::Magenta());
+		static void DrawDebugLine(Level* _level, const FVector2& _start, const FVector2& _direction, const Float& _length = 75.0f, const Float& _thickness = 2.5f, const Color& _color = Color::Magenta());
 	};
 
 }

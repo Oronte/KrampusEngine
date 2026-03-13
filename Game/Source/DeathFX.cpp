@@ -1,10 +1,13 @@
 #include "DeathFX.h"
+#include "Managers/AudioManager.h"
 
 DeathFX::DeathFX(Level* _level)
 	: Actor(_level)
 {
 	sprite = CreateComponent<SpriteComponent>(RectangleShapeData(FVector2(200.0f), "Explosion"));
 	animation = CreateComponent<AnimationComponent>();
+
+	boomSound = M_AUDIO.CreateSound("Boom", AudioExtensionType::MP3);
 }
 
 void DeathFX::Construct()
@@ -34,4 +37,5 @@ void DeathFX::BeginPlay()
 	Super::BeginPlay();
 
 	animation->StartAnimation();
+	boomSound.Play();
 }

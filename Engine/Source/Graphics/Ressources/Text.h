@@ -9,12 +9,12 @@ namespace Krampus
 
     struct TextData
     {
-        std::string text = "Unknown";
-        unsigned int characterSize = 30u;
-        std::string fontFileName = "DefaultFont";
-        FontExtensionType extentionType = FontExtensionType::OTF;
+        String              text            = "Unknown";
+        UInt                characterSize   = 30u;
+        String              fontFileName    = "_internal/DefaultFont";
+        FontExtensionType   extentionType   = FontExtensionType::OTF;
 
-        TextData(const std::string& _text = "Unknown", const unsigned int _characterSize = 30u, const std::string& _fontFileName = "DefaultFont", const FontExtensionType _extentionType = FontExtensionType::OTF)
+        TextData(const String& _text = "Unknown", const UInt& _characterSize = 30u, const String& _fontFileName = "_internal/DefaultFont", const FontExtensionType _extentionType = FontExtensionType::OTF)
         {
             text = _text;
             characterSize = _characterSize;
@@ -28,29 +28,29 @@ namespace Krampus
     class Text
     {
 
-        sf::Text text;
-        Font font;
+        sf::Text    text;
+        Font        font;
 
     public:
 
         Text(const TextData& _data)
-            : text(font, _data.text, _data.characterSize)
+            : text(font, _data.text.StdString(), _data.characterSize)
         {
             M_FONT.LoadFont(font, _data.fontFileName, _data.extentionType);
             SetOriginAtMiddle();
         }
 
-        inline virtual void SetString(const std::string& _string)
+        inline virtual void SetString(const String& _string)
         { 
-            text.setString(_string);
+            text.setString(_string.StdString());
             SetOriginAtMiddle();
         }
-        inline const std::string& GetString() const
+        inline String GetString() const
         {
-            return text.getString();
+            return String(text.getString());
         }
 
-        inline void SetFont(const std::string& _fileName, const FontExtensionType& _type)
+        inline void SetFont(const String& _fileName, const FontExtensionType& _type)
         {
             M_FONT.LoadFont(font, _fileName, _type);
             SetOriginAtMiddle();
@@ -60,12 +60,12 @@ namespace Krampus
             return font;
         }
 
-        inline void SetCharacterSize(unsigned int& _size)
+        inline void SetCharacterSize(const UInt& _size)
         {
             text.setCharacterSize(_size);
             SetOriginAtMiddle();
         }
-        inline unsigned int GetCharacterSize() const
+        inline UInt GetCharacterSize() const
         {
             return text.getCharacterSize();
         }
@@ -88,42 +88,42 @@ namespace Krampus
             return text.getOutlineColor();
         }
 
-        inline void SetOutlineThickness(const float& _thickness)
+        inline void SetOutlineThickness(const Float& _thickness)
         {
             text.setOutlineThickness(_thickness);
             SetOriginAtMiddle();
         }
-        inline float GetOutlineThickness() const
+        inline Float GetOutlineThickness() const
         {
             return text.getOutlineThickness();
         }
 
-        inline void SetStyle(const unsigned int& _style)
+        inline void SetStyle(const UInt& _style)
         {
             text.setStyle(_style);
             SetOriginAtMiddle();
         }
-        inline unsigned int GetStyle() const
+        inline UInt GetStyle() const
         {
-            return CAST(TextStyle, text.getStyle());
+            return CAST(UInt, text.getStyle());
         }
 
-        inline void SetLetterSpacing(const float& _spacing)
+        inline void SetLetterSpacing(const Float& _spacing)
         {
             text.setLetterSpacing(_spacing);
             SetOriginAtMiddle();
         }
-        inline float GetLetterSpacing() const
+        inline Float GetLetterSpacing() const
         {
             return text.getLetterSpacing();
         }
 
-        inline void SetLineSpacing(const float& _spacing)
+        inline void SetLineSpacing(const Float& _spacing)
         {
             text.setLineSpacing(_spacing);
             SetOriginAtMiddle();
         }
-        inline float GetLineSpacing() const
+        inline Float GetLineSpacing() const
         { 
             return text.getLineSpacing();
         }

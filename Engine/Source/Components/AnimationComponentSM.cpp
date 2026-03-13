@@ -4,13 +4,13 @@
 #include "Actors/Actor.h"
 
 
-Krampus::AnimationSM::AnimationSM(Engine* _engine, AnimationComponentSM* _component, const std::string& _name, ShapeObject* _shape, const AnimationData& _data)
+Krampus::AnimationSM::AnimationSM(Engine* _engine, AnimationComponentSM* _component, const String& _name, ShapeObject* _shape, const AnimationData& _data)
 	: Animation(_engine, _name, _shape, _data)
 {
 	component = _component;
 }
 
-bool Krampus::AnimationSM::CreateLink(AnimationSM* _animation, std::function<bool()> _check)
+Bool Krampus::AnimationSM::CreateLink(AnimationSM* _animation, std::function<Bool()> _check)
 {
 	if (links.contains(_animation))
 	{
@@ -24,10 +24,10 @@ bool Krampus::AnimationSM::CreateLink(AnimationSM* _animation, std::function<boo
 
 Krampus::AnimationSM* Krampus::AnimationSM::GetNextAnimation()
 {
-	for (const std::pair<AnimationSM*, std::function<bool()>>& _pair : links)
+	for (const std::pair<AnimationSM*, std::function<Bool()>>& _pair : links)
 	{
 		AnimationSM* _anim = _pair.first;
-		std::function<bool()> _check = _pair.second;
+		std::function<Bool()> _check = _pair.second;
 		if (_check())
 		{
 			AnimationSM* _lastAnim = _anim->GetNextAnimation();
@@ -41,10 +41,10 @@ Krampus::AnimationSM* Krampus::AnimationSM::GetNextAnimation()
 Krampus::AnimationComponentSM::AnimationComponentSM(Actor* _owner)
 	: Component(_owner)
 {
-
+	name = NAME_OF(AnimationComponentSM);
 }
 
-Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const std::string& _name, const AnimationData& _data)
+Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const String& _name, const AnimationData& _data)
 {
 	if (animations.contains(_name))
 	{
@@ -63,7 +63,7 @@ Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const std::str
 	return _anim;
 }
 
-Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const std::string& _name, const AnimationData& _data, std::vector<std::pair<AnimationSM*, std::function<bool()>>> _links)
+Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const String& _name, const AnimationData& _data, std::vector<std::pair<AnimationSM*, std::function<Bool()>>> _links)
 {
 	if (animations.contains(_name))
 	{
@@ -80,13 +80,13 @@ Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const std::str
 	AnimationSM* _anim = animations[_name].get();
 	if (!current) current = _anim;
 
-	for (const std::pair<AnimationSM*, std::function<bool()>>& _pair : _links)
+	for (const std::pair<AnimationSM*, std::function<Bool()>>& _pair : _links)
 		_anim->CreateLink(_pair.first, _pair.second);
 
 	return _anim;
 }
 
-void Krampus::AnimationComponentSM::Tick(const float& _deltaTime)
+void Krampus::AnimationComponentSM::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
@@ -96,4 +96,12 @@ void Krampus::AnimationComponentSM::Tick(const float& _deltaTime)
 	current->Stop();
 	current = _nextAnim;
 	current->Start();
+}
+
+std::string Krampus::AnimationComponentSM::ToString() const
+{
+	String _animationsName;
+	for (auto& [_key, _anim] : animations)
+		_animationsName += _key + ", ";
+	return name + std::format(" -> Animations Count = {} : ", animations.size()) + _animationsName;
 }

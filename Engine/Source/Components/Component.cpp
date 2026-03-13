@@ -10,7 +10,7 @@ Engine* Component::GetWorld() const
 	return level->GetWorld();
 }
 
-float Krampus::Component::GetDeltaTime() const
+Float Krampus::Component::GetDeltaTime() const
 {
 	return owner->GetDeltaTime();
 }
@@ -18,11 +18,12 @@ float Krampus::Component::GetDeltaTime() const
 Component::Component(Actor* _owner)
 	: transform(_owner->transform)
 {
+	name = NAME_OF(Component);
 	owner = _owner;
 	level = owner->GetLevel();
 }
 
-Krampus::Timer* Krampus::Component::CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
+Krampus::Timer* Krampus::Component::CreateTimer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
 {
 	return owner->CreateTimer(_callback, _duration, _isLoop, _startRunning);
 }

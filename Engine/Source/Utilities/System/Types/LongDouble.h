@@ -1,10 +1,11 @@
 #pragma once
+#include <functional>
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include <type_traits>
 #include <limits>
 #include <cmath>
 #include <string>
-#include "Utilities/System/Printable.h"
 
 class LongDouble : public Krampus::IPrintable
 {
@@ -14,6 +15,7 @@ public:
     // ── Constructors ─────────────────────────────────────────────────────────
     LongDouble() = default;
     LongDouble(const LongDouble& _o) : value(_o.value) {}
+    LongDouble& operator=(const LongDouble&) = default;
 
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
     LongDouble(T _v) : value(static_cast<long double>(_v)) {}
@@ -77,6 +79,7 @@ public:
     // ── Operators (member) ───────────────────────────────────────────────────
     LongDouble  operator+ (const LongDouble& o) const { return LongDouble(value + o.value); }
     LongDouble  operator- (const LongDouble& o) const { return LongDouble(value - o.value); }
+    LongDouble  operator- ()               const { return LongDouble(-value); }  // unary minus
     LongDouble  operator* (const LongDouble& o) const { return LongDouble(value * o.value); }
     LongDouble  operator/ (const LongDouble& o) const;
     LongDouble& operator+=(const LongDouble& o)       { value += o.value; return *this; }
@@ -92,9 +95,9 @@ public:
     Bool operator>=(const LongDouble& o) const { return Bool(value >= o.value); }
 
     LongDouble& operator++()    { ++value; return *this; }
-    LongDouble  operator++(int) { LongDouble t(*this); value++; return t; }
+    LongDouble operator++(int) { LongDouble _t(*this); value++; return _t; }
     LongDouble& operator--()    { --value; return *this; }
-    LongDouble  operator--(int) { LongDouble t(*this); value--; return t; }
+    LongDouble operator--(int) { LongDouble _t(*this); value--; return _t; }
 
     // ── Template overloads ────────────────────────────────────────────────────
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -167,4 +170,32 @@ public:
     operator float()              const { return (float)(value); }
     operator double()             const { return (double)(value); }
     operator long double()        const { return (long double)(value); }
+
+    // ── Cross-type conversions ──────────────────────────────────────────────
+    Byte ToByte() const;
+    Short ToShort() const;
+    UShort ToUShort() const;
+    Int ToInt() const;
+    UInt ToUInt() const;
+    Long ToLong() const;
+    ULong ToULong() const;
+    LongLong ToLongLong() const;
+    ULongLong ToULongLong() const;
+    Float ToFloat() const;
+    Double ToDouble() const;
+
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows LongDouble to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<LongDouble>
+    {
+        std::size_t operator()(const LongDouble& _v) const noexcept
+        {
+            return std::hash<long double>{}(static_cast<long double>(_v));
+        }
+    };
+}

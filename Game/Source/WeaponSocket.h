@@ -4,11 +4,10 @@
 
 class WeaponSocket : public Krampus::Actor
 {
-	GrabableComponent* grabable = nullptr;
+	GrabableComponent*	grabable	= nullptr;
 
 public:
-	WeaponSocket(Krampus::Level* _level, Krampus::Actor* _grabber = nullptr);
+	WeaponSocket(Krampus::Level* _level, Player* _grabber = nullptr);
 
-	void SetGraber(Krampus::Actor* _grabber);
+	void SetGraber(Player* _grabber);
 };
-

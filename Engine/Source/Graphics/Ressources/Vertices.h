@@ -10,11 +10,11 @@ namespace Krampus
 
 	class Vertices
 	{
-		sf::VertexArray vertices;
+		sf::VertexArray     vertices;
 
     public:
 
-        NO_DISCARD inline std::size_t GetVertexCount() const
+        NO_DISCARD inline ULongLong GetVertexCount() const
         {
             const std::size_t& _size = vertices.getVertexCount();
             return _size;
@@ -34,10 +34,10 @@ namespace Krampus
         }
 
         Vertices() = default;
-        explicit Vertices(const PrimitiveType& _type, const std::size_t& _vertexCount = 0);
+        Vertices(const PrimitiveType& _type, const ULongLong& _vertexCount = 0);
 
         void Clear();
-        void Resize(const std::size_t& _vertexCount);
+        void Resize(const ULongLong& _vertexCount);
         void Append(const FVector2& _position, const Color& _color = Color::Magenta(), const FVector2& _textureCoords = FVector2());;
         void Append(const Vertex& _vertex);
 

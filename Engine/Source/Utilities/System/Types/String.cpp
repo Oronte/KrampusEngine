@@ -48,6 +48,11 @@ void String::Trim()      { TrimLeft(); TrimRight(); }
 
 void String::Reverse() { std::reverse(value.begin(), value.end()); }
 
+void String::Reserve(const Int& _size)
+{
+    value.reserve(_size);
+}
+
 String String::Substring(int _pos, int _count) const
 {
     if (_pos < 0 || _pos > (int)value.size()) { LOG_WARNING("String::Substring: index out of range. Returning empty."); return String(""); }
@@ -108,3 +113,13 @@ Bool String::operator< (const String& o) const { return Bool(value <  o.value); 
 Bool String::operator> (const String& o) const { return Bool(value >  o.value); }
 Bool String::operator<=(const String& o) const { return Bool(value <= o.value); }
 Bool String::operator>=(const String& o) const { return Bool(value >= o.value); }
+
+String  String::operator+ (const std::string& o) const { return String(value + o); }
+String& String::operator+=(const std::string& o) { value += o; return *this; }
+
+Bool String::operator==(const std::string& o) const { return Bool(value == o); }
+Bool String::operator!=(const std::string& o) const { return Bool(value != o); }
+Bool String::operator< (const std::string& o) const { return Bool(value < o); }
+Bool String::operator> (const std::string& o) const { return Bool(value > o); }
+Bool String::operator<=(const std::string& o) const { return Bool(value <= o); }
+Bool String::operator>=(const std::string& o) const { return Bool(value >= o); }

@@ -1,13 +1,14 @@
 #include "AnimationComponent.h"
 #include "SpriteComponent.h"
 #include "Actors/Actor.h"
-#include "AnimationComponentSM.h"
 
 Krampus::AnimationComponent::AnimationComponent(Actor* _owner)
 	: Component(_owner)
-{  }
+{
+	name = NAME_OF(AnimationComponent);
+}
 
-void Krampus::AnimationComponent::AddAnimation(const std::string& _name, const AnimationData& _data)
+void Krampus::AnimationComponent::AddAnimation(const String& _name, const AnimationData& _data)
 {
 	if (animations.contains(_name)) return;
 
@@ -26,4 +27,12 @@ void Krampus::AnimationComponent::Deconstruct()
 
 	StopAnimation();
 	current = nullptr;
+}
+
+std::string Krampus::AnimationComponent::ToString() const
+{
+	String _animationsName;
+	for (auto& [_key, _anim] : animations)
+		_animationsName += _key + ", ";
+	return name + std::format(" -> Animations Count = {} : ", animations.size()) + _animationsName;
 }

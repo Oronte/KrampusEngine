@@ -17,22 +17,22 @@ namespace Krampus
 	class AudioManager : public Singleton<AudioManager>
 	{
 #ifdef SHIP
-		std::string audioPath = "../../Content/Audio/";
+		String															audioPath	= "../../Content/Audio/";
 #else
-		std::string audioPath = "Content/Audio/";
+		String															audioPath	= "Content/Audio/";
 #endif
-		std::unordered_map<std::string, std::shared_ptr<sf::SoundBuffer>> cache;
+		std::unordered_map<String, std::shared_ptr<sf::SoundBuffer>>	cache;
 
 	public:
 		AudioManager();
 
 	private:
 		std::string GetExtensionNameByType(const AudioExtensionType& _type) const;
-		std::shared_ptr<sf::SoundBuffer> LoadOrGetSoundBuffer(const std::string& _path);
+		std::shared_ptr<sf::SoundBuffer> LoadOrGetSoundBuffer(const String& _path);
 	
 	public:
-		Sound CreateSound(const std::string& _fileName, const AudioExtensionType& _type);
-		Music CreateMusic(const std::string& _fileName, const AudioExtensionType& _type);
+		Sound CreateSound(const String& _fileName, const AudioExtensionType& _type);
+		Music CreateMusic(const String& _fileName, const AudioExtensionType& _type);
 	};
 
 }

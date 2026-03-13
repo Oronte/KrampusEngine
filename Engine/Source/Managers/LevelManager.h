@@ -7,7 +7,8 @@ namespace Krampus
 
 	class LevelManager : public KrampusObject
 	{
-		std::unique_ptr<Level> currentLevel = nullptr;
+		std::unique_ptr<Level>	currentLevel	=	nullptr;
+		std::unique_ptr<Level>	pendingAddLevel =	nullptr;
 
 	public:
 		template<typename LevelType = Level>
@@ -25,10 +26,25 @@ namespace Krampus
 		template<typename LevelType = Level>
 		inline LevelType* SetLevel()
 		{
-			if (currentLevel.get()) currentLevel->Unload();
-			currentLevel = std::make_unique<LevelType>(GetWorld());
+			pendingAddLevel = std::make_unique<LevelType>(GetWorld());
+			return Cast<LevelType>(pendingAddLevel.get());
+		}
+
+		inline Bool ChangeLevel()
+		{
+			if (!pendingAddLevel.get())
+				return Bool::False();
+
+			if (currentLevel.get()) 
+				currentLevel->Unload();
+
+			currentLevel.reset();
+			currentLevel = std::move(pendingAddLevel);
+			pendingAddLevel = nullptr;
+
 			currentLevel->Load();
-			return GetCurrentLevel<LevelType>();
+
+			return Bool::True();
 		}
 
 		LevelManager(Engine* _engine)

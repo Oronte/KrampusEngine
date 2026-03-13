@@ -8,11 +8,10 @@ namespace Krampus
 
     class Exception : public std::exception
     {
-        using Error = std::string;
-        Error message;
+        String message;
 
     public:
-        Exception(const Error& _error, const Error& _debugInfo = "");
+        Exception(const String& _error, const String& _debugInfo = "");
 
     private:
         NO_DISCARD virtual const char* what() const noexcept override;

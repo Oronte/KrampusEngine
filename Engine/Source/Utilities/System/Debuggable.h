@@ -10,11 +10,24 @@ namespace Krampus
 	/// </summary>
 	class IDebuggable
 	{
-	public:
-		bool useDebug = false;
+		Bool useDebug = false;
 
 	protected:
 		virtual void DrawDebug() = 0;
+
+	public:
+		Bool IsDebugging() const
+		{
+			return useDebug;
+		}
+		void UseDebug()
+		{
+			useDebug = true;
+		}
+		void DisableDebug()
+		{
+			useDebug = false;
+		}
 	};
 
 }

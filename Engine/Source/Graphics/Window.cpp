@@ -10,16 +10,16 @@ void Krampus::Window::SetView(const CameraComponent* _camera)
 	onViewChange.Broadcast(_view);
 }
 
-void Krampus::Window::Create(const std::string& _name, const UVector2& _windowSize)
+void Krampus::Window::Create(const String& _name, const UVector2& _windowSize)
 {
 	window.create(sf::VideoMode(_windowSize),
-		CAST(sf::String, _name.c_str()), sf::Style::None);
+		CAST(sf::String, _name.ToCharPtr()), sf::Style::None);
 }
 
-void Krampus::Window::Create(const std::string& _name)
+void Krampus::Window::Create(const String& _name)
 {
 	window.create(sf::VideoMode::getDesktopMode(),
-		CAST(sf::String, _name.c_str()), sf::Style::None);
+		CAST(sf::String, _name.ToCharPtr()), sf::Style::None);
 }
 
 void Krampus::Window::Clear(const Color& _color)

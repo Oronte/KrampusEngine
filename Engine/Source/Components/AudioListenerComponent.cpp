@@ -1,8 +1,9 @@
 #include "AudioListenerComponent.h"
 
-Krampus::AudioListenerComponent::AudioListenerComponent(Actor* _owner, bool _topView)
+Krampus::AudioListenerComponent::AudioListenerComponent(Actor* _owner, const Bool& _topView)
 	: Component(_owner), topView(_topView)
 {
+	name = NAME_OF(AudioListenerComponent);
 }
 
 void Krampus::AudioListenerComponent::BeginPlay()
@@ -12,7 +13,7 @@ void Krampus::AudioListenerComponent::BeginPlay()
 	UpdateListener();
 }
 
-void Krampus::AudioListenerComponent::Tick(const float& _deltaTime)
+void Krampus::AudioListenerComponent::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
@@ -40,4 +41,9 @@ void Krampus::AudioListenerComponent::UpdateListener()
 	sf::Listener::setPosition(sf::Vector3f(_position.x, _position.y, 0.0f));
 	sf::Listener::setDirection(sf::Vector3f(_forward.x, _forward.y, 0.0f));
 	//sf::Listener::setVelocity(transform.GetVelocity());
+}
+
+std::string Krampus::AudioListenerComponent::ToString() const
+{
+	return name + " -> Is Top View = " + topView.ToString();
 }

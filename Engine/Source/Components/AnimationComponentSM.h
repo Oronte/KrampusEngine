@@ -10,27 +10,27 @@ namespace Krampus
 	struct AnimationSM : public Animation
 	{
 	private:
-		AnimationComponentSM* component = nullptr;
-		std::map<AnimationSM*, std::function<bool()>> links;
+		AnimationComponentSM*							component	= nullptr;
+		std::map<AnimationSM*, std::function<Bool()>>	links;
 
 	public:
-		AnimationSM(Engine* _engine, AnimationComponentSM* _component, const std::string& _name, ShapeObject* _shape, const AnimationData& _data);
+		AnimationSM(Engine* _engine, AnimationComponentSM* _component, const String& _name, ShapeObject* _shape, const AnimationData& _data);
 	
-		bool CreateLink(AnimationSM* _animation, std::function<bool()> _check);
+		Bool CreateLink(AnimationSM* _animation, std::function<Bool()> _check);
 		AnimationSM* GetNextAnimation();
 	};
 
 	class AnimationComponentSM : public Component
 	{
-		AnimationSM* current = nullptr;
-		std::unordered_map<std::string, std::unique_ptr<AnimationSM>> animations;
+		AnimationSM*												current		= nullptr;
+		std::unordered_map<String, std::unique_ptr<AnimationSM>>	animations;
 
 	public:
 		inline AnimationSM* GetCurrentAnimation() const
 		{
 			return current;
 		}
-		inline AnimationSM* GetAnimation(const std::string _animationName) const
+		inline AnimationSM* GetAnimation(const String& _animationName) const
 		{
 			auto _iterator = animations.find(_animationName);
 			if (_iterator == animations.end())
@@ -64,10 +64,12 @@ namespace Krampus
 		// The owner require a SpriteComponent
 		AnimationComponentSM(Actor* _owner);
 
-		AnimationSM* AddAnimation(const std::string& _name, const AnimationData& _data);
-		AnimationSM* AddAnimation(const std::string& _name, const AnimationData& _data, std::vector<std::pair<AnimationSM*, std::function<bool()>>> _links);
+		AnimationSM* AddAnimation(const String& _name, const AnimationData& _data);
+		AnimationSM* AddAnimation(const String& _name, const AnimationData& _data, std::vector<std::pair<AnimationSM*, std::function<Bool()>>> _links);
 
-		virtual void Tick(const float& _deltaTime) override;
+		virtual void Tick(const Float& _deltaTime) override;
+
+		virtual std::string ToString() const override;
 
 		friend struct AnimationSM;
 	};

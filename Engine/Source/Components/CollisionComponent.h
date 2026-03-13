@@ -33,26 +33,26 @@ namespace Krampus
 
 	class CollisionComponent : public Component, public IDebuggable
 	{
-		ShapeSizeData sizeData;
-		ShapeType shapeType;
+		ShapeSizeData							sizeData;
+		ShapeType								shapeType;
 		std::unordered_set<CollisionComponent*> collidingComponents;
 
-		Event<CollisionInfo>::ListenerHandle onCollisionHandle;
+		Event<CollisionInfo>::ListenerHandle	onCollisionHandle;
 
 	public:
-		Event<CollisionInfo> onCollisionEnter;
-		Event<CollisionInfo> onCollision;
-		Event<CollisionComponent*> onCollisionExit;
+		Event<CollisionInfo>					onCollisionEnter;
+		Event<CollisionInfo>					onCollision;
+		Event<CollisionComponent*>				onCollisionExit;
 
-		CollisionChannel channel = CollisionChannel::None;
-		CollisionChannel mask = CollisionChannel::None;
+		CollisionChannel						channel				= CollisionChannel::None;
+		CollisionChannel						mask				= CollisionChannel::None;
 
 	public:
 		inline ShapeType GetShapeType() const
 		{
 			return shapeType;
 		}
-		inline float GetRadius() const
+		inline Float GetRadius() const
 		{
 			if (shapeType != ShapeType::Circle)
 			{
@@ -71,7 +71,7 @@ namespace Krampus
 			return sizeData.size;
 		}
 
-		static inline bool ContainsCollisionChannel(const CollisionChannel& _a, const CollisionChannel& _b)
+		static inline Bool ContainsCollisionChannel(const CollisionChannel& _a, const CollisionChannel& _b)
 		{
 			return CAST(uint32_t, _a & _b) != 0;
 		}
@@ -80,7 +80,7 @@ namespace Krampus
 		CollisionComponent(Actor* _owner, 
 			const CollisionChannel& _channel = CollisionChannel::None,
 			const CollisionChannel& _mask = CollisionChannel::None);
-		CollisionComponent(Actor* _owner, const float& _radius,
+		CollisionComponent(Actor* _owner, const Float& _radius,
 			const CollisionChannel& _channel = CollisionChannel::None,
 			const CollisionChannel& _mask = CollisionChannel::None);
 		CollisionComponent(Actor* _owner, const FVector2& _size,
@@ -89,14 +89,14 @@ namespace Krampus
 
 		void UpdateShapeValues(const SpriteComponent* _sprite);
 		void SetSize(const FVector2& _size);
-		void SetRadius(const float _radius);
+		void SetRadius(const Float& _radius);
 
 		void ResolveCollision(const CollisionInfo& _info);
 		void BindCollisionResolution();
 		void ComputeCollision(CollisionComponent* _other);
 		bool CanCollide(const CollisionComponent* _other) const;
 
-		virtual void Tick(const float& _deltaTime) override;
+		virtual void Tick(const Float& _deltaTime) override;
 		virtual void BeginDestroy() override;
 
 	private:
@@ -107,6 +107,9 @@ namespace Krampus
 
 
 		void DrawDebug() override;
+
+	public:
+		virtual std::string ToString() const override;
 	};
 
 }

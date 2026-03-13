@@ -1,29 +1,29 @@
 #include "Shader.h"
 
-Krampus::Shader::Shader(const std::string& _vertexShaderFileName, const std::string& _fragmentShaderFileName)
+Krampus::Shader::Shader(const String& _vertexShaderFileName, const String& _fragmentShaderFileName)
 {
-	shader = std::make_unique<sf::Shader>(std::filesystem::path(_vertexShaderFileName),
-		std::filesystem::path(_fragmentShaderFileName));
+	shader = std::make_unique<sf::Shader>(std::filesystem::path(_vertexShaderFileName.StdString()),
+		std::filesystem::path(_fragmentShaderFileName.StdString()));
 }
 
-Krampus::Shader::Shader(const std::string& _vertexShaderFileName, const std::string& _geometryShaderFileName, const std::string& _fragmentShaderFileName)
+Krampus::Shader::Shader(const String& _vertexShaderFileName, const String& _geometryShaderFileName, const String& _fragmentShaderFileName)
 {
-	shader = std::make_unique<sf::Shader>(std::filesystem::path(_vertexShaderFileName),
-		std::filesystem::path(_geometryShaderFileName),
-		std::filesystem::path(_fragmentShaderFileName));
+	shader = std::make_unique<sf::Shader>(std::filesystem::path(_vertexShaderFileName.StdString()),
+		std::filesystem::path(_geometryShaderFileName.StdString()),
+		std::filesystem::path(_fragmentShaderFileName.StdString()));
 }
 
-Krampus::Shader::Shader(const std::string& _fileName, const ShaderType& _shaderType)
+Krampus::Shader::Shader(const String& _fileName, const ShaderType& _shaderType)
 {
-	shader = std::make_unique<sf::Shader>(std::filesystem::path(_fileName), _shaderType);
+	shader = std::make_unique<sf::Shader>(std::filesystem::path(_fileName.StdString()), _shaderType);
 }
 
-bool Krampus::Shader::IsAvaliable()
+Bool Krampus::Shader::IsAvaliable()
 {
 	return sf::Shader::isAvailable();
 }
 
-bool Krampus::Shader::IsGeometryAvaliable()
+Bool Krampus::Shader::IsGeometryAvaliable()
 {
 	return sf::Shader::isGeometryAvailable();
 }
@@ -38,130 +38,130 @@ void Krampus::Shader::Bind()
 	sf::Shader::bind(shader.get());
 }
 
-bool Krampus::Shader::Load(const std::string& _vertexShaderFileName, const std::string& _fragmentShaderFileName)
+Bool Krampus::Shader::Load(const String& _vertexShaderFileName, const String& _fragmentShaderFileName)
 {
-	return shader->loadFromFile(std::filesystem::path(_vertexShaderFileName),
-		std::filesystem::path(_fragmentShaderFileName));
+	return shader->loadFromFile(std::filesystem::path(_vertexShaderFileName.StdString()),
+		std::filesystem::path(_fragmentShaderFileName.StdString()));
 }
 
-bool Krampus::Shader::Load(const std::string& _vertexShaderFileName, const std::string& _geometryShaderFileName, const std::string& _fragmentShaderFileName)
+Bool Krampus::Shader::Load(const String& _vertexShaderFileName, const String& _geometryShaderFileName, const String& _fragmentShaderFileName)
 {
-	return shader->loadFromFile(std::filesystem::path(_vertexShaderFileName),
-		std::filesystem::path(_geometryShaderFileName),
-		std::filesystem::path(_fragmentShaderFileName));
+	return shader->loadFromFile(std::filesystem::path(_vertexShaderFileName.StdString()),
+		std::filesystem::path(_geometryShaderFileName.StdString()),
+		std::filesystem::path(_fragmentShaderFileName.StdString()));
 }
 
-bool Krampus::Shader::Load(const std::string& _fileName, const ShaderType& _type)
+Bool Krampus::Shader::Load(const String& _fileName, const ShaderType& _type)
 {
-	return shader->loadFromFile(std::filesystem::path(_fileName), _type);
+	return shader->loadFromFile(std::filesystem::path(_fileName.StdString()), _type);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, float x)
-{
-	shader->setUniform(name, x);
-}
-
-void Krampus::Shader::SetUniform(const std::string& name, sf::Glsl::Vec2 vector)
-{
-	shader->setUniform(name, vector);
-}
-
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Vec3& vector)
-{
-	shader->setUniform(name, vector);
-}
-
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Vec4& vector)
-{
-	shader->setUniform(name, vector);
-}
-
-void Krampus::Shader::SetUniform(const std::string& name, int x)
+void Krampus::Shader::SetUniform(const String& name, float x)
 {
 	shader->setUniform(name, x);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, sf::Glsl::Ivec2 vector)
+void Krampus::Shader::SetUniform(const String& name, sf::Glsl::Vec2 vector)
 {
 	shader->setUniform(name, vector);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Ivec3& vector)
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Vec3& vector)
 {
 	shader->setUniform(name, vector);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Ivec4& vector)
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Vec4& vector)
 {
 	shader->setUniform(name, vector);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, bool x)
+void Krampus::Shader::SetUniform(const String& name, int x)
 {
 	shader->setUniform(name, x);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, sf::Glsl::Bvec2 vector)
+void Krampus::Shader::SetUniform(const String& name, sf::Glsl::Ivec2 vector)
 {
 	shader->setUniform(name, vector);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Bvec3& vector)
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Ivec3& vector)
 {
 	shader->setUniform(name, vector);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Bvec4& vector)
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Ivec4& vector)
 {
 	shader->setUniform(name, vector);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Mat3& matrix)
+void Krampus::Shader::SetUniform(const String& name, bool x)
+{
+	shader->setUniform(name, x);
+}
+
+void Krampus::Shader::SetUniform(const String& name, sf::Glsl::Bvec2 vector)
+{
+	shader->setUniform(name, vector);
+}
+
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Bvec3& vector)
+{
+	shader->setUniform(name, vector);
+}
+
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Bvec4& vector)
+{
+	shader->setUniform(name, vector);
+}
+
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Mat3& matrix)
 {
 	shader->setUniform(name, matrix);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Glsl::Mat4& matrix)
+void Krampus::Shader::SetUniform(const String& name, const sf::Glsl::Mat4& matrix)
 {
 	shader->setUniform(name, matrix);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, const sf::Texture& texture)
+void Krampus::Shader::SetUniform(const String& name, const sf::Texture& texture)
 {
 	shader->setUniform(name, texture);
 }
 
-void Krampus::Shader::SetUniform(const std::string& name, ShaderTextureType)
+void Krampus::Shader::SetUniform(const String& name, ShaderTextureType)
 {
 	shader->setUniform(name, sf::Shader::CurrentTexture);
 }
 
-void Krampus::Shader::SetUniformArray(const std::string& name, const float* scalarArray, std::size_t length)
+void Krampus::Shader::SetUniformArray(const String& name, const float* scalarArray, std::size_t length)
 {
 	shader->setUniformArray(name, scalarArray, length);
 }
 
-void Krampus::Shader::SetUniformArray(const std::string& name, const sf::Glsl::Vec2* vectorArray, std::size_t length)
+void Krampus::Shader::SetUniformArray(const String& name, const sf::Glsl::Vec2* vectorArray, std::size_t length)
 {
 	shader->setUniformArray(name, vectorArray, length);
 }
 
-void Krampus::Shader::SetUniformArray(const std::string& name, const sf::Glsl::Vec3* vectorArray, std::size_t length)
+void Krampus::Shader::SetUniformArray(const String& name, const sf::Glsl::Vec3* vectorArray, std::size_t length)
 {
 	shader->setUniformArray(name, vectorArray, length);
 }
 
-void Krampus::Shader::SetUniformArray(const std::string& name, const sf::Glsl::Vec4* vectorArray, std::size_t length)
+void Krampus::Shader::SetUniformArray(const String& name, const sf::Glsl::Vec4* vectorArray, std::size_t length)
 {
 	shader->setUniformArray(name, vectorArray, length);
 }
 
-void Krampus::Shader::SetUniformArray(const std::string& name, const sf::Glsl::Mat3* matrixArray, std::size_t length)
+void Krampus::Shader::SetUniformArray(const String& name, const sf::Glsl::Mat3* matrixArray, std::size_t length)
 {
 	shader->setUniformArray(name, matrixArray, length);
 }
 
-void Krampus::Shader::SetUniformArray(const std::string& name, const sf::Glsl::Mat4* matrixArray, std::size_t length)
+void Krampus::Shader::SetUniformArray(const String& name, const sf::Glsl::Mat4* matrixArray, std::size_t length)
 {
 	shader->setUniformArray(name, matrixArray, length);
 }

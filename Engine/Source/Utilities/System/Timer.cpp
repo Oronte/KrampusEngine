@@ -2,7 +2,7 @@
 
 using namespace Krampus;
 
-Krampus::Timer::Timer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop, const bool& _startRunning)
+Krampus::Timer::Timer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
 {
 	callback = _callback;
 	isRunning = _startRunning;
@@ -16,7 +16,7 @@ void Timer::Play()
 	Resume();
 }
 
-void Timer::Update(const float& _deltaTime)
+void Timer::Update(const Float& _deltaTime)
 {
 	if (!isRunning) return;
 

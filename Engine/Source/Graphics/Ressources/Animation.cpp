@@ -4,7 +4,7 @@
 
 // AnimationData
 
-Krampus::AnimationData::AnimationData(const int& _count, const float& _duration, const IRect& _spriteData, const bool& _canLoop, const ReadDirection& _direction)
+Krampus::AnimationData::AnimationData(const Int& _count, const Float& _duration, const IRect& _spriteData, const Bool& _canLoop, const ReadDirection& _direction)
 {
     canLoop = _canLoop;
     count = _count;
@@ -56,7 +56,7 @@ Krampus::AnimationData::AnimationData(const int& _count, const float& _duration,
             ));
 }
 
-Krampus::AnimationData::AnimationData(const float& _duration, const std::vector<IRect>& _spritesData, const bool& _canLoop)
+Krampus::AnimationData::AnimationData(const Float& _duration, const std::vector<IRect>& _spritesData, const Bool& _canLoop)
 {
     canLoop = _canLoop;
     count = CAST(int, _spritesData.size());
@@ -68,7 +68,7 @@ Krampus::AnimationData::AnimationData(const float& _duration, const std::vector<
 
 // Animation
 
-Krampus::Animation::Animation(Engine* _engine, const std::string& _name, ShapeObject* _shape, const AnimationData& _data)
+Krampus::Animation::Animation(Engine* _engine, const String& _name, ShapeObject* _shape, const AnimationData& _data)
     : KrampusObject(_engine)
 {
     name = _name;

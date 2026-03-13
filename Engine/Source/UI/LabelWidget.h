@@ -7,10 +7,13 @@ namespace Krampus
 
 	class LabelWidget : public Widget
 	{
-		LabelComponent* label = nullptr;
+	protected:
+		LabelComponent*		label	= nullptr;
 
 	public:
 		LabelWidget(Level* _level, const TextData& _data);
+
+		virtual std::string ToString() const override;
 	};
 
 }

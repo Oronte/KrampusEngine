@@ -1,4 +1,5 @@
 #pragma once
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include "Char.h"
 #include "String.h"

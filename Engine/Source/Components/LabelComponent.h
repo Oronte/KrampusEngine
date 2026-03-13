@@ -8,19 +8,19 @@ namespace Krampus
 {
 	class LabelComponent : public Component, public IDrawable, public IDebuggable
 	{
-		Text text;
+		Text    text;
 
 	public:
-        inline void SetString(const std::string& _string)
+        inline void SetString(const String& _string)
         {
             text.SetString(_string);
         }
-        inline const std::string& GetString() const
+        inline String GetString() const
         {
             return text.GetString();
         }
 
-        inline void SetFont(const std::string& _fileName, const FontExtensionType& _type)
+        inline void SetFont(const String& _fileName, const FontExtensionType& _type)
         {
             text.SetFont(_fileName, _type);
         }
@@ -29,11 +29,11 @@ namespace Krampus
             return text.GetFont();
         }
 
-        inline void SetCharacterSize(unsigned int& _size)
+        inline void SetCharacterSize(const UInt& _size)
         {
             text.SetCharacterSize(_size);
         }
-        inline unsigned int GetCharacterSize() const
+        inline UInt GetCharacterSize() const
         {
             return text.GetCharacterSize();
         }
@@ -56,38 +56,38 @@ namespace Krampus
             return text.GetOutlineColor();
         }
 
-        inline void SetOutlineThickness(const float& _thickness)
+        inline void SetOutlineThickness(const Float& _thickness)
         {
             text.SetOutlineThickness(_thickness);
         }
-        inline float GetOutlineThickness() const
+        inline Float GetOutlineThickness() const
         {
             return text.GetOutlineThickness();
         }
 
-        inline void SetStyle(const unsigned int& _style)
+        inline void SetStyle(const UInt& _style)
         {
             text.SetStyle(_style);
         }
-        inline unsigned int GetStyle() const
+        inline UInt GetStyle() const
         {
             return text.GetStyle();
         }
 
-        inline void SetLetterSpacing(const float& _spacing)
+        inline void SetLetterSpacing(const Float& _spacing)
         {
             text.SetLetterSpacing(_spacing);
         }
-        inline float GetLetterSpacing() const
+        inline Float GetLetterSpacing() const
         {
             return text.GetLetterSpacing();
         }
 
-        inline void SetLineSpacing(const float& _spacing)
+        inline void SetLineSpacing(const Float& _spacing)
         {
             text.SetLineSpacing(_spacing);
         }
-        inline float GetLineSpacing() const
+        inline Float GetLineSpacing() const
         {
             return text.GetLineSpacing();
         }
@@ -148,7 +148,7 @@ namespace Krampus
         {
             return text.GetGlobalBounds();
         }
-        inline FVector2 FindCharacterPos(const std::size_t& _index) const
+        inline FVector2 FindCharacterPos(const Int& _index) const
         {
             return text.FindCharacterPos(_index);
         }
@@ -166,7 +166,10 @@ namespace Krampus
         virtual void SetZOrder(const ZOrder& _zOrder) override;
 
     protected:
-        virtual void Tick(const float& _deltaTime) override;
+        virtual void Tick(const Float& _deltaTime) override;
+
+    public:
+        virtual std::string ToString() const override;
     };
 
 }

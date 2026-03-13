@@ -1,9 +1,10 @@
 ﻿#include "RigidbodyComponent.h"
 #include "Actors/Actor.h"
 
-Krampus::RigidbodyComponent::RigidbodyComponent(Actor* _owner, const float& _mass)
+Krampus::RigidbodyComponent::RigidbodyComponent(Actor* _owner, const Float& _mass)
 	: Component(_owner)
 {
+    name = NAME_OF(RigidbodyComponent);
 	mass = FMath::MaxVal(0.001f, _mass);
 	inverseMass = 1.0f / mass;
     ComputeInertia();
@@ -34,7 +35,7 @@ void Krampus::RigidbodyComponent::ClearForces()
     accumulatedTorque = 0.f;
 }
 
-void Krampus::RigidbodyComponent::Tick(const float& _deltaTime)
+void Krampus::RigidbodyComponent::Tick(const Float& _deltaTime)
 {
 	if (isKinematic) return;
 
@@ -70,8 +71,8 @@ void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
     float _invMassA = _physA->inverseMass;
     float _invInertiaA = _physA->inverseInertia;
 
-    float invMassB = _physB && !_physB->isKinematic ? _physB->inverseMass : 0.f;
-    float invInertiaB = _physB && !_physB->isKinematic ? _physB->inverseInertia : 0.f;
+    float invMassB = _physB && !_physB->isKinematic ? _physB->inverseMass : Float(0.0f);
+    float invInertiaB = _physB && !_physB->isKinematic ? _physB->inverseInertia : Float(0.0f);
 
     const FVector2& normal = info.normal;
 
@@ -191,7 +192,7 @@ void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
     }
 }
 
-void Krampus::RigidbodyComponent::Integrate(const float& _deltaTime)
+void Krampus::RigidbodyComponent::Integrate(const Float& _deltaTime)
 {
     velocity += (accumulatedForces * inverseMass) * _deltaTime;
     float _speedSq = velocity.Dot(velocity);
@@ -238,5 +239,10 @@ void Krampus::RigidbodyComponent::ComputeInertia()
         const FVector2& _size = _collision->GetSize();
         inertia = (1.f / 12.f) * mass * (_size.x * _size.x + _size.y * _size.y);
     }
-    inverseInertia = inertia > 0.f ? 1.f / inertia : 0.f;
+    inverseInertia = inertia > 0.f ? 1.f / inertia : Float(0.0f);
+}
+
+std::string Krampus::RigidbodyComponent::ToString() const
+{
+    return name + " -> Mass = " + mass.ToString() + ", Velocity = " + velocity.ToString();
 }

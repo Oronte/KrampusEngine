@@ -2,7 +2,7 @@
 
 Krampus::FontManager::FontManager()
 {
-	std::filesystem::create_directories(fontPath);
+	std::filesystem::create_directories(fontPath.StdString());
 	LoadDefaultFont();
 }
 
@@ -17,9 +17,9 @@ void Krampus::FontManager::SetFontToDefault(Font& _font)
 	LoadFont(_font, _finalPath);
 }
 
-std::string Krampus::FontManager::GetExtensionNameByType(const FontExtensionType& _fontType) const
+String Krampus::FontManager::GetExtensionNameByType(const FontExtensionType& _fontType) const
 {
-	const std::string _extensionNames[] =
+	const String _extensionNames[] =
 	{
 		"otf",
 		"ttf",
@@ -28,7 +28,7 @@ std::string Krampus::FontManager::GetExtensionNameByType(const FontExtensionType
 	return _extensionNames[(int)_fontType];
 }
 
-void Krampus::FontManager::LoadFont(Font& _font, const std::string& _fullName)
+void Krampus::FontManager::LoadFont(Font& _font, const String& _fullName)
 {
 	const std::string& _finalPath = fontPath + _fullName;
 
@@ -39,7 +39,7 @@ void Krampus::FontManager::LoadFont(Font& _font, const std::string& _fullName)
 	}
 }
 
-void Krampus::FontManager::LoadFont(Font& _font, const std::string& _fileName, const FontExtensionType& _fontType)
+void Krampus::FontManager::LoadFont(Font& _font, const String& _fileName, const FontExtensionType& _fontType)
 {
 	const std::string& _finalPath = fontPath + _fileName + "." + GetExtensionNameByType(_fontType);
 

@@ -46,3 +46,9 @@ Bool Bool::operator&&(const Bool& o) const { return Bool(value && o.value); }
 Bool Bool::operator||(const Bool& o) const { return Bool(value || o.value); }
 Bool Bool::operator! ()              const { return Bool(!value); }
 Bool Bool::operator^ (const Bool& o) const { return Bool(value ^  o.value); }
+
+Bool Bool::operator==(bool o) const { return Bool(value == o); }
+Bool Bool::operator!=(bool o) const { return Bool(value != o); }
+Bool Bool::operator&&(bool o) const { return Bool(value && o); }
+Bool Bool::operator||(bool o) const { return Bool(value || o); }
+Bool Bool::operator^ (bool o) const { return Bool(value ^  o); }

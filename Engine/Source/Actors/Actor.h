@@ -10,15 +10,15 @@ namespace Krampus
 
 	class Actor : public IGameObject
 	{
-		std::vector<Actor*> children;
+		std::vector<Actor*>							children;
 
 	protected:
-		std::vector<std::unique_ptr<Component>> components;
-		Level* level;
+		std::vector<std::unique_ptr<Component>>		components;
+		Level*										level;
 
-		Transform oldTransform;
+		Transform									oldTransform;
 	public:
-		Transform transform;
+		Transform									transform;
 
 		Engine* GetWorld() const;
 
@@ -74,7 +74,7 @@ namespace Krampus
 			Type* _component = GetComponent<Type>();
 			if (!_component)
 			{
-				LOG_WARNING("There is not a component of this type");
+				LOG_WARNING("There is not a component of type" + std::string(NAME_OF(Type)));
 				return;
 			}
 
@@ -88,17 +88,17 @@ namespace Krampus
 				});
 		}
 
-		Timer* CreateTimer(const std::function<void()>& _callback, const float& _duration, const bool& _isLoop = false, const bool& _startRunning = true);
+		Timer* CreateTimer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true);
 
 
 		void Construct() override;
 		void Deconstruct() override;
 		void BeginPlay() override;
-		void Tick(const float& _deltaTime) override;
+		void Tick(const Float& _deltaTime) override;
 		void BeginDestroy() override;
 		
 	public:
-		virtual void SetActive(const bool& _status) override;
+		virtual void SetActive(const Bool& _status) override;
 
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
 		inline Type* GetComponent()
@@ -112,6 +112,8 @@ namespace Krampus
 
 		friend class ActorManager;
 		friend class Component;
+
+		virtual std::string ToString() const override;
 	};
 
 }

@@ -7,8 +7,10 @@ using namespace Krampus;
 
 class DeathFX : public Actor
 {
-	SpriteComponent* sprite = nullptr;
-	AnimationComponent* animation = nullptr;
+	SpriteComponent*		sprite		= nullptr;
+	AnimationComponent*		animation	= nullptr;
+
+	Sound					boomSound;
 
 	Event<>::ListenerHandle handle;
 

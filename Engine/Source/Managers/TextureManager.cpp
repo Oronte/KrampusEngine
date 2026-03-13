@@ -4,7 +4,7 @@ using namespace Krampus;
 
 Krampus::TextureManager::TextureManager()
 {
-	std::filesystem::create_directories(texturePath);
+	std::filesystem::create_directories(texturePath.StdString());
 	LoadDefaultTexture();
 }
 
@@ -21,7 +21,7 @@ void Krampus::TextureManager::SetTextureToDefault(Texture& _texture)
 	_texture = defaultTexture;
 }
 
-std::shared_ptr<sf::Texture> Krampus::TextureManager::LoadOrGetSharedTexture(const std::string& _path, const IRect& _rect)
+std::shared_ptr<sf::Texture> Krampus::TextureManager::LoadOrGetSharedTexture(const String& _path, const IRect& _rect)
 {
 	const std::string _finalPath = texturePath + _path;
 
@@ -55,7 +55,7 @@ void Krampus::TextureManager::SetTexture(Shape* _shape, const Texture* _texture)
 	_shape->SetTexture(_texture);
 }
 
-std::string Krampus::TextureManager::GetExtensionNameByType(const TextureExtensionType& _textureType)
+String Krampus::TextureManager::GetExtensionNameByType(const TextureExtensionType& _textureType)
 {
 	const std::string _extensionNames[] =
 	{
@@ -73,7 +73,7 @@ std::string Krampus::TextureManager::GetExtensionNameByType(const TextureExtensi
 	return _extensionNames[CAST(int, _textureType)];
 }
 
-void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const std::string& _path, const TextureExtensionType& _textureType, const IRect& _rect, const bool _isRepeated, const bool _smooth)
+void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const String& _path, const TextureExtensionType& _textureType, const IRect& _rect, const Bool& _isRepeated, const Bool& _smooth)
 {
 	if (!_shapeObject)
 	{
@@ -83,7 +83,7 @@ void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const std::string&
 
 	Texture& texRef = _shapeObject->GetTextureRef();
 
-	if (_path.empty())
+	if (_path.IsEmpty())
 	{
 		LOG(VerbosityType::Error, "Cannot open file with an empty path !");
 		SetTextureToDefault(texRef);

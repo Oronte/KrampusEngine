@@ -1,7 +1,7 @@
 #include "Exception.h"
 #include "Logger.h"
 
-Krampus::Exception::Exception(const Error& _error, const Error& _debugInfo)
+Krampus::Exception::Exception(const String& _error, const String& _debugInfo)
 {
 	message = _error + " " + _debugInfo;
 	if (_debugInfo == "") message += DEBUG_INFO;
@@ -11,7 +11,7 @@ Krampus::Exception::Exception(const Error& _error, const Error& _debugInfo)
 
 const char* Krampus::Exception::what() const noexcept
 {
-	return message.c_str();
+	return message;
 }
 
 const char* Krampus::Exception::What() const

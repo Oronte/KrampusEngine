@@ -8,21 +8,27 @@
 namespace Krampus
 {
 
+	class CameraActor;
+	class CameraComponent;
+
 	class Level : public KrampusObject
-	{
-		int frameCount = 0;
+	{	
+		Int					frameCount				= 0;
 
 	protected:
-		CameraManager cameraManager;
-		CollisionManager collisionManager;
-		ActorManager actorManager;
-		HUD hud;
-		Color backgroundColor = Color::Black();
-		bool isLoaded = false;
+		CameraManager		cameraManager;
+		CollisionManager	collisionManager;
+		ActorManager		actorManager;
+		HUD					hud;
+		Color				backgroundColor			= Color::Black();
+		Bool				isLoaded				= false;
 
-	public:
+		CameraActor*		mainCamera				= nullptr;
+
+	protected:
 		Level(Engine* _engine);
 
+	public:
 		inline void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
@@ -49,7 +55,7 @@ namespace Krampus
 		}
 
 	protected:
-		virtual void InitLevel() = 0;
+		virtual void InitLevel();
 
 	public:
 		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
@@ -69,7 +75,8 @@ namespace Krampus
 		}
 		virtual void Load();
 		virtual void Unload();
-		void Update(const float& _deltaTime);
+		void Update(const Float& _deltaTime);
+		CameraComponent* GetDefaultCamera() const;
 
 	private:
 		void Render();

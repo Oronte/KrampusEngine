@@ -7,8 +7,8 @@ using namespace Krampus;
 
 class Background : public Actor
 {
-	SpriteComponent* sprite = nullptr;
-	AnimationComponent* animation = nullptr;
+	SpriteComponent*		sprite		= nullptr;
+	AnimationComponent*		animation	= nullptr;
 
 public:
 	Background(Level* _level);

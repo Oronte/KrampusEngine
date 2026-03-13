@@ -7,39 +7,39 @@ namespace Krampus
 	class RigidbodyComponent : public Component
 	{
 	public:
-		bool useGravity = true;
-		bool isKinematic = false;
-		float gravity = 981.f;
+		Bool		useGravity				= true;
+		Bool		isKinematic				= false;
+		Float		gravity					= 981.f;
 
-		bool freezeRotation = false;
-		bool freezeMovementX = false;
-		bool freezeMovementY = false;
+		Bool		freezeRotation			= false;
+		Bool		freezeMovementX			= false;
+		Bool		freezeMovementY			= false;
 
-		float linearDamping = 0.1f;
-		float angularDamping = 0.1f;
-		float restitution = 0.15f;
-		float staticFriction = 0.5f;
-		float dynamicFriction = 0.4f;
+		Float		linearDamping			= 0.1f;
+		Float		angularDamping			= 0.1f;
+		Float		restitution				= 0.15f;
+		Float		staticFriction			= 0.5f;
+		Float		dynamicFriction			= 0.4f;
 
-		float maxLinearVelocity = 2000.f;
-		float maxAngularVelocity = 20.f;
+		Float		maxLinearVelocity		= 2000.f;
+		Float		maxAngularVelocity		= 20.f;
 
 	private:
-		float mass = 1.f;
-		float inverseMass = 1.f;
-		float inertia = 1.f;
-		float inverseInertia = 1.f;
+		Float		mass					= 1.f;
+		Float		inverseMass				= 1.f;
+		Float		inertia					= 1.f;
+		Float		inverseInertia			= 1.f;
 
-		FVector2 velocity = FVector2::Zero();
-		float angularVelocity = 0.f;
-		FVector2 acceleration = FVector2::Zero();
-		FVector2 accumulatedForces = FVector2::Zero();
-		float accumulatedTorque = 0.f;
+		FVector2	velocity				= FVector2::Zero();
+		Float		angularVelocity			= 0.f;
+		FVector2	acceleration			= FVector2::Zero();
+		FVector2	accumulatedForces		= FVector2::Zero();
+		Float		accumulatedTorque		= 0.f;
 
 		Event<CollisionInfo>::ListenerHandle onCollisionHandle;
 
 	public:
-		RigidbodyComponent(Actor* _owner, const float& _mass = 1.0f);
+		RigidbodyComponent(Actor* _owner, const Float& _mass = 1.0f);
 
 		// Adds a continuous force to be applied during integration
 		void AddForce(const FVector2& _force, const FVector2& _applyPoint = FVector2::Zero());
@@ -48,7 +48,7 @@ namespace Krampus
 		// Clears all accumulated forces after simulation
 		void ClearForces();
 
-		virtual void Tick(const float& _deltaTime) override;
+		virtual void Tick(const Float& _deltaTime) override;
 
 		// Binds collision events to physical collision response (require a valid CollisionComponent)
 		void BindCollisionResponse();
@@ -57,8 +57,11 @@ namespace Krampus
 
 	private:
 		// Integrates forces, velocity, and position over time
-		void Integrate(const float& _deltaTime);
+		void Integrate(const Float& _deltaTime);
 		void ComputeInertia();
+
+	public:
+		virtual std::string ToString() const override;
 	};
 
 }

@@ -1,11 +1,18 @@
 #include "Level.h"
 #include "Managers/LevelManager.h"
 #include "Managers/CollisionManager.h"
+#include "Actors/CameraActor.h"
 
 using namespace Krampus;
 
 Krampus::Level::Level(Engine* _engine)
 	: KrampusObject(_engine), cameraManager(_engine) { }
+
+void Level::InitLevel()
+{
+	mainCamera = SpawnActor<CameraActor>();
+	mainCamera->transform.position = GetWindowRef().GetSize() / 2.0f;
+}
 
 void Level::Load()
 {
@@ -29,7 +36,7 @@ void Krampus::Level::Unload()
 	hud.BeginDestroy();
 }
 
-void Level::Update(const float& _deltaTime)
+void Level::Update(const Float& _deltaTime)
 {
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	collisionManager.Update(); 
@@ -40,6 +47,11 @@ void Level::Update(const float& _deltaTime)
 	hud.DestroyPendingDeleteWidgets();
 
 	Render();
+}
+
+CameraComponent* Level::GetDefaultCamera() const
+{
+	return mainCamera->GetComponent<CameraComponent>();
 }
 
 void Krampus::Level::Render()

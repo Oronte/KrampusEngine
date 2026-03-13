@@ -48,7 +48,7 @@ void Krampus::ShapeObject::SetRadius(const float& _radius)
 	else Cast<CircleShape>(shape.get())->SetRadius(_radius);
 }
 
-float Krampus::ShapeObject::GetRadius() const
+Float Krampus::ShapeObject::GetRadius() const
 {
 	if (shapeType != ShapeType::Circle)
 	{
@@ -64,7 +64,7 @@ void Krampus::ShapeObject::SetPointCount(const size_t& _pointCount)
 	else Cast<CircleShape>(shape.get())->SetPointCount(_pointCount);
 }
 
-size_t Krampus::ShapeObject::GetPointCount() const
+Int Krampus::ShapeObject::GetPointCount() const
 {
 	if (shapeType != ShapeType::Circle)
 	{
@@ -74,7 +74,7 @@ size_t Krampus::ShapeObject::GetPointCount() const
 	return Cast<CircleShape>(shape.get())->GetPointCount();
 }
 
-void Krampus::ShapeObject::SetTexture(const std::string& _path, TextureExtensionType _textureType, const IRect& _rect, const bool _isRepeated, const bool _smooth)
+void Krampus::ShapeObject::SetTexture(const String& _path, TextureExtensionType _textureType, const IRect& _rect, const Bool& _isRepeated, const Bool& _smooth)
 {
 	M_TEXTURE.Load(this, _path, _textureType, _rect, _isRepeated, _smooth);
 }

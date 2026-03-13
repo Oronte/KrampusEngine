@@ -10,15 +10,15 @@ namespace Krampus
 	class TextureManager : public Singleton<TextureManager>
 	{
 #ifdef SHIP
-		std::string texturePath = "../../Content/Textures/";
+		String		texturePath					= "../../Content/Textures/";
 #else
-		std::string texturePath = "Content/Textures/";
+		String		texturePath					= "Content/Textures/";
 #endif
-		std::string defaultTexturePath = "Default";
-		std::string defaultTextureExtension = "png";
-		Texture defaultTexture;
+		String		defaultTexturePath			= "_internal/Default";
+		String		defaultTextureExtension		= "png";
+		Texture		defaultTexture;
 
-		std::unordered_map<std::string, std::shared_ptr<sf::Texture>> cache;
+		std::unordered_map<String, std::shared_ptr<sf::Texture>> cache;
 
 	public:
 		TextureManager();
@@ -27,14 +27,14 @@ namespace Krampus
 		void LoadDefaultTexture();
 		void SetTextureToDefault(Texture& _texture);
 
-		std::shared_ptr<sf::Texture> LoadOrGetSharedTexture(const std::string& _path, const IRect& _rect = IRect());
+		std::shared_ptr<sf::Texture> LoadOrGetSharedTexture(const String& _path, const IRect& _rect = IRect());
 		
 		void SetTexture(Shape* _shape, const Texture* _texture);
-		std::string GetExtensionNameByType(const TextureExtensionType& _textureType);
+		String GetExtensionNameByType(const TextureExtensionType& _textureType);
 
 	public:
-		void Load(ShapeObject* _shapeObject, const std::string& _path, const TextureExtensionType& _textureType = TextureExtensionType::PNG,
-			const IRect& _rect = IRect(), const bool _isRepeated = false, const bool _smooth = true);
+		void Load(ShapeObject* _shapeObject, const String& _path, const TextureExtensionType& _textureType = TextureExtensionType::PNG,
+			const IRect& _rect = IRect(), const Bool& _isRepeated = false, const Bool& _smooth = true);
 		void SetTextureRect(Shape* _shape, const IVector2& _start, const IVector2& _size);
 		void SetTextureRect(Shape* _shape, const IRect& _rect);
 	};

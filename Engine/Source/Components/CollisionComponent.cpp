@@ -7,6 +7,7 @@
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionChannel& _channel, const CollisionChannel& _mask)
 	: Component(_owner)
 {
+	name = NAME_OF(CollisionComponent);
 	channel = _channel;
 	mask = _mask;
 
@@ -24,9 +25,10 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionCh
 	level->GetCollisionManagerRef().Register(this);
 }
 
-Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const float& _radius, const CollisionChannel& _channel, const CollisionChannel& _mask)
+Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const Float& _radius, const CollisionChannel& _channel, const CollisionChannel& _mask)
 	: Component(_owner)
 {
+	name = NAME_OF(CollisionComponent);
 	channel = _channel;
 	mask = _mask;
 
@@ -39,6 +41,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const float& _rad
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _size, const CollisionChannel& _channel, const CollisionChannel& _mask)
 	: Component(_owner)
 {
+	name = NAME_OF(CollisionComponent);
 	channel = _channel;
 	mask = _mask;
 
@@ -66,7 +69,7 @@ void Krampus::CollisionComponent::SetSize(const FVector2& _size)
 	shapeType = ShapeType::Rectangle;
 }
 
-void Krampus::CollisionComponent::SetRadius(const float _radius)
+void Krampus::CollisionComponent::SetRadius(const Float& _radius)
 {
 	sizeData.radius = _radius;
 	shapeType = ShapeType::Circle;
@@ -105,7 +108,7 @@ void Krampus::CollisionComponent::ComputeCollision(CollisionComponent* _other)
 
 }
 
-void Krampus::CollisionComponent::Tick(const float& _deltaTime)
+void Krampus::CollisionComponent::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
@@ -271,7 +274,7 @@ void Krampus::CollisionComponent::BeginDestroy()
 void Krampus::CollisionComponent::DrawDebug()
 {
 #ifdef DEBUG
-	if (!useDebug) return;
+	if (!IsDebugging()) return;
 
 	switch (shapeType)
 	{
@@ -284,4 +287,9 @@ void Krampus::CollisionComponent::DrawDebug()
 		break;
 	};
 #endif
+}
+
+std::string Krampus::CollisionComponent::ToString() const
+{
+	return std::string();
 }

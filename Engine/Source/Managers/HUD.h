@@ -6,8 +6,8 @@ namespace Krampus
 
 	class HUD
 	{
-		std::vector<std::unique_ptr<Widget>> widgets;
-		std::vector<std::unique_ptr<Widget>> pendingDeleteWidgets;
+		std::vector<std::unique_ptr<Widget>>	widgets;
+		std::vector<std::unique_ptr<Widget>>	pendingDeleteWidgets;
 
 	public:
 		inline const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
@@ -64,7 +64,7 @@ namespace Krampus
 
 	public:
 		void BeginPlay();
-		void Update(const float& _deltaTime);
+		void Update(const Float& _deltaTime);
 		void Deconstruct();
 		void BeginDestroy();
 	};

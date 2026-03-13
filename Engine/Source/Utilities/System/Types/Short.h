@@ -1,41 +1,43 @@
 #pragma once
+#include <functional>
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include <type_traits>
 #include <limits>
 #include <cstdlib>
 #include <string>
-#include "Utilities/System/Printable.h"
 
-class Long : public Krampus::IPrintable
+class Short : public Krampus::IPrintable
 {
-    long value = 0;
+    short value = 0;
 
 public:
     // ── Constructors ─────────────────────────────────────────────────────────
-    Long() = default;
-    Long(const Long& _o) : value(_o.value) {}
+    Short() = default;
+    Short(const Short& _o) : value(_o.value) {}
+    Short& operator=(const Short&) = default;
 
     // Handles ALL arithmetic primitives via one template constructor
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long(T _v) : value(static_cast<long>(_v)) {}
+    Short(T _v) : value(static_cast<short>(_v)) {}
 
     // ── Assignment ───────────────────────────────────────────────────────────
-    void SetValue(const Long& _v) { value = _v.value; }
+    void SetValue(const Short& _v) { value = _v.value; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    void SetValue(T _v) { value = static_cast<long>(_v); }
+    void SetValue(T _v) { value = static_cast<short>(_v); }
 
     // ── Mutating arithmetic ───────────────────────────────────────────────────
     void Increment() { ++value; }
     void Decrement() { --value; }
 
-    void Add     (const Long& _v) { value += _v.value; }
-    void Subtract(const Long& _v) { value -= _v.value; }
-    void Multiply(const Long& _v) { value *= _v.value; }
-    void Divide  (const Long& _v);
-    void Modulo  (const Long& _v);
-    void And     (const Long& _v) { value &= _v.value; }
-    void Or      (const Long& _v) { value |= _v.value; }
-    void Xor     (const Long& _v) { value ^= _v.value; }
+    void Add     (const Short& _v) { value += _v.value; }
+    void Subtract(const Short& _v) { value -= _v.value; }
+    void Multiply(const Short& _v) { value *= _v.value; }
+    void Divide  (const Short& _v);
+    void Modulo  (const Short& _v);
+    void And     (const Short& _v) { value &= _v.value; }
+    void Or      (const Short& _v) { value |= _v.value; }
+    void Xor     (const Short& _v) { value ^= _v.value; }
     void Not     ()                { value  = ~value;   }
     void ShiftLeft (int _b) { value <<= _b; }
     void ShiftRight(int _b) { value >>= _b; }
@@ -43,154 +45,155 @@ public:
     void Abs();
     void Negate();
     void Invert();
-    static Long Abs(const Long& _v);
+    static Short Abs(const Short& _v);
     // Template variants – accept any arithmetic type
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    void Add     (T _v) { Add     (Long(static_cast<long>(_v))); }
+    void Add     (T _v) { Add     (Short(static_cast<short>(_v))); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    void Subtract(T _v) { Subtract(Long(static_cast<long>(_v))); }
+    void Subtract(T _v) { Subtract(Short(static_cast<short>(_v))); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    void Multiply(T _v) { Multiply(Long(static_cast<long>(_v))); }
+    void Multiply(T _v) { Multiply(Short(static_cast<short>(_v))); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    void Divide  (T _v) { Divide  (Long(static_cast<long>(_v))); }
+    void Divide  (T _v) { Divide  (Short(static_cast<short>(_v))); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    void Modulo  (T _v) { Modulo  (Long(static_cast<long>(_v))); }
+    void Modulo  (T _v) { Modulo  (Short(static_cast<short>(_v))); }
 
     // ── Queries ──────────────────────────────────────────────────────────────
     Bool IsZero    () const { return Bool(value == 0); }
-    Bool IsPositive() const { return Bool(value > (long)0); }
-    Bool IsNegative() const { return Bool(value < (long)0); }
+    Bool IsPositive() const { return Bool(value > (short)0); }
+    Bool IsNegative() const { return Bool(value < (short)0); }
     Bool IsEven    () const { return Bool((value % 2) == 0); }
     Bool IsOdd     () const { return !IsEven(); }
-    Bool IsEqual         (const Long& o) const { return Bool(value == o.value); }
-    Bool IsDifferent     (const Long& o) const { return Bool(value != o.value); }
-    Bool IsGreater       (const Long& o) const { return Bool(value >  o.value); }
-    Bool IsLower         (const Long& o) const { return Bool(value <  o.value); }
-    Bool IsGreaterOrEqual(const Long& o) const { return Bool(value >= o.value); }
-    Bool IsLowerOrEqual  (const Long& o) const { return Bool(value <= o.value); }
+    Bool IsEqual         (const Short& o) const { return Bool(value == o.value); }
+    Bool IsDifferent     (const Short& o) const { return Bool(value != o.value); }
+    Bool IsGreater       (const Short& o) const { return Bool(value >  o.value); }
+    Bool IsLower         (const Short& o) const { return Bool(value <  o.value); }
+    Bool IsGreaterOrEqual(const Short& o) const { return Bool(value >= o.value); }
+    Bool IsLowerOrEqual  (const Short& o) const { return Bool(value <= o.value); }
 
     // ── Static helpers ───────────────────────────────────────────────────────
     virtual std::string ToString() const override { return std::to_string(value); }
-    static Long MaxLong() { return Long(std::numeric_limits<long>::max()); }
-    static Long MinLong() { return Long(std::numeric_limits<long>::min()); }
-    static Long Parse(const std::string& _s);
-    static Long Max  (const Long& a, const Long& b) { return a.value >= b.value ? a : b; }
-    static Long Min  (const Long& a, const Long& b) { return a.value <= b.value ? a : b; }
-    static Long Clamp(const Long& v, const Long& mn, const Long& mx);
+    static Short MaxShort() { return Short(std::numeric_limits<short>::max()); }
+    static Short MinShort() { return Short(std::numeric_limits<short>::min()); }
+    static Short Parse(const std::string& _s);
+    static Short Max  (const Short& a, const Short& b) { return a.value >= b.value ? a : b; }
+    static Short Min  (const Short& a, const Short& b) { return a.value <= b.value ? a : b; }
+    static Short Clamp(const Short& v, const Short& mn, const Short& mx);
 
     // ── Operators (member) ───────────────────────────────────────────────────
-    Long  operator+ (const Long& o) const { return Long((long)(value + o.value)); }
-    Long  operator- (const Long& o) const { return Long((long)(value - o.value)); }
-    Long  operator* (const Long& o) const { return Long((long)(value * o.value)); }
-    Long  operator/ (const Long& o) const;
-    Long  operator% (const Long& o) const;
-    Long  operator& (const Long& o) const { return Long(value & o.value); }
-    Long  operator| (const Long& o) const { return Long(value | o.value); }
-    Long  operator^ (const Long& o) const { return Long(value ^ o.value); }
-    Long  operator~ ()               const { return Long(~value); }
-    Long  operator<<(int b)          const { return Long(value << b); }
-    Long  operator>>(int b)          const { return Long(value >> b); }
+    Short  operator+ (const Short& o) const { return Short((short)(value + o.value)); }
+    Short  operator- (const Short& o) const { return Short((short)(value - o.value)); }
+    Short  operator- ()               const { return Short(-value); }  // unary minus
+    Short  operator* (const Short& o) const { return Short((short)(value * o.value)); }
+    Short  operator/ (const Short& o) const;
+    Short  operator% (const Short& o) const;
+    Short  operator& (const Short& o) const { return Short(value & o.value); }
+    Short  operator| (const Short& o) const { return Short(value | o.value); }
+    Short  operator^ (const Short& o) const { return Short(value ^ o.value); }
+    Short  operator~ ()               const { return Short(~value); }
+    Short  operator<<(int b)          const { return Short(value << b); }
+    Short  operator>>(int b)          const { return Short(value >> b); }
 
-    Long& operator+=(const Long& o)       { value += o.value; return *this; }
-    Long& operator-=(const Long& o)       { value -= o.value; return *this; }
-    Long& operator*=(const Long& o)       { value *= o.value; return *this; }
-    Long& operator/=(const Long& o);
-    Long& operator%=(const Long& o);
-    Long& operator&=(const Long& o)       { value &= o.value; return *this; }
-    Long& operator|=(const Long& o)       { value |= o.value; return *this; }
-    Long& operator^=(const Long& o)       { value ^= o.value; return *this; }
-    Long& operator<<=(int b)               { value <<= b;      return *this; }
-    Long& operator>>=(int b)               { value >>= b;      return *this; }
+    Short& operator+=(const Short& o)       { value += o.value; return *this; }
+    Short& operator-=(const Short& o)       { value -= o.value; return *this; }
+    Short& operator*=(const Short& o)       { value *= o.value; return *this; }
+    Short& operator/=(const Short& o);
+    Short& operator%=(const Short& o);
+    Short& operator&=(const Short& o)       { value &= o.value; return *this; }
+    Short& operator|=(const Short& o)       { value |= o.value; return *this; }
+    Short& operator^=(const Short& o)       { value ^= o.value; return *this; }
+    Short& operator<<=(int b)               { value <<= b;      return *this; }
+    Short& operator>>=(int b)               { value >>= b;      return *this; }
 
-    Bool operator==(const Long& o) const { return Bool(value == o.value); }
-    Bool operator!=(const Long& o) const { return Bool(value != o.value); }
-    Bool operator< (const Long& o) const { return Bool(value <  o.value); }
-    Bool operator> (const Long& o) const { return Bool(value >  o.value); }
-    Bool operator<=(const Long& o) const { return Bool(value <= o.value); }
-    Bool operator>=(const Long& o) const { return Bool(value >= o.value); }
+    Bool operator==(const Short& o) const { return Bool(value == o.value); }
+    Bool operator!=(const Short& o) const { return Bool(value != o.value); }
+    Bool operator< (const Short& o) const { return Bool(value <  o.value); }
+    Bool operator> (const Short& o) const { return Bool(value >  o.value); }
+    Bool operator<=(const Short& o) const { return Bool(value <= o.value); }
+    Bool operator>=(const Short& o) const { return Bool(value >= o.value); }
 
-    Long& operator++()    { ++value; return *this; }
-    Long  operator++(int) { Long t(*this); value++; return t; }
-    Long& operator--()    { --value; return *this; }
-    Long  operator--(int) { Long t(*this); value--; return t; }
+    Short& operator++()    { ++value; return *this; }
+    Short operator++(int) { Short _t(*this); value++; return _t; }
+    Short& operator--()    { --value; return *this; }
+    Short operator--(int) { Short _t(*this); value--; return _t; }
 
-    // ── Template overloads: T op Long  and  Long op T ──────────────────────
+    // ── Template overloads: T op Short  and  Short op T ──────────────────────
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator+(T v) const { return *this + Long(static_cast<long>(v)); }
+    Short operator+(T v) const { return *this + Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator-(T v) const { return *this - Long(static_cast<long>(v)); }
+    Short operator-(T v) const { return *this - Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator*(T v) const { return *this * Long(static_cast<long>(v)); }
+    Short operator*(T v) const { return *this * Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator/(T v) const { return *this / Long(static_cast<long>(v)); }
+    Short operator/(T v) const { return *this / Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator%(T v) const { return *this % Long(static_cast<long>(v)); }
+    Short operator%(T v) const { return *this % Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator&(T v) const { return *this & Long(static_cast<long>(v)); }
+    Short operator&(T v) const { return *this & Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator|(T v) const { return *this | Long(static_cast<long>(v)); }
+    Short operator|(T v) const { return *this | Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long operator^(T v) const { return *this ^ Long(static_cast<long>(v)); }
-
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator+=(T v) { return *this += Long(static_cast<long>(v)); }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator-=(T v) { return *this -= Long(static_cast<long>(v)); }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator*=(T v) { return *this *= Long(static_cast<long>(v)); }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator/=(T v) { return *this /= Long(static_cast<long>(v)); }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator%=(T v) { return *this %= Long(static_cast<long>(v)); }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator&=(T v) { value &= static_cast<long>(v); return *this; }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator|=(T v) { value |= static_cast<long>(v); return *this; }
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Long& operator^=(T v) { value ^= static_cast<long>(v); return *this; }
+    Short operator^(T v) const { return *this ^ Short(static_cast<short>(v)); }
 
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Bool operator==(T v) const { return Bool(value == static_cast<long>(v)); }
+    Short& operator+=(T v) { return *this += Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Bool operator!=(T v) const { return Bool(value != static_cast<long>(v)); }
+    Short& operator-=(T v) { return *this -= Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Bool operator< (T v) const { return Bool(value <  static_cast<long>(v)); }
+    Short& operator*=(T v) { return *this *= Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Bool operator> (T v) const { return Bool(value >  static_cast<long>(v)); }
+    Short& operator/=(T v) { return *this /= Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Bool operator<=(T v) const { return Bool(value <= static_cast<long>(v)); }
+    Short& operator%=(T v) { return *this %= Short(static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    Bool operator>=(T v) const { return Bool(value >= static_cast<long>(v)); }
+    Short& operator&=(T v) { value &= static_cast<short>(v); return *this; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    Short& operator|=(T v) { value |= static_cast<short>(v); return *this; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    Short& operator^=(T v) { value ^= static_cast<short>(v); return *this; }
 
-    // Non-member friends: T op Long
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator+(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) + rhs; }
+    Bool operator==(T v) const { return Bool(value == static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator-(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) - rhs; }
+    Bool operator!=(T v) const { return Bool(value != static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator*(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) * rhs; }
+    Bool operator< (T v) const { return Bool(value <  static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator/(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) / rhs; }
+    Bool operator> (T v) const { return Bool(value >  static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator%(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) % rhs; }
+    Bool operator<=(T v) const { return Bool(value <= static_cast<short>(v)); }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator&(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) & rhs; }
+    Bool operator>=(T v) const { return Bool(value >= static_cast<short>(v)); }
+
+    // Non-member friends: T op Short
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator|(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) | rhs; }
+    friend Short operator+(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) + rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Long operator^(T lhs, const Long& rhs) { return Long(static_cast<long>(lhs)) ^ rhs; }
+    friend Short operator-(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) - rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Bool  operator==(T lhs, const Long& rhs) { return rhs == lhs; }
+    friend Short operator*(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) * rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Bool  operator!=(T lhs, const Long& rhs) { return rhs != lhs; }
+    friend Short operator/(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) / rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Bool  operator< (T lhs, const Long& rhs) { return rhs >  lhs; }
+    friend Short operator%(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) % rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Bool  operator> (T lhs, const Long& rhs) { return rhs <  lhs; }
+    friend Short operator&(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) & rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Bool  operator<=(T lhs, const Long& rhs) { return rhs >= lhs; }
+    friend Short operator|(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) | rhs; }
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
-    friend Bool  operator>=(T lhs, const Long& rhs) { return rhs <= lhs; }
+    friend Short operator^(T lhs, const Short& rhs) { return Short(static_cast<short>(lhs)) ^ rhs; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    friend Bool  operator==(T lhs, const Short& rhs) { return rhs == lhs; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    friend Bool  operator!=(T lhs, const Short& rhs) { return rhs != lhs; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    friend Bool  operator< (T lhs, const Short& rhs) { return rhs >  lhs; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    friend Bool  operator> (T lhs, const Short& rhs) { return rhs <  lhs; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    friend Bool  operator<=(T lhs, const Short& rhs) { return rhs >= lhs; }
+    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
+    friend Bool  operator>=(T lhs, const Short& rhs) { return rhs <= lhs; }
 
     // ── Cast operators ───────────────────────────────────────────────────────
 
@@ -209,4 +212,32 @@ public:
     operator float()              const { return (float)(value); }
     operator double()             const { return (double)(value); }
     operator long double()        const { return (long double)(value); }
+
+    // ── Cross-type conversions ──────────────────────────────────────────────
+    Byte ToByte() const;
+    UShort ToUShort() const;
+    Int ToInt() const;
+    UInt ToUInt() const;
+    Long ToLong() const;
+    ULong ToULong() const;
+    LongLong ToLongLong() const;
+    ULongLong ToULongLong() const;
+    Float ToFloat() const;
+    Double ToDouble() const;
+    LongDouble ToLongDouble() const;
+
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows Short to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<Short>
+    {
+        std::size_t operator()(const Short& _v) const noexcept
+        {
+            return std::hash<short>{}(static_cast<short>(_v));
+        }
+    };
+}

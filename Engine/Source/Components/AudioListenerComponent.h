@@ -6,14 +6,14 @@ namespace Krampus
 
 	class AudioListenerComponent : public Component
 	{
-		bool topView;
+		Bool	topView		= false;
 
 	public:
-		inline void SetGlobalVolume(const float _volume)
+		inline void SetGlobalVolume(const Float& _volume)
 		{
 			sf::Listener::setGlobalVolume(_volume);
 		}
-		inline float GetGlobalVolume() const
+		inline Float GetGlobalVolume() const
 		{
 			return sf::Listener::getGlobalVolume();
 		}
@@ -27,13 +27,16 @@ namespace Krampus
 			return sf::Listener::getCone();
 		}
 
-		AudioListenerComponent(Actor* _owner, bool _topView = false);
+		AudioListenerComponent(Actor* _owner, const Bool& _topView = false);
 
 		virtual void BeginPlay() override;
-		virtual void Tick(const float& _deltaTime) override;
+		virtual void Tick(const Float& _deltaTime) override;
 
 	private:
 		void UpdateListener();
+
+	public:
+		virtual std::string ToString() const override;
 	};
 
 }

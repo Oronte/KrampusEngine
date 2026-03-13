@@ -30,6 +30,6 @@ std::string Krampus::Transform::ToString() const
 {
 	return std::format("Position = {} | Rotation (degrees) = {} | Scale = {}",
 		position.ToString(),
-		rotation.ToDegrees(),
+		rotation.ToDegrees().ToString(),
 		scale.ToString());
 }

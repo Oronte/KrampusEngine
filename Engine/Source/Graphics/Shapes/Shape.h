@@ -8,7 +8,7 @@ namespace Krampus
 	class Shape
 	{
 	protected:
-		std::unique_ptr<sf::Shape> shape;
+		std::unique_ptr<sf::Shape>  shape;
 
 	public:
         virtual ~Shape() = default;
@@ -27,7 +27,7 @@ namespace Krampus
             }
             return Texture(*(shape->getTexture()));
         }
-        inline void SetTexture(const Texture* _texture, const bool& _resetRect = false)
+        inline void SetTexture(const Texture* _texture, const Bool& _resetRect = false)
         {
             if (!shape || !_texture)
             {
@@ -94,7 +94,7 @@ namespace Krampus
             return shape->getOutlineColor();
         }
 
-        inline void SetOutlineThickness(const float& _thickness)
+        inline void SetOutlineThickness(const Float& _thickness)
         {
             if (!shape)
             {
@@ -103,7 +103,7 @@ namespace Krampus
             }
             shape->setOutlineThickness(_thickness);
         }
-        inline float GetOutlineThickness() const
+        inline Float GetOutlineThickness() const
         {
             if (!shape)
             {
@@ -113,7 +113,7 @@ namespace Krampus
             return shape->getOutlineThickness();
         }
 
-        inline std::size_t GetPointCount() const
+        inline Int GetPointCount() const
         {
             if (!shape)
             {
@@ -122,7 +122,7 @@ namespace Krampus
             }
             return shape->getPointCount();
         }
-        inline FVector2 GetPoint(const std::size_t& _index) const
+        inline FVector2 GetPoint(const Int& _index) const
         {
             if (!shape)
             {

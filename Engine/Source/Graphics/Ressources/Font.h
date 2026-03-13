@@ -13,25 +13,25 @@ namespace Krampus
 
 	class Font
 	{
-		sf::Font font;
+		sf::Font	font;
 
 	public:
-		inline bool IsSmooth() const
+		inline Bool IsSmooth() const
 		{
 			return font.isSmooth();
 		}
-		inline void SetSmooth(const bool& _smooth)
+		inline void SetSmooth(const Bool& _smooth)
 		{
 			return font.setSmooth(_smooth);
 		}
 
 		Font() = default;
-		Font(const std::string& _path) : font(_path) {}
+		Font(const String& _path) : font(_path.StdString()) {}
 		Font(const sf::Font& _font) : font(_font) {}
 
-		inline bool Open(const std::string& _path)
+		inline Bool Open(const String& _path)
 		{
-			return font.openFromFile(_path);
+			return font.openFromFile(_path.StdString());
 		}
 
 		operator const sf::Font&() const noexcept

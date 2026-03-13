@@ -1,4 +1,5 @@
 #include "CameraManager.h"
+#include "Managers/LevelManager.h"
 
 void Krampus::CameraManager::UpdateView()
 {
@@ -6,8 +7,10 @@ void Krampus::CameraManager::UpdateView()
 	GetWorld()->GetWindowRef().SetView(current);
 }
 
-void Krampus::CameraManager::Render(const bool& splitScreen)
+void Krampus::CameraManager::Render(const Bool& splitScreen)
 {
+	if (!current)
+		current = GetWorld()->GetLevelManager()->GetCurrentLevel()->GetDefaultCamera();
 	if (!current)
 	{
 		LOG_WARNING("There is no current camera ! Objects cannot be drawn on the screen.");

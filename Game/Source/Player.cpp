@@ -2,6 +2,9 @@
 #include "Managers/InputManager.h"
 #include "Graphics/Mouse.h"
 #include "GameFramework/Level.h"
+#include "Managers/AudioManager.h"
+#include "Managers/LevelManager.h"
+#include "MainMenu.h"
 
 Player::Player(Level* _level)
 	: Actor(_level)
@@ -14,6 +17,10 @@ Player::Player(Level* _level)
 	animationSM = CreateComponent<AnimationComponentSM>();
 	camera = CreateComponent<CameraComponent>();
 	health = CreateComponent<HealthComponent>();
+	listener = CreateComponent<AudioListenerComponent>();
+
+	footStep = M_AUDIO.CreateSound("Footstep", AudioExtensionType::MP3);
+	hurtSound = M_AUDIO.CreateSound("PlayerHurt", AudioExtensionType::MP3);
 }
 
 void Player::Construct()
@@ -30,6 +37,10 @@ void Player::Construct()
 	inputs->Bind(&GetWorld()->GetInputManager()->D.onRelease, this, &Player::Stop);
 	inputs->Bind(&GetWorld()->GetInputManager()->Q.onRelease, this, &Player::Stop);
 	inputs->Bind(&GetWorld()->GetInputManager()->Space.onPress, this, &Player::Jump);
+
+	inputs->Bind(&GetWorld()->GetInputManager()->M.onPress, [this]() {LOG_MSG("Test"); });
+	inputs->Bind(&GetWorld()->GetInputManager()->W.onPress, [this]() {LOG_WARNING("Test"); });
+	inputs->Bind(&GetWorld()->GetInputManager()->E.onPress, [this]() {LOG_ERROR("Test"); });
 
 	AnimationSM* _idle = animationSM->AddAnimation("Idle", AnimationData(4, 0.5f, IRect(IVector2(0, 32 * 0), IVector2(32))));
 	AnimationSM* _move = animationSM->AddAnimation("Move", AnimationData(4, 0.3f, IRect(IVector2(0, 32 * 1), IVector2(32))));
@@ -78,6 +89,16 @@ void Player::Construct()
 			return !isHit;
 		});
 
+	footstepHandle = _move->notifies[2].AddListener([this]()
+		{
+			footStep.Play();
+		});
+
+	hurtHandle = health->onHealthUpdate.AddListener([this](Int _health)
+		{
+			hurtSound.Play();
+		});
+
 	camera->SetCurrent();
 	camera->freezeRotation = true;
 
@@ -90,8 +111,6 @@ void Player::BeginPlay()
 
 	handle = collision->onCollisionEnter.AddListener([this](CollisionInfo _info)
 		{
-			isJumping = false;
-			Stop();
 			if (_info.collision->ContainsCollisionChannel(_info.collision->channel, CollisionChannel::Enemy))
 			{
 				bool _isAlive = health->Damage(10.0f);
@@ -106,17 +125,26 @@ void Player::BeginPlay()
 					Stop();
 				}
 			}
+			else
+			{
+				isJumping = false;
+				Stop();
+				footStep.Play();
+			}
 		});
 
-	deathHandle = health->onDeath.AddListener(this, &::Player::Die);
+	deathHandle = health->onDeath.AddListener(this, &Player::Die);
 
 	animationSM->StartAnimation();
 }
 
-void Player::Tick(const float& _deltaTime)
+void Player::Tick(const Float& _deltaTime)
 {
 	Super::Tick(_deltaTime);
 
+	//LOG_MSG("This is a message log.");
+	//LOG_WARNING("This is a warning log.");
+	//LOG_ERROR("This is a error log.");
 	camera->SetCenter((transform.position + GetWorld()->GetMouse()->GetPosition() / 2.0f) / 2.0f);
 }
 
@@ -158,22 +186,14 @@ void Player::Jump()
 
 void Player::Die()
 {
-	//RemoveComponent<CollisionComponent>();
-	//RemoveComponent<RigidbodyComponent>();
-	//RemoveComponent<InputComponent>();
-	//RemoveComponent<HealthComponent>();
+	RemoveComponent<RigidbodyComponent>();
+	RemoveComponent<InputComponent>();
+	collision->channel = CollisionChannel::None;
 
-	//collision = nullptr;
-	//rigidbody = nullptr;
-	//inputs = nullptr;
-	//health = nullptr;
-	//deathHandle.~ListenerHandle();
+	CreateTimer([this]()
+		{
+			GetWorld()->GetLevelManager()->SetLevel<MainMenu>();
+		}, 3.0f);
 
-	//CreateTimer([this]()
-	//	{
-	//		GetLevel()->Unload();
-	//		GetLevel()->Load();
-	//	}, 1.5f);
-
-	Destroy();
+	onDeath.Broadcast();
 }

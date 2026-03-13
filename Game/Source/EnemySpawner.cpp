@@ -3,7 +3,7 @@
 #include "GameFramework/Level.h"
 #include "Managers/TimerManager.h"
 
-EnemySpawner::EnemySpawner(Level* _level, Actor* _player)
+EnemySpawner::EnemySpawner(Level* _level, Player* _player)
 	: Actor(_level), player(_player)
 {
 	GetWorld()->GetTimerManager()->CreateTimer(this, &EnemySpawner::Spawn, spawnTime, true);

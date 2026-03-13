@@ -1,10 +1,11 @@
 #pragma once
+#include <functional>
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include <type_traits>
 #include <limits>
 #include <cstdlib>
 #include <string>
-#include "Utilities/System/Printable.h"
 
 class Byte : public Krampus::IPrintable
 {
@@ -14,6 +15,7 @@ public:
     // ── Constructors ─────────────────────────────────────────────────────────
     Byte() = default;
     Byte(const Byte& _o) : value(_o.value) {}
+    Byte& operator=(const Byte&) = default;
 
     // Handles ALL arithmetic primitives via one template constructor
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -106,9 +108,9 @@ public:
     Bool operator>=(const Byte& o) const { return Bool(value >= o.value); }
 
     Byte& operator++()    { ++value; return *this; }
-    Byte  operator++(int) { Byte t(*this); value++; return t; }
+    Byte operator++(int) { Byte _t(*this); value++; return _t; }
     Byte& operator--()    { --value; return *this; }
-    Byte  operator--(int) { Byte t(*this); value--; return t; }
+    Byte operator--(int) { Byte _t(*this); value--; return _t; }
 
     // ── Template overloads: T op Byte  and  Byte op T ──────────────────────
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -205,4 +207,32 @@ public:
     operator float()              const { return (float)(value); }
     operator double()             const { return (double)(value); }
     operator long double()        const { return (long double)(value); }
+
+    // ── Cross-type conversions ──────────────────────────────────────────────
+    Short ToShort() const;
+    UShort ToUShort() const;
+    Int ToInt() const;
+    UInt ToUInt() const;
+    Long ToLong() const;
+    ULong ToULong() const;
+    LongLong ToLongLong() const;
+    ULongLong ToULongLong() const;
+    Float ToFloat() const;
+    Double ToDouble() const;
+    LongDouble ToLongDouble() const;
+
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows Byte to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<Byte>
+    {
+        std::size_t operator()(const Byte& _v) const noexcept
+        {
+            return std::hash<unsigned char>{}(static_cast<unsigned char>(_v));
+        }
+    };
+}

@@ -3,16 +3,26 @@
 #include "Core/Engine.h"
 #include "Graphics/Mouse.h"
 
-GrabableComponent::GrabableComponent(Actor* _owner, Actor* _graber)
+GrabableComponent::GrabableComponent(Actor* _owner, Player* _graber)
 	: Component(_owner), graber(_graber)
 {
 }
 
-void GrabableComponent::Tick(const float& _deltaTime)
+void GrabableComponent::Construct()
+{
+	Super::Construct();
+
+	handle = graber->onDeath.AddListener([this]()
+		{
+			canTrack = false;
+		});
+}
+
+void GrabableComponent::Tick(const Float& _deltaTime)
 {
 	Super::Tick(_deltaTime);
 
-	if (!graber) return;
+	if (!graber || !canTrack) return;
 	transform.position = graber->transform.position;
 	transform.LookAt(GetWorld()->GetMouse()->GetPosition());
 	if (FMath::Abs(transform.rotation.ToRadians()) >= FMath::halfPi)

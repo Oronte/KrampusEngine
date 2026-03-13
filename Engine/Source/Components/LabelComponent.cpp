@@ -5,7 +5,9 @@
 
 Krampus::LabelComponent::LabelComponent(Actor* _owner, const TextData& _data)
 	: Component(_owner), text(_data)
-{ }
+{ 
+	name = NAME_OF(LabelComponent);
+}
 
 void Krampus::LabelComponent::Draw(Window& _window)
 {
@@ -17,7 +19,7 @@ void Krampus::LabelComponent::Draw(Window& _window)
 void Krampus::LabelComponent::DrawDebug()
 {
 #ifdef DEBUG
-	if (!useDebug) return;
+	if (!IsDebugging()) return;
 	Debug::DrawDebugRect(level, transform.position, GetLocalBounds().GetSize(), transform.rotation, Color::Green());
 #endif
 
@@ -30,7 +32,7 @@ void Krampus::LabelComponent::Construct()
 	level->GetCameraManagerRef().AddToWindow(this);
 }
 
-void Krampus::LabelComponent::Tick(const float& _deltaTime)
+void Krampus::LabelComponent::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
@@ -56,4 +58,9 @@ void Krampus::LabelComponent::SetZOrder(const ZOrder& _zOrder)
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
 	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+}
+
+std::string Krampus::LabelComponent::ToString() const
+{
+	return name + " -> Label = \"" + text.GetString() + "\"";
 }

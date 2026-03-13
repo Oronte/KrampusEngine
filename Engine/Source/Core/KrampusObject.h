@@ -5,7 +5,7 @@ namespace Krampus
 {
 	class KrampusObject
 	{
-		Engine* world = nullptr;
+		Engine*		world	= nullptr;
 
 	public:
 		inline Engine* GetWorld() const

@@ -6,7 +6,7 @@ namespace Krampus
 
 	class CollisionManager
 	{
-		std::vector<CollisionComponent*> collisions;
+		std::vector<CollisionComponent*>	collisions;
 
 	public:
 		CollisionManager() = default;

@@ -1,9 +1,10 @@
 #include "Logger.h"
 #include "Managers/TimerManager.h"
+#include "Managers/AudioManager.h"
 
 using namespace Krampus;
 
-std::string VerbosityData::RetrieveFullText(bool _useColor) const
+std::string VerbosityData::RetrieveFullText(Bool _useColor) const
 {
     static constexpr const char* _table[] =
     {
@@ -116,6 +117,16 @@ void Logger::Init()
     Reset();
     running = true;
     logThread = std::thread(LoggingThread);
+
+    msgNotif = M_AUDIO.CreateSound("_internal/MsgLogNotif", AudioExtensionType::MP3);
+    warningNotif = M_AUDIO.CreateSound("_internal/WarningLogNotif", AudioExtensionType::MP3);
+    errorNotif = M_AUDIO.CreateSound("_internal/ErrorLogNotif", AudioExtensionType::MP3);
+    fatalNotif = M_AUDIO.CreateSound("_internal/FatalLogNotif", AudioExtensionType::WAV);
+
+    msgNotif.SetSpatializationEnabled(false);
+    warningNotif.SetSpatializationEnabled(false);
+    errorNotif.SetSpatializationEnabled(false);
+    fatalNotif.SetSpatializationEnabled(false);
 #endif
 }
 
@@ -148,6 +159,8 @@ void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, cons
         EnqueueLog(_verbosity.RetrieveFullText(false));
 
         if (CanPrintInConsole(_type)) EnqueueConsole(_verbosity.RetrieveFullText(true));
+
+        PlayDebugSound(_type);
     }
 
     if (_type == VerbosityType::Fatal) THROW_EXCEPTION("Fatal exception occurred");
@@ -171,4 +184,50 @@ void Krampus::Logger::PrintLog(const VerbosityType& _type, const IPrintable* _ob
     }
     PrintLog(_type, _object->ToString(), _debug);
 #endif
+}
+
+void Krampus::Logger::Clear()
+{
+#ifdef DEBUG
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+#endif
+}
+
+void Krampus::Logger::PlayDebugSound(const VerbosityType& _type)
+{
+    if (!canPlaySound)
+        return;
+
+    if (_type == VerbosityType::Display)
+    {
+        if (msgNotif.IsAvaliable())
+        {
+            if (canPlayMsgSound) msgNotif.Play();
+        }
+    }
+    else if (_type == VerbosityType::Warning)
+    {
+        if (warningNotif.IsAvaliable())
+        {
+            if (canPlayWarningSound) warningNotif.Play();
+        }
+    }
+    else if (_type == VerbosityType::Error)
+    {
+        if (errorNotif.IsAvaliable())
+        {
+            if (canPlayErrorSound) errorNotif.Play();
+        }
+    }
+    else if (_type == VerbosityType::Fatal)
+    {
+        if (fatalNotif.IsAvaliable())
+        {
+            if (canPlayFatalSound) fatalNotif.Play();
+        }
+    }
 }

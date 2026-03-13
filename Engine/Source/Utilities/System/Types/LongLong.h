@@ -1,10 +1,11 @@
 #pragma once
+#include <functional>
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include <type_traits>
 #include <limits>
 #include <cstdlib>
 #include <string>
-#include "Utilities/System/Printable.h"
 
 class LongLong : public Krampus::IPrintable
 {
@@ -14,6 +15,7 @@ public:
     // ── Constructors ─────────────────────────────────────────────────────────
     LongLong() = default;
     LongLong(const LongLong& _o) : value(_o.value) {}
+    LongLong& operator=(const LongLong&) = default;
 
     // Handles ALL arithmetic primitives via one template constructor
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -81,6 +83,7 @@ public:
     // ── Operators (member) ───────────────────────────────────────────────────
     LongLong  operator+ (const LongLong& o) const { return LongLong((long long)(value + o.value)); }
     LongLong  operator- (const LongLong& o) const { return LongLong((long long)(value - o.value)); }
+    LongLong  operator- ()               const { return LongLong(-value); }  // unary minus
     LongLong  operator* (const LongLong& o) const { return LongLong((long long)(value * o.value)); }
     LongLong  operator/ (const LongLong& o) const;
     LongLong  operator% (const LongLong& o) const;
@@ -110,9 +113,9 @@ public:
     Bool operator>=(const LongLong& o) const { return Bool(value >= o.value); }
 
     LongLong& operator++()    { ++value; return *this; }
-    LongLong  operator++(int) { LongLong t(*this); value++; return t; }
+    LongLong operator++(int) { LongLong _t(*this); value++; return _t; }
     LongLong& operator--()    { --value; return *this; }
-    LongLong  operator--(int) { LongLong t(*this); value--; return t; }
+    LongLong operator--(int) { LongLong _t(*this); value--; return _t; }
 
     // ── Template overloads: T op LongLong  and  LongLong op T ──────────────────────
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -209,4 +212,32 @@ public:
     operator float()              const { return (float)(value); }
     operator double()             const { return (double)(value); }
     operator long double()        const { return (long double)(value); }
+
+    // ── Cross-type conversions ──────────────────────────────────────────────
+    Byte ToByte() const;
+    Short ToShort() const;
+    UShort ToUShort() const;
+    Int ToInt() const;
+    UInt ToUInt() const;
+    Long ToLong() const;
+    ULong ToULong() const;
+    ULongLong ToULongLong() const;
+    Float ToFloat() const;
+    Double ToDouble() const;
+    LongDouble ToLongDouble() const;
+
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows LongLong to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<LongLong>
+    {
+        std::size_t operator()(const LongLong& _v) const noexcept
+        {
+            return std::hash<long long>{}(static_cast<long long>(_v));
+        }
+    };
+}

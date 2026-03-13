@@ -1,10 +1,11 @@
 #pragma once
+#include <functional>
+#include "KrampusFwd.h"
 #include "Bool.h"
 #include <type_traits>
 #include <limits>
 #include <cstdlib>
 #include <string>
-#include "Utilities/System/Printable.h"
 
 class UShort : public Krampus::IPrintable
 {
@@ -14,6 +15,7 @@ public:
     // ── Constructors ─────────────────────────────────────────────────────────
     UShort() = default;
     UShort(const UShort& _o) : value(_o.value) {}
+    UShort& operator=(const UShort&) = default;
 
     // Handles ALL arithmetic primitives via one template constructor
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -106,9 +108,9 @@ public:
     Bool operator>=(const UShort& o) const { return Bool(value >= o.value); }
 
     UShort& operator++()    { ++value; return *this; }
-    UShort  operator++(int) { UShort t(*this); value++; return t; }
+    UShort operator++(int) { UShort _t(*this); value++; return _t; }
     UShort& operator--()    { --value; return *this; }
-    UShort  operator--(int) { UShort t(*this); value--; return t; }
+    UShort operator--(int) { UShort _t(*this); value--; return _t; }
 
     // ── Template overloads: T op UShort  and  UShort op T ──────────────────────
     template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, bool>>>
@@ -205,4 +207,32 @@ public:
     operator float()              const { return (float)(value); }
     operator double()             const { return (double)(value); }
     operator long double()        const { return (long double)(value); }
+
+    // ── Cross-type conversions ──────────────────────────────────────────────
+    Byte ToByte() const;
+    Short ToShort() const;
+    Int ToInt() const;
+    UInt ToUInt() const;
+    Long ToLong() const;
+    ULong ToULong() const;
+    LongLong ToLongLong() const;
+    ULongLong ToULongLong() const;
+    Float ToFloat() const;
+    Double ToDouble() const;
+    LongDouble ToLongDouble() const;
+
 };
+
+// ─── std::hash specialization ────────────────────────────────────────────────
+// Allows UShort to be used as key in std::unordered_map / std::unordered_set
+namespace std
+{
+    template<>
+    struct hash<UShort>
+    {
+        std::size_t operator()(const UShort& _v) const noexcept
+        {
+            return std::hash<unsigned short>{}(static_cast<unsigned short>(_v));
+        }
+    };
+}

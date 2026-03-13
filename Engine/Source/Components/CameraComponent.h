@@ -6,12 +6,12 @@ namespace Krampus
 
 	class CameraComponent : public Component
 	{
-		std::unique_ptr<sf::View> view;
+		std::unique_ptr<sf::View>	view;
 
 	public:
-		bool attachedToOwner = false;
-		bool freezePostition = false;
-		bool freezeRotation = false;
+		Bool						attachedToOwner		= false;
+		Bool						freezePostition		= false;
+		Bool						freezeRotation		= false;
 
 
 		inline sf::View* GetView() const
@@ -50,7 +50,7 @@ namespace Krampus
 		{
 			view->rotate(_angle);
 		}
-		inline void Zoom(const float _factor)
+		inline void Zoom(const Float& _factor)
 		{
 			view->zoom(_factor);
 		}
@@ -63,8 +63,11 @@ namespace Krampus
 		void SetCurrent();
 
 	private:
-		virtual void Tick(const float& _deltaTime) override;
+		virtual void Tick(const Float& _deltaTime) override;
 		virtual void BeginDestroy() override;
+
+	public:
+		virtual std::string ToString() const override;
 	};
 
 }

@@ -6,7 +6,7 @@ using namespace Krampus;
 
 class Collider2D : public Actor
 {
-	CollisionComponent* collision = nullptr;
+	CollisionComponent*		collision	= nullptr;
 
 public:
 	Collider2D(Level* _level, const FVector2& _size);

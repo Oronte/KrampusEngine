@@ -2,6 +2,7 @@
 #include "Managers/TextureManager.h"
 #include "Graphics/Mouse.h"
 #include "HealthComponent.h"
+#include "Managers/AudioManager.h"
 
 Bullet::Bullet(Level* _level, const FVector2& _direction)
 	: Actor(_level), direction(_direction)
@@ -31,14 +32,14 @@ void Bullet::BeginPlay()
 		}, lifeSpan);
 }
 
-void Bullet::Tick(const float& _deltaTime)
+void Bullet::Tick(const Float& _deltaTime)
 {
 	Super::Tick(_deltaTime);
 
 	Move(_deltaTime);
 }
 
-void Bullet::Move(float _deltaTime)
+void Bullet::Move(Float _deltaTime)
 {
 	if (!canMove) return;
 
@@ -68,6 +69,6 @@ void Bullet::OnCollision(CollisionInfo _info)
 	if (!_actor) return;
 	if (HealthComponent* _compo = _actor->GetComponent<HealthComponent>())
 	{
-		_compo->Damage(damage);
+		_compo->Damage((int)damage);
 	}
 }

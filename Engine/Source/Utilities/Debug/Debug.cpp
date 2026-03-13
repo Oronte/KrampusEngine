@@ -3,12 +3,12 @@
 #include "GameFramework/Level.h"
 #include "Graphics/Window.h"
 
-void Krampus::Debug::DrawDebugCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawDebugCircle(Actor* _context, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color)
 {
 	DrawDebugCircle(_context->GetLevel(), _position, _radius, _pointCount, _color);
 }
 
-void Krampus::Debug::DrawDebugCircle(Level* _level, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawDebugCircle(Level* _level, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color)
 {
 #ifdef DEBUG
 	std::shared_ptr<Vertices> _vert = std::make_shared<Vertices>(PrimitiveType::LineStrip);
@@ -26,12 +26,12 @@ void Krampus::Debug::DrawDebugCircle(Level* _level, const FVector2& _position, c
 #endif
 }
 
-void Krampus::Debug::DrawFillCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawFillCircle(Actor* _context, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color)
 {
 	DrawFillCircle(_context->GetLevel(), _position, _radius, _pointCount, _color);
 }
 
-void Krampus::Debug::DrawFillCircle(Level* _level, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawFillCircle(Level* _level, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color)
 {
 #ifdef DEBUG
 	std::shared_ptr<Vertices> _vert = std::make_shared<Vertices>(PrimitiveType::TriangleStrip);
@@ -50,12 +50,12 @@ void Krampus::Debug::DrawFillCircle(Level* _level, const FVector2& _position, co
 #endif
 }
 
-void Krampus::Debug::DrawPointCircle(Actor* _context, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawPointCircle(Actor* _context, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color)
 {
 	DrawPointCircle(_context->GetLevel(), _position, _radius, _pointCount, _color);
 }
 
-void Krampus::Debug::DrawPointCircle(Level* _level, const FVector2& _position, const float& _radius, const int& _pointCount, const Color& _color)
+void Krampus::Debug::DrawPointCircle(Level* _level, const FVector2& _position, const Float& _radius, const Int& _pointCount, const Color& _color)
 {
 #ifdef DEBUG
 	std::shared_ptr<Vertices> _vert = std::make_shared<Vertices>(PrimitiveType::Points);
@@ -171,23 +171,23 @@ void Krampus::Debug::DrawPointRect(Level* _level, const FVector2& _position, con
 #endif
 }
 
-void Krampus::Debug::DrawDebugPoint(Actor* _context, const FVector2& _position, const float& _thickness, const Color& _color)
+void Krampus::Debug::DrawDebugPoint(Actor* _context, const FVector2& _position, const Float& _thickness, const Color& _color)
 {
 	DrawDebugPoint(_context->GetLevel(), _position, _thickness, _color);
 }
 
-void Krampus::Debug::DrawDebugPoint(Level* _level, const FVector2& _position, const float& _thickness, const Color& _color)
+void Krampus::Debug::DrawDebugPoint(Level* _level, const FVector2& _position, const Float& _thickness, const Color& _color)
 {
 	DrawFillCircle(_level, _position, _thickness, 30, _color);
 }
 
-void Krampus::Debug::DrawDebugLine(Actor* _context, const FVector2& _start, const FVector2& _direction, const float _length, const float _thickness, const Color& _color)
+void Krampus::Debug::DrawDebugLine(Actor* _context, const FVector2& _start, const FVector2& _direction, const Float& _length, const Float& _thickness, const Color& _color)
 {
 	DrawDebugLine(_context->GetLevel(), _start, _direction, _length, _thickness, _color);
 }
 
-void Krampus::Debug::DrawDebugLine(Level* _level, const FVector2& _start, const FVector2& _direction, const float _length, const float _thickness, const Color& _color)
+void Krampus::Debug::DrawDebugLine(Level* _level, const FVector2& _start, const FVector2& _direction, const Float& _length, const Float& _thickness, const Color& _color)
 {
 	const FVector2& _pos = _start + _direction * (_length * 0.5f);
-	DrawFillRect(_level, _pos, FVector2(_length, _thickness), FVector2::AngleBetweenRadians(FVector2::Right(), _direction), _color);
+	DrawFillRect(_level, _pos, FVector2(_length, _thickness), Float(FVector2::AngleBetweenRadians(FVector2::Right(), _direction)), _color);
 }
