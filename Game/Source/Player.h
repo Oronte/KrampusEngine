@@ -8,6 +8,7 @@
 #include "Components/CameraComponent.h"
 #include "Components/AudioListenerComponent.h"
 #include "HealthComponent.h"
+#include "Save/Save.h"
 
 
 using namespace Krampus;
@@ -66,5 +67,9 @@ public:
 	void Jump();
 
 	void Die();
+
+	void Save(SaveNode& _node) const;
+	void Load(const SaveNode& _node);
 };
 
+static_assert(Serializable<Player>);

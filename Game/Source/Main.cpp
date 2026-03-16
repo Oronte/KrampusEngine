@@ -16,7 +16,8 @@ void StartGame();
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	StartGame();
+    TestSave();
+	//StartGame();
 
 	return EXIT_SUCCESS;
 }
@@ -26,7 +27,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 int main(/*int argc, char** argv*/)
 {
-	//Krampus::SetupMemoryLeakDetection();
+	Krampus::SetupMemoryLeakDetection();
 
 	try
 	{
@@ -37,7 +38,7 @@ int main(/*int argc, char** argv*/)
 		std::cerr << TXT_DARK_RED << _exception.What() << COLOR_RESET << std::endl;
 	}
 
-	//Krampus::TeardownMemoryLeakDetection();
+	Krampus::TeardownMemoryLeakDetection();
 
 	return EXIT_SUCCESS;
 }

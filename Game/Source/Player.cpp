@@ -21,6 +21,19 @@ Player::Player(Level* _level)
 
 	footStep = M_AUDIO.CreateSound("Footstep", AudioExtensionType::MP3);
 	hurtSound = M_AUDIO.CreateSound("PlayerHurt", AudioExtensionType::MP3);
+
+	//auto _save = SaveManager::LoadOrThrow(String("PlayerSave"));
+	//std::optional<Player> _player = _save.GetAs<Player>("Player");
+
+	auto _saveOpt = SaveManager::TryLoad("PlayerSave");
+	SaveNode _testnode;
+	SaveResult _r = SaveManager::Load("PlayerSave", _testnode);
+	if (_r == SaveResult::Success)
+	{
+		score = _testnode.Get<Int>("PlayerScore", Int(10));
+		LOG_MSG(score);
+	}
+	else LOG_WARNING((int)_r);
 }
 
 void Player::Construct()
@@ -195,5 +208,25 @@ void Player::Die()
 			GetWorld()->GetLevelManager()->SetLevel<MainMenu>();
 		}, 3.0f);
 
+	//SaveNode _playerSave;
+	//_playerSave.Set("Player", *this);
+	//SaveManager::Save("PlayerSave", _playerSave);
+	 
+	SaveNode _playerSave;
+	_playerSave.Set("PlayerScore", score);
+	SaveResult _result = SaveManager::Save("PlayerSave", _playerSave);
+	if (_result != SaveResult::Success)
+		LOG_WARNING(CAST(int, _result));
+
 	onDeath.Broadcast();
+}
+
+void Player::Save(SaveNode& _node) const
+{
+	_node.Set("Score", score);
+}
+
+void Player::Load(const SaveNode& _node)
+{
+	score = _node.Get<Int>("Score");
 }
