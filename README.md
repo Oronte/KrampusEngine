@@ -1,4 +1,4 @@
-![KrampusEngine](Content/Textures/KrampusEngineBanner.png)
+![KrampusEngine](Content/Textures/_internal/KrampusEngineBanner.png)
 
 # KrampusEngine
 
