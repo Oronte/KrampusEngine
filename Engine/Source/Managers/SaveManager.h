@@ -43,7 +43,7 @@ public:
 #if SHIP
     static inline const String SAVE_DIRECTORY  = String("../../Content/Saves/");
 #else
-    static inline const String SAVE_DIRECTORY  = String("Content/Saves/");
+    static inline const String SAVE_DIRECTORY  = String(CONTENT_PATH + "Saves/");
 #endif
     static inline const String SAVE_EXTENSION  = String(".ksave");
 

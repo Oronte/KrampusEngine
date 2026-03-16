@@ -10,6 +10,9 @@ class EnemySpawner : public Actor
 	Float		spawnTime	= 3.5f;
 	Int			spawnCount	= 9;
 	Player*		player		= nullptr;
+	Timer*		timer		= nullptr;
+
+	Event<>::ListenerHandle handle;
 
 public:
 	FVector2	spawnPoint	= FVector2::Zero();

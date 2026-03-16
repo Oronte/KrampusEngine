@@ -1,6 +1,7 @@
 #include "Animation.h"
 #include "Managers/TimerManager.h"
 #include "Managers/TextureManager.h"
+#include "Managers/LevelManager.h"
 
 // AnimationData
 
@@ -74,7 +75,7 @@ Krampus::Animation::Animation(Engine* _engine, const String& _name, ShapeObject*
     name = _name;
     shape = _shape;
     data = _data;
-    timer = GetWorld()->GetTimerManager()->CreateTimer([&]() { Update(); },
+    timer = GetWorld()->GetLevelManager()->GetCurrentLevel()->GetTimerManagerRef().CreateTimer([&]() { Update(); },
         ComputeDuration(),
         true,
         false);

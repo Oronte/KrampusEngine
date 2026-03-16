@@ -12,7 +12,7 @@ namespace Krampus
 #ifdef SHIP
 		String		texturePath					= "../../Content/Textures/";
 #else
-		String		texturePath					= "Content/Textures/";
+		String		texturePath					= CONTENT_PATH + "Textures/";
 #endif
 		String		defaultTexturePath			= "_internal/Default";
 		String		defaultTextureExtension		= "png";

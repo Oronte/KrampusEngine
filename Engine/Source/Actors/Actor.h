@@ -47,7 +47,7 @@ namespace Krampus
 					return _actor == _toRemove;
 				});
 		}
-		float GetDeltaTime() const;
+		Float GetDeltaTime() const;
 
 		Actor(Level* _level);
 

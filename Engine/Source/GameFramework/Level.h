@@ -3,6 +3,7 @@
 #include "Managers/ActorManager.h"
 #include "Managers/CameraManager.h"
 #include "Managers/CollisionManager.h"
+#include "Managers/TimerManager.h"
 #include "Managers/HUD.h"
 
 namespace Krampus
@@ -16,6 +17,7 @@ namespace Krampus
 		Int					frameCount				= 0;
 
 	protected:
+		TimerManager		timerManager;
 		CameraManager		cameraManager;
 		CollisionManager	collisionManager;
 		ActorManager		actorManager;
@@ -32,6 +34,10 @@ namespace Krampus
 		inline void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
+		}
+		inline TimerManager& GetTimerManagerRef()
+		{
+			return timerManager;
 		}
 		inline CameraManager& GetCameraManagerRef()
 		{
@@ -76,6 +82,7 @@ namespace Krampus
 		virtual void Load();
 		virtual void Unload();
 		void Update(const Float& _deltaTime);
+		Float UpdateTime();
 		CameraComponent* GetDefaultCamera() const;
 
 	private:

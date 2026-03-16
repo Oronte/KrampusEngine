@@ -6,7 +6,7 @@
 using namespace Krampus;
 
 Krampus::Level::Level(Engine* _engine)
-	: KrampusObject(_engine), cameraManager(_engine) { }
+	: KrampusObject(_engine), cameraManager(_engine), timerManager(_engine) { }
 
 void Level::InitLevel()
 {
@@ -47,6 +47,11 @@ void Level::Update(const Float& _deltaTime)
 	hud.DestroyPendingDeleteWidgets();
 
 	Render();
+}
+
+Float Krampus::Level::UpdateTime()
+{
+	return timerManager.Update();
 }
 
 CameraComponent* Level::GetDefaultCamera() const

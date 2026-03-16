@@ -79,10 +79,10 @@ namespace Krampus
 
 
 	private:
-		Float Update();
 		void UpdateTimers();
 
 	public:
+		Float Update();
 		static String GetCurrentRealTime();
 
 		Timer* CreateTimer(const std::function<void()> _callback, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true);
@@ -98,7 +98,5 @@ namespace Krampus
 		void Pause();
 		void Resume();
 		void Stop();
-
-		friend void Engine::Update();
 	};
 }

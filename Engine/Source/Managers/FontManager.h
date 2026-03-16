@@ -13,7 +13,7 @@ namespace Krampus
 #ifdef SHIP
 		String	fontPath				= "../../Content/Fonts/";
 #else
-		String	fontPath				= "Content/Fonts/";
+		String	fontPath				= CONTENT_PATH + "Fonts/";
 #endif
 		String	defaultFontPath			= "_internal/DefaultFont";
 		String	defaultFontExtension	= "otf";

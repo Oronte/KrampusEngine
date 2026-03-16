@@ -403,6 +403,7 @@ FodyWeavers.xsd
 Logs/
 Bin/
 Saves/
+Build/
 
 *.sln
 *.vcxproj

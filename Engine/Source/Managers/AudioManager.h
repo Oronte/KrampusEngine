@@ -19,7 +19,7 @@ namespace Krampus
 #ifdef SHIP
 		String															audioPath	= "../../Content/Audio/";
 #else
-		String															audioPath	= "Content/Audio/";
+		String															audioPath	= CONTENT_PATH + "Audio/";
 #endif
 		std::unordered_map<String, std::shared_ptr<sf::SoundBuffer>>	cache;
 

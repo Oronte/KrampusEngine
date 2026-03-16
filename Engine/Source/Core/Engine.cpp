@@ -1,5 +1,4 @@
 #include "Engine.h"
-#include "Managers/TimerManager.h"
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
 #include "Graphics/Mouse.h"
@@ -11,7 +10,6 @@ Engine::Engine()
 {
 	levelManager = new LevelManager(this);
 	inputManager = new InputManager(this);
-	timerManager = new TimerManager(this);
 	mouse = new Mouse(this);
 
 	window.Create();
@@ -26,7 +24,6 @@ Engine::~Engine()
 {
 	delete levelManager;
 	delete inputManager;
-	delete timerManager;
 	delete mouse;
 }
 
@@ -50,7 +47,7 @@ void Engine::Update()
 		if (!_currentLevel) break;
 
 		mouse->Update();
-		_currentLevel->Update(timerManager->Update());
+		_currentLevel->Update(_currentLevel->UpdateTime());
 		const std::optional<sf::Event>& _event = window.PollEvent();
 		inputManager->Update(_event);
 		inputManager->UpdateSystemEvent(_event);

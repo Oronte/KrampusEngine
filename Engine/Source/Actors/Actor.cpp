@@ -7,9 +7,9 @@ Krampus::Engine* Krampus::Actor::GetWorld() const
 	return level->GetWorld();
 }
 
-float Krampus::Actor::GetDeltaTime() const
+Float Krampus::Actor::GetDeltaTime() const
 {
-	return GetWorld()->GetTimerManager()->GetDeltaTime();
+	return level->GetTimerManagerRef().GetDeltaTime();
 }
 
 Krampus::Actor::Actor(Level* _level)
@@ -30,7 +30,7 @@ void Krampus::Actor::SetActive(const Bool& _status)
 
 Krampus::Timer* Krampus::Actor::CreateTimer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
 {
-	return GetWorld()->GetTimerManager()->CreateTimer(_callback, _duration, _isLoop, _startRunning);
+	return level->GetTimerManagerRef().CreateTimer(_callback, _duration, _isLoop, _startRunning);
 }
 
 void Krampus::Actor::Construct()

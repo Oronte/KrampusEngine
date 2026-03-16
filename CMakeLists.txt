@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.20)
+project(KrampusEngine LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+get_property(IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(IS_MULTI_CONFIG)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Ship" CACHE STRING "Available build types" FORCE)
+else()
+    if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type" FORCE)
+    endif()
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "Ship")
+endif()
+
+set(CMAKE_CXX_FLAGS_SHIP          "${CMAKE_CXX_FLAGS_RELEASE}"          CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_SHIP            "${CMAKE_C_FLAGS_RELEASE}"            CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS_SHIP   "${CMAKE_EXE_LINKER_FLAGS_RELEASE}"   CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS_SHIP "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}" CACHE STRING "" FORCE)
+set(CMAKE_STATIC_LINKER_FLAGS_SHIP "${CMAKE_STATIC_LINKER_FLAGS_RELEASE}" CACHE STRING "" FORCE)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
+if(MSVC)
+    add_compile_options(/EHsc /Zc:preprocessor /Zc:__cplusplus)
+endif()
+
+if(WIN32)
+    set(KRAMPUS_PLATFORM "windows")
+elseif(APPLE)
+    set(KRAMPUS_PLATFORM "macosx")
+else()
+    set(KRAMPUS_PLATFORM "linux")
+endif()
+set(KRAMPUS_ARCH "x64")
+
+add_subdirectory(Engine)
+add_subdirectory(Game)

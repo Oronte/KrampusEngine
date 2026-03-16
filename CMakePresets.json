@@ -1,0 +1,94 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 20, "patch": 0 },
+
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+
+    {
+      "name": "windows-vs2022",
+      "displayName": "Windows — Visual Studio 2022",
+      "description": "Multi-config: Debug / Release / Ship. Open the generated .sln in VS2022.",
+      "inherits": "base",
+      "generator": "Visual Studio 17 2022",
+      "architecture": { "value": "x64", "strategy": "set" },
+      "binaryDir": "${sourceDir}/Build/vs2022",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+
+    {
+      "name": "windows-ninja-debug",
+      "displayName": "Windows — Ninja Debug",
+      "description": "Single-config Debug build (fast iteration, VSCode + CMake Tools).",
+      "inherits": "base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Build/ninja-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+
+    {
+      "name": "windows-ninja-release",
+      "displayName": "Windows — Ninja Release",
+      "description": "Single-config Release build.",
+      "inherits": "base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Build/ninja-release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+
+    {
+      "name": "windows-ninja-ship",
+      "displayName": "Windows — Ninja Ship",
+      "description": "Single-config Ship build (optimised, no debug features).",
+      "inherits": "base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Build/ninja-ship",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Ship" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "vs2022-debug",
+      "displayName": "VS2022 — Debug",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2022-release",
+      "displayName": "VS2022 — Release",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2022-ship",
+      "displayName": "VS2022 — Ship",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Ship"
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "Ninja — Debug",
+      "configurePreset": "windows-ninja-debug"
+    },
+    {
+      "name": "ninja-release",
+      "displayName": "Ninja — Release",
+      "configurePreset": "windows-ninja-release"
+    },
+    {
+      "name": "ninja-ship",
+      "displayName": "Ninja — Ship",
+      "configurePreset": "windows-ninja-ship"
+    }
+  ]
+}
