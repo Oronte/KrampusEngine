@@ -48,9 +48,16 @@ void Engine::Update()
 
 		mouse->Update();
 		_currentLevel->Update(_currentLevel->UpdateTime());
-		const std::optional<sf::Event>& _event = window.PollEvent();
-		inputManager->Update(_event);
-		inputManager->UpdateSystemEvent(_event);
+
+		while (true)
+		{
+			const std::optional<sf::Event> event = engine->GetWindowRef().PollEvent();
+			if (!event.has_value()) break;
+
+			ImGui::SFML::ProcessEvent(engine->GetWindowRef().GetRenderWindow(), event.value());
+			inputManager->Update(event);
+			inputManager->UpdateSystemEvent(event);
+		}
 	}
 }
 
