@@ -113,6 +113,117 @@ void Krampus::InputManager::Update(const std::optional<sf::Event>& _event)
         MouseWheelScroll.Broadcast(_mouseWheelScrolled->delta);
 }
 
+void Krampus::InputManager::UpdateOnPerform()
+{
+    A.Update();
+    B.Update();
+    C.Update();
+    D.Update();
+    E.Update();
+    F.Update();
+    G.Update();
+    H.Update();
+    I.Update();
+    J.Update();
+    K.Update();
+    L.Update();
+    M.Update();
+    N.Update();
+    O.Update();
+    P.Update();
+    Q.Update();
+    R.Update();
+    S.Update();
+    T.Update();
+    U.Update();
+    V.Update();
+    W.Update();
+    X.Update();
+    Y.Update();
+    Z.Update();
+
+    Num0.Update();
+    Num1.Update();
+    Num2.Update();
+    Num3.Update();
+    Num4.Update();
+    Num5.Update();
+    Num6.Update();
+    Num7.Update();
+    Num8.Update();
+    Num9.Update();
+
+    Escape.Update();
+    LControl.Update();
+    LShift.Update();
+    LAlt.Update();
+    LSystem.Update();
+    RControl.Update();
+    RShift.Update();
+    RAlt.Update();
+    RSystem.Update();
+    Menu.Update();
+
+    LBracket.Update();
+    RBracket.Update();
+    Semicolon.Update();
+    Comma.Update();
+    Period.Update();
+    Quote.Update();
+    Slash.Update();
+    Backslash.Update();
+    //Tilde.Update();
+    Equal.Update();
+    Hyphen.Update();
+
+    Space.Update();
+    Enter.Update();
+    Backspace.Update();
+    Tab.Update();
+
+    PageUp.Update();
+    PageDown.Update();
+    End.Update();
+    Home.Update();
+    Insert.Update();
+    Delete.Update();
+
+    F1.Update();
+    F2.Update();
+    F3.Update();
+    F4.Update();
+    F5.Update();
+    F6.Update();
+    F7.Update();
+    F8.Update();
+    F9.Update();
+    F10.Update();
+    F11.Update();
+    F12.Update();
+    F13.Update();
+    F14.Update();
+    F15.Update();
+
+    Pause.Update();
+
+    MouseLeftClick.Update();
+    MouseRightClick.Update();
+    MouseMiddleClick.Update();
+    MouseExtraButton1.Update();
+    MouseExtraButton2.Update();
+
+    ButtonA.Update();
+    ButtonB.Update();
+    ButtonX.Update();
+    ButtonY.Update();
+    ButtonStart.Update();
+    ButtonBack.Update();
+    ButtonLB.Update();
+    ButtonRB.Update();
+    ButtonLS.Update();
+    ButtonRS.Update();
+}
+
 void Krampus::InputManager::UpdateSystemEvent(const std::optional<sf::Event>& _event)
 {
     if (!_event.has_value()) return;
@@ -131,12 +242,10 @@ void Krampus::InputManager::UpdateKey(Input& _input, const Key& _key)
 {
 	if (sf::Keyboard::isKeyPressed(_key)) _input.Press();
 	else _input.Release();
-	_input.Update();
 }
 
 void Krampus::InputManager::UpdateMouseButton(Input& _input, const MouseButton& _mouseButton)
 {
 	if (sf::Mouse::isButtonPressed(_mouseButton)) _input.Press();
 	else _input.Release();
-	_input.Update();
 }

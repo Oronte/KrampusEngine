@@ -1,24 +1,23 @@
 #pragma once
 #include "Core/GameObject.h"
-#include "Utilities/Math/Transform.h"
+#include "Utilities/System/Transformable.h"
 #include "Utilities/System/Timer.h"
 
 namespace Krampus
 {
 	class Engine;
 
-	class Component : public IGameObject
+	class Component : public IGameObject, public ITransformable
 	{
 	protected:
 		class Actor*	owner;
-		class Level*	level		= nullptr;
-		Transform&		transform;
 
 	public:
 		inline Actor* GetOwner() const
 		{
 			return owner;
 		}
+		class Level* GetLevel() const;
 		Engine* GetWorld() const;
 		Float GetDeltaTime() const;
 
@@ -38,6 +37,13 @@ namespace Krampus
 		virtual void BeginDestroy() override {};
 
 		virtual std::string ToString() const override;
+
+		void SetActorPosition(const FVector2& _newPosition) override;
+		FVector2 GetActorPosition() const override;
+		void SetActorRotation(const Angle& _newRotation) override;
+		Angle GetActorRotation() const override;
+		void SetActorScale(const FVector2& _newScale) override;
+		FVector2 GetActorScale() const override;
 	};
 
 

@@ -30,8 +30,8 @@ void Krampus::Widget::Destroy()
 
 void Krampus::Widget::UpdateWorldPos(const sf::View& _view)
 {
-	transform.position = level->GetWindowRef().MapPixelToCoords(screenPosition, _view);
-	transform.rotation = localRotation + Angle(_view.getRotation());
+	SetActorPosition(level->GetWindowRef().MapPixelToCoords(screenPosition, _view));
+	SetActorRotation(localRotation + Angle(_view.getRotation()));
 }
 
 std::string Krampus::Widget::ToString() const

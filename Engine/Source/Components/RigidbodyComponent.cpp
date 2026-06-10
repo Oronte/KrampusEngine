@@ -17,7 +17,7 @@ void Krampus::RigidbodyComponent::AddForce(const FVector2& _force, const FVector
 
     if (_applyPoint != FVector2::Zero())
     {
-        const FVector2& _r = _applyPoint - owner->transform.position;
+        const FVector2& _r = _applyPoint - GetActorPosition();
         accumulatedTorque += _r.Cross(_force);
     }
 }
@@ -78,11 +78,11 @@ void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
 
     for (const FVector2& contact : info.contacts)
     {
-        FVector2 rA = contact - _physA->owner->transform.position;
+        FVector2 rA = contact - _physA->owner->GetActorPosition();
         FVector2 rB = FVector2::Zero();
 
         if (_physB)
-            rB = contact - _physB->owner->transform.position;
+            rB = contact - _physB->owner->GetActorPosition();
 
         // Vélocité au point de contact
         FVector2 vA = _physA->velocity + FVector2(-_physA->angularVelocity * rA.y, _physA->angularVelocity * rA.x);
@@ -186,9 +186,9 @@ void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
             (FMath::MaxVal(info.penetration - slop, 0.f) / totalInvMass) *
             percent;
 
-        _physA->owner->transform.position += correction * _invMassA;
+        _physA->owner->Move(correction * _invMassA);
         if (_physB && !_physB->isKinematic)
-            _physB->owner->transform.position -= correction * invMassB;
+            _physB->owner->Move(-(correction * invMassB));
     }
 }
 
@@ -205,14 +205,14 @@ void Krampus::RigidbodyComponent::Integrate(const Float& _deltaTime)
         freezeMovementX ? 0.0f : velocity.x,
         freezeMovementY ? 0.0f : velocity.y
     );
-    owner->transform.position += _force * _deltaTime;
+    owner->Move(_force * _deltaTime);
 
     if (!freezeRotation)
     {
         angularVelocity += accumulatedTorque * inverseInertia * _deltaTime;
         angularVelocity *= FMath::Clamp(1.f - angularDamping * _deltaTime, 0.f, 1.f);
         angularVelocity = FMath::Clamp(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
-        owner->transform.rotation += angularVelocity * _deltaTime;
+        owner->Rotate(angularVelocity * _deltaTime);
     }
 
     ClearForces();

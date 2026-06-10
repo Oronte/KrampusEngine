@@ -5,9 +5,14 @@
 
 using namespace Krampus;
 
+Level* Krampus::Component::GetLevel() const
+{
+	return owner->GetLevel();
+}
+
 Engine* Component::GetWorld() const
 {
-	return level->GetWorld();
+	return GetLevel()->GetWorld();
 }
 
 Float Krampus::Component::GetDeltaTime() const
@@ -16,11 +21,9 @@ Float Krampus::Component::GetDeltaTime() const
 }
 
 Component::Component(Actor* _owner)
-	: transform(_owner->transform)
 {
 	name = NAME_OF(Component);
 	owner = _owner;
-	level = owner->GetLevel();
 }
 
 Krampus::Timer* Krampus::Component::CreateTimer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
@@ -42,4 +45,34 @@ std::string Krampus::Component::ToString() const
 {
 	if (!owner) return "Component with no owner";
 	return "Component : owner = " + owner->ToString();
+}
+
+void Krampus::Component::SetActorPosition(const FVector2& _newPosition)
+{
+	GetOwner()->SetActorPosition(_newPosition);
+}
+
+FVector2 Krampus::Component::GetActorPosition() const
+{
+	return GetOwner()->GetActorPosition();
+}
+
+void Krampus::Component::SetActorRotation(const Angle& _newRotation)
+{
+	GetOwner()->SetActorRotation(_newRotation);
+}
+
+Angle Krampus::Component::GetActorRotation() const
+{
+	return GetOwner()->GetActorRotation();
+}
+
+void Krampus::Component::SetActorScale(const FVector2& _newScale)
+{
+	GetOwner()->SetActorScale(_newScale);
+}
+
+FVector2 Krampus::Component::GetActorScale() const
+{
+	return GetOwner()->GetActorScale();
 }

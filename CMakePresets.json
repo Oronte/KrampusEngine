@@ -20,39 +20,6 @@
       "architecture": { "value": "x64", "strategy": "set" },
       "binaryDir": "${sourceDir}/Build/vs2022",
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
-    },
-
-    {
-      "name": "windows-ninja-debug",
-      "displayName": "Windows — Ninja Debug",
-      "description": "Single-config Debug build (fast iteration, VSCode + CMake Tools).",
-      "inherits": "base",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/Build/ninja-debug",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
-      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
-    },
-
-    {
-      "name": "windows-ninja-release",
-      "displayName": "Windows — Ninja Release",
-      "description": "Single-config Release build.",
-      "inherits": "base",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/Build/ninja-release",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
-      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
-    },
-
-    {
-      "name": "windows-ninja-ship",
-      "displayName": "Windows — Ninja Ship",
-      "description": "Single-config Ship build (optimised, no debug features).",
-      "inherits": "base",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/Build/ninja-ship",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Ship" },
-      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
     }
   ],
 
@@ -74,21 +41,6 @@
       "displayName": "VS2022 — Ship",
       "configurePreset": "windows-vs2022",
       "configuration": "Ship"
-    },
-    {
-      "name": "ninja-debug",
-      "displayName": "Ninja — Debug",
-      "configurePreset": "windows-ninja-debug"
-    },
-    {
-      "name": "ninja-release",
-      "displayName": "Ninja — Release",
-      "configurePreset": "windows-ninja-release"
-    },
-    {
-      "name": "ninja-ship",
-      "displayName": "Ninja — Ship",
-      "configurePreset": "windows-ninja-ship"
     }
   ]
 }

@@ -1,37 +1,27 @@
 #pragma once
-#include "Core/GameObject.h"
 #include "components/Component.h"
-#include "Utilities/Math/Transform.h"
 
 namespace Krampus
 {
 
 	class Level;
 
-	class Actor : public IGameObject
+	class Actor : public IGameObject, public ITransformable
 	{
 		std::vector<Actor*>							children;
+		Transform									transform;
+	
+	public:
+		Event<FVector2>								onMove;
+		Event<FVector2>								onScale;
+		Event<Angle>								onRotate;
 
 	protected:
 		std::vector<std::unique_ptr<Component>>		components;
 		Level*										level;
 
-		Transform									oldTransform;
-	public:
-		Transform									transform;
 
 		Engine* GetWorld() const;
-
-		template<typename Type = Level, IS_BASE_OF(Level, Type)>
-		inline Type* GetLevel()
-		{
-			if (InstanceOf<Type>(level))
-			{
-				return level;
-			}
-
-			return Cast<Type>(level);
-		}
 
 		inline void AddChild(Actor* _actor)
 		{
@@ -98,6 +88,17 @@ namespace Krampus
 		void BeginDestroy() override;
 		
 	public:
+		template<typename Type = Level, IS_BASE_OF(Level, Type)>
+		inline Type* GetLevel()
+		{
+			if (InstanceOf<Type>(level))
+			{
+				return level;
+			}
+
+			return Cast<Type>(level);
+		}
+
 		virtual void SetActive(const Bool& _status) override;
 
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
@@ -114,7 +115,14 @@ namespace Krampus
 		friend class Component;
 
 		virtual std::string ToString() const override;
-	};
+
+		void SetActorPosition(const FVector2& _newPosition) override;
+		FVector2 GetActorPosition() const override;
+		void SetActorRotation(const Angle& _newRotation) override;
+		Angle GetActorRotation() const override;
+		void SetActorScale(const FVector2& _newScale) override;
+		FVector2 GetActorScale() const override;
+};
 
 }
 

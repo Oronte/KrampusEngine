@@ -404,6 +404,7 @@ Logs/
 Bin/
 Saves/
 Build/
+.idea/
 
 *.sln
 *.vcxproj

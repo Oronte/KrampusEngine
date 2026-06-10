@@ -10,6 +10,10 @@ namespace Krampus
 	{
 		Text    text;
 
+        Event<FVector2>::ListenerHandle onOwnerMoveHandle;
+        Event<Angle>::ListenerHandle onOwnerRotateHandle;
+        Event<FVector2>::ListenerHandle onOwnerScaleHandle;
+
 	public:
         inline void SetString(const String& _string)
         {
@@ -164,9 +168,6 @@ namespace Krampus
         virtual void Deconstruct() override;
         virtual void SetZOrder(const uint8_t& _zOrder) override;
         virtual void SetZOrder(const ZOrder& _zOrder) override;
-
-    protected:
-        virtual void Tick(const Float& _deltaTime) override;
 
     public:
         virtual std::string ToString() const override;

@@ -45,7 +45,7 @@ namespace Krampus
 			std::unique_ptr<Type> _actor = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _rawActor = _actor.get();
 			actors.push_back(std::move(_actor));
-			_rawActor->transform = _transform;
+			_rawActor->SetActorTransform(_transform);
 			_rawActor->Construct();
 			if (isPlaying) _rawActor->BeginPlay();
 			return _rawActor;

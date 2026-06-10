@@ -10,6 +10,19 @@ Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const CircleShapeData& 
 	name = NAME_OF(SpriteComponent);
 	shape = std::make_unique<ShapeObject>(_data);
 	SetZOrder(ZOrder::Actors);
+
+	onOwnerMoveHandle = _owner->onMove.AddListener([this](FVector2 _newPos)
+		{
+			shape->GetShape()->SetPosition(_newPos);
+		});
+	onOwnerRotateHandle = _owner->onRotate.AddListener([this](Angle _newRot)
+		{
+			shape->GetShape()->SetRotation(_newRot);
+		});
+	onOwnerScaleHandle = _owner->onScale.AddListener([this](FVector2 _newScale)
+		{
+			shape->GetShape()->SetScale(_newScale);
+		});
 }
 
 Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const RectangleShapeData& _data)
@@ -18,27 +31,33 @@ Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const RectangleShapeDat
 	name = NAME_OF(SpriteComponent);
 	shape = std::make_unique<ShapeObject>(_data);
 	SetZOrder(ZOrder::Actors);
+
+	onOwnerMoveHandle = _owner->onMove.AddListener([this](FVector2 _newPos)
+		{
+			shape->GetShape()->SetPosition(_newPos);
+		});
+	onOwnerRotateHandle = _owner->onRotate.AddListener([this](Angle _newRot)
+		{
+			shape->GetShape()->SetRotation(_newRot);
+		});
+	onOwnerScaleHandle = _owner->onScale.AddListener([this](FVector2 _newScale)
+		{
+			shape->GetShape()->SetScale(_newScale);
+		});
 }
 
 void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
-	level->GetCameraManagerRef().AddToWindow(this);
+	GetLevel()->GetCameraManagerRef().AddToWindow(this);
 }
 
 void Krampus::SpriteComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	level->GetCameraManagerRef().RemoveToWindow(this);
-}
-
-void Krampus::SpriteComponent::Tick(const Float& _deltaTime)
-{
-	Component::Tick(_deltaTime);
-
-	shape->GetShape()->SetTransform(transform);
+	GetLevel()->GetCameraManagerRef().RemoveToWindow(this);
 }
 
 
@@ -57,11 +76,11 @@ void Krampus::SpriteComponent::DrawDebug()
 	switch (shape->GetShapeType())
 	{
 	case ShapeType::Circle:
-		Debug::DrawDebugCircle(level, transform.position, shape->GetSizeData().radius, 15, Color::Green());
+		Debug::DrawDebugCircle(GetLevel(), GetActorPosition(), shape->GetSizeData().radius, 15, Color::Green());
 		break;
 
 	case ShapeType::Rectangle:
-		Debug::DrawDebugRect(level, transform.position, shape->GetSizeData().size, transform.rotation, Color::Green());
+		Debug::DrawDebugRect(GetLevel(), GetActorPosition(), shape->GetSizeData().size, GetActorRotation(), Color::Green());
 		break;
 	};
 #endif
@@ -71,14 +90,14 @@ void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
 }
 
 void Krampus::SpriteComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	level->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
 }
 
 std::string Krampus::SpriteComponent::ToString() const

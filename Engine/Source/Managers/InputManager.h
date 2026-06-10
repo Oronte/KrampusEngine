@@ -174,6 +174,7 @@ namespace Krampus
 
 	private:
 		void Update(const std::optional<sf::Event>& _event);
+		void UpdateOnPerform();
 		void UpdateSystemEvent(const std::optional<sf::Event>& _event);
 		void UpdateKey(Input& _input, const Key& _key);
 		void UpdateMouseButton(Input& _input, const MouseButton& _mouseButton);

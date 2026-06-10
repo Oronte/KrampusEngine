@@ -29,8 +29,7 @@ namespace Krampus
 			return FVector2::Left().Rotated(rotation.ToRadians());
 		}
 
-		Transform();
-		Transform(const FVector2& _position, const Angle& _rotation, const FVector2& _scale = FVector2(1.0f));
+		Transform(const FVector2& _position = FVector2::Zero(), const Angle& _rotation = Angle(0.0f), const FVector2& _scale = FVector2(1.0f));
 
 		Angle GetAngleTo(const FVector2& _target) const;
 		void LookAt(const FVector2& _target);

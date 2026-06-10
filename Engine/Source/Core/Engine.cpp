@@ -51,13 +51,13 @@ void Engine::Update()
 
 		while (true)
 		{
-			const std::optional<sf::Event> event = engine->GetWindowRef().PollEvent();
-			if (!event.has_value()) break;
+			const std::optional<sf::Event> _event = GetWindowRef().PollEvent();
+			if (!_event.has_value()) break;
 
-			ImGui::SFML::ProcessEvent(engine->GetWindowRef().GetRenderWindow(), event.value());
-			inputManager->Update(event);
-			inputManager->UpdateSystemEvent(event);
+			inputManager->Update(_event);
+			inputManager->UpdateSystemEvent(_event);
 		}
+		inputManager->UpdateOnPerform();
 	}
 }
 

@@ -90,7 +90,7 @@ Bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
 
     if (_delta.Dot(_normal) < 0.0f) _normal *= -1.0f;
 
-    const float _penetration = _minPen / 2.0f;
+    const float _penetration = _minPen;
 
     _aInfo.normal = _normal * -1.0f;
     _aInfo.penetration = _penetration;

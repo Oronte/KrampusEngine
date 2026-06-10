@@ -4,5 +4,6 @@ Krampus::CameraActor::CameraActor(Level* _level)
 	: Actor(_level)
 {
 	camera = CreateComponent<CameraComponent>();
+	camera->attachedToOwner = true;
 	camera->SetCurrent();
 }

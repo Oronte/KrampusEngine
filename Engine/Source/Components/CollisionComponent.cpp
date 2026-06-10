@@ -22,7 +22,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionCh
 	if (shapeType == ShapeType::Circle) sizeData.radius = _sprite->GetShapeSizeData().radius;
 	else sizeData.size = _sprite->GetShapeSizeData().size;
 
-	level->GetCollisionManagerRef().Register(this);
+	GetLevel()->GetCollisionManagerRef().Register(this);
 }
 
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const Float& _radius, const CollisionChannel& _channel, const CollisionChannel& _mask)
@@ -35,7 +35,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const Float& _rad
 	sizeData.radius = _radius;
 	shapeType = ShapeType::Circle;
 
-	level->GetCollisionManagerRef().Register(this);
+	GetLevel()->GetCollisionManagerRef().Register(this);
 }
 
 Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _size, const CollisionChannel& _channel, const CollisionChannel& _mask)
@@ -48,7 +48,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _
 	sizeData.size = _size;
 	shapeType = ShapeType::Rectangle;
 
-	level->GetCollisionManagerRef().Register(this);
+	GetLevel()->GetCollisionManagerRef().Register(this);
 }
 
 void Krampus::CollisionComponent::UpdateShapeValues(const SpriteComponent* _sprite)
@@ -77,7 +77,7 @@ void Krampus::CollisionComponent::SetRadius(const Float& _radius)
 
 void Krampus::CollisionComponent::ResolveCollision(const CollisionInfo& _info)
 {
-	transform.position += _info.normal * _info.penetration;
+	Move(_info.normal * _info.penetration);
 }
 
 void Krampus::CollisionComponent::BindCollisionResolution()
@@ -125,8 +125,8 @@ bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
 {
 	CollisionInfo _hitInfo, _otherHitInfo;
 
-    const bool _collision = Physics::CircleToCircle(transform.position, sizeData.radius,
-        _other->transform.position, _other->sizeData.radius,
+    const bool _collision = Physics::CircleToCircle(GetActorPosition(), sizeData.radius,
+        _other->GetActorPosition(), _other->sizeData.radius,
         _hitInfo, _otherHitInfo);
 
 	if (!_collision)
@@ -161,8 +161,8 @@ bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
 {
 	CollisionInfo _hitInfo, _otherHitInfo;
 
-    const bool _collision = Physics::RectToRectOBB(FRect(transform.position, sizeData.size), transform.rotation,
-        FRect(_other->transform.position, _other->sizeData.size), _other->transform.rotation,
+    const bool _collision = Physics::RectToRectOBB(FRect(GetActorPosition(), sizeData.size), GetActorRotation(),
+        FRect(_other->GetActorPosition(), _other->sizeData.size), _other->GetActorRotation(),
         _hitInfo, _otherHitInfo);
 
 	if (!_collision)
@@ -197,8 +197,8 @@ bool Krampus::CollisionComponent::RectToRectAABB(CollisionComponent* _other)
 {
 	CollisionInfo _hitInfo, _otherHitInfo;
 
-	const bool _collision = Physics::RectToRectAABB(FRect(transform.position, sizeData.size),
-		FRect(_other->transform.position, _other->sizeData.size),
+	const bool _collision = Physics::RectToRectAABB(FRect(GetActorPosition(), sizeData.size),
+		FRect(_other->GetActorPosition(), _other->sizeData.size),
 		_hitInfo, _otherHitInfo);
 
 	if (!_collision)
@@ -232,8 +232,8 @@ bool Krampus::CollisionComponent::CircleToRect(CollisionComponent* _circle, Coll
 {
 	CollisionInfo _circleInfo, _rectInfo;
 
-	const bool _collision = Physics::CircleToRect(_circle->transform.position, _circle->sizeData.radius,
-		FRect(_rect->transform.position, _rect->sizeData.size), _rect->transform.rotation,
+	const bool _collision = Physics::CircleToRect(_circle->GetActorPosition(), _circle->sizeData.radius,
+		FRect(_rect->GetActorPosition(), _rect->sizeData.size), _rect->GetActorRotation(),
 		_circleInfo, _rectInfo);
 
 	CollisionComponent* _other = _circle == this ? _rect : _circle;
@@ -268,7 +268,7 @@ void Krampus::CollisionComponent::BeginDestroy()
 {
 	Component::BeginDestroy();
 
-	level->GetCollisionManagerRef().RemoveComponent(this);
+	GetLevel()->GetCollisionManagerRef().RemoveComponent(this);
 }
 
 void Krampus::CollisionComponent::DrawDebug()
@@ -279,11 +279,11 @@ void Krampus::CollisionComponent::DrawDebug()
 	switch (shapeType)
 	{
 	case ShapeType::Circle:
-		Debug::DrawDebugCircle(level, transform.position, sizeData.radius, 15, Color::Red());
+		Debug::DrawDebugCircle(GetLevel(), GetActorPosition(), sizeData.radius, 15, Color::Red());
 		break;
 
 	case ShapeType::Rectangle:
-		Debug::DrawDebugRect(level, transform.position, sizeData.size, transform.rotation, Color::Red());
+		Debug::DrawDebugRect(GetLevel(), GetActorPosition(), sizeData.size, GetActorRotation(), Color::Red());
 		break;
 	};
 #endif

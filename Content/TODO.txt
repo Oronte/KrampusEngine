@@ -1,4 +1,5 @@
 High Priority:
+	SpatialSoundComponent,
 	Multiple ligne animation + GIF Reader,
 	Capture d'ecran / video,
 	Save,
@@ -22,9 +23,7 @@ Low Priority:
 	steam,
 	Culling,
 	HotReload,
-	Animation avec condition,
 	IA FSM,
-	sous titre / dialogue,
 	shader + post processing (sf::Shader) ,
 	light,
 	coroutine,

@@ -8,6 +8,9 @@ namespace Krampus
 	{
 		std::unique_ptr<sf::View>	view;
 
+		Event<FVector2>::ListenerHandle onOwnerMoveHandle;
+		Event<Angle>::ListenerHandle onOwnerRotateHandle;
+
 	public:
 		Bool						attachedToOwner		= false;
 		Bool						freezePostition		= false;
@@ -63,8 +66,9 @@ namespace Krampus
 		void SetCurrent();
 
 	private:
-		virtual void Tick(const Float& _deltaTime) override;
 		virtual void BeginDestroy() override;
+
+		void InitEvent();
 
 	public:
 		virtual std::string ToString() const override;

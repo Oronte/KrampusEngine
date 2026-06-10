@@ -11,7 +11,7 @@ Krampus::Level::Level(Engine* _engine)
 void Level::InitLevel()
 {
 	mainCamera = SpawnActor<CameraActor>();
-	mainCamera->transform.position = GetWindowRef().GetSize() / 2.0f;
+	mainCamera->SetActorPosition(GetWindowRef().GetSize() / 2.0f);
 }
 
 void Level::Load()

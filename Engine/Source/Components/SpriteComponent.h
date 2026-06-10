@@ -13,6 +13,10 @@ namespace Krampus
 	{
 		std::unique_ptr<ShapeObject>	shape;
 
+		Event<FVector2>::ListenerHandle onOwnerMoveHandle;
+		Event<Angle>::ListenerHandle onOwnerRotateHandle;
+		Event<FVector2>::ListenerHandle onOwnerScaleHandle;
+
 	public:
 		inline ShapeObject* GetShapeObject()
 		{
@@ -60,9 +64,6 @@ namespace Krampus
 
 		virtual void Construct() override;
 		virtual void Deconstruct() override;
-
-	protected:
-		virtual void Tick(const Float& _deltaTime) override;
 
 	public:
 		virtual void Draw(Window& _window) override;

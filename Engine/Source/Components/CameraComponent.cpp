@@ -6,7 +6,9 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner)
 	: Component(_owner)
 {
 	name = NAME_OF(CameraComponent);
-	view = std::make_unique<sf::View>(transform.position, FVector2(level->GetWindowRef().GetSize()));
+	view = std::make_unique<sf::View>(GetActorPosition(), FVector2(GetLevel()->GetWindowRef().GetSize()));
+
+	InitEvent();
 }
 
 Krampus::CameraComponent::CameraComponent(Actor* _owner, const FVector2& _center, const FVector2& _size)
@@ -14,6 +16,8 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner, const FVector2& _center
 {
 	name = NAME_OF(CameraComponent);
 	view = std::make_unique<sf::View>(_center, _size);
+	
+	InitEvent();
 }
 
 Krampus::CameraComponent::CameraComponent(Actor* _owner, const FVector2& _size)
@@ -21,6 +25,8 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner, const FVector2& _size)
 {
 	name = NAME_OF(CameraComponent);
 	view = std::make_unique<sf::View>(_size / 2.0f, _size);
+
+	InitEvent();
 }
 
 Krampus::CameraComponent::CameraComponent(Actor* _owner, const FRect& _rect)
@@ -28,30 +34,36 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner, const FRect& _rect)
 {
 	name = NAME_OF(CameraComponent);
 	view = std::make_unique<sf::View>(_rect);
+
+	InitEvent();
 }
 
 void Krampus::CameraComponent::SetCurrent()
 {
-	level->GetCameraManagerRef().SetCurrent(this);
-}
-
-void Krampus::CameraComponent::Tick(const Float& _deltaTime)
-{
-	Component::Tick(_deltaTime);
-
-	if (!attachedToOwner) return;
-	
-	if (!freezePostition) 
-		SetCenter(transform.position);
-	if (!freezeRotation)
-		SetRotation(transform.rotation);
+	GetLevel()->GetCameraManagerRef().SetCurrent(this);
 }
 
 void Krampus::CameraComponent::BeginDestroy()
 {
 	Component::BeginDestroy();
 
-	level->GetCameraManagerRef().SetCurrent(nullptr);
+	GetLevel()->GetCameraManagerRef().SetCurrent(nullptr);
+}
+
+void Krampus::CameraComponent::InitEvent()
+{
+	onOwnerMoveHandle = GetOwner()->onMove.AddListener([this](FVector2 _newPos)
+		{
+			if (!attachedToOwner || freezePostition)
+				return;
+			SetCenter(_newPos);
+		});
+	onOwnerRotateHandle = GetOwner()->onRotate.AddListener([this](Angle _newRot)
+		{
+			if (!attachedToOwner || freezeRotation)
+				return;
+			SetRotation(_newRot);
+		});
 }
 
 std::string Krampus::CameraComponent::ToString() const
