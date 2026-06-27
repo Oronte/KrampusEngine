@@ -1,4 +1,6 @@
 #include "InputsLevel.h"
+#include "Exemple/Levels/MainMenu.h"
+#include "Exemple/UI/MainMenuButton.h"
 #include "Exemple/Actors/Inputs/InputActorExemple.h"
 #include "UI/LabelWidget.h"
 
@@ -10,6 +12,12 @@ Krampus::Exemple::InputsLevel::InputsLevel(Engine* _world)
 void Krampus::Exemple::InputsLevel::InitLevel()
 {
 	Super::InitLevel();
+
+	RectangleShapeData _data;
+	_data.size = FVector2(200.0f, 100.0f);
+	MainMenuButton* _backButton = SpawnWidget<MainMenuButton>(_data, "Back");
+	_backButton->SetScreenPosition(_data.size / 2.0f);
+	_backButton->BindChangeLevel<MainMenu>();
 
 	SpawnActor<InputActorExemple>();
 	LabelWidget* _title = SpawnWidget<LabelWidget>(TextData("Press any input and see result at the Console"));

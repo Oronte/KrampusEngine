@@ -20,7 +20,7 @@ namespace Krampus
 		std::vector<std::unique_ptr<Component>>		components;
 		Level*										level;
 
-
+	public:
 		Engine* GetWorld() const;
 
 		inline void AddChild(Actor* _actor)
@@ -39,9 +39,9 @@ namespace Krampus
 		}
 		Float GetDeltaTime() const;
 
+	protected:
 		Actor(Level* _level);
 
-	protected:
 		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
 		inline Type* CreateComponent(Args&&... _args)
 		{

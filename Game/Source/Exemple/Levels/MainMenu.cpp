@@ -9,6 +9,8 @@
 #include "InputsLevel.h"
 #include "LogLevel.h"
 
+#include "DemoGame/MainMenuDemoGame.h"
+
 Krampus::Exemple::MainMenu::MainMenu(Engine* _world)
 	: Level(_world)
 {
@@ -92,4 +94,16 @@ void Krampus::Exemple::MainMenu::InitLevel()
 		SpawnWidget<MainMenuButton>(_inputs, "Inputs");
 	_inputButton->SetScreenPosition(_buttonSize + _spacer * 5);
 	_inputButton->BindChangeLevel<InputsLevel>();
+
+
+
+
+
+	// ==============	Test Game	==============
+	RectangleShapeData _testGame;
+	_testGame.size = _buttonSize;
+	MainMenuButton* _testGameButton =
+		SpawnWidget<MainMenuButton>(_testGame, "Test Game");
+	_testGameButton->SetScreenPosition(FVector2(1920.0f, 1080.0f) - _buttonSize * 2.0f);
+	_testGameButton->BindChangeLevel<MainMenuDemoGame>();
 }
