@@ -12,34 +12,34 @@
     },
 
     {
-      "name": "windows-vs2022",
-      "displayName": "Windows — Visual Studio 2022",
-      "description": "Multi-config: Debug / Release / Ship. Open the generated .sln in VS2022.",
+      "name": "windows-vs2026",
+      "displayName": "Windows — Visual Studio 2026",
+      "description": "Multi-config: Debug / Release / Ship. Open the generated .sln in VS2026",
       "inherits": "base",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "architecture": { "value": "x64", "strategy": "set" },
-      "binaryDir": "${sourceDir}/Build/vs2022",
+      "binaryDir": "${sourceDir}/Build/vs2026",
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
     }
   ],
 
   "buildPresets": [
     {
-      "name": "vs2022-debug",
-      "displayName": "VS2022 — Debug",
-      "configurePreset": "windows-vs2022",
+      "name": "vs2026-debug",
+      "displayName": "VS2026 — Debug",
+      "configurePreset": "windows-vs2026",
       "configuration": "Debug"
     },
     {
-      "name": "vs2022-release",
-      "displayName": "VS2022 — Release",
-      "configurePreset": "windows-vs2022",
+      "name": "vs2026-release",
+      "displayName": "VS2026 — Release",
+      "configurePreset": "windows-vs2026",
       "configuration": "Release"
     },
     {
-      "name": "vs2022-ship",
-      "displayName": "VS2022 — Ship",
-      "configurePreset": "windows-vs2022",
+      "name": "vs2026-ship",
+      "displayName": "VS2026 — Ship",
+      "configurePreset": "windows-vs2026",
       "configuration": "Ship"
     }
   ]

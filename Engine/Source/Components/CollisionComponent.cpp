@@ -285,7 +285,7 @@ void Krampus::CollisionComponent::DrawDebug()
 	case ShapeType::Rectangle:
 		Debug::DrawDebugRect(GetLevel(), GetActorPosition(), sizeData.size, GetActorRotation(), Color::Red());
 		break;
-	};
+	}
 #endif
 }
 
