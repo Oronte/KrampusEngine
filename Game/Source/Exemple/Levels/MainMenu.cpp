@@ -1,7 +1,7 @@
 #include "MainMenu.h"
 #include "Managers/LevelManager.h"
 #include "Exemple/UI/MainMenuButton.h"
-#include "UI/ImageWidget.h"
+#include "../../../../Engine/Source/UI/Diegetic/DiegeticImageWidget.h"
 #include "AnimationLevel.h"
 #include "AudioLevel.h"
 #include "CameraLevel.h"
@@ -24,8 +24,8 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	RectangleShapeData _backgroundData;
 	_backgroundData.size = FVector2(1920.0f, 1080.0f);
 	_backgroundData.texturePath = "_internal/KrampusEngineBanner";
-	ImageWidget* _background =
-		SpawnWidget<ImageWidget>(_backgroundData);
+	DiegeticImageWidget* _background =
+		SpawnActor<DiegeticImageWidget>(_backgroundData);
 	_background->SetScreenPosition(FVector2(1920.0f, 1080.0f) / 2.0f);
 
 	const FVector2& _buttonSize = FVector2(200.0f, 100.0f);
@@ -35,7 +35,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_quit.size = _buttonSize;
 	MainMenuButton* _quitButton =
 		SpawnWidget<MainMenuButton>(_quit, "Quit");
-	_quitButton->SetScreenPosition(FVector2(1920.0f / 2.0f, 950.0f));
+	_quitButton->SetPosition(FVector2(1920.0f / 2.0f, 950.0f));
 	quitHandle = _quitButton->onPress.AddListener([this]()
 		{
 			GetWorld()->QuitGame();
@@ -47,7 +47,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_animation.size = _buttonSize;
 	MainMenuButton* _animationButton =
 		SpawnWidget<MainMenuButton>(_animation, "Animation");
-	_animationButton->SetScreenPosition(_buttonSize);
+	_animationButton->SetPosition(_buttonSize);
 	_animationButton->BindChangeLevel<AnimationLevel>();
 
 
@@ -56,7 +56,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_audio.size = _buttonSize;
 	MainMenuButton* _audioButton =
 		SpawnWidget<MainMenuButton>(_audio, "Audio 3D");
-	_audioButton->SetScreenPosition(_buttonSize + _spacer);
+	_audioButton->SetPosition(_buttonSize + _spacer);
 	_audioButton->BindChangeLevel<AudioLevel>();
 
 
@@ -65,7 +65,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_camera.size = _buttonSize;
 	MainMenuButton* _cameraButton =
 		SpawnWidget<MainMenuButton>(_camera, "Camera");
-	_cameraButton->SetScreenPosition(_buttonSize + _spacer * 2);
+	_cameraButton->SetPosition(_buttonSize + _spacer * 2);
 	_cameraButton->BindChangeLevel<CameraLevel>();
 
 
@@ -74,7 +74,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_collision.size = _buttonSize;
 	MainMenuButton* _collisionButton =
 		SpawnWidget<MainMenuButton>(_collision, "Physics");
-	_collisionButton->SetScreenPosition(_buttonSize + _spacer * 3);
+	_collisionButton->SetPosition(_buttonSize + _spacer * 3);
 	_collisionButton->BindChangeLevel<CollisionLevel>();
 
 
@@ -83,7 +83,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_log.size = _buttonSize;
 	MainMenuButton* _logButton =
 		SpawnWidget<MainMenuButton>(_log, "Logs");
-	_logButton->SetScreenPosition(_buttonSize + _spacer * 4);
+	_logButton->SetPosition(_buttonSize + _spacer * 4);
 	_logButton->BindChangeLevel<LogLevel>();
 
 
@@ -92,7 +92,7 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_inputs.size = _buttonSize;
 	MainMenuButton* _inputButton =
 		SpawnWidget<MainMenuButton>(_inputs, "Inputs");
-	_inputButton->SetScreenPosition(_buttonSize + _spacer * 5);
+	_inputButton->SetPosition(_buttonSize + _spacer * 5);
 	_inputButton->BindChangeLevel<InputsLevel>();
 
 
@@ -104,6 +104,6 @@ void Krampus::Exemple::MainMenu::InitLevel()
 	_testGame.size = _buttonSize;
 	MainMenuButton* _testGameButton =
 		SpawnWidget<MainMenuButton>(_testGame, "Test Game");
-	_testGameButton->SetScreenPosition(FVector2(1920.0f, 1080.0f) - _buttonSize * 2.0f);
+	_testGameButton->SetPosition(FVector2(1920.0f, 1080.0f) - _buttonSize * 2.0f);
 	_testGameButton->BindChangeLevel<MainMenuDemoGame>();
 }

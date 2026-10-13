@@ -1,7 +1,7 @@
 #include "HealthWidget.h"
 
 HealthWidget::HealthWidget(Level* _level, HealthComponent* _target)
-	: LabelWidget(_level, TextData("0 / 0")), targetComponent(_target)
+	: DiegeticLabelWidget(_level, TextData("0 / 0")), targetComponent(_target)
 {
 	label->SetFillColor(Color::Green());
 	UpdateString();

@@ -28,33 +28,33 @@ void DemoLevel::InitLevel()
 
 	// Game Objects
 	Player* _player = SpawnActor<Player>();
-	_player->SetActorPosition(FVector2(900, 0));
+	_player->SetPosition(FVector2(900, 0));
 
-	HealthWidget* _healthWidget = SpawnWidget<HealthWidget>(_player->GetComponent<HealthComponent>());
+	HealthWidget* _healthWidget = SpawnActor<HealthWidget>(_player->GetComponent<HealthComponent>());
 	_healthWidget->SetScreenPosition(FVector2(150.0f, 850.0f));
 	_healthWidget->SetScale(FVector2(3.0f));
 
-	ScoreLabelWidget* _scoreWidget = SpawnWidget<ScoreLabelWidget>(_player);
+	ScoreLabelWidget* _scoreWidget = SpawnActor<ScoreLabelWidget>(_player);
 	_scoreWidget->SetScreenPosition(FVector2(1920 / 2, 150));
 	_scoreWidget->SetScale(FVector2(2.0f));
 
 	Collider2D* _floor = SpawnActor<Collider2D>(FVector2(1500, 400));
 	_floor->GetComponent<CollisionComponent>()->UseDebug();
-	_floor->SetActorPosition(FVector2(900, 300));
+	_floor->SetPosition(FVector2(900, 300));
 
 	Collider2D* _leftWall = SpawnActor<Collider2D>(FVector2(100, 400));
 	_leftWall->GetComponent<CollisionComponent>()->UseDebug();
-	_leftWall->SetActorPosition(FVector2(200, -100));
+	_leftWall->SetPosition(FVector2(200, -100));
 
 	Collider2D* _rightWall = SpawnActor<Collider2D>(FVector2(100, 400));
 	_rightWall->GetComponent<CollisionComponent>()->UseDebug();
-	_rightWall->SetActorPosition(FVector2(1600, -100));
+	_rightWall->SetPosition(FVector2(1600, -100));
 
 	Weapon* _weapon = SpawnActor<Weapon>(_player);
 
 	WeaponSocket* _weaponSocket = SpawnActor<WeaponSocket>(_player);
 
-	_weapon->SetActorPosition(FVector2(75.0f, 0.0f));
+	_weapon->SetPosition(FVector2(75.0f, 0.0f));
 	_weaponSocket->AddChild(_weapon);
 	_weaponSocket->SetGraber(_player);
 
@@ -63,7 +63,7 @@ void DemoLevel::InitLevel()
 	_spawner->offset = FVector2(200.0f, 0.0f);
 
 	Background* _background = SpawnActor<Background>();
-	_background->SetActorPosition(FVector2(900, -400));
+	_background->SetPosition(FVector2(900, -400));
 
 	backgroundMusic = M_AUDIO.CreateMusic("EpicMusic", AudioExtensionType::MP3);
 	backgroundMusic.SetLoop(true);

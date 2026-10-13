@@ -1,5 +1,5 @@
 #pragma once
-#include "UI/ButtonWidget.h"
+#include "UI/Widgets/ButtonWidget.h"
 #include "Managers/LevelManager.h"
 
 namespace Krampus::Exemple
@@ -26,7 +26,7 @@ namespace Krampus::Exemple
 		template<typename LevelType = Level>
 		void BindChangeLevel()
 		{
-			changeLevelHandle = onPress.AddListener([this]()
+			changeLevelHandle = buttonComponent->onPress.AddListener([this]()
 				{
 					GetWorld()->GetLevelManager()->SetLevel<LevelType>();
 				});

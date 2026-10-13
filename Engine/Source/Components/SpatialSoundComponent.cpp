@@ -8,15 +8,15 @@ Krampus::SpatialSoundComponent::SpatialSoundComponent(Actor* _owner)
 
 	onOwnerMoveHandle = _owner->onMove.AddListener([this](FVector2 _newPos)
 		{
-			SetPosition(FVector3(_newPos.x, 0.0f, _newPos.y));
+			Set3DPosition(FVector3(_newPos.x, 0.0f, _newPos.y));
 		});
 	onOwnerRotateHandle = _owner->onRotate.AddListener([this](Angle _newRot)
 		{
 			FVector2 _dir;
 			if (isTopDown)
-				_dir = GetActorUpVector();
+				_dir = GetUpVector();
 			else
-				_dir = GetActorRightVector();
+				_dir = GetRightVector();
 			SetDirection(FVector3(_dir.x, 0.0f, _dir.y));
 		});
 }
@@ -29,15 +29,15 @@ Krampus::SpatialSoundComponent::SpatialSoundComponent(Actor* _owner, const Strin
 
 	onOwnerMoveHandle = _owner->onMove.AddListener([this](FVector2 _newPos)
 		{
-			SetPosition(FVector3(_newPos.x, 0.0f, _newPos.y));
+			Set3DPosition(FVector3(_newPos.x, 0.0f, _newPos.y));
 		});
 	onOwnerRotateHandle = _owner->onRotate.AddListener([this](Angle _newRot)
 		{
 			FVector2 _dir;
 			if (isTopDown)
-				_dir = GetActorUpVector();
+				_dir = GetUpVector();
 			else
-				_dir = GetActorRightVector();
+				_dir = GetRightVector();
 			SetDirection(FVector3(_dir.x, 0.0f, _dir.y));
 		});
 }
@@ -46,7 +46,7 @@ void Krampus::SpatialSoundComponent::Construct()
 {
 	Component::Construct();
 
-	previousPosition = GetActorPosition();
+	previousPosition = GetPosition();
 
 	SetMinDistance(400.0f);
 	SetAttenuation(1.5f);
@@ -67,7 +67,7 @@ void Krampus::SpatialSoundComponent::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
-	FVector2 _currentPosition = GetActorPosition();
+	FVector2 _currentPosition = GetPosition();
 	FVector2 _offset = _currentPosition - previousPosition;
 	SetVelocity(FVector3(_offset.x, 0.0f, _offset.y));
 	previousPosition = _currentPosition;

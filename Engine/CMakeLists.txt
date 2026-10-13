@@ -6,9 +6,12 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "Source/*.cpp")
 
 add_library(Engine STATIC ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
+target_precompile_headers(Engine PRIVATE Source/Utilities/Macro.h)
+
 target_include_directories(Engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Source
     ${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/include
+    ${CMAKE_SOURCE_DIR}/ThirdParty/box2d-3.1.1/include
 )
 
 target_link_directories(Engine PUBLIC

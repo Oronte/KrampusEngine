@@ -1,7 +1,12 @@
 #include "Window.h"
 #include "Graphics/Shapes/ShapeObject.h"
 #include "Components/CameraComponent.h"
-#include "Graphics/Ressources/Vertices.h"
+
+void Krampus::Window::SetView(sf::View _view)
+{
+	window.setView(_view);
+	onViewChange.Broadcast(_view);
+}
 
 void Krampus::Window::SetView(const CameraComponent* _camera)
 {

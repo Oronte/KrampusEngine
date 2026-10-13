@@ -5,6 +5,7 @@
 #include "Managers/CollisionManager.h"
 #include "Managers/TimerManager.h"
 #include "Managers/HUD.h"
+#include "box2d/box2d.h"
 
 namespace Krampus
 {
@@ -15,6 +16,8 @@ namespace Krampus
 	class Level : public KrampusObject
 	{	
 		Int					frameCount				= 0;
+		b2WorldDef			physicsWorld;
+		b2WorldId			physicsWorldID;
 
 	protected:
 		TimerManager		timerManager;
@@ -59,17 +62,25 @@ namespace Krampus
 		{
 			return GetWorld()->GetWindowRef();
 		}
+		inline b2WorldDef& GetPhysicsWorldRef()
+		{
+			return physicsWorld;
+		}
+		inline b2WorldId GetPhysicsWorldID()
+		{
+			return physicsWorldID;
+		}
 
 	protected:
 		virtual void InitLevel();
 
 	public:
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
 		inline Type* SpawnActor(Args&&... _args)
 		{
 			return actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
 		}
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
 		inline Type* SpawnActorAt(const Transform& _transform, Args&&... _args)
 		{
 			return actorManager.CreateActorAt<Type>(_transform, this, std::forward<Args>(_args)...);
@@ -84,9 +95,6 @@ namespace Krampus
 		void Update(const Float& _deltaTime);
 		Float UpdateTime();
 		CameraComponent* GetDefaultCamera() const;
-
-	private:
-		void Render();
 	};
 
 }

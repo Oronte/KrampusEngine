@@ -1,10 +1,10 @@
 #pragma once
-#include "UI/ButtonWidget.h"
+#include "UI/Diegetic/DiegeticButtonWidget.h"
 #include "Components/LabelComponent.h"
 
 using namespace Krampus;
 
-class NameButtonWidget : public ButtonWidget
+class NameButtonWidget : public DiegeticButtonWidget
 {
 	LabelComponent*			label			= nullptr;
 	Event<>::ListenerHandle hoverHandle;

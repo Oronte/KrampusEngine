@@ -1,15 +1,19 @@
 #pragma once
 #include "Components/CollisionComponent.h"
+#include "Core/KrampusObject.h"
 
 namespace Krampus
 {
 
-	class CollisionManager
+	class CollisionManager : public KrampusObject
 	{
 		std::vector<CollisionComponent*>	collisions;
+		int									subStepsCount = 4;
 
 	public:
-		CollisionManager() = default;
+		Event<>								onResolveCollision;
+
+		CollisionManager(Engine* _engine);
 
 		void Register(CollisionComponent* _component);
 

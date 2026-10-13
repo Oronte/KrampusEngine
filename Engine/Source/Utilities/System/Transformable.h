@@ -7,59 +7,59 @@ namespace Krampus
 	class ITransformable
 	{
 	public:
-		virtual void SetActorPosition(const FVector2& _newPosition) = 0;
-		virtual FVector2 GetActorPosition() const = 0;
+		virtual void SetPosition(const FVector2& _newPosition) = 0;
+		NO_DISCARD virtual FVector2 GetPosition() const = 0;
 		virtual void Move(const FVector2& _offset)
 		{
-			SetActorPosition(GetActorPosition() + _offset);
+			SetPosition(GetPosition() + _offset);
 		}
 
-		virtual void SetActorRotation(const Angle& _newRotation) = 0;
-		virtual Angle GetActorRotation() const = 0;
+		virtual void SetRotation(const Angle& _newRotation) = 0;
+		NO_DISCARD virtual Angle GetRotation() const = 0;
 		virtual void Rotate(const Angle& _offset)
 		{
-			SetActorRotation(GetActorRotation() + _offset);
+			SetRotation(GetRotation() + _offset);
 		}
 
-		virtual void SetActorScale(const FVector2& _newScale) = 0;
-		virtual FVector2 GetActorScale() const = 0;
+		virtual void SetScale(const FVector2& _newScale) = 0;
+		NO_DISCARD virtual FVector2 GetScale() const = 0;
 		virtual void Scale(const FVector2& _offset)
 		{
-			SetActorScale(GetActorScale() + _offset);
+			SetScale(GetScale() + _offset);
 		}
 
-		virtual void SetActorTransform(const Transform& _transform)
+		virtual void SetTransform(const Transform& _transform)
 		{
-			SetActorPosition(_transform.position);
-			SetActorRotation(_transform.rotation);
-			SetActorScale(_transform.scale);
+			SetPosition(_transform.position);
+			SetRotation(_transform.rotation);
+			SetScale(_transform.scale);
 		}
 
 
-		virtual inline FVector2 GetActorUpVector() const
+		NO_DISCARD virtual inline FVector2 GetUpVector() const
 		{
-			return FVector2::Up().Rotated(GetActorRotation().ToRadians());
+			return FVector2::Up().Rotated(GetRotation().ToRadians());
 		}
-		virtual inline FVector2 GetActorDownVector() const
+		NO_DISCARD virtual inline FVector2 GetDownVector() const
 		{
-			return FVector2::Down().Rotated(GetActorRotation().ToRadians());
+			return FVector2::Down().Rotated(GetRotation().ToRadians());
 		}
-		virtual inline FVector2 GetActorRightVector() const
+		NO_DISCARD virtual inline FVector2 GetRightVector() const
 		{
-			return FVector2::Right().Rotated(GetActorRotation().ToRadians());
+			return FVector2::Right().Rotated(GetRotation().ToRadians());
 		}
-		virtual inline FVector2 GetActorLeftVector() const
+		NO_DISCARD virtual inline FVector2 GetLeftVector() const
 		{
-			return FVector2::Left().Rotated(GetActorRotation().ToRadians());
+			return FVector2::Left().Rotated(GetRotation().ToRadians());
 		}
 
-		virtual inline Angle GetAngleTo(const FVector2& _target) const
+		NO_DISCARD virtual inline Angle GetAngleTo(const FVector2& _target) const
 		{
-			return Angle((_target - GetActorPosition()).AtanToRadian());
+			return Angle((_target - GetPosition()).AtanToRadian());
 		}
 		virtual inline void LookAt(const FVector2& _target)
 		{
-			SetActorRotation(GetAngleTo(_target));
+			SetRotation(GetAngleTo(_target));
 		}
 	};
 

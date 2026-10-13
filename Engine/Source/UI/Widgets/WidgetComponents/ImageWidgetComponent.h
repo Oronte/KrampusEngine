@@ -1,0 +1,73 @@
+#pragma once
+#include "WidgetComponent.h"
+#include "Graphics/Shapes/ShapeObject.h"
+#include "Utilities/System/Debuggable.h"
+#include "Utilities/System/Drawable.h"
+
+namespace Krampus
+{
+    class ImageWidgetComponent : public WidgetComponent, public IDebuggable, public IDrawable
+    {
+        std::unique_ptr<ShapeObject>	shape;
+
+        Event<FVector2>::ListenerHandle onOwnerMoveHandle;
+        Event<Angle>::ListenerHandle    onOwnerRotateHandle;
+        Event<FVector2>::ListenerHandle onOwnerScaleHandle;
+
+    public:
+        inline ShapeObject* GetShapeObject()
+        {
+            return shape.get();
+        }
+        inline ShapeSizeData& GetShapeSizeData()
+        {
+            return shape->GetSizeData();
+        }
+        inline ShapeType GetShapeType() const
+        {
+            return shape->GetShapeType();
+        }
+        void SetSize(const FVector2& _size)
+        {
+            shape->SetSize(_size);
+        }
+        FVector2 GetSize() const
+        {
+            return shape->GetSize();
+        }
+        void SetRadius(const Float& _radius)
+        {
+            shape->SetRadius(_radius);
+        }
+        Float GetRadius() const
+        {
+            return shape->GetRadius();
+        }
+        void SetPointCount(const size_t& _pointCount)
+        {
+            shape->SetPointCount(_pointCount);
+        }
+        size_t GetPointCount() const
+        {
+            return shape->GetPointCount();
+        }
+        void SetTexture(const std::string& _path, TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const Bool& _isRepeated = false, const Bool& _smooth = true)
+        {
+            shape->SetTexture(_path, _textureType, _rect, _isRepeated, _smooth);
+        }
+
+        ImageWidgetComponent(Widget* _owner, const CircleShapeData& _data);
+        ImageWidgetComponent(Widget* _owner, const RectangleShapeData& _data);
+
+        virtual void Construct() override;
+        virtual void Deconstruct() override;
+
+    public:
+        virtual void Draw(Window& _window) override;
+        virtual void DrawDebug() override;
+        virtual void SetZOrder(const uint8_t& _zOrder) override;
+        virtual void SetZOrder(const ZOrder& _zOrder) override;
+
+        virtual std::string ToString() const override;
+    };
+}

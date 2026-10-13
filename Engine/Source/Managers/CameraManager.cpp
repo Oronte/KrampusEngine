@@ -19,17 +19,38 @@ void Krampus::CameraManager::Render(const Bool& splitScreen)
 
 	Window& _window = GetWorld()->GetWindowRef();
 
-	for (std::pair<int, std::vector<IDrawable*>> _pair : drawer)
-	{
-		const std::vector<IDrawable*>& _sprites = _pair.second;
+	UpdateView(); // World View
+	RenderActors(_window, splitScreen);
+	RenderDebugs(_window, splitScreen);
 
-		for (IDrawable* _sprite : _sprites) _sprite->Draw(_window);
-	}
+	GetWorld()->GetWindowRef().SetView(GetWorld()->GetLevelManager()->GetCurrentLevel()->GetHUDRef().GetView()); // Widget View
+	RenderWidgets(_window, splitScreen);
 
+	//UpdateView(); // World View
+
+	debugs.clear();
+
+	_window.Display();
+}
+
+void Krampus::CameraManager::RenderActors(Window& _window, const Bool& splitScreen)
+{
+	for (const auto& [_zOrder, _sprites] : actors)
+		for (IDrawable* _sprite : _sprites)
+			_sprite->Draw(_window);
+}
+
+void Krampus::CameraManager::RenderDebugs(Window& _window, const Bool& splitScreen)
+{
 	for (const std::shared_ptr<Vertices> _vert : debugs)
 	{
 		_window.Draw(*_vert);
 	}
-	
-	debugs.clear();
+}
+
+void Krampus::CameraManager::RenderWidgets(Window& _window, const Bool& splitScreen)
+{
+	for (const auto& [_zOrder, _sprites] : widgets)
+		for (IDrawable* _sprite : _sprites)
+			_sprite->Draw(_window);
 }

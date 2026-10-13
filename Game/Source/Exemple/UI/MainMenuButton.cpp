@@ -1,5 +1,5 @@
 #include "MainMenuButton.h"
-#include "Components/LabelComponent.h"
+#include "UI/Widgets/WidgetComponents/LabelWidgetComponent.h"
 
 Krampus::Exemple::MainMenuButton::MainMenuButton(Level* _level, const CircleShapeData& _data, const String& _text)
 	: ButtonWidget(_level, _data)
@@ -7,7 +7,7 @@ Krampus::Exemple::MainMenuButton::MainMenuButton(Level* _level, const CircleShap
 	TextData _textData;
 	_textData.text = _text;
 	_textData.characterSize = 25;
-	LabelComponent* _label = CreateComponent<LabelComponent>(_textData);
+	LabelWidgetComponent* _label = CreateComponent<LabelWidgetComponent>(_textData);
 	_label->SetZOrder(ZOrder::Debug);
 }
 
@@ -17,7 +17,7 @@ Krampus::Exemple::MainMenuButton::MainMenuButton(Level* _level, const RectangleS
 	TextData _textData;
 	_textData.text = _text;
 	_textData.characterSize = 25;
-	LabelComponent* _label = CreateComponent<LabelComponent>(_textData);
+	LabelWidgetComponent* _label = CreateComponent<LabelWidgetComponent>(_textData);
 	_label->SetZOrder(ZOrder::Debug);
 }
 
@@ -25,13 +25,13 @@ void Krampus::Exemple::MainMenuButton::Construct()
 {
 	Super::Construct();
 
-	onHoverHandle = onHover.AddListener([this]()
+	onHoverHandle = buttonComponent->onHover.AddListener([this]()
 		{
-			SetActorScale(hoverScale);
+			SetScale(hoverScale);
 		});
-	onUnhoverHandle = onUnhover.AddListener([this]()
+	onUnhoverHandle = buttonComponent->onUnhover.AddListener([this]()
 		{
-			SetActorScale(unhoverScale);
+			SetScale(unhoverScale);
 		});
 }
 

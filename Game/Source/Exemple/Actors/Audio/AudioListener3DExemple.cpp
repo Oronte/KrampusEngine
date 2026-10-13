@@ -28,7 +28,7 @@ void Krampus::Exemple::AudioListener3DExemple::Tick(const Float& _deltaTime)
 {
 	Super::Tick(_deltaTime);
 
-	SetActorPosition(GetWorld()->GetMouse()->GetPosition());
+	SetPosition(GetWorld()->GetMouse()->GetPosition());
 }
 
 void Krampus::Exemple::AudioListener3DExemple::Deconstruct()

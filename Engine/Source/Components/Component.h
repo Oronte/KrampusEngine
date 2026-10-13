@@ -38,12 +38,12 @@ namespace Krampus
 
 		virtual std::string ToString() const override;
 
-		void SetActorPosition(const FVector2& _newPosition) override;
-		FVector2 GetActorPosition() const override;
-		void SetActorRotation(const Angle& _newRotation) override;
-		Angle GetActorRotation() const override;
-		void SetActorScale(const FVector2& _newScale) override;
-		FVector2 GetActorScale() const override;
+		void SetPosition(const FVector2& _newPosition) override;
+		FVector2 GetPosition() const override;
+		void SetRotation(const Angle& _newRotation) override;
+		Angle GetRotation() const override;
+		void SetScale(const FVector2& _newScale) override;
+		FVector2 GetScale() const override;
 	};
 
 

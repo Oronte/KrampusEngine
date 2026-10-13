@@ -1,7 +1,7 @@
 #include "ScoreLabelWidget.h"
 
 ScoreLabelWidget::ScoreLabelWidget(Level* _level, Player* _player)
-	: LabelWidget(_level, TextData("0")), player(_player)
+	: DiegeticLabelWidget(_level, TextData("0")), player(_player)
 {
 	label->SetFillColor(Color::Blue());
 }

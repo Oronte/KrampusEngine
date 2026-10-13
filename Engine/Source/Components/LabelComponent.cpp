@@ -33,7 +33,7 @@ void Krampus::LabelComponent::DrawDebug()
 {
 #ifdef DEBUG
 	if (!IsDebugging()) return;
-	Debug::DrawDebugRect(GetLevel(), GetActorPosition(), GetLocalBounds().GetSize(), GetActorRotation(), Color::Green());
+	Debug::DrawDebugRect(GetLevel(), GetPosition(), GetLocalBounds().GetSize(), GetRotation(), Color::Green());
 #endif
 
 }
@@ -42,28 +42,28 @@ void Krampus::LabelComponent::Construct()
 {
 	Component::Construct();
 
-	GetLevel()->GetCameraManagerRef().AddToWindow(this);
+	GetLevel()->GetCameraManagerRef().AddToScreen(this);
 }
 
 void Krampus::LabelComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	GetLevel()->GetCameraManagerRef().RemoveToWindow(this);
+	GetLevel()->GetCameraManagerRef().RemoveToScreen(this);
 }
 
 void Krampus::LabelComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManagerRef().ChangeScreenZOrder(this, _oldZOrder);
 }
 
 void Krampus::LabelComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManagerRef().ChangeScreenZOrder(this, _oldZOrder);
 }
 
 std::string Krampus::LabelComponent::ToString() const

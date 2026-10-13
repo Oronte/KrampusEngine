@@ -5,6 +5,7 @@ namespace Krampus::Exemple
 {
 	class CameraLevel : public Level
 	{
+		Event<>::ListenerHandle handle;
 	public:
 		CameraLevel(Engine* _world);
 

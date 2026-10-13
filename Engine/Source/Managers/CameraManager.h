@@ -10,7 +10,8 @@ namespace Krampus
 	class CameraManager : public KrampusObject
 	{
 		CameraComponent*							current		= nullptr;
-		std::map<uint8_t, std::vector<IDrawable*>>	drawer;
+		std::map<uint8_t, std::vector<IDrawable*>>	actors;
+		std::map<uint8_t, std::vector<IDrawable*>>	widgets;
 		std::vector<std::shared_ptr<Vertices>>		debugs;
 
 	public:
@@ -18,36 +19,66 @@ namespace Krampus
 		{
 			current = _camera;
 		}
-		inline void AddToWindow(IDrawable* _drawable)
+		inline void AddToWorld(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
 				LOG(VerbosityType::Error, "You try to add to window an invalide sprite");
 				return;
 			}
-			drawer[_drawable->GetZOrder()].push_back(_drawable);
+			actors[_drawable->GetZOrder()].push_back(_drawable);
 		}
-		inline void RemoveToWindow(IDrawable* _drawable)
+		inline void AddToScreen(IDrawable* _drawable)
+		{
+			if (!_drawable)
+			{
+				LOG(VerbosityType::Error, "You try to add to window an invalide sprite");
+				return;
+			}
+			widgets[_drawable->GetZOrder()].push_back(_drawable);
+		}
+		inline void RemoveToWorld(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
 				LOG(VerbosityType::Error, "You try to remove to window an nullptr sprite");
 				return;
 			}
-			std::erase_if(drawer[_drawable->GetZOrder()], [&](const IDrawable* _item)
+			std::erase_if(actors[_drawable->GetZOrder()], [&](const IDrawable* _item)
+				{
+					return _item == _drawable;
+				});
+		}
+		inline void RemoveToScreen(IDrawable* _drawable)
+		{
+			if (!_drawable)
+			{
+				LOG(VerbosityType::Error, "You try to remove to window an nullptr sprite");
+				return;
+			}
+			std::erase_if(widgets[_drawable->GetZOrder()], [&](const IDrawable* _item)
 				{
 					return _item == _drawable;
 				});
 		}
 
-		inline void ChangeZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
+		inline void ChangeWorldZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
 		{
-			std::erase_if(drawer[_oldZOrder], [&](const IDrawable* _item)
+			std::erase_if(actors[_oldZOrder], [&](const IDrawable* _item)
 				{
 					return _drawable == _item;
 				});
 
-			AddToWindow(_drawable);
+			AddToWorld(_drawable);
+		}
+		inline void ChangeScreenZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
+		{
+			std::erase_if(widgets[_oldZOrder], [&](const IDrawable* _item)
+				{
+					return _drawable == _item;
+				});
+
+			AddToScreen(_drawable);
 		}
 
 		CameraManager(Engine* _engine)
@@ -56,6 +87,11 @@ namespace Krampus
 	public:
 		void UpdateView();
 		void Render(const Bool& splitScreen);
+
+	private:
+		void RenderActors(Window& _window, const Bool& splitScreen);
+		void RenderDebugs(Window& _window, const Bool& splitScreen);
+		void RenderWidgets(Window& _window, const Bool& splitScreen);
 
 		friend class Debug;
 	};

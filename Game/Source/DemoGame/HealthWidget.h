@@ -1,10 +1,10 @@
 #pragma once
-#include "UI/LabelWidget.h"
+#include "UI/Diegetic/DiegeticLabelWidget.h"
 #include "HealthComponent.h"
 
 using namespace Krampus;
 
-class HealthWidget : public LabelWidget
+class HealthWidget : public DiegeticLabelWidget
 {
 	HealthComponent*	targetComponent			= nullptr;
 	Float				colorChangePercentage	= 0.3;

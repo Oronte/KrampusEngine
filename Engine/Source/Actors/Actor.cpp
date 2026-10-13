@@ -85,45 +85,45 @@ std::string Krampus::Actor::ToString() const
 	return name + " -> Transform = " + transform.ToString();
 }
 
-void Krampus::Actor::SetActorPosition(const FVector2& _newPosition)
+void Krampus::Actor::SetPosition(const FVector2& _newPosition)
 {
 	for (Actor* _actor : children)
-		_actor->Move(_newPosition - GetActorPosition());
+		_actor->Move(_newPosition - GetPosition());
 	transform.position = _newPosition;
 	onMove.Broadcast(_newPosition);
 }
 
-Krampus::FVector2 Krampus::Actor::GetActorPosition() const
+Krampus::FVector2 Krampus::Actor::GetPosition() const
 {
 	return transform.position;
 }
 
-void Krampus::Actor::SetActorRotation(const Angle& _newRotation)
+void Krampus::Actor::SetRotation(const Angle& _newRotation)
 {
 	for (Actor* _actor : children)
 	{
-		const Angle& _deltaRot = _newRotation - GetActorRotation();
-		_actor->SetActorPosition(_actor->GetActorPosition().FVector2::RotateAround(GetActorPosition(), _deltaRot));
+		const Angle& _deltaRot = _newRotation - GetRotation();
+		_actor->SetPosition(_actor->GetPosition().FVector2::RotateAround(GetPosition(), _deltaRot));
 		_actor->Rotate(_deltaRot);
 	}
 	transform.rotation = _newRotation;
 	onRotate.Broadcast(_newRotation);
 }
 
-Krampus::Angle Krampus::Actor::GetActorRotation() const
+Krampus::Angle Krampus::Actor::GetRotation() const
 {
 	return transform.rotation;
 }
 
-void Krampus::Actor::SetActorScale(const FVector2& _newScale)
+void Krampus::Actor::SetScale(const FVector2& _newScale)
 {
 	for (Actor* _actor : children)
-		_actor->Scale(_newScale - GetActorScale());
+		_actor->Scale(_newScale - GetScale());
 	transform.scale = _newScale;
 	onScale.Broadcast(_newScale);
 }
 
-Krampus::FVector2 Krampus::Actor::GetActorScale() const
+Krampus::FVector2 Krampus::Actor::GetScale() const
 {
 	return transform.scale;
 }

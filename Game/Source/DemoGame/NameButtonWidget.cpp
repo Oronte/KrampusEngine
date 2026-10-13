@@ -2,7 +2,7 @@
 #include "Managers/AudioManager.h"
 
 NameButtonWidget::NameButtonWidget(Level* _level, const RectangleShapeData& _data, const String& _label)
-	: ButtonWidget(_level, _data)
+	: DiegeticButtonWidget(_level, _data)
 {
 	label = CreateComponent<LabelComponent>(TextData(_label));
 	label->SetZOrder(210);
@@ -19,12 +19,12 @@ void NameButtonWidget::Construct()
 
 void NameButtonWidget::OnUnhover()
 {
-	SetActorScale(FVector2(1.0f));
+	SetScale(FVector2(1.0f));
 	sound.Play();
 }
 
 void NameButtonWidget::OnHover()
 {
-	SetActorScale(FVector2(1.15f));
+	SetScale(FVector2(1.15f));
 	sound.Play();
 }

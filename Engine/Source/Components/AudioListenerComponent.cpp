@@ -53,9 +53,9 @@ Bool Krampus::AudioListenerComponent::HasChanged(
 
 void Krampus::AudioListenerComponent::UpdateListener()
 {
-	const FVector2 _position = GetActorPosition();
-	const FVector2 _right = GetActorRightVector();
-	const FVector2 _up = GetActorUpVector();
+	const FVector2 _position = GetPosition();
+	const FVector2 _right = GetRightVector();
+	const FVector2 _up = GetUpVector();
 
 
 	FVector2 _forward;

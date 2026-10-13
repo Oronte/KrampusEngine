@@ -17,7 +17,7 @@ void Krampus::RigidbodyComponent::AddForce(const FVector2& _force, const FVector
 
     if (_applyPoint != FVector2::Zero())
     {
-        const FVector2& _r = _applyPoint - GetActorPosition();
+        const FVector2& _r = _applyPoint - GetPosition();
         accumulatedTorque += _r.Cross(_force);
     }
 }
@@ -78,11 +78,11 @@ void Krampus::RigidbodyComponent::OnCollision(const CollisionInfo& info)
 
     for (const FVector2& contact : info.contacts)
     {
-        FVector2 rA = contact - _physA->owner->GetActorPosition();
+        FVector2 rA = contact - _physA->owner->GetPosition();
         FVector2 rB = FVector2::Zero();
 
         if (_physB)
-            rB = contact - _physB->owner->GetActorPosition();
+            rB = contact - _physB->owner->GetPosition();
 
         // Vélocité au point de contact
         FVector2 vA = _physA->velocity + FVector2(-_physA->angularVelocity * rA.y, _physA->angularVelocity * rA.x);

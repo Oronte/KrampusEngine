@@ -50,14 +50,14 @@ void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
-	GetLevel()->GetCameraManagerRef().AddToWindow(this);
+	GetLevel()->GetCameraManagerRef().AddToWorld(this);
 }
 
 void Krampus::SpriteComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	GetLevel()->GetCameraManagerRef().RemoveToWindow(this);
+	GetLevel()->GetCameraManagerRef().RemoveToWorld(this);
 }
 
 
@@ -76,11 +76,11 @@ void Krampus::SpriteComponent::DrawDebug()
 	switch (shape->GetShapeType())
 	{
 	case ShapeType::Circle:
-		Debug::DrawDebugCircle(GetLevel(), GetActorPosition(), shape->GetSizeData().radius, 15, Color::Green());
+		Debug::DrawDebugCircle(GetLevel(), GetPosition(), shape->GetSizeData().radius, 15, Color::Green());
 		break;
 
 	case ShapeType::Rectangle:
-		Debug::DrawDebugRect(GetLevel(), GetActorPosition(), shape->GetSizeData().size, GetActorRotation(), Color::Green());
+		Debug::DrawDebugRect(GetLevel(), GetPosition(), shape->GetSizeData().size, GetRotation(), Color::Green());
 		break;
 	};
 #endif
@@ -90,14 +90,14 @@ void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManagerRef().ChangeWorldZOrder(this, _oldZOrder);
 }
 
 void Krampus::SpriteComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManagerRef().ChangeZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManagerRef().ChangeWorldZOrder(this, _oldZOrder);
 }
 
 std::string Krampus::SpriteComponent::ToString() const
