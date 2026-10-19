@@ -37,11 +37,11 @@ void Weapon::Shoot()
 			canShoot = true;
 		}, 1.0f / bulletsPerSec);
 
-	FVector2 _dir = GetActorPosition().DirectionTo(GetWorld()->GetMouse()->GetPosition());
+	FVector2 _dir = GetPosition().DirectionTo(GetWorld()->GetMouse()->GetPosition());
 	_dir += FVector2::RandomRange(-1.0f, 1.0f).Normalized() * spread;
 
 	Bullet* _bullet = GetLevel()->SpawnActorAt<Bullet>(
-		Transform(GetActorPosition() + GetActorRightVector() * 36.0f * 2.0f + GetActorUpVector() * 10.0f, GetAngleTo(GetWorld()->GetMouse()->GetPosition())),
+		Transform(GetPosition() + GetRightVector() * 36.0f * 2.0f + GetUpVector() * 10.0f, GetAngleTo(GetWorld()->GetMouse()->GetPosition())),
 		_dir.Normalized());
 
 	shootSound.Play();

@@ -1,10 +1,10 @@
 #pragma once
-#include "UI/LabelWidget.h"
+#include "UI/Diegetic/DiegeticLabelWidget.h"
 #include "Player.h"
 
 using namespace Krampus;
 
-class ScoreLabelWidget : public LabelWidget
+class ScoreLabelWidget : public DiegeticLabelWidget
 {
 	Player*		player	= nullptr;
 public:

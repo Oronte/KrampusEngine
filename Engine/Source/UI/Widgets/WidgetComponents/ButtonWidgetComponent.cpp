@@ -1,0 +1,75 @@
+
+#include "ButtonWidgetComponent.h"
+
+#include "ImageWidgetComponent.h"
+#include "Managers/InputManager.h"
+#include "Utilities/Math/Physics.h"
+#include "Graphics/Mouse.h"
+#include "UI/Widgets/Widget.h"
+
+Krampus::ButtonWidgetComponent::ButtonWidgetComponent(Widget* _owner)
+    : WidgetComponent(_owner)
+{
+    name = NAME_OF(ButtonWidgetComponent);
+    Init();
+    ImageWidgetComponent* _image = owner->GetComponent<ImageWidgetComponent>();
+    if (!_image)
+    {
+        LOG_ERROR("This Constructor of ButtonWidgetComponent requires an ImageWidgetComponent");
+        return;
+    }
+    shape = _image->GetShapeObject();
+}
+
+void Krampus::ButtonWidgetComponent::Tick(const Float &_deltaTime)
+{
+    WidgetComponent::Tick(_deltaTime);
+
+    if (isPressed) onPerform.Broadcast();
+}
+
+void Krampus::ButtonWidgetComponent::Init()
+{
+    InputManager* _inputManager = GetWorld()->GetInputManager();
+
+    onMouseMovedHandle = _inputManager->MouseMovedScreen.AddListener(this, &ButtonWidgetComponent::OnMouseMoved);
+    onClickHandle = _inputManager->MouseLeftClick.onPress.AddListener(this, &ButtonWidgetComponent::OnClick);
+    onReleaseHandle = _inputManager->MouseLeftClick.onRelease.AddListener(this, &ButtonWidgetComponent::OnRelease);
+}
+
+void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_mousePos)
+{
+    if (!shape)
+    {
+        LOG_ERROR("This Constructor of ButtonWidgetComponent requires an ShapeObject");
+        return;
+    }
+    CollisionInfo _info;
+    Bool _colliding = false;
+    if (shape->GetShapeType() == ShapeType::Circle)
+        _colliding = Physics::Contains(_mousePos, GetPosition(), shape->GetSizeData().radius, _info);
+    else
+        _colliding = Physics::Contains(_mousePos, GetPosition(), shape->GetSizeData().size, GetRotation(), _info);
+
+    if (_colliding && !isHovered) onHover.Broadcast();
+    else if (!_colliding && isHovered) onUnhover.Broadcast();
+
+    isHovered = _colliding;
+}
+
+void Krampus::ButtonWidgetComponent::OnClick()
+{
+    if (!isPressed && isHovered) onPress.Broadcast();
+    isPressed = isHovered;
+}
+
+void Krampus::ButtonWidgetComponent::OnRelease()
+{
+    if (isPressed) onRelease.Broadcast();
+    isPressed = false;
+}
+
+std::string Krampus::ButtonWidgetComponent::ToString() const
+{
+	return name + " -> IsHovered = " + isHovered.ToString() + ", IsPressed = " + isPressed.ToString();
+}

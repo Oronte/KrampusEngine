@@ -1,5 +1,5 @@
 #pragma once
-#include "UI/Widget.h"
+#include "UI/Widgets/Widget.h"
 
 namespace Krampus
 {
@@ -8,6 +8,8 @@ namespace Krampus
 	{
 		std::vector<std::unique_ptr<Widget>>	widgets;
 		std::vector<std::unique_ptr<Widget>>	pendingDeleteWidgets;
+
+		sf::View								view = sf::View(FVector2(1920, 1080) / 2.0f, FVector2(1920, 1080));
 
 	public:
 		inline const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
@@ -63,6 +65,9 @@ namespace Krampus
 		HUD() = default;
 
 	public:
+		NO_DISCARD sf::View GetView() const;
+		void SetView(const sf::View& _view);
+
 		void BeginPlay();
 		void Update(const Float& _deltaTime);
 		void Deconstruct();

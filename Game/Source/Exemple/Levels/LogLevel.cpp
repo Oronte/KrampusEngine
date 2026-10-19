@@ -15,7 +15,7 @@ void Krampus::Exemple::LogLevel::InitLevel()
 	RectangleShapeData _dataBack;
 	_dataBack.size = FVector2(200.0f, 100.0f);
 	MainMenuButton* _backButton = SpawnWidget<MainMenuButton>(_dataBack, "Back");
-	_backButton->SetScreenPosition(_dataBack.size / 2.0f);
+	_backButton->SetPosition(_dataBack.size / 2.0f);
 	_backButton->BindChangeLevel<MainMenu>();
 
 	CircleShapeData _data;
@@ -28,10 +28,10 @@ void Krampus::Exemple::LogLevel::InitLevel()
 	const FVector2 _center = FVector2(1920.0f, 1080.0f) / 2.0f;
 	const FVector2 _offset = FVector2(1920.0f, 1080.0f) / 8.0f;
 
-	_messageLogButton->SetScreenPosition(_center - _offset);
-	_warningLogButton->SetScreenPosition(_center + FVector2(_offset.x, -_offset.y));
-	_errorLogButton->SetScreenPosition(_center + FVector2(-_offset.x, _offset.y));
-	_fatalLogButton->SetScreenPosition(_center + _offset);
+	_messageLogButton->SetPosition(_center - _offset);
+	_warningLogButton->SetPosition(_center + FVector2(_offset.x, -_offset.y));
+	_errorLogButton->SetPosition(_center + FVector2(-_offset.x, _offset.y));
+	_fatalLogButton->SetPosition(_center + _offset);
 
 	messageLogHandle = _messageLogButton->onPress.AddListener([this]()
 		{

@@ -91,6 +91,7 @@ namespace Krampus
 			return window.mapPixelToCoords(_screenPos, _view);
 		}
 
+		virtual void SetView(sf::View _view);
 		virtual void SetView(const CameraComponent* _camera);
 
 		Window() = default;

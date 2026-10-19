@@ -1,6 +1,6 @@
 #pragma once
 #include "Actors/Actor.h"
-#include "UI/Widget.h"
+#include "../UI/Diegetic/DiegeticWidget.h"
 
 namespace Krampus
 {
@@ -16,7 +16,7 @@ namespace Krampus
 		{
 			return actors;
 		}
-		template <typename Type, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+		template <typename Type, IS_BASE_OF(Actor, Type)>
 		inline std::vector<Type*> GetAllActorOfClass()
 		{
 			std::vector<Type*> _finalVector;
@@ -29,7 +29,8 @@ namespace Krampus
 
 			return _finalVector;
 		}
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
 		inline Type* CreateActor(Args&&... _args)
 		{
 			std::unique_ptr<Type> _actor = std::make_unique<Type>(std::forward<Args>(_args)...);
@@ -39,13 +40,13 @@ namespace Krampus
 			if (isPlaying) _rawActor->BeginPlay();
 			return _rawActor;
 		}
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type), IS_NOT_BASE_OF(Widget, Type)>
+		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
 		inline Type* CreateActorAt(const Transform& _transform, Args&&... _args)
 		{
 			std::unique_ptr<Type> _actor = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _rawActor = _actor.get();
 			actors.push_back(std::move(_actor));
-			_rawActor->SetActorTransform(_transform);
+			_rawActor->SetTransform(_transform);
 			_rawActor->Construct();
 			if (isPlaying) _rawActor->BeginPlay();
 			return _rawActor;

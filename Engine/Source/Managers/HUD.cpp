@@ -1,5 +1,15 @@
 #include "HUD.h"
 
+sf::View Krampus::HUD::GetView() const
+{
+	return view;
+}
+
+void Krampus::HUD::SetView(const sf::View& _view)
+{
+	view = _view;
+}
+
 void Krampus::HUD::BeginPlay()
 {
 	for (const std::unique_ptr<Widget>& _widget : widgets)

@@ -61,10 +61,10 @@ void Enemy::Tick(const Float& _deltaTime)
 {
 	Super::Tick(_deltaTime);
 
-	enemySound.SetPosition(FVector3(GetActorPosition().x, 0.0f, GetActorPosition().y));
+	enemySound.SetPosition(FVector3(GetPosition().x, 0.0f, GetPosition().y));
 
 	if (player)
-		Move(GetActorPosition().DirectionTo(player->GetActorPosition()).Normalized() * 100.0f * _deltaTime);
+		Move(GetPosition().DirectionTo(player->GetPosition()).Normalized() * 100.0f * _deltaTime);
 }
 
 void Enemy::Die()
@@ -76,7 +76,7 @@ void Enemy::Die()
 	collision->mask = CollisionChannel::Wall | CollisionChannel::Enemy | CollisionChannel::Trigger;
 	CreateTimer([this]()
 		{
-			GetLevel()->SpawnActorAt<DeathFX>(Transform(GetActorPosition(), Angle()));
+			GetLevel()->SpawnActorAt<DeathFX>(Transform(GetPosition(), Angle()));
 			Destroy();
 		}, FMath::RandomRange(0.5f, 3.0f));
 

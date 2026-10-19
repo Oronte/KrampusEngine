@@ -23,9 +23,9 @@ void GrabableComponent::Tick(const Float& _deltaTime)
 	Super::Tick(_deltaTime);
 
 	if (!graber || !canTrack) return;
-	SetActorPosition(graber->GetActorPosition());
+	SetPosition(graber->GetPosition());
 	LookAt(GetWorld()->GetMouse()->GetPosition());
-	if (FMath::Abs(GetActorRotation().ToRadians()) >= FMath::halfPi)
-		SetActorScale(FVector2(1, -1));
-	else SetActorScale(FVector2::One());
+	if (FMath::Abs(GetRotation().ToRadians()) >= FMath::halfPi)
+		SetScale(FVector2(1, -1));
+	else SetScale(FVector2::One());
 }

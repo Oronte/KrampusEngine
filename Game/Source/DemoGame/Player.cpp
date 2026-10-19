@@ -156,7 +156,7 @@ void Player::Tick(const Float& _deltaTime)
 	//LOG_MSG("This is a message log.");
 	//LOG_WARNING("This is a warning log.");
 	//LOG_ERROR("This is a error log.");
-	camera->SetCenter((GetActorPosition() + GetWorld()->GetMouse()->GetPosition() / 2.0f) / 2.0f);
+	camera->SetCenter((GetPosition() + GetWorld()->GetMouse()->GetPosition() / 2.0f) / 2.0f);
 }
 
 void Player::MoveLeft()
@@ -167,7 +167,7 @@ void Player::MoveLeft()
 		isRunning = true;
 	}
 	Move(FVector2::Left() * moveSpeed * GetDeltaTime());
-	SetActorScale(FVector2(-1.0f, 1.0f));
+	SetScale(FVector2(-1.0f, 1.0f));
 }
 
 void Player::MoveRight()
@@ -178,7 +178,7 @@ void Player::MoveRight()
 		isRunning = true;
 	}
 	Move(FVector2::Right() * moveSpeed * GetDeltaTime());
-	SetActorScale(FVector2(1.0f, 1.0f));
+	SetScale(FVector2(1.0f, 1.0f));
 }
 
 void Player::Stop()

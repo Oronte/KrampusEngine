@@ -6,12 +6,15 @@
 using namespace Krampus;
 
 Krampus::Level::Level(Engine* _engine)
-	: KrampusObject(_engine), cameraManager(_engine), timerManager(_engine) { }
+	: KrampusObject(_engine), cameraManager(_engine), timerManager(_engine), collisionManager(_engine)
+{
+	physicsWorldID = b2CreateWorld(&physicsWorld);
+}
 
 void Level::InitLevel()
 {
 	mainCamera = SpawnActor<CameraActor>();
-	mainCamera->SetActorPosition(GetWindowRef().GetSize() / 2.0f);
+	mainCamera->SetPosition(GetWindowRef().GetSize() / 2.0f);
 }
 
 void Level::Load()
@@ -46,7 +49,7 @@ void Level::Update(const Float& _deltaTime)
 	actorManager.DestroyPendingDeleteActors();
 	hud.DestroyPendingDeleteWidgets();
 
-	Render();
+	cameraManager.Render(false); // TODO SplitScreen
 }
 
 Float Krampus::Level::UpdateTime()
@@ -57,10 +60,4 @@ Float Krampus::Level::UpdateTime()
 CameraComponent* Level::GetDefaultCamera() const
 {
 	return mainCamera->GetComponent<CameraComponent>();
-}
-
-void Krampus::Level::Render()
-{
-	cameraManager.Render(false); // TODO SplitScreen
-	GetWorld()->GetWindowRef().Display();
 }

@@ -6,7 +6,7 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner)
 	: Component(_owner)
 {
 	name = NAME_OF(CameraComponent);
-	view = std::make_unique<sf::View>(GetActorPosition(), FVector2(GetLevel()->GetWindowRef().GetSize()));
+	view = std::make_unique<sf::View>(GetPosition(), FVector2(GetLevel()->GetWindowRef().GetSize()));
 
 	InitEvent();
 }

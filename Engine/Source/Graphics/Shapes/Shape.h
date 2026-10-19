@@ -179,7 +179,7 @@ namespace Krampus
             }
             shape->setRotation(_angle);
         }
-        inline Angle GetRotation() const
+        NO_DISCARD inline Angle GetRotation() const
         {
             if (!shape)
             {
@@ -207,7 +207,7 @@ namespace Krampus
             }
             shape->setScale(_scale);
         }
-        inline FVector2 GetScale() const
+        NO_DISCARD inline FVector2 GetScale() const
         {
             if (!shape)
             {
@@ -239,7 +239,7 @@ namespace Krampus
         {
             SetOrigin(GetGeometricCenter());
         }
-        inline FVector2 GetOrigin() const
+        NO_DISCARD inline FVector2 GetOrigin() const
         {
             if (!shape)
             {
@@ -249,7 +249,7 @@ namespace Krampus
             return FVector2(shape->getOrigin());
         }
 
-        inline FRect GetLocalBounds() const
+        NO_DISCARD inline FRect GetLocalBounds() const
         {
             if (!shape)
             {
@@ -258,7 +258,7 @@ namespace Krampus
             }
             return shape->getLocalBounds();
         }
-        inline FRect GetGlobalBounds() const
+        NO_DISCARD inline FRect GetGlobalBounds() const
         {
             if (!shape)
             {
@@ -268,7 +268,7 @@ namespace Krampus
             return shape->getGlobalBounds();
         }
 
-        inline const Transform& GetTransform() const
+        NO_DISCARD inline Transform GetTransform() const
         {
             return Transform(
                 GetPosition(),

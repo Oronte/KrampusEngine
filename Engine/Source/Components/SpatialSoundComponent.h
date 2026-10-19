@@ -122,11 +122,11 @@ namespace Krampus
 			return sound.GetVelocity();
 		}
 
-		inline void SetPosition(const FVector3& _position) const
+		inline void Set3DPosition(const FVector3& _position) const
 		{
 			sound.SetPosition(_position);
 		}
-		inline FVector3 GetPosition() const
+		inline FVector3 Get3DPosition() const
 		{
 			return sound.GetPosition();
 		}

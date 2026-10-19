@@ -40,7 +40,6 @@
 // Krampus
 #include "Utilities/System/Types/Types.h"
 
-
 #define DEBUG_PATH
 #ifdef DEBUG_PATH
 #define PATH __func__
@@ -76,3 +75,4 @@
 #define CURRENT_PATH					std::filesystem::current_path().string()
 #define PROJECT_ROOT					std::string(PROJECT_ROOT_DIR)
 #define CONTENT_PATH					PROJECT_ROOT + "/Content/"
+#define PX_TO_M							100.0f

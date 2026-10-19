@@ -37,7 +37,7 @@ void Krampus::Exemple::CameraActorExemple::Tick(const Float& _deltaTime)
 {
 	Super::Tick(_deltaTime);
 
-	SetActorPosition(GetWorld()->GetMouse()->GetScreenPosition());
+	SetPosition(GetWorld()->GetMouse()->GetScreenPosition());
 }
 
 void Krampus::Exemple::CameraActorExemple::Deconstruct()

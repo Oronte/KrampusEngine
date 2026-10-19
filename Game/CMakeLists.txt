@@ -13,6 +13,7 @@ set_target_properties(Game PROPERTIES
 target_include_directories(Game PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Source
     ${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/include
+    ${CMAKE_SOURCE_DIR}/ThirdParty/box2d-3.1.1/include
     ${CMAKE_SOURCE_DIR}/Engine/Source
 )
 

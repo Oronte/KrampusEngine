@@ -1,5 +1,4 @@
 #include "Component.h"
-#include "Utilities/Math/Transform.h"
 #include "Actors/Actor.h"
 #include "GameFramework/Level.h"
 
@@ -47,32 +46,32 @@ std::string Krampus::Component::ToString() const
 	return "Component : owner = " + owner->ToString();
 }
 
-void Krampus::Component::SetActorPosition(const FVector2& _newPosition)
+void Krampus::Component::SetPosition(const FVector2& _newPosition)
 {
-	GetOwner()->SetActorPosition(_newPosition);
+	GetOwner()->SetPosition(_newPosition);
 }
 
-FVector2 Krampus::Component::GetActorPosition() const
+FVector2 Krampus::Component::GetPosition() const
 {
-	return GetOwner()->GetActorPosition();
+	return GetOwner()->GetPosition();
 }
 
-void Krampus::Component::SetActorRotation(const Angle& _newRotation)
+void Krampus::Component::SetRotation(const Angle& _newRotation)
 {
-	GetOwner()->SetActorRotation(_newRotation);
+	GetOwner()->SetRotation(_newRotation);
 }
 
-Angle Krampus::Component::GetActorRotation() const
+Angle Krampus::Component::GetRotation() const
 {
-	return GetOwner()->GetActorRotation();
+	return GetOwner()->GetRotation();
 }
 
-void Krampus::Component::SetActorScale(const FVector2& _newScale)
+void Krampus::Component::SetScale(const FVector2& _newScale)
 {
-	GetOwner()->SetActorScale(_newScale);
+	GetOwner()->SetScale(_newScale);
 }
 
-FVector2 Krampus::Component::GetActorScale() const
+FVector2 Krampus::Component::GetScale() const
 {
-	return GetOwner()->GetActorScale();
+	return GetOwner()->GetScale();
 }

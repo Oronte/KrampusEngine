@@ -10,6 +10,8 @@ namespace Krampus
 	/// </summary>
 	struct IPrintable
 	{
+		//virtual ~IPrintable() = default;
+
 		// Convert the object to a string representation.
 		virtual std::string ToString() const = 0;
 		friend std::ostream& operator << (std::ostream& _os, const IPrintable& _object)

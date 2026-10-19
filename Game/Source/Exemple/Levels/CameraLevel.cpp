@@ -1,9 +1,11 @@
 #include "CameraLevel.h"
 #include "Exemple/UI/MainMenuButton.h"
-#include "UI/LabelWidget.h"
+#include "UI/Diegetic/DiegeticLabelWidget.h"
 #include "Exemple/Levels/MainMenu.h"
 #include "Exemple/Actors/Camera/CameraActorExemple.h"
 #include "Exemple/Actors/Camera/SpriteActorExemple.h"
+
+#include "UI/Widgets/ButtonWidget.h"
 
 Krampus::Exemple::CameraLevel::CameraLevel(Engine* _world)
 	: Level(_world)
@@ -17,8 +19,9 @@ void Krampus::Exemple::CameraLevel::InitLevel()
 
 	RectangleShapeData _rectData;
 	_rectData.size = FVector2(200.0f, 100.0f);
+
 	MainMenuButton* _backButton = SpawnWidget<MainMenuButton>(_rectData, "Back");
-	_backButton->SetScreenPosition(_rectData.size / 2.0f);
+	_backButton->SetPosition(_rectData.size / 2.0f);
 	_backButton->BindChangeLevel<MainMenu>();
 
 
@@ -33,7 +36,7 @@ void Krampus::Exemple::CameraLevel::InitLevel()
 	_circleData.texturePath = "_internal/KrampusLogo";
 	SpawnActorAt<SpriteActorExemple>(Transform(FVector2(350.0f)), _circleData);
 
-	LabelWidget* _tip = SpawnWidget<LabelWidget>(TextData(
+	DiegeticLabelWidget* _tip = SpawnActor<DiegeticLabelWidget>(TextData(
 		"Move Mouse -> Move Camera\nScroll Mouse Wheel -> Rotate Camera"));
 	_tip->SetFillColor(Color::Yellow());
 	_tip->SetScreenPosition(FVector2(1300.0f, 700.0f));
