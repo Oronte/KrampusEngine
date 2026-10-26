@@ -8,6 +8,8 @@ using namespace Krampus;
 Krampus::Level::Level(Engine* _engine)
 	: KrampusObject(_engine), cameraManager(_engine), timerManager(_engine), collisionManager(_engine)
 {
+	physicsWorld = b2DefaultWorldDef();
+	physicsWorld.gravity *= -1.0f;
 	physicsWorldID = b2CreateWorld(&physicsWorld);
 }
 
@@ -42,8 +44,8 @@ void Krampus::Level::Unload()
 void Level::Update(const Float& _deltaTime)
 {
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
-	collisionManager.Update(); 
 	actorManager.Update(_deltaTime);
+	collisionManager.Update(); 
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
 	actorManager.DestroyPendingDeleteActors();

@@ -27,11 +27,11 @@ void Krampus::Exemple::CollisionLevel::InitLevel()
 	_resetButton->SetPosition(_data.size * FVector2(5.5f, 1.0f));
 	onResetHandle = _resetButton->onPress.AddListener(this, &CollisionLevel::ResetSimulation);
 
-	SpawnActorAt<PhysicsActorExemple>(Transform(FVector2(1920.0f / 2.0f, 1000.0f)));
-	SpawnActorAt<PhysicsActorExemple>(Transform(FVector2(100.0f, 500.0f), Angle(FMath::halfPi)));
-	SpawnActorAt<PhysicsActorExemple>(Transform(FVector2(1850.0f, 0.0f), Angle(FMath::halfPi)));
-
 	ResetSimulation();
+
+	SpawnActorAt<PhysicsActorExemple>(Transform(FVector2(1920.0f / 2.0f, 1000.0f)), true)->SetStatic();
+	SpawnActorAt<PhysicsActorExemple>(Transform(FVector2(100.0f, 500.0f), Angle(FMath::halfPi)), true)->SetStatic();
+	SpawnActorAt<PhysicsActorExemple>(Transform(FVector2(1850.0f, 0.0f), Angle(FMath::halfPi)), true)->SetStatic();
 }
 
 void Krampus::Exemple::CollisionLevel::ResetSimulation()
@@ -45,18 +45,9 @@ void Krampus::Exemple::CollisionLevel::ResetSimulation()
 	for (int _indexX = 0; _indexX < 5; _indexX++)
 		for (int _indexY = 0; _indexY < 2; _indexY++)
 		{
-			PhysicsActorExemple* _actor = SpawnActorAt<PhysicsActorExemple>(Transform(_start + FVector2(300.0f * _indexX, 200.0f * _indexY), Angle(FMath::RandomRange(0.0f, 180.0f))));
-			_actor->SetDynamic();
+			PhysicsActorExemple* _actor = SpawnActor<PhysicsActorExemple>();
+			_actor->SetPosition(_start + FVector2(300.0f * _indexX, 200.0f * _indexY));
+			_actor->SetRotation(Angle(FMath::RandomRange(0.0f, 180.0f)));
 			rbs.push_back(_actor);
 		}
-
-	// for (Actor* _actor : rbs)
-	// 	_actor->Destroy();
-	// rbs.clear();
-	//
-	// FVector2 _start = FVector2(400.0f, 100.0f);
-	//
-	// for (int _indexX = 0; _indexX < 5; _indexX++)
-	// 	for (int _indexY = 0; _indexY < 2; _indexY++)
-	// 		rbs.push_back(SpawnActorAt<RigidbodyExemple>(Transform(_start + FVector2(300.0f * _indexX, 200.0f * _indexY), Angle(FMath::RandomRange(0.0f, 180.0f)))));
 }

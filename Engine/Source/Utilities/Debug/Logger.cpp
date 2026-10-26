@@ -158,7 +158,7 @@ void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, cons
         const VerbosityData& _verbosity = VerbosityData(_type, _text, _debug);
         EnqueueLog(_verbosity.RetrieveFullText(false));
 
-        if (CanPrintInConsole(_type)) EnqueueConsole(_verbosity.RetrieveFullText(true));
+        if (CanPrintInConsole(_type)) EnqueueConsole(_verbosity.RetrieveFullText(canColorText));
 
         PlayDebugSound(_type);
     }

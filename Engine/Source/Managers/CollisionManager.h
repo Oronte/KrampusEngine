@@ -8,7 +8,7 @@ namespace Krampus
 	class CollisionManager : public KrampusObject
 	{
 		std::vector<CollisionComponent*>	collisions;
-		int									subStepsCount = 4;
+		int									subStepsCount = 8;
 
 	public:
 		Event<>								onResolveCollision;

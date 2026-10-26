@@ -9,7 +9,7 @@ namespace Krampus::Exemple
         PhysicsComponent* component = nullptr;
 
     public:
-        PhysicsActorExemple(Level* _level);
+        PhysicsActorExemple(Level* _level, bool _isStatic = false);
 
         void SetDynamic();
         void SetStatic();

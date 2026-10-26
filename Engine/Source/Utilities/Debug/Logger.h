@@ -72,6 +72,8 @@ namespace Krampus
         static inline Bool                      canPlayErrorSound   = true;
         static inline Bool                      canPlayFatalSound   = true;
 
+        static inline Bool                      canColorText        = true;
+
     private:
         static void LoggingThread();
         static void EnqueueLog(const std::string& _logText);

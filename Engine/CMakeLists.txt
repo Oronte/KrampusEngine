@@ -16,6 +16,7 @@ target_include_directories(Engine PUBLIC
 
 target_link_directories(Engine PUBLIC
     ${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/lib
+    ${CMAKE_SOURCE_DIR}/ThirdParty/box2d-3.1.1/lib
 )
 
 target_compile_definitions(Engine PUBLIC

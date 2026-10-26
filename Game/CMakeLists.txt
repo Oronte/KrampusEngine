@@ -19,6 +19,7 @@ target_include_directories(Game PRIVATE
 
 target_link_directories(Game PRIVATE
     ${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/lib
+    ${CMAKE_SOURCE_DIR}/ThirdParty/box2d-3.1.1/lib
 )
 
 target_link_libraries(Game PRIVATE
@@ -30,6 +31,8 @@ target_link_libraries(Game PRIVATE
     $<$<CONFIG:Debug>:sfml-system-d>
     $<$<CONFIG:Debug>:sfml-audio-d>
     $<$<CONFIG:Debug>:sfml-network-d>
+    # box2d Debug library
+    $<$<CONFIG:Debug>:box2d>
 
     # SFML Release/Ship libraries
     $<$<OR:$<CONFIG:Release>,$<CONFIG:Ship>>:sfml-graphics>
@@ -37,6 +40,9 @@ target_link_libraries(Game PRIVATE
     $<$<OR:$<CONFIG:Release>,$<CONFIG:Ship>>:sfml-system>
     $<$<OR:$<CONFIG:Release>,$<CONFIG:Ship>>:sfml-audio>
     $<$<OR:$<CONFIG:Release>,$<CONFIG:Ship>>:sfml-network>
+    # box2d Debug library
+    $<$<CONFIG:Debug>:box2dd>
+    $<$<CONFIG:Release>:box2d>
 
     # OpenGL (always)
     opengl32

@@ -17,7 +17,7 @@ void Krampus::InputComponent::Bind(Event<>* _event, std::function<void()> _callb
 		return;
 	}
 
-	handlesVoid.push_back(_event->AddListener(_callback, _once));
+	handlesVoid.push_back(_event->AddListener(_callback, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::Bind(Event<Float>* _event, std::function<void(Float)> _callback, const Bool& _once)
@@ -28,7 +28,7 @@ void Krampus::InputComponent::Bind(Event<Float>* _event, std::function<void(Floa
 		return;
 	}
 
-	handlesFloat.push_back(_event->AddListener(_callback, _once));
+	handlesFloat.push_back(_event->AddListener(_callback, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::Bind(Event<FVector2>* _event, std::function<void(FVector2)> _callback, const Bool& _once)
@@ -39,7 +39,7 @@ void Krampus::InputComponent::Bind(Event<FVector2>* _event, std::function<void(F
 		return;
 	}
 
-	handlesFVector2.push_back(_event->AddListener(_callback, _once));
+	handlesFVector2.push_back(_event->AddListener(_callback, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::Bind(Event<IVector2>* _event, std::function<void(IVector2)> _callback, const Bool& _once)
@@ -50,5 +50,5 @@ void Krampus::InputComponent::Bind(Event<IVector2>* _event, std::function<void(I
 		return;
 	}
 
-	handlesIVector2.push_back(_event->AddListener(_callback, _once));
+	handlesIVector2.push_back(_event->AddListener(_callback, ListenerOptions{.once = _once}));
 }

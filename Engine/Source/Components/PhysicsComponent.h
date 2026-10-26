@@ -20,6 +20,8 @@ namespace Krampus
         PhysicsComponent(Actor* _owner, const Float& _radius);
         PhysicsComponent(Actor* _owner, const FVector2& _size);
 
+		virtual void Deconstruct() override;
+
         void OnCollisionResolve();
 
         void SetDynamic();

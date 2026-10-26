@@ -1,7 +1,7 @@
 #include "MainMenu.h"
 #include "Managers/LevelManager.h"
 #include "Exemple/UI/MainMenuButton.h"
-#include "../../../../Engine/Source/UI/Diegetic/DiegeticImageWidget.h"
+#include "UI/Diegetic/DiegeticImageWidget.h"
 #include "AnimationLevel.h"
 #include "AudioLevel.h"
 #include "CameraLevel.h"
