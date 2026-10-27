@@ -5,19 +5,33 @@
 namespace Krampus
 {
 
+	/// <summary>
+	/// Base class wrapping 2D geometric drawable shapes with transform, outline, fill, and texture properties.
+	/// </summary>
 	class Shape
 	{
 	protected:
 		std::unique_ptr<sf::Shape>  shape;
 
 	public:
+		/// <summary>
+		/// Virtual destructor for Shape.
+		/// </summary>
         virtual ~Shape() = default;
 
+		/// <summary>
+		/// Gets a raw pointer to the underlying SFML shape.
+		/// </summary>
+		/// <returns>Pointer to sf::Shape.</returns>
         inline sf::Shape* Get() const noexcept
         {
             return shape.get();
         }
 
+		/// <summary>
+		/// Gets the texture applied to this shape.
+		/// </summary>
+		/// <returns>Texture instance.</returns>
         inline const Texture& GetTexture() const
         {
             if (!shape)
@@ -27,6 +41,12 @@ namespace Krampus
             }
             return Texture(*(shape->getTexture()));
         }
+
+		/// <summary>
+		/// Assigns a texture to the shape.
+		/// </summary>
+		/// <param name="_texture">Pointer to Texture.</param>
+		/// <param name="_resetRect">Whether to reset texture rect to full dimensions.</param>
         inline void SetTexture(const Texture* _texture, const Bool& _resetRect = false)
         {
             if (!shape || !_texture)
@@ -37,6 +57,10 @@ namespace Krampus
             shape->setTexture(_texture->Get(), _resetRect);
         }
 
+		/// <summary>
+		/// Gets the sub-rectangle of the texture mapped onto the shape.
+		/// </summary>
+		/// <returns>Texture rectangle.</returns>
         inline const IRect& GetTextureRect() const
         {
             if (!shape)
@@ -46,6 +70,11 @@ namespace Krampus
             }
             return shape->getTextureRect();
         }
+
+		/// <summary>
+		/// Sets the sub-rectangle of the texture mapped onto the shape.
+		/// </summary>
+		/// <param name="_rect">Texture coordinates sub-rectangle.</param>
         inline void SetTextureRect(const IRect& _rect)
         {
             if (!shape)
@@ -56,6 +85,10 @@ namespace Krampus
             shape->setTextureRect(_rect);
         }
 
+		/// <summary>
+		/// Gets the fill color of the shape.
+		/// </summary>
+		/// <returns>Fill color.</returns>
         inline Color GetFillColor() const
         {
             if (!shape)
@@ -65,6 +98,11 @@ namespace Krampus
             }
             return shape->getFillColor();
         }
+
+		/// <summary>
+		/// Sets the fill color of the shape interior.
+		/// </summary>
+		/// <param name="_color">Fill color.</param>
         inline void SetFillColor(const Color& _color)
         {
             if (!shape)
@@ -75,6 +113,10 @@ namespace Krampus
             shape->setFillColor(_color);
         }
 
+		/// <summary>
+		/// Sets the outline color of the shape perimeter.
+		/// </summary>
+		/// <param name="_color">Outline color.</param>
         inline void SetOutlineColor(const Color& _color)
         {
             if (!shape)
@@ -84,6 +126,11 @@ namespace Krampus
             }
             shape->setOutlineColor(_color);
         }
+
+		/// <summary>
+		/// Gets the outline color of the shape perimeter.
+		/// </summary>
+		/// <returns>Outline color.</returns>
         inline Color GetOutlineColor() const
         {
             if (!shape)
@@ -94,6 +141,10 @@ namespace Krampus
             return shape->getOutlineColor();
         }
 
+		/// <summary>
+		/// Sets the thickness of the outline border in pixels.
+		/// </summary>
+		/// <param name="_thickness">Outline border thickness.</param>
         inline void SetOutlineThickness(const Float& _thickness)
         {
             if (!shape)
@@ -103,6 +154,11 @@ namespace Krampus
             }
             shape->setOutlineThickness(_thickness);
         }
+
+		/// <summary>
+		/// Gets the thickness of the outline border in pixels.
+		/// </summary>
+		/// <returns>Outline border thickness.</returns>
         inline Float GetOutlineThickness() const
         {
             if (!shape)
@@ -113,6 +169,10 @@ namespace Krampus
             return shape->getOutlineThickness();
         }
 
+		/// <summary>
+		/// Gets the total number of polygon points defining the shape.
+		/// </summary>
+		/// <returns>Point count.</returns>
         inline Int GetPointCount() const
         {
             if (!shape)
@@ -122,6 +182,12 @@ namespace Krampus
             }
             return shape->getPointCount();
         }
+
+		/// <summary>
+		/// Gets the local coordinate of a point by index.
+		/// </summary>
+		/// <param name="_index">Point index.</param>
+		/// <returns>Point coordinates.</returns>
         inline FVector2 GetPoint(const Int& _index) const
         {
             if (!shape)
@@ -132,6 +198,10 @@ namespace Krampus
             return FVector2(shape->getPoint(_index));
         }
 
+		/// <summary>
+		/// Computes the geometric centroid center of the shape points.
+		/// </summary>
+		/// <returns>Center coordinates.</returns>
         inline FVector2 GetGeometricCenter() const
         {
             if (!shape)
@@ -142,6 +212,10 @@ namespace Krampus
             return FVector2(shape->getGeometricCenter());
         }
 
+		/// <summary>
+		/// Sets the position of the shape in 2D space.
+		/// </summary>
+		/// <param name="_position">Position coordinates.</param>
         inline void SetPosition(const FVector2& _position)
         {
             if (!shape)
@@ -151,6 +225,11 @@ namespace Krampus
             }
             shape->setPosition(_position);
         }
+
+		/// <summary>
+		/// Gets the position of the shape in 2D space.
+		/// </summary>
+		/// <returns>Position coordinates.</returns>
         inline FVector2 GetPosition() const
         {
             if (!shape)
@@ -160,6 +239,11 @@ namespace Krampus
             }
             return FVector2(shape->getPosition());
         }
+
+		/// <summary>
+		/// Moves the shape by a 2D offset vector.
+		/// </summary>
+		/// <param name="_offset">Offset to translate.</param>
         inline void Move(const FVector2& _offset)
         {
             if (!shape)
@@ -170,6 +254,10 @@ namespace Krampus
             shape->move(_offset);
         }
 
+		/// <summary>
+		/// Sets the rotation angle of the shape.
+		/// </summary>
+		/// <param name="_angle">Rotation angle.</param>
         inline void SetRotation(const Angle& _angle)
         {
             if (!shape)
@@ -179,6 +267,11 @@ namespace Krampus
             }
             shape->setRotation(_angle);
         }
+
+		/// <summary>
+		/// Gets the rotation angle of the shape.
+		/// </summary>
+		/// <returns>Rotation angle.</returns>
         NO_DISCARD inline Angle GetRotation() const
         {
             if (!shape)
@@ -188,6 +281,11 @@ namespace Krampus
             }
             return Angle(shape->getRotation());
         }
+
+		/// <summary>
+		/// Rotates the shape by an angular offset.
+		/// </summary>
+		/// <param name="_angle">Angle offset.</param>
         inline void Rotate(const Angle& _angle)
         {
             if (!shape)
@@ -198,6 +296,10 @@ namespace Krampus
             shape->rotate(_angle);
         }
 
+		/// <summary>
+		/// Sets the 2D scale factor of the shape.
+		/// </summary>
+		/// <param name="_scale">Scale multipliers.</param>
         inline void SetScale(const FVector2& _scale)
         {
             if (!shape)
@@ -207,6 +309,11 @@ namespace Krampus
             }
             shape->setScale(_scale);
         }
+
+		/// <summary>
+		/// Gets the 2D scale factor of the shape.
+		/// </summary>
+		/// <returns>Scale multipliers.</returns>
         NO_DISCARD inline FVector2 GetScale() const
         {
             if (!shape)
@@ -216,6 +323,11 @@ namespace Krampus
             }
             return FVector2(shape->getScale());
         }
+
+		/// <summary>
+		/// Scales the shape by multiplying current scale with factor.
+		/// </summary>
+		/// <param name="_factor">Scale factor.</param>
         inline void Scale(const FVector2& _factor)
         {
             if (!shape)
@@ -226,6 +338,10 @@ namespace Krampus
             shape->scale(_factor);
         }
 
+		/// <summary>
+		/// Sets the local origin (pivot point) of the shape.
+		/// </summary>
+		/// <param name="_origin">Origin coordinates.</param>
         inline void SetOrigin(const FVector2& _origin)
         {
             if (!shape)
@@ -235,10 +351,19 @@ namespace Krampus
             }
             shape->setOrigin(_origin);
         }
+
+		/// <summary>
+		/// Centers the origin point at the geometric centroid of the shape.
+		/// </summary>
         inline void SetOriginAtMiddle()
         {
             SetOrigin(GetGeometricCenter());
         }
+
+		/// <summary>
+		/// Gets the local origin (pivot point) of the shape.
+		/// </summary>
+		/// <returns>Origin coordinates.</returns>
         NO_DISCARD inline FVector2 GetOrigin() const
         {
             if (!shape)
@@ -249,6 +374,10 @@ namespace Krampus
             return FVector2(shape->getOrigin());
         }
 
+		/// <summary>
+		/// Gets the local bounding box of the shape without transformations.
+		/// </summary>
+		/// <returns>Local bounds rectangle.</returns>
         NO_DISCARD inline FRect GetLocalBounds() const
         {
             if (!shape)
@@ -258,6 +387,11 @@ namespace Krampus
             }
             return shape->getLocalBounds();
         }
+
+		/// <summary>
+		/// Gets the global bounding box of the shape in world space.
+		/// </summary>
+		/// <returns>Global bounds rectangle.</returns>
         NO_DISCARD inline FRect GetGlobalBounds() const
         {
             if (!shape)
@@ -268,6 +402,10 @@ namespace Krampus
             return shape->getGlobalBounds();
         }
 
+		/// <summary>
+		/// Gets the combined Transform structure (position, rotation, scale).
+		/// </summary>
+		/// <returns>Transform structure.</returns>
         NO_DISCARD inline Transform GetTransform() const
         {
             return Transform(
@@ -275,6 +413,11 @@ namespace Krampus
                 GetRotation(),
                 GetScale());
         }
+
+		/// <summary>
+		/// Applies a combined Transform structure to the shape.
+		/// </summary>
+		/// <param name="_transform">Transform structure.</param>
         inline void SetTransform(const Transform& _transform)
         {
             SetPosition(_transform.position);
@@ -284,4 +427,3 @@ namespace Krampus
 	};
 
 }
-

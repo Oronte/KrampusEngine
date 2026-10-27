@@ -5,6 +5,8 @@
 Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner)
     : Component(_owner)
 {
+	name = NAME_OF(PhysicsComponent);
+
     Init();
 
     SpriteComponent* _sprite = _owner->GetComponent<SpriteComponent>();
@@ -23,6 +25,7 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner)
 Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const Float& _radius)
     : Component(_owner)
 {
+    name = NAME_OF(PhysicsComponent);
     Init();
     MakeCircle(_radius);
 }
@@ -30,6 +33,7 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const Float& _radius)
 Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const FVector2& _size)
     : Component(_owner)
 {
+	name = NAME_OF(PhysicsComponent);
     Init();
     MakeRectangle(_size);
 }

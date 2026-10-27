@@ -5,12 +5,20 @@
 namespace Krampus
 {
 
+	/// <summary>
+	/// Manages level loading, unloading, transitions, and the currently active Level instance.
+	/// </summary>
 	class LevelManager : public KrampusObject
 	{
 		std::unique_ptr<Level>	currentLevel	=	nullptr;
 		std::unique_ptr<Level>	pendingAddLevel =	nullptr;
 
 	public:
+		/// <summary>
+		/// Retrieves the currently loaded level, cast to the requested Level-derived class.
+		/// </summary>
+		/// <typeparam name="LevelType">Level derived class.</typeparam>
+		/// <returns>Pointer to active LevelType, or nullptr if cast fails.</returns>
 		template<typename LevelType = Level>
 		inline LevelType* GetCurrentLevel() const
 		{
@@ -23,6 +31,11 @@ namespace Krampus
 			return _level;
 		}
 
+		/// <summary>
+		/// Stages a new level instance to be loaded on the next level change.
+		/// </summary>
+		/// <typeparam name="LevelType">Level derived class to instantiate.</typeparam>
+		/// <returns>Pointer to newly staged level.</returns>
 		template<typename LevelType = Level>
 		inline LevelType* SetLevel()
 		{
@@ -30,6 +43,10 @@ namespace Krampus
 			return Cast<LevelType>(pendingAddLevel.get());
 		}
 
+		/// <summary>
+		/// Executes the transition to the staged pending level, unloading the current level and loading the new one.
+		/// </summary>
+		/// <returns>True if a level transition occurred, false if no pending level was staged.</returns>
 		inline Bool ChangeLevel()
 		{
 			if (!pendingAddLevel.get())
@@ -47,6 +64,10 @@ namespace Krampus
 			return Bool::True();
 		}
 
+		/// <summary>
+		/// Constructs the LevelManager associated with the engine world.
+		/// </summary>
+		/// <param name="_engine">Pointer to Engine world.</param>
 		LevelManager(Engine* _engine)
 			: KrampusObject(_engine) { }
 	};

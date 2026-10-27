@@ -1,11 +1,12 @@
 #pragma once
 #include "Core/KrampusObject.h"
 
-
 namespace Krampus
 {
 
-	// TODO make std::unordored_map with automatic creation
+	/// <summary>
+	/// Centralized input processing system mapping keyboard, mouse, and game controller hardware events to engine events.
+	/// </summary>
 	class InputManager : public KrampusObject
 	{
 		using Key			= sf::Keyboard::Key;
@@ -13,10 +14,17 @@ namespace Krampus
 		using MouseWheel	= sf::Mouse::Wheel;
 		using JoystickAxis	= sf::Joystick::Axis;
 
+	public:
+		/// <summary>
+		/// Structure encapsulating press, continuous hold, and release events for an individual button or key.
+		/// </summary>
 		struct Input
 		{
+			/// <summary>Broadcast when key or button is first pressed down.</summary>
 			Event<>			onPress;
+			/// <summary>Broadcast every frame while key or button is continuously held.</summary>
 			Event<>			onPerform; // Called every framewhile holding
+			/// <summary>Broadcast when key or button is released.</summary>
 			Event<>			onRelease;
 
 		private:
@@ -169,6 +177,10 @@ namespace Krampus
 		Event<IVector2> WindowResize;
 		Event<> WindowClose;
 
+		/// <summary>
+		/// Constructs the InputManager associated with the engine world.
+		/// </summary>
+		/// <param name="_engine">Pointer to Engine world.</param>
 		InputManager(Engine* _engine)
 			: KrampusObject(_engine) { }
 
@@ -183,4 +195,3 @@ namespace Krampus
 	};
 
 }
-

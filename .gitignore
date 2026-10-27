@@ -405,6 +405,7 @@ Bin/
 Saves/
 Build/
 .idea/
+Docs/
 
 *.sln
 *.vcxproj

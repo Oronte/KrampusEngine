@@ -3,6 +3,9 @@
 
 namespace Krampus
 {
+    /// <summary>
+    /// Component providing button interaction, cursor hit testing, and hover/click event dispatching for a widget.
+    /// </summary>
     class ButtonWidgetComponent : public WidgetComponent
     {
     protected:
@@ -16,18 +19,27 @@ namespace Krampus
         Event<>::ListenerHandle			onReleaseHandle;
 
     public:
+        /// <summary>Broadcast when mouse enters the button area.</summary>
         Event<>							onHover;
+        /// <summary>Broadcast when mouse leaves the button area.</summary>
         Event<>							onUnhover;
+        /// <summary>Broadcast when mouse clicks down on the button.</summary>
         Event<>							onPress;
+        /// <summary>Broadcast every frame while mouse is pressed on button.</summary>
         Event<>							onPerform;
+        /// <summary>Broadcast when mouse click is released.</summary>
         Event<>							onRelease;
 
-        // Require a ImageWidgetComponent
+        /// <summary>
+        /// Constructs a ButtonWidgetComponent attached to a widget.
+        /// Note: The owning widget requires an existing ImageWidgetComponent.
+        /// </summary>
+        /// <param name="_owner">Pointer to owning Widget.</param>
         ButtonWidgetComponent(Widget* _owner);
-        //ButtonWidgetComponent(Level* _level, const CircleShapeData& _data);
-        //ButtonWidgetComponent(Level* _level, const RectangleShapeData& _data);
 
     protected:
+        /// <summary>Updates button hover and perform state each frame.</summary>
+        /// <param name="_deltaTime">Elapsed time in seconds.</param>
         virtual void Tick(const Float& _deltaTime) override;
 
     private:
@@ -38,6 +50,8 @@ namespace Krampus
         void OnRelease();
 
     public:
+        /// <summary>Returns a string representation of the component.</summary>
+        /// <returns>String representation.</returns>
         virtual std::string ToString() const override;
     };
 }

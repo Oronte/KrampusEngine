@@ -1,4 +1,4 @@
-#include "SaveManager.h"
+﻿#include "SaveManager.h"
 #include <Utilities/Debug/Exception.h>
 
 
@@ -121,6 +121,16 @@ namespace
 
         void WriteValue(const SaveValue& val)
         {
+/// <summary>
+/// Implementation of std::visit.
+/// </summary>
+/// @param v
+/// @return
+/// <summary>
+/// Implementation of std::visit.
+/// </summary>
+/// @param v
+/// @return
             std::visit([this](const auto& v) { WriteVariant(v); }, val);
         }
 
@@ -331,7 +341,7 @@ namespace
         void CheckBounds(const Int& n) const 
         {
             if ((pos + n) > Int(buf.size()))
-                THROW_EXCEPTION("Ka7::SaveManager: données tronquées");
+                THROW_EXCEPTION("Ka7::SaveManager: donnÃ©es tronquÃ©es");
         }
     };
 
@@ -407,7 +417,23 @@ void SaveManager::SetSaveDirectory(String dir)
     saveDirectory = std::move(dir);
 }
 
+/// <summary>
+/// Implementation of SaveManager::SetOnSaveCallback.
+/// </summary>
+/// @param cb
+/// <summary>
+/// Implementation of SaveManager::SetOnSaveCallback.
+/// </summary>
+/// @param cb
 void SaveManager::SetOnSaveCallback(EventCallback cb) { onSave = std::move(cb); }
+/// <summary>
+/// Implementation of SaveManager::SetOnLoadCallback.
+/// </summary>
+/// @param cb
+/// <summary>
+/// Implementation of SaveManager::SetOnLoadCallback.
+/// </summary>
+/// @param cb
 void SaveManager::SetOnLoadCallback(EventCallback cb) { onLoad = std::move(cb); }
 
 Bool SaveManager::Exists(const String& name) 
@@ -633,7 +659,7 @@ SaveNode SaveManager::LoadOrThrow(const String& name)
     const auto result = Load(name, root);
     if (result != SaveResult::Success)
         THROW_EXCEPTION(
-            String("Ka7::SaveManager::LoadOrThrow — '")
+            String("Ka7::SaveManager::LoadOrThrow â€” '")
             .StdString() + name.StdString() + "': " + ToString(result));
     return root;
 }
@@ -644,3 +670,4 @@ std::optional<SaveNode> SaveManager::TryLoad(const String& name)
     if (Load(name, root) == SaveResult::Success) return root;
     return std::nullopt;
 }
+
