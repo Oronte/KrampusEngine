@@ -29,5 +29,19 @@ namespace Krampus
 		/// </summary>
 		/// <returns>True to consume the event so lower layers and the InputManager never see it.</returns>
 		virtual Bool OnEvent(const sf::Event& _event) { return false; }
+
+		/// <summary>When true, layers below this one are still drawn but no longer updated.</summary>
+		virtual Bool PausesLayersBelow() const { return false; }
+
+		/// <summary>When true, the InputManager receives nothing (keys, mouse, pads).</summary>
+		virtual Bool BlocksInput() const { return false; }
+
+		/// <summary>Asks the stack to remove this layer at the end of the frame. Safe to call from any callback.</summary>
+		void Close() { closed = true; }
+
+		Bool IsClosed() const { return closed; }
+
+	private:
+		Bool closed = false;
 	};
 }

@@ -15,6 +15,11 @@ namespace Krampus
 
 	public:
 		/// <summary>
+		/// Event broadcast right after a pending level has been loaded and become the current one.
+		/// </summary>
+		Event<>					onLevelChanged;
+
+		/// <summary>
 		/// Retrieves the currently loaded level, cast to the requested Level-derived class.
 		/// </summary>
 		/// <typeparam name="LevelType">Level derived class.</typeparam>
@@ -60,6 +65,7 @@ namespace Krampus
 			pendingAddLevel = nullptr;
 
 			currentLevel->Load();
+			onLevelChanged.Broadcast();
 
 			return Bool::True();
 		}

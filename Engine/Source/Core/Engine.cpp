@@ -1,7 +1,10 @@
 #include "Engine.h"
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
-#include "GameFramework/LevelLayer.h"
+#include "Layers/LevelLayer.h"
+#include "Layers/FadeLayer.h"
+#include "Layers/PauseLayer.h"
+#include "Layers/SplashLayer.h"
 #include "Graphics/Mouse.h"
 
 using namespace Krampus;
@@ -17,6 +20,9 @@ Engine::Engine()
 	window.SetFramerateLimit(0);
 
 	layerStack.PushLayer<LevelLayer>(this);
+	layerStack.PushOverlay<Krampus::FadeLayer>(this);
+	layerStack.PushOverlay<Krampus::PauseLayer>();
+	layerStack.PushOverlay<Krampus::SplashLayer>(CONTENT_PATH +"Textures/_internal/KrampusEngineBanner.png");
 
 	handle = inputManager->WindowClose.AddListener(this, &Engine::QuitGame);
 
@@ -59,11 +65,12 @@ void Engine::Update()
 			const std::optional<sf::Event> _event = GetWindowRef().PollEvent();
 			if (!_event.has_value()) break;
 
-			if (!layerStack.DispatchEvent(*_event))
+			if (!layerStack.DispatchEvent(*_event) && !layerStack.BlocksInput())
 				inputManager->Update(_event);
 			inputManager->UpdateSystemEvent(_event);
 		}
-		inputManager->UpdateOnPerform();
+		if (!layerStack.BlocksInput())
+			inputManager->UpdateOnPerform();
 	}
 }
 

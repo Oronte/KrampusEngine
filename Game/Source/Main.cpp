@@ -16,7 +16,6 @@ void StartGame();
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    TestSave();
 	StartGame();
 
 	return EXIT_SUCCESS;
@@ -29,7 +28,6 @@ int main(/*int argc, char** argv*/)
 {
 	//Krampus::SetupMemoryLeakDetection();
 
-	Krampus::Logger::canColorText = false;
 	try
 	{
 		StartGame();
@@ -47,9 +45,13 @@ int main(/*int argc, char** argv*/)
 #endif
 
 
+
+
 void StartGame()
 {
-	Krampus::Logger::canPlaySound = false;
+	//Krampus::Logger::canColorText = false;
+	//Krampus::Logger::canPlaySound = false;
+
 	Krampus::Engine _engine;
 	_engine.GetLevelManager()->SetLevel<Krampus::Exemple::MainMenu>();
 

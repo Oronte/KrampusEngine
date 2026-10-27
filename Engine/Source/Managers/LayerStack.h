@@ -74,8 +74,32 @@ namespace Krampus
 
 		inline void Update(const Float& _deltaTime)
 		{
-			for (size_t _i = 0; _i < layers.size(); ++_i)
+			// Layers below the topmost pausing layer are skipped.
+			size_t _first = 0;
+			for (size_t _i = layers.size(); _i > 0; --_i)
+				if (layers[_i - 1]->PausesLayersBelow())
+				{
+					_first = _i - 1;
+					break;
+				}
+
+			for (size_t _i = _first; _i < layers.size(); ++_i)
 				layers[_i]->OnUpdate(_deltaTime);
+
+			for (size_t _i = layers.size(); _i > 0; --_i)
+				if (layers[_i - 1]->IsClosed())
+					Pop(layers[_i - 1].get());
+		}
+
+		/// <summary>
+		/// True if any layer asks the InputManager to be cut off.
+		/// </summary>
+		inline Bool BlocksInput() const
+		{
+			for (const auto& _layer : layers)
+				if (_layer->BlocksInput())
+					return true;
+			return false;
 		}
 
 		inline void Render(Window& _window)
