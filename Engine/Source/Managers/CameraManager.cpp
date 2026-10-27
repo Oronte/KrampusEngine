@@ -29,8 +29,6 @@ void Krampus::CameraManager::Render(const Bool& splitScreen)
 	//UpdateView(); // World View
 
 	debugs.clear();
-
-	_window.Display();
 }
 
 void Krampus::CameraManager::RenderActors(Window& _window, const Bool& splitScreen)

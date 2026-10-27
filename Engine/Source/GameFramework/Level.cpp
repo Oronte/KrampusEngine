@@ -40,14 +40,17 @@ void Krampus::Level::Unload()
 
 void Level::Update(const Float& _deltaTime)
 {
-	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	actorManager.Update(_deltaTime);
-	worldPhysics.Update(); 
+	worldPhysics.Update();
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
 	actorManager.DestroyPendingDeleteActors();
 	hud.DestroyPendingDeleteWidgets();
+}
 
+void Level::Render()
+{
+	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	cameraManager.Render(false); // TODO SplitScreen
 }
 

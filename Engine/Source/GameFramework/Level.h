@@ -163,6 +163,11 @@ namespace Krampus
 		void Update(const Float& _deltaTime);
 
 		/// <summary>
+		/// Clears the window and draws actors, debug shapes and widgets. Does not present the frame.
+		/// </summary>
+		void Render();
+
+		/// <summary>
 		/// Updates the internal frame timer and returns elapsed delta time.
 		/// </summary>
 		/// <returns>Delta time as Float.</returns>

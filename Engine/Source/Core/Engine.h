@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Window.h"
+#include "Managers/LayerStack.h"
 
 namespace Krampus
 {
@@ -18,6 +19,7 @@ namespace Krampus
 		InputManager*				inputManager = nullptr;
 		Window						window;
 		Mouse*						mouse = nullptr;
+		LayerStack					layerStack;
 		Event<>::ListenerHandle		handle;
 
 	public:
@@ -52,6 +54,15 @@ namespace Krampus
 		inline Window& GetWindowRef()
 		{
 			return window;
+		}
+
+		/// <summary>
+		/// Gets the stack of layers (level, UI, overlays...) updated, drawn and fed events each frame.
+		/// </summary>
+		/// <returns>Reference to the LayerStack.</returns>
+		inline LayerStack& GetLayerStack()
+		{
+			return layerStack;
 		}
 
 		/// <summary>

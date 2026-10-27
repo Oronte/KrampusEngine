@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
+#include "GameFramework/LevelLayer.h"
 #include "Graphics/Mouse.h"
 
 using namespace Krampus;
@@ -14,6 +15,8 @@ Engine::Engine()
 
 	window.Create();
 	window.SetFramerateLimit(0);
+
+	layerStack.PushLayer<LevelLayer>(this);
 
 	handle = inputManager->WindowClose.AddListener(this, &Engine::QuitGame);
 
@@ -47,14 +50,17 @@ void Engine::Update()
 		if (!_currentLevel) break;
 
 		mouse->Update();
-		_currentLevel->Update(_currentLevel->UpdateTime());
+		layerStack.Update(_currentLevel->UpdateTime());
+		layerStack.Render(window);
+		window.Display();
 
 		while (true)
 		{
 			const std::optional<sf::Event> _event = GetWindowRef().PollEvent();
 			if (!_event.has_value()) break;
 
-			inputManager->Update(_event);
+			if (!layerStack.DispatchEvent(*_event))
+				inputManager->Update(_event);
 			inputManager->UpdateSystemEvent(_event);
 		}
 		inputManager->UpdateOnPerform();
@@ -64,6 +70,7 @@ void Engine::Update()
 void Engine::Stop()
 {
 	onEngineStop.Broadcast();
+	layerStack.Clear();
 
 	if (Level* _level = levelManager->GetCurrentLevel())
 		_level->Unload();
