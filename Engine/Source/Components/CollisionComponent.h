@@ -3,46 +3,10 @@
 #include "Component.h"
 #include "Graphics/Shapes/ShapeObject.h"
 #include "Utilities/System/Debuggable.h"
+#include "Utilities/System/CollisionChannel.h"
 
 namespace Krampus
 {
-
-	/// <summary>
-	/// Bitmask flags representing collision filtering layers and channels.
-	/// </summary>
-	enum class CollisionChannel : uint32_t
-	{
-		None = 0,
-		Wall = 1 << 0,
-		Player = 1 << 1,
-		Enemy = 1 << 2,
-		Projectile = 1 << 3,
-		Trigger = 1 << 4,
-
-		All = Wall | Player | Enemy | Projectile | Trigger
-	};
-
-	/// <summary>
-	/// Bitwise OR operator for combining collision channels.
-	/// </summary>
-	/// <param name="_a">First channel flag.</param>
-	/// <param name="_b">Second channel flag.</param>
-	/// <returns>Combined CollisionChannel mask.</returns>
-	inline CollisionChannel operator|(CollisionChannel _a, CollisionChannel _b)
-	{
-		return CAST(CollisionChannel, (CAST(uint32_t, _a) | CAST(uint32_t, _b)));
-	}
-
-	/// <summary>
-	/// Bitwise AND operator for checking overlapping collision channels.
-	/// </summary>
-	/// <param name="_a">First channel flag.</param>
-	/// <param name="_b">Second channel flag.</param>
-	/// <returns>Intersected CollisionChannel mask.</returns>
-	inline CollisionChannel operator&(CollisionChannel _a, CollisionChannel _b)
-	{
-		return CAST(CollisionChannel, (CAST(uint32_t, _a) & CAST(uint32_t, _b)));
-	}
 
 	class SpriteComponent;
 

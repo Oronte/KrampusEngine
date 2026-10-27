@@ -6,7 +6,7 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner)
 	: Component(_owner)
 {
 	name = NAME_OF(CameraComponent);
-	view = std::make_unique<sf::View>(GetPosition(), FVector2(GetLevel()->GetWindowRef().GetSize()));
+	view = std::make_unique<sf::View>(GetPosition(), FVector2(GetLevel()->GetWindow().GetSize()));
 
 	InitEvent();
 }
@@ -40,14 +40,14 @@ Krampus::CameraComponent::CameraComponent(Actor* _owner, const FRect& _rect)
 
 void Krampus::CameraComponent::SetCurrent()
 {
-	GetLevel()->GetCameraManagerRef().SetCurrent(this);
+	GetLevel()->GetCameraManager().SetCurrent(this);
 }
 
 void Krampus::CameraComponent::BeginDestroy()
 {
 	Component::BeginDestroy();
 
-	GetLevel()->GetCameraManagerRef().SetCurrent(nullptr);
+	GetLevel()->GetCameraManager().SetCurrent(nullptr);
 }
 
 void Krampus::CameraComponent::InitEvent()

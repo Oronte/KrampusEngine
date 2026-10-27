@@ -6,7 +6,7 @@
 EnemySpawner::EnemySpawner(Level* _level, Player* _player)
 	: Actor(_level), player(_player)
 {
-	timer = level->GetTimerManagerRef().CreateTimer(this, &EnemySpawner::Spawn, spawnTime, true);
+	timer = level->GetTimerManager().CreateTimer(this, &EnemySpawner::Spawn, spawnTime, true);
 	handle = player->onDeath.AddListener([this]()
 		{
 			timer->Stop();

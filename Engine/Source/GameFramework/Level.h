@@ -2,10 +2,9 @@
 #include "Core/KrampusObject.h"
 #include "Managers/ActorManager.h"
 #include "Managers/CameraManager.h"
-#include "Managers/CollisionManager.h"
+#include "Managers/WorldPhysics.h"
 #include "Managers/TimerManager.h"
 #include "Managers/HUD.h"
-#include "box2d/box2d.h"
 
 namespace Krampus
 {
@@ -19,13 +18,11 @@ namespace Krampus
 	class Level : public KrampusObject
 	{	
 		Int					frameCount				= 0;
-		b2WorldDef			physicsWorld;
-		b2WorldId			physicsWorldID;
 
 	protected:
 		TimerManager		timerManager;
 		CameraManager		cameraManager;
-		CollisionManager	collisionManager;
+		WorldPhysics		worldPhysics;
 		ActorManager		actorManager;
 		HUD					hud;
 		Color				backgroundColor			= Color::Black();
@@ -54,7 +51,7 @@ namespace Krampus
 		/// Gets a reference to the level's TimerManager.
 		/// </summary>
 		/// <returns>Reference to TimerManager.</returns>
-		inline TimerManager& GetTimerManagerRef()
+		inline TimerManager& GetTimerManager()
 		{
 			return timerManager;
 		}
@@ -63,7 +60,7 @@ namespace Krampus
 		/// Gets a reference to the level's CameraManager.
 		/// </summary>
 		/// <returns>Reference to CameraManager.</returns>
-		inline CameraManager& GetCameraManagerRef()
+		inline CameraManager& GetCameraManager()
 		{
 			return cameraManager;
 		}
@@ -72,16 +69,16 @@ namespace Krampus
 		/// Gets a reference to the level's CollisionManager.
 		/// </summary>
 		/// <returns>Reference to CollisionManager.</returns>
-		inline CollisionManager& GetCollisionManagerRef()
+		inline WorldPhysics& GetWorldPhysics()
 		{
-			return collisionManager;
+			return worldPhysics;
 		}
 
 		/// <summary>
 		/// Gets a reference to the level's ActorManager.
 		/// </summary>
 		/// <returns>Reference to ActorManager.</returns>
-		inline ActorManager& GetActorManagerRef()
+		inline ActorManager& GetActorManager()
 		{
 			return actorManager;
 		}
@@ -90,7 +87,7 @@ namespace Krampus
 		/// Gets a reference to the level's heads-up display (HUD).
 		/// </summary>
 		/// <returns>Reference to HUD.</returns>
-		inline HUD& GetHUDRef()
+		inline HUD& GetHUD()
 		{
 			return hud;
 		}
@@ -99,28 +96,11 @@ namespace Krampus
 		/// Gets a reference to the engine window.
 		/// </summary>
 		/// <returns>Reference to Window.</returns>
-		inline Window& GetWindowRef()
+		inline Window& GetWindow()
 		{
 			return GetWorld()->GetWindowRef();
 		}
 
-		/// <summary>
-		/// Gets a reference to the Box2D physics world definition.
-		/// </summary>
-		/// <returns>Reference to b2WorldDef.</returns>
-		inline b2WorldDef& GetPhysicsWorldRef()
-		{
-			return physicsWorld;
-		}
-
-		/// <summary>
-		/// Gets the Box2D physics world identifier.
-		/// </summary>
-		/// <returns>b2WorldId identifying the Box2D world.</returns>
-		inline b2WorldId GetPhysicsWorldID()
-		{
-			return physicsWorldID;
-		}
 
 	protected:
 		/// <summary>

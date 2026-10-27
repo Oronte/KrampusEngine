@@ -9,7 +9,7 @@ Krampus::Engine* Krampus::Widget::GetWorld() const
 
 Float Krampus::Widget::GetDeltaTime() const
 {
-	return level->GetTimerManagerRef().GetDeltaTime();
+	return level->GetTimerManager().GetDeltaTime();
 }
 
 Krampus::Widget::Widget(Level* _level)
@@ -30,7 +30,7 @@ void Krampus::Widget::SetActive(const Bool& _status)
 
 Krampus::Timer* Krampus::Widget::CreateTimer(const std::function<void()>& _callback, const Float& _duration, const Bool& _isLoop, const Bool& _startRunning)
 {
-	return level->GetTimerManagerRef().CreateTimer(_callback, _duration, _isLoop, _startRunning);
+	return level->GetTimerManager().CreateTimer(_callback, _duration, _isLoop, _startRunning);
 }
 
 void Krampus::Widget::Construct()
@@ -77,7 +77,7 @@ void Krampus::Widget::BeginDestroy()
 void Krampus::Widget::Destroy()
 {
 	Deconstruct();
-	level->GetHUDRef().MarkForDeleteWidget(this);
+	level->GetHUD().MarkForDeleteWidget(this);
 }
 
 std::string Krampus::Widget::ToString() const

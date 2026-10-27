@@ -1,38 +1,24 @@
 High Priority:
-	SpatialSoundComponent,
 	Multiple ligne animation + GIF Reader,
 	Capture d'ecran / video,
 	Save,
-	Ajout d'UI (canvas, vertical box, ...)
-	Debug avec widget,
 	Localisation (Langues),
 	Particlues,
 	NavMesh,
 	Forme complexe (Vertex),
 	multiplayer,
 	PCG,
-	tremblement de camera,
-	Mettre le logo quand on demarre le jeu et quand on change de level,
 	Algo (Regex, noise ...),
 	Lanceur (Python + qt)
 
 Low Priority:
 	Ship,
-	Lecteur de gif/video,
 	Level streaming / world partition,
 	steam,
-	Culling,
 	HotReload,
 	IA FSM,
 	shader + post processing (sf::Shader) ,
-	light,
-	coroutine,
-	3D raycast,
-	squelette + ik,
-
-Other:
-	UML,
-	Doc
+	coroutine
 
 
 

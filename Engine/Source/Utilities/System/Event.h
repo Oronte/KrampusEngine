@@ -14,26 +14,37 @@
  *   - Propagation control: a listener may return Propagation::Stop to cancel the broadcast
  *   - Safe re-entrancy: add / remove / clear / nested Broadcast from inside a listener
  *   - Safe lifetime: a handle can outlive its event, an event can be moved
+ *   - Lifetime-tracked listeners: bind a member function on a weak_ptr/shared_ptr and the
+ *     listener quietly unsubscribes itself instead of firing on a dead object
  *   - Subscribe / unsubscribe in O(1) (generational slots), no heap allocation for small
  *     callbacks, and a Broadcast with nobody listening is a single branch
  *
  *  Usage
  *      Event<int, const std::string&> onScore;
  *
- *      ListenerHandle h = onScore.AddListener([](int _points, const std::string& _who) { ... });
- *      auto h2 = onScore.AddListener(this, &Player::OnScore, { .priority = EventPriority::High });
- *      auto h3 = onScore.AddOnce([] (int, const std::string&) { ... });
+ *      ListenerHandle h  = onScore.AddListener([](int _points, const std::string& _who) { ... });
+ *      ListenerHandle h2 = onScore += [](int, const std::string&) { ... };                       // same thing, shorthand
+ *      auto h3 = onScore.AddListener(this, &Player::OnScore, { .priority = EventPriority::High });
+ *      auto h4 = onScore.AddOnce([](int, const std::string&) { ... });
+ *
+ *      // _enemy is a std::shared_ptr<Enemy>: if the enemy dies before the event fires again,
+ *      // the listener silently stops being called instead of dereferencing a dangling pointer.
+ *      auto h5 = onScore.AddListener(_enemy, &Enemy::OnPlayerScored);
  *
  *      ListenerGroup group;                                  // members of a system
  *      onScore.AddListener(group, [](int, const std::string&) { ... });
  *
  *      onScore.Broadcast(10, "Alice");
+ *      onScore(10, "Alice");                                 // same thing, functor shorthand
  *
  *  Notes
  *   - Arguments are forwarded as declared: use Event<const Foo&> for anything heavier than a
  *     few bytes, a value type is copied once per listener.
  *   - Listeners added during a Broadcast start receiving events at the next Broadcast.
  *   - Listeners removed during a Broadcast are not called anymore, even if they were next.
+ *   - A weak_ptr/shared_ptr-tracked listener typically needs a heap allocation for its capture
+ *     (the tracked pointer + member pointer rarely fit the 32-byte inline buffer); this only
+ *     affects registration, never Broadcast, and registration is not a per-frame operation.
  *   - Do not destroy or move an Event from inside one of its own listeners.
  *   - Not thread-safe. For cross-thread communication use EventBus::Post (see EventBus.h).
  */
@@ -45,10 +56,10 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <format>
 #include <functional>
 #include <memory>
-#include <new>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -63,11 +74,11 @@ namespace Krampus
 
     namespace EventPriority
     {
-        inline constexpr std::int32_t Highest   =  1000;
-        inline constexpr std::int32_t High      =   500;
-        inline constexpr std::int32_t Normal    =     0;
-        inline constexpr std::int32_t Low       =  -500;
-        inline constexpr std::int32_t Lowest    = -1000;
+        inline constexpr std::int32_t Highest = 1000;
+        inline constexpr std::int32_t High = 500;
+        inline constexpr std::int32_t Normal = 0;
+        inline constexpr std::int32_t Low = -500;
+        inline constexpr std::int32_t Lowest = -1000;
     }
 
     /// Returned by a listener to decide if the remaining listeners must still be called.
@@ -79,8 +90,8 @@ namespace Krampus
 
     struct ListenerOptions
     {
-        std::int32_t    priority    = EventPriority::Normal;
-        bool            once        = false;
+        std::int32_t    priority = EventPriority::Normal;
+        bool            once = false;
     };
 
     /// A callable usable as a listener: invocable with Args..., returning void or Propagation.
@@ -88,7 +99,7 @@ namespace Krampus
     concept EventCallable =
         std::invocable<std::decay_t<F>&, Args...> &&
         (std::is_void_v<std::invoke_result_t<std::decay_t<F>&, Args...>> ||
-         std::same_as<std::invoke_result_t<std::decay_t<F>&, Args...>, Propagation>);
+            std::same_as<std::invoke_result_t<std::decay_t<F>&, Args...>, Propagation>);
 
     /// A member function pointer usable as a listener on an instance of T.
     template<typename MemFn, typename T, typename... Args>
@@ -96,7 +107,7 @@ namespace Krampus
         std::is_member_pointer_v<MemFn> &&
         std::invocable<MemFn, T*, Args...> &&
         (std::is_void_v<std::invoke_result_t<MemFn, T*, Args...>> ||
-         std::same_as<std::invoke_result_t<MemFn, T*, Args...>, Propagation>);
+            std::same_as<std::invoke_result_t<MemFn, T*, Args...>, Propagation>);
 
     // ------------------------------------------------------------------------------------------
     //  Implementation details
@@ -117,7 +128,7 @@ namespace Krampus
             Delegate() noexcept = default;
 
             template<typename F>
-            requires (!std::same_as<std::remove_cvref_t<F>, Delegate> && EventCallable<F, Args...>)
+                requires (!std::same_as<std::remove_cvref_t<F>, Delegate>&& EventCallable<F, Args...>)
             explicit Delegate(F&& _callable)
             {
                 using D = std::decay_t<F>;
@@ -125,7 +136,7 @@ namespace Krampus
                 if constexpr (StoredInline<D>)
                     ::new (static_cast<void*>(storage)) D(std::forward<F>(_callable));
                 else
-                    ::new (static_cast<void*>(storage)) D*(new D(std::forward<F>(_callable)));
+                    ::new (static_cast<void*>(storage)) D* (new D(std::forward<F>(_callable)));
 
                 vtable = VTableFor<D>();
             }
@@ -176,7 +187,7 @@ namespace Krampus
         private:
             struct VTable
             {
-                Propagation (*invoke)(void* _storage, Args... _args);
+                Propagation(*invoke)(void* _storage, Args... _args);
                 void        (*relocate)(void* _dst, void* _src) noexcept;
                 void        (*destroy)(void* _storage) noexcept;
             };
@@ -223,7 +234,7 @@ namespace Krampus
                 }
                 else
                 {
-                    ::new (_dst) F*(Get<F>(_src));
+                    ::new (_dst) F* (Get<F>(_src));
                 }
             }
 
@@ -253,7 +264,7 @@ namespace Krampus
                 }
             }
 
-            const VTable*   vtable = nullptr;
+            const VTable* vtable = nullptr;
             alignas(void*) unsigned char storage[BufferSize];
         };
 
@@ -362,7 +373,7 @@ namespace Krampus
         }
 
         std::shared_ptr<Detail::EventControl>   control;
-        const Detail::EventOps*                 ops = nullptr;
+        const Detail::EventOps* ops = nullptr;
         Id                                      id = 0;
     };
 
@@ -397,7 +408,7 @@ namespace Krampus
             handles.clear();
         }
 
-        std::size_t Size() const noexcept   { return handles.size(); }
+        std::size_t Size() const noexcept { return handles.size(); }
         bool        IsEmpty() const noexcept { return handles.empty(); }
 
     private:
@@ -414,27 +425,27 @@ namespace Krampus
     public:
         /// (generation << 32) | slot index. 0 is never a valid id. A recycled slot gets a new generation,
         /// so a stale id can never remove a newer listener.
-        using ListenerId        = std::uint64_t;
-        using ListenerHandle    = Krampus::ListenerHandle;
+        using ListenerId = std::uint64_t;
+        using ListenerHandle = Krampus::ListenerHandle;
 
     private:
         using Callback = Detail::Delegate<Detail::EventInlineBufferSize, Args...>;
 
-        // Listeners live in slots whose address never changes (a callback may be running while others
-        // are added). A separate array of slot indices keeps the call order.
+        // Listeners live in slots. A std::deque never invalidates references to existing elements
+        // when you push_back/emplace_back into it (only iterators are invalidated), which is exactly
+        // the guarantee needed here: a listener may register a new listener from inside a Broadcast,
+        // and the Slot& currently being invoked must stay valid. A plain std::vector could not make
+        // that promise without a hand-rolled chunked allocator; a deque gives it to us for free.
         struct Slot
         {
             Callback        callback;
-            std::uint32_t   generation  = 1;
-            std::int32_t    priority    = 0;
-            bool            once        = false;
-            bool            alive       = false;    // false: removed, waiting to be released
+            std::uint32_t   generation = 1;
+            std::int32_t    priority = 0;
+            bool            once = false;
+            bool            alive = false;    // false: removed, waiting to be released
         };
 
-        static constexpr std::uint32_t  ChunkShift  = 6;
-        static constexpr std::uint32_t  ChunkSize   = 1u << ChunkShift;
-        static constexpr std::uint32_t  ChunkMask   = ChunkSize - 1;
-        static constexpr std::uint32_t  MinGarbage  = 32;
+        static constexpr std::uint32_t  MinGarbage = 32;
 
         static bool RemoveThunk(void* _owner, std::uint64_t _id)
         {
@@ -465,17 +476,16 @@ namespace Krampus
             }
         };
 
-        std::vector<std::unique_ptr<Slot[]>>    chunks;             // slot storage, ChunkSize slots per chunk
+        std::deque<Slot>                        slots;              // stable addresses: see comment on Slot above
         std::vector<std::uint32_t>              order;              // slot indices in call order (may hold removed slots)
         std::vector<std::uint32_t>              pendingOrder;       // registered while broadcasting, merged afterwards
         std::vector<std::uint32_t>              freeSlots;
         std::shared_ptr<Detail::EventControl>   control;            // created lazily, only if somebody listens
-        std::uint32_t                           slotCount       = 0;
-        std::uint32_t                           liveCount       = 0;
-        std::uint32_t                           garbageCount    = 0;    // removals since the last compaction
-        std::uint32_t                           depth           = 0;    // broadcast nesting level
-        bool                                    hasGarbage      = false;
-        bool                                    needsSort       = false;    // 'order' is not sorted by priority yet
+        std::uint32_t                           liveCount = 0;
+        std::uint32_t                           garbageCount = 0;    // removals since the last compaction
+        std::uint32_t                           depth = 0;    // broadcast nesting level
+        bool                                    hasGarbage = false;
+        bool                                    needsSort = false;    // 'order' is not sorted by priority yet
 
     public:
         Event() = default;
@@ -527,7 +537,8 @@ namespace Krampus
             return Register(Callback(std::forward<F>(_callback)), _options);
         }
 
-        /// Registers a member function (const or not) of an instance. The instance must outlive the handle.
+        /// Registers a member function (const or not) of an instance. The instance must outlive the handle:
+        /// prefer the weak_ptr/shared_ptr overloads below when that is not guaranteed.
         template<typename T, typename MemFn>
         NO_DISCARD ListenerHandle AddListener(T* _instance, MemFn _memFn, const ListenerOptions& _options = {})
             requires EventMemberCallable<MemFn, T, Args...>
@@ -548,11 +559,37 @@ namespace Krampus
                 _options);
         }
 
+        /// Registers a member function tracked by a weak_ptr. If the object is already gone when the
+        /// event fires, the listener is skipped and unsubscribes itself instead of dereferencing a
+        /// dangling pointer - this is the classic "component destroyed but still listening" crash, and
+        /// it is a non-issue here by construction. Typically allocates (see the note at the top of the file).
+        template<typename T, typename MemFn>
+        NO_DISCARD ListenerHandle AddListener(std::weak_ptr<T> _weak, MemFn _memFn, const ListenerOptions& _options = {})
+            requires EventMemberCallable<MemFn, T, Args...>
+        {
+            return RegisterWeak(std::move(_weak), _memFn, _options);
+        }
+
+        /// Convenience overload: binds on the weak_ptr obtained from a shared_ptr the caller already has.
+        template<typename T, typename MemFn>
+        NO_DISCARD ListenerHandle AddListener(const std::shared_ptr<T>& _shared, MemFn _memFn, const ListenerOptions& _options = {})
+            requires EventMemberCallable<MemFn, T, Args...>
+        {
+            return RegisterWeak(std::weak_ptr<T>(_shared), _memFn, _options);
+        }
+
         /// Registers a callable that fires at most once.
         template<EventCallable<Args...> F>
         NO_DISCARD ListenerHandle AddOnce(F&& _callback, std::int32_t _priority = EventPriority::Normal)
         {
             return AddListener(std::forward<F>(_callback), ListenerOptions{ .priority = _priority, .once = true });
+        }
+
+        /// Shorthand for AddListener(callback): `event += [] (...) { ... };`
+        template<EventCallable<Args...> F>
+        NO_DISCARD ListenerHandle operator+=(F&& _callback)
+        {
+            return AddListener(std::forward<F>(_callback));
         }
 
         /// Same as AddListener, the subscription is owned by the group.
@@ -567,6 +604,20 @@ namespace Krampus
             requires EventMemberCallable<MemFn, T, Args...>
         {
             _group.Add(AddListener(_instance, _memFn, _options));
+        }
+
+        template<typename T, typename MemFn>
+        void AddListener(ListenerGroup& _group, std::weak_ptr<T> _weak, MemFn _memFn, const ListenerOptions& _options = {})
+            requires EventMemberCallable<MemFn, T, Args...>
+        {
+            _group.Add(AddListener(std::move(_weak), _memFn, _options));
+        }
+
+        template<typename T, typename MemFn>
+        void AddListener(ListenerGroup& _group, const std::shared_ptr<T>& _shared, MemFn _memFn, const ListenerOptions& _options = {})
+            requires EventMemberCallable<MemFn, T, Args...>
+        {
+            _group.Add(AddListener(_shared, _memFn, _options));
         }
 
         /// Removes a listener by id (prefer ListenerHandle). Returns true if something was removed.
@@ -586,6 +637,9 @@ namespace Krampus
             {
                 // Nobody is running it: release what the callback captured right now. The slot itself
                 // is recycled by the next compaction (amortized, so removing n listeners costs O(n)).
+                // When depth > 0 (this is reached from inside a listener, including a self-unsubscribing
+                // weak_ptr listener), the release is deferred to Flush() - see BroadcastScope above - so
+                // we never destroy a callback's own storage while that callback is still on the stack.
                 _slot->callback.Reset();
 
                 if (garbageCount > MinGarbage && garbageCount > liveCount)
@@ -598,7 +652,7 @@ namespace Krampus
         /// Removes every listener (callable from inside a listener).
         void Clear() noexcept
         {
-            const std::uint32_t _count = slotCount;
+            const std::uint32_t _count = static_cast<std::uint32_t>(slots.size());
             std::uint32_t _removed = 0;
 
             for (std::uint32_t _i = 0; _i < _count; ++_i)
@@ -665,6 +719,12 @@ namespace Krampus
             return false;
         }
 
+        /// Shorthand for Broadcast(...): `event(10, "Alice");`
+        bool operator()(Args... _args)
+        {
+            return Broadcast(std::forward<Args>(_args)...);
+        }
+
         // ---------------------------------------------------------------- Queries
 
         bool HasListener(ListenerId _id) const noexcept
@@ -695,21 +755,31 @@ namespace Krampus
         }
 
     private:
-        Slot& SlotAt(std::uint32_t _index) const noexcept
+        Slot& SlotAt(std::uint32_t _index) noexcept
         {
-            return chunks[_index >> ChunkShift][_index & ChunkMask];
+            return slots[_index];
         }
 
-        Slot* FindSlot(ListenerId _id) const noexcept
+        const Slot& SlotAt(std::uint32_t _index) const noexcept
+        {
+            return slots[_index];
+        }
+
+        const Slot* FindSlot(ListenerId _id) const noexcept
         {
             const std::uint32_t _index = static_cast<std::uint32_t>(_id);
             const std::uint32_t _generation = static_cast<std::uint32_t>(_id >> 32);
 
-            if (_index >= slotCount)
+            if (_index >= slots.size())
                 return nullptr;
 
-            Slot& _slot = SlotAt(_index);
+            const Slot& _slot = SlotAt(_index);
             return (_slot.alive && _slot.generation == _generation) ? &_slot : nullptr;
+        }
+
+        Slot* FindSlot(ListenerId _id) noexcept
+        {
+            return const_cast<Slot*>(std::as_const(*this).FindSlot(_id));
         }
 
         std::uint32_t AcquireSlot()
@@ -721,10 +791,8 @@ namespace Krampus
                 return _index;
             }
 
-            if ((slotCount & ChunkMask) == 0)
-                chunks.push_back(std::make_unique<Slot[]>(ChunkSize));
-
-            return slotCount++;
+            slots.emplace_back();
+            return static_cast<std::uint32_t>(slots.size() - 1);
         }
 
         /// Destroys the callback and makes the slot reusable (with a new generation).
@@ -742,7 +810,9 @@ namespace Krampus
             freeSlots.push_back(_index);
         }
 
-        ListenerHandle Register(Callback&& _callback, const ListenerOptions& _options)
+        /// Shared tail of registration: acquires a slot, wires the control block, places the listener
+        /// in 'order' (or 'pendingOrder' while broadcasting) and returns its handle.
+        ListenerId BeginRegister(const ListenerOptions& _options, std::uint32_t& _outIndex)
         {
             if (!control)
             {
@@ -753,10 +823,9 @@ namespace Krampus
             const std::uint32_t _index = AcquireSlot();
             Slot& _slot = SlotAt(_index);
 
-            _slot.callback  = std::move(_callback);
-            _slot.priority  = _options.priority;
-            _slot.once      = _options.once;
-            _slot.alive     = true;
+            _slot.priority = _options.priority;
+            _slot.once = _options.once;
+            _slot.alive = true;
             ++liveCount;
 
             if (depth > 0)
@@ -764,7 +833,53 @@ namespace Krampus
             else
                 AppendToOrder(_index);
 
-            return ListenerHandle(control, &Ops, (static_cast<ListenerId>(_slot.generation) << 32) | _index);
+            _outIndex = _index;
+            return (static_cast<ListenerId>(_slot.generation) << 32) | _index;
+        }
+
+        ListenerHandle Register(Callback&& _callback, const ListenerOptions& _options)
+        {
+            std::uint32_t _index = 0;
+            const ListenerId _id = BeginRegister(_options, _index);
+
+            SlotAt(_index).callback = std::move(_callback);
+
+            return ListenerHandle(control, &Ops, _id);
+        }
+
+        template<typename T, typename MemFn>
+        ListenerHandle RegisterWeak(std::weak_ptr<T> _weak, MemFn _memFn, const ListenerOptions& _options)
+        {
+            std::uint32_t _index = 0;
+            const ListenerId _id = BeginRegister(_options, _index);
+
+            using Result = std::invoke_result_t<MemFn, T*, Args...>;
+
+            SlotAt(_index).callback = Callback(
+                [this, _id, _weak = std::move(_weak), _memFn](Args... _args) -> Propagation
+                {
+                    const auto _locked = _weak.lock();
+
+                    if (!_locked)
+                    {
+                        // Safe even mid-broadcast: RemoveListener only flags the slot while depth > 0 and
+                        // defers the actual Reset() (which would destroy this very lambda) to Flush().
+                        this->RemoveListener(_id);
+                        return Propagation::Continue;
+                    }
+
+                    if constexpr (std::is_void_v<Result>)
+                    {
+                        std::invoke(_memFn, _locked.get(), std::forward<Args>(_args)...);
+                        return Propagation::Continue;
+                    }
+                    else
+                    {
+                        return std::invoke(_memFn, _locked.get(), std::forward<Args>(_args)...);
+                    }
+                });
+
+            return ListenerHandle(control, &Ops, _id);
         }
 
         /// Appends to 'order' in O(1). If the new listener has a higher priority than the last one, the array
@@ -833,30 +948,28 @@ namespace Krampus
         {
             assert(_other.depth == 0 && "An Event cannot be moved while it is broadcasting");
 
-            chunks          = std::move(_other.chunks);
-            order           = std::move(_other.order);
-            pendingOrder    = std::move(_other.pendingOrder);
-            freeSlots       = std::move(_other.freeSlots);
-            control         = std::move(_other.control);
-            slotCount       = _other.slotCount;
-            liveCount       = _other.liveCount;
-            garbageCount    = _other.garbageCount;
-            hasGarbage      = _other.hasGarbage;
-            needsSort       = _other.needsSort;
-            depth           = 0;
+            slots = std::move(_other.slots);
+            order = std::move(_other.order);
+            pendingOrder = std::move(_other.pendingOrder);
+            freeSlots = std::move(_other.freeSlots);
+            control = std::move(_other.control);
+            liveCount = _other.liveCount;
+            garbageCount = _other.garbageCount;
+            hasGarbage = _other.hasGarbage;
+            needsSort = _other.needsSort;
+            depth = 0;
 
             if (control)
                 control->owner = this;
 
-            _other.chunks.clear();
+            _other.slots.clear();
             _other.order.clear();
             _other.pendingOrder.clear();
             _other.freeSlots.clear();
-            _other.slotCount    = 0;
-            _other.liveCount    = 0;
+            _other.liveCount = 0;
             _other.garbageCount = 0;
-            _other.hasGarbage   = false;
-            _other.needsSort    = false;
+            _other.hasGarbage = false;
+            _other.needsSort = false;
         }
     };
 

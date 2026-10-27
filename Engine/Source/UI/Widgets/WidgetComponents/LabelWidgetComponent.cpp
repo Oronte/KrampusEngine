@@ -41,28 +41,28 @@ void Krampus::LabelWidgetComponent::Construct()
 {
     WidgetComponent::Construct();
 
-	GetLevel()->GetCameraManagerRef().AddToScreen(this);
+	GetLevel()->GetCameraManager().AddToScreen(this);
 }
 
 void Krampus::LabelWidgetComponent::Deconstruct()
 {
     WidgetComponent::Deconstruct();
 
-	GetLevel()->GetCameraManagerRef().RemoveToScreen(this);
+	GetLevel()->GetCameraManager().RemoveToScreen(this);
 }
 
 void Krampus::LabelWidgetComponent::SetZOrder(const uint8_t &_zOrder)
 {
     const uint8_t& _oldZOrder = GetZOrder();
     IDrawable::SetZOrder(_zOrder);
-    GetLevel()->GetCameraManagerRef().ChangeScreenZOrder(this, _oldZOrder);
+    GetLevel()->GetCameraManager().ChangeScreenZOrder(this, _oldZOrder);
 }
 
 void Krampus::LabelWidgetComponent::SetZOrder(const ZOrder &_zOrder)
 {
     const uint8_t& _oldZOrder = GetZOrder();
     IDrawable::SetZOrder(_zOrder);
-    GetLevel()->GetCameraManagerRef().ChangeScreenZOrder(this, _oldZOrder);
+    GetLevel()->GetCameraManager().ChangeScreenZOrder(this, _oldZOrder);
 }
 
 std::string Krampus::LabelWidgetComponent::ToString() const

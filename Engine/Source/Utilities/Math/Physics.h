@@ -1,6 +1,7 @@
 #pragma once
 #include "Rectangle.h"
 #include "Angle.h"
+#include "Utilities/System/CollisionChannel.h"
 
 namespace Krampus
 {
@@ -13,6 +14,25 @@ namespace Krampus
 		std::vector<FVector2>		contacts;
 		class CollisionComponent*	collision			= nullptr;
 		Bool						hit					= false;
+	};
+
+	struct ExplosionInfo
+	{
+		/// The center of the explosion in world space
+		FVector2					position			= FVector2::Zero();
+		
+		/// The radius of the explosion
+		float						radius				= 0.0f;
+
+		CollisionChannel			channel				= CollisionChannel::None;
+
+		/// The falloff distance beyond the radius. Impulse is reduced to zero at this distance.
+		float						falloff				= 0.0f;
+		
+		/// Impulse per unit length. This applies an impulse according to the shape perimeter that
+		/// is facing the explosion. Explosions only apply to circles, capsules, and polygons. This
+		/// may be negative for implosions.
+		float						impulsePerLength	= 0.0f;
 	};
 
 	// TODO raycast

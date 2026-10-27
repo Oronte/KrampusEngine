@@ -1,22 +1,19 @@
 #include "Level.h"
 #include "Managers/LevelManager.h"
-#include "Managers/CollisionManager.h"
+#include "Managers/WorldPhysics.h"
 #include "Actors/CameraActor.h"
 
 using namespace Krampus;
 
 Krampus::Level::Level(Engine* _engine)
-	: KrampusObject(_engine), cameraManager(_engine), timerManager(_engine), collisionManager(_engine)
+	: KrampusObject(_engine), cameraManager(_engine), timerManager(_engine), worldPhysics(_engine)
 {
-	physicsWorld = b2DefaultWorldDef();
-	physicsWorld.gravity *= -1.0f;
-	physicsWorldID = b2CreateWorld(&physicsWorld);
 }
 
 void Level::InitLevel()
 {
 	mainCamera = SpawnActor<CameraActor>();
-	mainCamera->SetPosition(GetWindowRef().GetSize() / 2.0f);
+	mainCamera->SetPosition(GetWindow().GetSize() / 2.0f);
 }
 
 void Level::Load()
@@ -45,7 +42,7 @@ void Level::Update(const Float& _deltaTime)
 {
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	actorManager.Update(_deltaTime);
-	collisionManager.Update(); 
+	worldPhysics.Update(); 
 	cameraManager.UpdateView();
 	hud.Update(_deltaTime);
 	actorManager.DestroyPendingDeleteActors();

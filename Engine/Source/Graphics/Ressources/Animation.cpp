@@ -75,7 +75,7 @@ Krampus::Animation::Animation(Engine* _engine, const String& _name, ShapeObject*
     name = _name;
     shape = _shape;
     data = _data;
-    timer = GetWorld()->GetLevelManager()->GetCurrentLevel()->GetTimerManagerRef().CreateTimer([&]() { Update(); },
+    timer = GetWorld()->GetLevelManager()->GetCurrentLevel()->GetTimerManager().CreateTimer([&]() { Update(); },
         ComputeDuration(),
         true,
         false);

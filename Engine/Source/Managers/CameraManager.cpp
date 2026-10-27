@@ -23,7 +23,7 @@ void Krampus::CameraManager::Render(const Bool& splitScreen)
 	RenderActors(_window, splitScreen);
 	RenderDebugs(_window, splitScreen);
 
-	GetWorld()->GetWindowRef().SetView(GetWorld()->GetLevelManager()->GetCurrentLevel()->GetHUDRef().GetView()); // Widget View
+	GetWorld()->GetWindowRef().SetView(GetWorld()->GetLevelManager()->GetCurrentLevel()->GetHUD().GetView()); // Widget View
 	RenderWidgets(_window, splitScreen);
 
 	//UpdateView(); // World View

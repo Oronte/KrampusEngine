@@ -50,14 +50,14 @@ void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
-	GetLevel()->GetCameraManagerRef().AddToWorld(this);
+	GetLevel()->GetCameraManager().AddToWorld(this);
 }
 
 void Krampus::SpriteComponent::Deconstruct()
 {
 	Component::Deconstruct();
 
-	GetLevel()->GetCameraManagerRef().RemoveToWorld(this);
+	GetLevel()->GetCameraManager().RemoveToWorld(this);
 }
 
 
@@ -90,14 +90,14 @@ void Krampus::SpriteComponent::SetZOrder(const uint8_t& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManagerRef().ChangeWorldZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManager().ChangeWorldZOrder(this, _oldZOrder);
 }
 
 void Krampus::SpriteComponent::SetZOrder(const ZOrder& _zOrder)
 {
 	const uint8_t& _oldZOrder = GetZOrder();
 	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManagerRef().ChangeWorldZOrder(this, _oldZOrder);
+	GetLevel()->GetCameraManager().ChangeWorldZOrder(this, _oldZOrder);
 }
 
 std::string Krampus::SpriteComponent::ToString() const
