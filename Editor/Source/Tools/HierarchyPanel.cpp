@@ -11,6 +11,27 @@ using namespace Krampus;
 namespace
 {
 	constexpr const char*	DRAG_PAYLOAD	= "KRAMPUS_ACTOR";
+	constexpr const char*	DRAG_WIDGET		= "KRAMPUS_WIDGET";
+
+	// What the HUD tree asks for during a frame (done after it is drawn).
+	struct WidgetOps
+	{
+		Widget*								toDelete	= nullptr;
+		Widget*								dragged		= nullptr;
+		Widget*								dropTarget	= nullptr;	// null with dragged set = make root
+		std::unordered_map<Widget*, Widget*>	parentOf;
+	};
+
+	bool IsWidgetDescendantOf(const WidgetOps& _ops, Widget* _widget, Widget* _ancestor)
+	{
+		for (Widget* _current = _widget; _current; )
+		{
+			if (_current == _ancestor) return true;
+			const auto _it = _ops.parentOf.find(_current);
+			_current = _it == _ops.parentOf.end() ? nullptr : _it->second;
+		}
+		return false;
+	}
 
 	struct HierarchyState
 	{
@@ -33,7 +54,7 @@ namespace
 		return false;
 	}
 
-	void DrawWidgetNode(EditorContext& _context, Widget* _widget, Widget*& _toDelete)
+	void DrawWidgetNode(EditorContext& _context, Widget* _widget, WidgetOps& _ops)
 	{
 		ImGuiTreeNodeFlags _flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 		if (_widget->GetChildren().empty()) _flags |= ImGuiTreeNodeFlags_Leaf;
@@ -48,17 +69,45 @@ namespace
 			LOG(VerbosityType::Log, "Hierarchy: selected widget " + _widget->GetName().StdString());
 		}
 
+		// Drag a widget onto another one to attach it (it then moves with it).
+		if (ImGui::BeginDragDropSource())
+		{
+			ImGui::SetDragDropPayload(DRAG_WIDGET, &_widget, sizeof(Widget*));
+			ImGui::Text("%s", _widget->GetName().StdString().c_str());
+			ImGui::EndDragDropSource();
+		}
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* _peek = ImGui::AcceptDragDropPayload(DRAG_WIDGET, ImGuiDragDropFlags_AcceptPeekOnly | ImGuiDragDropFlags_AcceptNoDrawDefaultRect))
+			{
+				Widget* _moved = *static_cast<Widget**>(_peek->Data);
+				const bool _ok = !IsWidgetDescendantOf(_ops, _widget, _moved);
+				ImGui::SetTooltip(_ok ? "Attach %s to %s" : "%s cannot be attached to %s (it would contain itself)", _moved->GetName().StdString().c_str(), _widget->GetName().StdString().c_str());
+			}
+			if (const ImGuiPayload* _payload = ImGui::AcceptDragDropPayload(DRAG_WIDGET))
+			{
+				_ops.dragged = *static_cast<Widget**>(_payload->Data);
+				_ops.dropTarget = _widget;
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		if (ImGui::BeginPopupContextItem())
 		{
 			if (ImGui::MenuItem("Delete"))
-				_toDelete = _widget;
+				_ops.toDelete = _widget;
+			if (_ops.parentOf.contains(_widget) && ImGui::MenuItem("Unparent"))
+			{
+				_ops.dragged = _widget;
+				_ops.dropTarget = nullptr;
+			}
 			ImGui::EndPopup();
 		}
 
 		if (_open)
 		{
 			for (Widget* _child : _widget->GetChildren())
-				DrawWidgetNode(_context, _child, _toDelete);
+				DrawWidgetNode(_context, _child, _ops);
 			ImGui::TreePop();
 		}
 	}
@@ -86,6 +135,13 @@ namespace
 		}
 		if (ImGui::BeginDragDropTarget())
 		{
+			// While the mouse is over this actor: say what the drop will do.
+			if (const ImGuiPayload* _peek = ImGui::AcceptDragDropPayload(DRAG_PAYLOAD, ImGuiDragDropFlags_AcceptPeekOnly | ImGuiDragDropFlags_AcceptNoDrawDefaultRect))
+			{
+				Actor* _moved = *static_cast<Actor**>(_peek->Data);
+				const bool _ok = !IsDescendantOf(_state, _actor, _moved);
+				ImGui::SetTooltip(_ok ? "Attach %s to %s" : "%s cannot be attached to %s (it would contain itself)", _moved->GetName().StdString().c_str(), _actor->GetName().StdString().c_str());
+			}
 			if (const ImGuiPayload* _payload = ImGui::AcceptDragDropPayload(DRAG_PAYLOAD))
 			{
 				_state.dragged = *static_cast<Actor**>(_payload->Data);
@@ -172,10 +228,9 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 			// HUD: the screen widgets of the level (drawn in the HUD view, not in the world).
 			ImGui::Separator();
+			WidgetOps _widgetOps;
 			if (ImGui::CollapsingHeader("HUD", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				Widget* _widgetToDelete = nullptr;
-
 				if (ImGui::Button("+ Add Widget"))
 					ImGui::OpenPopup("AddWidget");
 				if (ImGui::BeginPopup("AddWidget"))
@@ -198,6 +253,8 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					_widgets.push_back(_widget.get());
 					for (Widget* _child : _widget->GetChildren())
 						_childWidgets.insert(_child);
+					for (Widget* _child : _widget->GetChildren())
+						_widgetOps.parentOf[_child] = _widget.get();
 				}
 
 				// A selection from before a level change must not be used.
@@ -206,12 +263,13 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 				for (Widget* _widget : _widgets)
 					if (!_childWidgets.contains(_widget))
-						DrawWidgetNode(_context, _widget, _widgetToDelete);
+						DrawWidgetNode(_context, _widget, _widgetOps);
 				if (_widgets.empty())
 					ImGui::TextDisabled("No widget in this level");
 
-				if (_widgetToDelete)
+				if (_widgetOps.toDelete)
 				{
+					Widget* _widgetToDelete = _widgetOps.toDelete;
 					_context.history.Record(_context, "Delete " + _widgetToDelete->GetName().StdString());
 					LOG_MSG("Hierarchy: deleting widget " + _widgetToDelete->GetName().StdString());
 					if (_context.selectedWidget == _widgetToDelete) _context.selectedWidget = nullptr;
@@ -231,14 +289,36 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					_state.dragged = *static_cast<Actor**>(_payload->Data);
 					_state.dropTarget = nullptr;
 				}
+				if (const ImGuiPayload* _widgetPayload = ImGui::AcceptDragDropPayload(DRAG_WIDGET))
+				{
+					_widgetOps.dragged = *static_cast<Widget**>(_widgetPayload->Data);
+					_widgetOps.dropTarget = nullptr;
+				}
 				ImGui::EndDragDropTarget();
+			}
+
+			// Widget dropped on a widget (attach) or on the empty area (detach).
+			if (_widgetOps.dragged)
+			{
+				Widget* _moved = _widgetOps.dragged;
+				const auto _oldParent = _widgetOps.parentOf.find(_moved);
+				Widget* _currentParent = _oldParent == _widgetOps.parentOf.end() ? nullptr : _oldParent->second;
+				const bool _cycle = _widgetOps.dropTarget && IsWidgetDescendantOf(_widgetOps, _widgetOps.dropTarget, _moved);
+				if (!_cycle && _currentParent != _widgetOps.dropTarget)
+				{
+					_context.history.Record(_context, "Reparent " + _moved->GetName().StdString());
+					LOG_MSG("Hierarchy: widget " + _moved->GetName().StdString() + (_widgetOps.dropTarget ? " attached to " + _widgetOps.dropTarget->GetName().StdString() : std::string(" detached")));
+					if (_currentParent) _currentParent->RemoveChild(_moved);
+					if (_widgetOps.dropTarget) _widgetOps.dropTarget->AddChild(_moved);
+				}
 			}
 
 			if (_state.dragged)
 			{
 				const auto _old = _state.parentOf.find(_state.dragged);
 				const bool _cycle = _state.dropTarget && IsDescendantOf(_state, _state.dropTarget, _state.dragged);
-				if (!_cycle)
+				Actor* _currentParent = _old == _state.parentOf.end() ? nullptr : _old->second;
+				if (!_cycle && _currentParent != _state.dropTarget)	// already attached there: nothing to do
 				{
 					_context.history.Record(_context, "Reparent " + _state.dragged->GetName().StdString());
 					LOG_MSG("Hierarchy: " + _state.dragged->GetName().StdString() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName().StdString() : std::string(" detached")));

@@ -406,6 +406,9 @@ Saves/
 Build/
 .idea/
 Docs/
+Content/
+
+CLAUDE.md
 
 *.sln
 *.vcxproj

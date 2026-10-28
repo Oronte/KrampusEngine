@@ -43,6 +43,7 @@ namespace
 			break;
 		case PropertyType::Texture:
 		case PropertyType::Font:
+		case PropertyType::Scene:
 		case PropertyType::Sound:
 		case PropertyType::String:
 			if (auto _v = _node.TryGet<String>(_key)) return PropertyValue(_v->StdString());

@@ -417,6 +417,18 @@ void Krampus::RegisterEngineClasses()
 		AddLive(_info, "globalVolume", &AudioSettings::globalVolume, 0.f, 100.f);
 	}
 
+	{
+		ClassInfo& _info = Describe("ShipSettings", "IGameObject");
+		_info.AddProperty<ShipSettings, std::string>("startScene", &ShipSettings::startScene);
+		_info.SetLastPropertyType(PropertyType::Scene);
+		_info.AddProperty<ShipSettings, std::string>("gameName", &ShipSettings::gameName);
+		_info.AddProperty<ShipSettings, int>("windowMode", &ShipSettings::windowMode, 0.f, 2.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Borderless (desktop size)", "Windowed", "Fullscreen" });
+		_info.AddProperty<ShipSettings, int>("windowWidth", &ShipSettings::windowWidth, 320.f, 7680.f);
+		_info.AddProperty<ShipSettings, int>("windowHeight", &ShipSettings::windowHeight, 240.f, 4320.f);
+		_info.AddProperty<ShipSettings, bool>("showSplash", &ShipSettings::showSplash);
+	}
+
 	// ================= HUD widgets =================
 	{
 		ClassInfo& _info = Describe("ButtonWidget", "Widget");

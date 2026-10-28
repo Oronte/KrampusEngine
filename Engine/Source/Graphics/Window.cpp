@@ -84,3 +84,9 @@ void Krampus::Window::Draw(const ShapeObject& _drawable)
 {
 	Draw(*(_drawable.GetShape()->Get()));
 }
+void Krampus::Window::Create(const String& _name, const UVector2& _windowSize, const bool& _fullscreen)
+{
+	window->create(sf::VideoMode(_windowSize), CAST(sf::String, _name.ToCharPtr()),
+		_fullscreen ? sf::Style::None : sf::Style::Default,
+		_fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
+}

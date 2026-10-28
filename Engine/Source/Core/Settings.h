@@ -133,6 +133,25 @@ namespace Krampus
 	};
 
 	/// <summary>
+	/// The packaged game (Ship): the scene it starts on and how its window looks. The editor also opens the start scene when it starts;
+	/// the window options only matter for the exe made by File > Package Game.
+	/// </summary>
+	class ShipSettings : public SettingsSection
+	{
+	public:
+		std::string	startScene		= "MainMenu";			// name of a scene of Content/Scenes (without .ka7)
+		std::string	gameName		= "KrampusEngine";		// title of the window
+		int			windowMode		= 0;						// 0 borderless at the desktop size, 1 window, 2 fullscreen
+		int			windowWidth		= 1280;						// for the window and the fullscreen modes
+		int			windowHeight	= 720;
+		bool		showSplash		= true;						// the Krampus logo at the start
+
+		const char* Title() const override { return "Ship"; }
+		const char* Description() const override { return "The packaged game: first scene, window title and mode, splash screen. Saved in the settings file, so the package carries them."; }
+		void ResetToDefaults() override;
+	};
+
+	/// <summary>
 	/// Every section of the engine, and their file.
 	/// </summary>
 	class EngineSettings
@@ -145,6 +164,7 @@ namespace Krampus
 		TimeSettings		time;
 		WindowSettings		window;
 		AudioSettings		audio;
+		ShipSettings		ship;
 
 	public:
 		EngineSettings();
@@ -156,6 +176,9 @@ namespace Krampus
 
 		/// <summary>Gives the engine to every section.</summary>
 		void Attach(Engine* _engine);
+
+		/// <summary>Reads the file (a missing file keeps the defaults) without applying anything: the window needs the Ship values before it exists.</summary>
+		void LoadFile();
 
 		/// <summary>Reads the file (a missing file keeps the defaults) and applies the values.</summary>
 		void Load();

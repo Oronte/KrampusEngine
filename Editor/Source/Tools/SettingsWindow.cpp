@@ -73,6 +73,24 @@ void EditorLayer::DrawSettingsWindow()
 			if (DrawObjectProperties(_section))
 				settingsDirty = true;
 
+			if (std::string(_section.Title()) == "Ship")
+			{
+				ImGui::Spacing();
+				std::error_code _relativeError;
+				std::filesystem::path _sceneName = context.scenePath.empty() ? std::filesystem::path() : std::filesystem::relative(context.scenePath, SCENES_DIRECTORY, _relativeError);
+				if (_relativeError || _sceneName.empty() || *_sceneName.begin() == "..") _sceneName = context.scenePath.stem();
+				_sceneName.replace_extension();
+				const std::string _openScene = _sceneName.generic_string();
+				ImGui::BeginDisabled(_openScene.empty());
+				if (ImGui::Button(("Use the open scene (" + (_openScene.empty() ? std::string("save it first") : _openScene) + ") as start scene").c_str()))
+				{
+					context.engine->GetSettings().ship.startScene = _openScene;
+					settingsDirty = true;
+					LOG_MSG("Settings: start scene is now " + _openScene);
+				}
+				ImGui::EndDisabled();
+			}
+
 			if (context.settingsPage == 0)	// Logger
 			{
 				ImGui::Spacing();

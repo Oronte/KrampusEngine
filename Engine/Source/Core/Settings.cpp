@@ -5,6 +5,7 @@
 #include "Managers/LevelManager.h"
 #include "Managers/WorldPhysics.h"
 #include "Managers/TimerManager.h"
+#include "Components/PhysicsComponent.h"
 
 using namespace Krampus;
 
@@ -66,6 +67,7 @@ namespace
 		case PropertyType::String:
 		case PropertyType::Texture:
 		case PropertyType::Font:
+		case PropertyType::Scene:
 		case PropertyType::Sound:	return PropertyValue(_text);
 		case PropertyType::Vector2:
 		{
@@ -130,8 +132,16 @@ void PhysicsSettings::ApplyTo(WorldPhysics& _physics) const
 
 void PhysicsSettings::Apply()
 {
-	if (Level* _level = CurrentLevel(engine))
-		ApplyTo(_level->GetWorldPhysics());
+	Level* _level = CurrentLevel(engine);
+	if (!_level) return;
+
+	ApplyTo(_level->GetWorldPhysics());
+
+	// A body at rest is asleep and ignores a new gravity or a new threshold until something touches it: wake them all, so that the
+	// change shows in the level at once.
+	for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+		if (PhysicsComponent* _body = _actor->GetComponent<PhysicsComponent>())
+			_body->SetAwake(true);
 }
 
 void PhysicsSettings::ApplyToLevel(Level& _level)
@@ -192,10 +202,17 @@ void AudioSettings::ResetToDefaults()
 	globalVolume = 100.f;
 }
 
+void ShipSettings::ResetToDefaults()
+{
+	Engine* _engine = engine;
+	*this = ShipSettings();
+	engine = _engine;
+}
+
 // ---- All of them
 
 EngineSettings::EngineSettings()
-	: sections { &logger, &physics, &time, &window, &audio }
+	: sections { &logger, &physics, &time, &window, &audio, &ship }
 {
 }
 
@@ -210,12 +227,17 @@ void EngineSettings::Attach(Engine* _engine)
 		_section->Attach(_engine);
 }
 
-void EngineSettings::Load()
+void EngineSettings::LoadFile()
 {
 	if (LoadSections(GetPath(), sections))
 		LOG_MSG("Settings: loaded " + GetPath().generic_string());
 	else
 		LOG(VerbosityType::Log, "Settings: no file yet (" + GetPath().generic_string() + "), defaults used");
+}
+
+void EngineSettings::Load()
+{
+	LoadFile();
 	Apply();
 }
 

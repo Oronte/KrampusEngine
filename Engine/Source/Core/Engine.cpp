@@ -20,24 +20,31 @@ Engine::Engine(sf::RenderWindow* _hostWindow)
 	inputManager = new InputManager(this);
 	mouse = new Mouse(this);
 
+	settings.Attach(this);
+	settings.LoadFile();	// before the window: the Ship section says how it looks
+
 	if (_hostWindow)
 	{
 		window.Attach(_hostWindow);
 	}
 	else
 	{
-		window.Create();
+		const ShipSettings& _ship = settings.ship;
+		const UVector2 _size(static_cast<unsigned int>(std::max(320, _ship.windowWidth)), static_cast<unsigned int>(std::max(240, _ship.windowHeight)));
+		if (_ship.windowMode == 0)
+			window.Create(String(_ship.gameName));
+		else
+			window.Create(String(_ship.gameName), _size, _ship.windowMode == 2);
 		window.SetFramerateLimit(0);
 	}
-
-	settings.Attach(this);
-	settings.Load();
+	settings.Apply();
 
 	layerStack.PushLayer<LevelLayer>(this);
 	layerStack.PushOverlay<Krampus::FadeLayer>(this);
 	layerStack.PushOverlay<Krampus::PauseLayer>();
 #ifdef SHIP
-	layerStack.PushOverlay<Krampus::SplashLayer>(CONTENT_PATH +"Textures/_internal/KrampusEngineBanner.png");
+	if (settings.ship.showSplash)
+		layerStack.PushOverlay<Krampus::SplashLayer>(CONTENT_PATH +"Textures/_internal/KrampusEngineBanner.png");
 #endif
 
 	handle = inputManager->WindowClose.AddListener(this, &Engine::QuitGame);

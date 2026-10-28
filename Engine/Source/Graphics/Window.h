@@ -223,6 +223,11 @@ namespace Krampus
 		virtual void Create(const String& _name = "KrampusEngine");
 
 		/// <summary>
+		/// Creates a window with a title bar (or, with _fullscreen, a fullscreen window) of the given size.
+		/// </summary>
+		virtual void Create(const String& _name, const UVector2& _windowSize, const bool& _fullscreen);
+
+		/// <summary>
 		/// Uses a window created and owned by the host application. Close() then leaves it open.
 		/// The window must outlive this object.
 		/// </summary>

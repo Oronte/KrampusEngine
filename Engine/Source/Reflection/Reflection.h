@@ -34,7 +34,8 @@ namespace Krampus
 		Enum,		// stored as an int: index in PropertyInfo::flagNames, shown as a drop-down list
 		Texture,	// stored as a string ("Folder/Name.png", relative to Content/Textures), picked from a list of pictures
 		Font,		// stored as a string ("Folder/Name.ttf", relative to Content/Fonts), picked from a list
-		Sound		// stored as a string ("Folder/Name.mp3", relative to Content/Audio, empty = none), picked from a list
+		Sound,		// stored as a string ("Folder/Name.mp3", relative to Content/Audio, empty = none), picked from a list
+		Scene		// stored as a string (name of a scene of Content/Scenes, without .ka7), picked from a list
 	};
 
 	/// <summary>

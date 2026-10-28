@@ -192,6 +192,47 @@ namespace
 		return _changed;
 	}
 
+	// The scenes of Content/Scenes, as "Name" (or "Folder/Name"), for a property that holds a scene.
+	std::vector<std::string> SceneNames()
+	{
+		std::vector<std::string> _names;
+		std::error_code _error;
+		for (const auto& _entry : std::filesystem::recursive_directory_iterator(SCENES_DIRECTORY, _error))
+		{
+			if (!_entry.is_regular_file() || _entry.path().extension() != ".ka7") continue;
+			std::filesystem::path _relative = std::filesystem::relative(_entry.path(), SCENES_DIRECTORY, _error);
+			_relative.replace_extension();
+			_names.push_back(_relative.generic_string());
+		}
+		std::sort(_names.begin(), _names.end());
+		return _names;
+	}
+
+	// A drop-down list of the scenes. A name that matches no file is shown in red: the game would start on an empty level.
+	bool DrawScenePicker(const char* _label, std::string& _scene)
+	{
+		bool _changed = false;
+		const std::vector<std::string> _names = SceneNames();
+		const bool _exists = std::find(_names.begin(), _names.end(), _scene) != _names.end();
+
+		if (ImGui::BeginCombo(_label, _scene.empty() ? "(none)" : _scene.c_str()))
+		{
+			for (const std::string& _name : _names)
+			{
+				if (ImGui::Selectable(_name.c_str(), _name == _scene))
+				{
+					_scene = _name;
+					_changed = true;
+				}
+			}
+			if (_names.empty()) ImGui::TextDisabled("No scene in Content/Scenes");
+			ImGui::EndCombo();
+		}
+		if (!_exists)
+			ImGui::TextColored(ImVec4(1.f, 0.45f, 0.3f, 1.f), "No scene named \"%s\" in Content/Scenes", _scene.c_str());
+		return _changed;
+	}
+
 	// One check box per name. Returns true when a bit changed.
 	bool DrawFlags(const PropertyInfo& _property, int& _bits)
 	{
@@ -307,6 +348,9 @@ namespace
 			}
 			break;
 		}
+		case PropertyType::Scene:
+			_changed = DrawScenePicker(_property.name.c_str(), std::get<std::string>(_value));
+			break;
 		case PropertyType::Flags:
 			_changed = DrawFlags(_property, std::get<int>(_value));
 			break;

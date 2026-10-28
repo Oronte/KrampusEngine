@@ -217,3 +217,5 @@ This project prioritizes **understanding and correctness** over speed of iterati
 - Procedural generation
 - Shaders
 - KrampusEngine Launcher
+
+> Guide complet d'utilisation du moteur (en français) : [Docs/Tutorial.md](Docs/Tutorial.md)
