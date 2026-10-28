@@ -1,5 +1,6 @@
 
 #include "ButtonWidget.h"
+#include "Scene/Scene.h"
 
 Krampus::ButtonWidget::ButtonWidget(Level *_level, const RectangleShapeData &_data)
     : Widget(_level)
@@ -26,4 +27,12 @@ void Krampus::ButtonWidget::Construct()
     onPressHandle = buttonComponent->onPress.AddListener([&]() {onPress.Broadcast();});
     onPerformHandle = buttonComponent->onPerform.AddListener([&]() {onPerform.Broadcast();});
     onReleaseHandle = buttonComponent->onRelease.AddListener([&]() {onRelease.Broadcast();});
+
+    actionHandle = onPress.AddListener([this]()
+        {
+            if (action == 1 && !targetScene.StdString().empty())
+                Scene::Open(*GetWorld(), targetScene.StdString());
+            else if (action == 2)
+                GetWorld()->QuitGame();
+        });
 }

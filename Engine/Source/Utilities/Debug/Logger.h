@@ -46,6 +46,20 @@ namespace Krampus
 
     class Logger
     {
+    public:
+        /// <summary>
+        /// A message that reached the log file, kept for in-game readers such as the editor console.
+        /// </summary>
+        struct Entry
+        {
+            VerbosityType   type;
+            std::string     text;
+        };
+
+    private:
+        static inline std::vector<Entry>        pendingEntries;
+        static inline std::mutex                entriesMutex;
+
         static inline std::string               logsDir             = "Content/Logs/";
         static inline std::string               logsFileName        = "log.txt";
 
@@ -74,6 +88,9 @@ namespace Krampus
 
         static inline Bool                      canColorText        = true;
 
+        /// <summary>When true, every logged message is also queued for DrainEntries. Set it only while a reader exists.</summary>
+        static inline std::atomic<bool>         collectEntries      = false;
+
     private:
         static void LoggingThread();
         static void EnqueueLog(const std::string& _logText);
@@ -97,6 +114,11 @@ namespace Krampus
         static void PrintLog(const VerbosityType& _type, const IPrintable* _object, const std::string& _debug = "");
 
         static void Clear();
+
+        /// <summary>
+        /// Moves the messages queued since the last call into _out (appended). Thread-safe.
+        /// </summary>
+        static void DrainEntries(std::vector<Entry>& _out);
 
         static void PlayDebugSound(const VerbosityType& _type);
     };

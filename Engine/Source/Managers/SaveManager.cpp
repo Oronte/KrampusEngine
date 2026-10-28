@@ -528,11 +528,17 @@ std::optional<SaveMetadata> SaveManager::GetMetadata(const String& name)
     return meta;
 }
 
-SaveResult SaveManager::Save(const String& name,
-    const SaveNode& root,
-    const Bool& compress)
+SaveResult SaveManager::Save(const String& name, const SaveNode& root, const Bool& compress)
 {
     EnsureSaveDirectoryExists();
+    return SaveToFile(GetSavePath(name), root, compress);
+}
+
+SaveResult SaveManager::SaveToFile(const std::filesystem::path& path, const SaveNode& root, const Bool& compress)
+{
+    const String name = String(path.string());
+    std::error_code dirError;
+    std::filesystem::create_directories(path.parent_path(), dirError);
     try 
     {
         BinaryWriter dataWriter;
@@ -550,7 +556,7 @@ SaveResult SaveManager::Save(const String& name,
         BinaryWriter hdrWriter;
         WriteHeader(hdrWriter, CURRENT_VERSION, flags, timestamp, checksum, dataSize);
 
-        std::ofstream file(GetSavePath(name), std::ios::binary | std::ios::trunc);
+        std::ofstream file(path, std::ios::binary | std::ios::trunc);
         if (!file) 
         {
             if (onSave) onSave(name, SaveResult::ErrorIO);
@@ -580,9 +586,14 @@ SaveResult SaveManager::Save(const String& name,
     }
 }
 
-SaveResult SaveManager::Load(const String& name, SaveNode& outRoot) 
+SaveResult SaveManager::Load(const String& name, SaveNode& outRoot)
 {
-    auto path = GetSavePath(name);
+    return LoadFromFile(GetSavePath(name), outRoot);
+}
+
+SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode& outRoot)
+{
+    const String name = String(path.string());
 
     if (!std::filesystem::exists(path)) 
     {

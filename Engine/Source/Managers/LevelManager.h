@@ -12,6 +12,7 @@ namespace Krampus
 	{
 		std::unique_ptr<Level>	currentLevel	=	nullptr;
 		std::unique_ptr<Level>	pendingAddLevel =	nullptr;
+		std::function<std::unique_ptr<Level>()>	levelFactory;	// builds a new instance of the last level given to SetLevel
 
 	public:
 		/// <summary>
@@ -44,8 +45,18 @@ namespace Krampus
 		template<typename LevelType = Level>
 		inline LevelType* SetLevel()
 		{
+			levelFactory = [this]() -> std::unique_ptr<Level> { return std::make_unique<LevelType>(GetWorld()); };
 			pendingAddLevel = std::make_unique<LevelType>(GetWorld());
 			return Cast<LevelType>(pendingAddLevel.get());
+		}
+
+		/// <summary>
+		/// Stages a fresh instance of the last level given to SetLevel (restart).
+		/// </summary>
+		inline void ReloadLevel()
+		{
+			if (levelFactory)
+				pendingAddLevel = levelFactory();
 		}
 
 		/// <summary>

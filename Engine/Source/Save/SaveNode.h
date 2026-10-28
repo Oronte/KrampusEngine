@@ -174,6 +174,16 @@ public:
     /// <summary>Sets a nested child SaveNode by copy.</summary>
     /// <param name="key">Field key.</param>
     /// <param name="node">SaveNode to nest.</param>
+    void Set(const String& key, std::vector<SaveNodePtr> value) { fields[key] = std::move(value); }
+
+    NO_DISCARD std::vector<SaveNodePtr> GetNodes(const String& key) const
+    {
+        auto it = fields.find(key);
+        if (it == fields.end()) return {};
+        if (const auto* arr = std::get_if<std::vector<SaveNodePtr>>(&it->second)) return *arr;
+        return {};
+    }
+
     void Set(const String& key, const SaveNode& node) { fields[key] = std::make_shared<SaveNode>(node); }
 
     /// <summary>Sets a nested child SaveNode by move.</summary>

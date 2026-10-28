@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Managers/InputManager.h"
 #include "Managers/LevelManager.h"
+#include "Managers/AudioManager.h"
 #include "Layers/LevelLayer.h"
 #include "Layers/FadeLayer.h"
 #include "Layers/PauseLayer.h"
@@ -10,14 +11,21 @@
 using namespace Krampus;
 #undef new
 
-Engine::Engine()
+Engine::Engine(sf::RenderWindow* _hostWindow)
 {
 	levelManager = new LevelManager(this);
 	inputManager = new InputManager(this);
 	mouse = new Mouse(this);
 
-	window.Create();
-	window.SetFramerateLimit(0);
+	if (_hostWindow)
+	{
+		window.Attach(_hostWindow);
+	}
+	else
+	{
+		window.Create();
+		window.SetFramerateLimit(0);
+	}
 
 	layerStack.PushLayer<LevelLayer>(this);
 	layerStack.PushOverlay<Krampus::FadeLayer>(this);
@@ -49,29 +57,35 @@ void Krampus::Engine::QuitGame()
 
 void Engine::Update()
 {
-	while (!shouldClose)
+	while (Tick()) { }
+}
+
+Bool Engine::Tick()
+{
+	if (shouldClose) return false;
+
+	levelManager->ChangeLevel();
+	Level* _currentLevel = levelManager->GetCurrentLevel();
+	if (!_currentLevel) return false;
+
+	mouse->Update();
+	layerStack.Update(_currentLevel->UpdateTime());
+	layerStack.Render(window);
+	window.Display();
+
+	while (true)
 	{
-		levelManager->ChangeLevel();
-		Level* _currentLevel = levelManager->GetCurrentLevel();
-		if (!_currentLevel) break;
+		const std::optional<sf::Event> _event = GetWindowRef().PollEvent();
+		if (!_event.has_value()) break;
 
-		mouse->Update();
-		layerStack.Update(_currentLevel->UpdateTime());
-		layerStack.Render(window);
-		window.Display();
-
-		while (true)
-		{
-			const std::optional<sf::Event> _event = GetWindowRef().PollEvent();
-			if (!_event.has_value()) break;
-
-			if (!layerStack.DispatchEvent(*_event) && !layerStack.BlocksInput())
-				inputManager->Update(_event);
-			inputManager->UpdateSystemEvent(_event);
-		}
-		if (!layerStack.BlocksInput())
-			inputManager->UpdateOnPerform();
+		if (!layerStack.DispatchEvent(*_event) && !layerStack.BlocksInput())
+			inputManager->Update(_event);
+		inputManager->UpdateSystemEvent(_event);
 	}
+	if (!layerStack.BlocksInput())
+		inputManager->UpdateOnPerform();
+
+	return !shouldClose;
 }
 
 void Engine::Stop()
@@ -82,6 +96,7 @@ void Engine::Stop()
 	if (Level* _level = levelManager->GetCurrentLevel())
 		_level->Unload();
 
+	M_AUDIO.ClearCache();
 	window.Close();
 	Logger::Shutdown();
 }

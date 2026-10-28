@@ -242,3 +242,14 @@ void Krampus::PhysicsComponent::MakeRectangle(const FVector2& _size)
     _shape.density = 1.0f;
     b2CreatePolygonShape(id, &_shape, &_polygon);
 }
+
+
+int Krampus::PhysicsComponent::GetBodyType() const
+{
+    return static_cast<int>(b2Body_GetType(id));
+}
+
+void Krampus::PhysicsComponent::SetBodyType(const int& _type)
+{
+    b2Body_SetType(id, static_cast<b2BodyType>(_type));
+}

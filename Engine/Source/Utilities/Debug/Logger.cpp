@@ -137,6 +137,12 @@ void Krampus::Logger::Shutdown()
     cv.notify_all();
     if (logThread.joinable())
         logThread.join();
+
+    // Release audio now: destroying the last sound at DLL unload would stop the audio thread under the loader lock and deadlock.
+    msgNotif = Sound();
+    warningNotif = Sound();
+    errorNotif = Sound();
+    fatalNotif = Sound();
 #endif
 }
 
@@ -156,7 +162,14 @@ void Logger::PrintLog(const VerbosityType& _type, const std::string& _text, cons
     if (CanPrintInLog(_type))
     {
         const VerbosityData& _verbosity = VerbosityData(_type, _text, _debug);
-        EnqueueLog(_verbosity.RetrieveFullText(false));
+        const std::string _plainText = _verbosity.RetrieveFullText(false);
+        EnqueueLog(_plainText);
+
+        if (collectEntries)
+        {
+            std::lock_guard _lock(entriesMutex);
+            pendingEntries.push_back({ _type, _plainText });
+        }
 
         if (CanPrintInConsole(_type)) EnqueueConsole(_verbosity.RetrieveFullText(canColorText));
 
@@ -184,6 +197,13 @@ void Krampus::Logger::PrintLog(const VerbosityType& _type, const IPrintable* _ob
     }
     PrintLog(_type, _object->ToString(), _debug);
 #endif
+}
+
+void Krampus::Logger::DrainEntries(std::vector<Entry>& _out)
+{
+    std::lock_guard _lock(entriesMutex);
+    _out.insert(_out.end(), std::make_move_iterator(pendingEntries.begin()), std::make_move_iterator(pendingEntries.end()));
+    pendingEntries.clear();
 }
 
 void Krampus::Logger::Clear()

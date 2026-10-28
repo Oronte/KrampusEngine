@@ -38,6 +38,34 @@ namespace Krampus
 			}
 		}
 
+		/// <summary>Gets the child widgets.</summary>
+		inline const std::vector<Widget*>& GetChildren() const
+		{
+			return children;
+		}
+
+		/// <summary>Gets the components attached to this widget.</summary>
+		inline const std::vector<std::unique_ptr<WidgetComponent>>& GetComponents() const
+		{
+			return components;
+		}
+
+		/// <summary>Public version of CreateComponent, for scenes and the editor.</summary>
+		template <typename Type, typename ...Args, IS_BASE_OF(WidgetComponent, Type)>
+		inline Type* AddComponent(Args&&... _args)
+		{
+			return CreateComponent<Type>(std::forward<Args>(_args)...);
+		}
+
+		/// <summary>Removes a component given by pointer (the editor does not know its type).</summary>
+		inline void RemoveComponentInstance(WidgetComponent* _component)
+		{
+			if (!_component) return;
+			_component->Deconstruct();
+			_component->BeginDestroy();
+			std::erase_if(components, [&](const std::unique_ptr<WidgetComponent>& _item) { return _item.get() == _component; });
+		}
+
 		/// <summary>Removes a child widget from hierarchy.</summary>
 		/// <param name="_toRemove">Pointer to child Widget.</param>
 		inline void RemoveChild(Widget* _toRemove)

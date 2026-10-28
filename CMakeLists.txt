@@ -38,3 +38,6 @@ set(KRAMPUS_ARCH "x64")
 
 add_subdirectory(Engine)
 add_subdirectory(Game)
+add_subdirectory(Editor)
+
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Editor)

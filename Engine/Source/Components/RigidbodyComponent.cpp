@@ -246,3 +246,11 @@ std::string Krampus::RigidbodyComponent::ToString() const
 {
     return name + " -> Mass = " + mass.ToString() + ", Velocity = " + velocity.ToString();
 }
+
+
+void Krampus::RigidbodyComponent::SetMass(const Float& _mass)
+{
+	mass = FMath::MaxVal(0.001f, _mass);
+	inverseMass = 1.0f / mass;
+	ComputeInertia();
+}

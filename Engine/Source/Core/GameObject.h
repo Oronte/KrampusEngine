@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include <typeinfo>
 
 namespace Krampus
 {
@@ -29,6 +30,19 @@ namespace Krampus
 		String GetName() const
 		{
 			return name;
+		}
+
+		void SetName(const String& _name)
+		{
+			name = _name;
+		}
+
+		/// <summary>
+		/// Name of the reflected class (see KCLASS in Reflection/Reflection.h), or "IGameObject" if the class is not reflected.
+		/// </summary>
+		virtual const char* ClassName() const
+		{
+			return typeid(*this).name(); // compiler name; ClassNameOf() cleans it
 		}
 
 		/// <summary>

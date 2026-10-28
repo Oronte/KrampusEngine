@@ -6,6 +6,7 @@
 #include "Utilities/Math/Physics.h"
 #include "Graphics/Mouse.h"
 #include "UI/Widgets/Widget.h"
+#include "GameFramework/Level.h"
 
 Krampus::ButtonWidgetComponent::ButtonWidgetComponent(Widget* _owner)
     : WidgetComponent(_owner)
@@ -37,8 +38,11 @@ void Krampus::ButtonWidgetComponent::Init()
     onReleaseHandle = _inputManager->MouseLeftClick.onRelease.AddListener(this, &ButtonWidgetComponent::OnRelease);
 }
 
-void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_mousePos)
+void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_screenPos)
 {
+    // Widgets live in the HUD view (not in window pixels): map the cursor through it, whatever the window size is.
+    const IVector2 _mousePos = GetWorld()->GetWindowRef().MapPixelToCoords(_screenPos, owner->GetLevel()->GetHUD().GetView());
+
     if (!shape)
     {
         LOG_ERROR("This Constructor of ButtonWidgetComponent requires an ShapeObject");

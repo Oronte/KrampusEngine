@@ -20,6 +20,7 @@ namespace Krampus
 		Window						window;
 		Mouse*						mouse = nullptr;
 		LayerStack					layerStack;
+		Bool						levelPaused = false;
 		Event<>::ListenerHandle		handle;
 
 	public:
@@ -66,6 +67,22 @@ namespace Krampus
 		}
 
 		/// <summary>
+		/// Freezes or resumes the level logic (actors, physics, HUD). The level is still drawn. Used by the editor outside of Play mode.
+		/// </summary>
+		inline void SetLevelPaused(const Bool& _paused)
+		{
+			levelPaused = _paused;
+		}
+
+		/// <summary>
+		/// Checks whether the level logic is frozen.
+		/// </summary>
+		inline Bool IsLevelPaused() const
+		{
+			return levelPaused;
+		}
+
+		/// <summary>
 		/// Gets the Mouse input handler.
 		/// </summary>
 		/// <returns>Pointer to the Mouse instance.</returns>
@@ -77,7 +94,8 @@ namespace Krampus
 		/// <summary>
 		/// Constructs the Engine and initializes sub-managers and window.
 		/// </summary>
-		Engine();
+		/// <param name="_hostWindow">Window owned by a host application (e.g. the editor). When null, the engine creates and owns its window.</param>
+		Engine(sf::RenderWindow* _hostWindow = nullptr);
 
 		/// <summary>
 		/// Destructs the Engine and cleans up resources.
@@ -99,7 +117,15 @@ namespace Krampus
 		/// </summary>
 		void Update();
 
-	private:
+		/// <summary>
+		/// Runs one frame of the game loop (update, render, events). Lets a host application drive the loop.
+		/// </summary>
+		/// <returns>False when the engine wants to quit (window closed, QuitGame, or no level).</returns>
+		Bool Tick();
+
+		/// <summary>
+		/// Shuts the engine down: unloads the level, closes the window (if it owns it) and stops the Logger.
+		/// </summary>
 		void Stop();
 	};
 }

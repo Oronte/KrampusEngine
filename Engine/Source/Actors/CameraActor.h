@@ -1,6 +1,7 @@
 #pragma once
 #include "Actor.h"
 #include "Components/CameraComponent.h"
+#include "Reflection/Reflection.h"
 
 namespace Krampus
 {
@@ -10,6 +11,8 @@ namespace Krampus
 	/// </summary>
 	class CameraActor : public Actor
 	{
+		KACTOR(CameraActor, Actor)
+
 	protected:
 		CameraComponent*	camera	= nullptr;
 

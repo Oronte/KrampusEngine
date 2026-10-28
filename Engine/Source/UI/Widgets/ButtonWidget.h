@@ -15,8 +15,14 @@ namespace Krampus
         Event<>::ListenerHandle			onPressHandle;
         Event<>::ListenerHandle			onPerformHandle;
         Event<>::ListenerHandle			onReleaseHandle;
+        Event<>::ListenerHandle			actionHandle;
 
     public:
+        /// <summary>What a press does, set in the Inspector: 0 nothing, 1 open the scene named targetScene, 2 quit the game.</summary>
+        Int								action			= 0;
+        /// <summary>Scene opened by action 1: a name ("MainMenu" = Content/Scenes/MainMenu.ka7) or a path.</summary>
+        String							targetScene;
+
         /// <summary>Broadcast when mouse pointer hovers over the button.</summary>
         Event<>							onHover;
         /// <summary>Broadcast when mouse pointer leaves the button.</summary>

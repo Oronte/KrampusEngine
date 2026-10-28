@@ -83,6 +83,7 @@ namespace Krampus
 		std::unique_ptr<Shape>	shape;
 		ShapeType				shapeType;
 		ShapeSizeData			sizeData;
+		String					texturePath;
 
 	public:
 		/// <summary>
@@ -177,6 +178,12 @@ namespace Krampus
 		/// <param name="_rect">Sub-rectangle coordinates.</param>
 		/// <param name="_isRepeated">Whether texture repeats/tiles.</param>
 		/// <param name="_smooth">Whether bilinear filtering is enabled.</param>
+		/// <summary>Path last given to SetTexture (empty if none).</summary>
+		inline const String& GetTexturePath() const
+		{
+			return texturePath;
+		}
+
 		void SetTexture(const String& _path, TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _rect = IRect(), const Bool& _isRepeated = false, const Bool& _smooth = true);
 	};
 

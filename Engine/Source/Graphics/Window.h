@@ -14,7 +14,9 @@ namespace Krampus
 	/// </summary>
 	class Window
 	{
-		sf::RenderWindow	window;
+		sf::RenderWindow	ownWindow;
+		sf::RenderWindow*	window	= &ownWindow;	// points to ownWindow, or to a window owned by the host application
+		sf::FloatRect		mouseViewport;				// zero size = the game fills the window
 
 	public:
 		/// <summary>
@@ -29,7 +31,7 @@ namespace Krampus
 		/// <returns>Reference to sf::RenderWindow.</returns>
 		virtual inline sf::RenderWindow& GetRenderWindow() noexcept
 		{
-			return window;
+			return *window;
 		}
 
 		/// <summary>
@@ -38,7 +40,7 @@ namespace Krampus
 		/// <returns>True if open, false if closed.</returns>
 		virtual inline Bool IsOpen() const noexcept
 		{
-			return window.isOpen();
+			return window->isOpen();
 		}
 
 		/// <summary>
@@ -47,7 +49,7 @@ namespace Krampus
 		/// <param name="_limit">Framerate limit (0 for unlimited).</param>
 		virtual inline void SetFramerateLimit(const UInt& _limit)
 		{
-			window.setFramerateLimit(_limit);
+			window->setFramerateLimit(_limit);
 		}
 
 		/// <summary>
@@ -56,7 +58,7 @@ namespace Krampus
 		/// <param name="_enabled">True to enable VSync, false to disable.</param>
 		virtual inline void SetVerticalSyncEnabled(const Bool& _enabled)
 		{
-			window.setVerticalSyncEnabled(_enabled);
+			window->setVerticalSyncEnabled(_enabled);
 		}
 
 		/// <summary>
@@ -65,7 +67,7 @@ namespace Krampus
 		/// <param name="_title">Title string.</param>
 		virtual inline void SetTitle(const String& _title)
 		{
-			window.setTitle(sf::String(_title.ToCharPtr()));
+			window->setTitle(sf::String(_title.ToCharPtr()));
 		}
 
 		/// <summary>
@@ -74,7 +76,7 @@ namespace Krampus
 		/// <param name="_size">Width and height in pixels.</param>
 		virtual inline void SetSize(const UVector2& _size)
 		{
-			window.setSize(_size);
+			window->setSize(_size);
 		}
 
 		/// <summary>
@@ -83,7 +85,7 @@ namespace Krampus
 		/// <returns>Dimensions as UVector2.</returns>
 		virtual inline UVector2 GetSize() const noexcept
 		{
-			return UVector2(window.getSize());
+			return UVector2(window->getSize());
 		}
 
 		/// <summary>
@@ -92,7 +94,7 @@ namespace Krampus
 		/// <param name="_position">Desktop screen coordinates.</param>
 		virtual inline void SetPosition(const IVector2& _position)
 		{
-			window.setPosition(_position);
+			window->setPosition(_position);
 		}
 
 		/// <summary>
@@ -101,7 +103,7 @@ namespace Krampus
 		/// <returns>Desktop screen coordinates.</returns>
 		virtual inline IVector2 GetPosition() const
 		{
-			return IVector2(window.getPosition());
+			return IVector2(window->getPosition());
 		}
 
 		/// <summary>
@@ -119,7 +121,7 @@ namespace Krampus
 		/// <param name="_image">Source Image containing pixel data.</param>
 		virtual inline void SetIcon(const Image& _image)
 		{
-			window.setIcon(_image);
+			window->setIcon(_image);
 		}
 
 		/// <summary>
@@ -128,7 +130,7 @@ namespace Krampus
 		/// <returns>True if focused, false otherwise.</returns>
 		virtual inline Bool HasFocus() const
 		{
-			return window.hasFocus();
+			return window->hasFocus();
 		}
 
 		/// <summary>
@@ -136,7 +138,7 @@ namespace Krampus
 		/// </summary>
 		virtual inline void RequestFocus()
 		{
-			window.requestFocus();
+			window->requestFocus();
 		}
 
 		/// <summary>
@@ -145,7 +147,7 @@ namespace Krampus
 		/// <returns>Active sf::View.</returns>
 		virtual inline sf::View GetView() const
 		{
-			return window.getView();
+			return window->getView();
 		}
 
 		/// <summary>
@@ -155,7 +157,7 @@ namespace Krampus
 		/// <returns>Pixel position.</returns>
 		inline IVector2 MapCoordsToPixel(const FVector2& _worldPos) const
 		{
-			return window.mapCoordsToPixel(_worldPos);
+			return window->mapCoordsToPixel(_worldPos);
 		}
 
 		/// <summary>
@@ -166,7 +168,7 @@ namespace Krampus
 		/// <returns>Pixel position.</returns>
 		inline IVector2 MapCoordsToPixel(const FVector2& _worldPos, const sf::View& _view) const
 		{
-			return window.mapCoordsToPixel(_worldPos, _view);
+			return window->mapCoordsToPixel(_worldPos, _view);
 		}
 
 		/// <summary>
@@ -176,7 +178,7 @@ namespace Krampus
 		/// <returns>World coordinates.</returns>
 		inline FVector2 MapPixelToCoords(const IVector2& _screenPos) const
 		{
-			return window.mapPixelToCoords(_screenPos);
+			return window->mapPixelToCoords(_screenPos);
 		}
 
 		/// <summary>
@@ -187,7 +189,7 @@ namespace Krampus
 		/// <returns>World coordinates.</returns>
 		inline FVector2 MapPixelToCoords(const IVector2& _screenPos, const sf::View& _view) const
 		{
-			return window.mapPixelToCoords(_screenPos, _view);
+			return window->mapPixelToCoords(_screenPos, _view);
 		}
 
 		/// <summary>
@@ -219,6 +221,44 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_name">Title of the window.</param>
 		virtual void Create(const String& _name = "KrampusEngine");
+
+		/// <summary>
+		/// Uses a window created and owned by the host application. Close() then leaves it open.
+		/// The window must outlive this object.
+		/// </summary>
+		/// <param name="_hostWindow">Already opened window.</param>
+		inline void Attach(sf::RenderWindow* _hostWindow)
+		{
+			window = _hostWindow;
+		}
+
+		/// <summary>
+		/// Declares the region of the window (in window pixels) that shows the game, e.g. the editor Viewport.
+		/// GetMousePosition then maps that region to the full window size, as if the game filled the window.
+		/// </summary>
+		/// <param name="_region">Region in window pixels.</param>
+		inline void SetMouseViewport(const sf::FloatRect& _region)
+		{
+			mouseViewport = _region;
+		}
+
+		/// <summary>
+		/// The game fills the window again.
+		/// </summary>
+		inline void ResetMouseViewport()
+		{
+			mouseViewport = sf::FloatRect();
+		}
+
+		/// <summary>
+		/// Gets the mouse position in game window pixels (relative to the window, corrected by the mouse viewport).
+		/// </summary>
+		IVector2 GetMousePosition() const;
+
+		/// <summary>
+		/// Moves the OS cursor to a position given in game window pixels (inverse of GetMousePosition).
+		/// </summary>
+		void SetMousePosition(const IVector2& _position);
 
 		/// <summary>
 		/// Clears the window render target with a background color.

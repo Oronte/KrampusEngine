@@ -35,6 +35,14 @@ namespace Krampus
 		/// </summary>
 		AudioManager();
 
+		/// <summary>
+		/// Drops every cached sound buffer. Call before the game DLL is unloaded, since buffers keep the audio device alive.
+		/// </summary>
+		inline void ClearCache()
+		{
+			cache.clear();
+		}
+
 	private:
 		std::string GetExtensionNameByType(const AudioExtensionType& _type) const;
 		std::shared_ptr<sf::SoundBuffer> LoadOrGetSoundBuffer(const String& _path);

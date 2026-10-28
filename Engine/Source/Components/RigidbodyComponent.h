@@ -102,6 +102,15 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_force">Force vector.</param>
 		/// <param name="_applyPoint">Local application point offset relative to center of mass.</param>
+		/// <summary>Sets the mass (kg, minimum 0.001) and recomputes the inertia.</summary>
+		void SetMass(const Float& _mass);
+
+		/// <summary>Gets the mass in kg.</summary>
+		inline Float GetMass() const
+		{
+			return mass;
+		}
+
 		void AddForce(const FVector2& _force, const FVector2& _applyPoint = FVector2::Zero());
 
 		/// <summary>

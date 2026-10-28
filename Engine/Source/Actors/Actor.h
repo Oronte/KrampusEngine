@@ -54,6 +54,42 @@ namespace Krampus
 		}
 
 		/// <summary>
+		/// Gets the child actors in this actor's hierarchy.
+		/// </summary>
+		inline const std::vector<Actor*>& GetChildren() const
+		{
+			return children;
+		}
+
+		/// <summary>
+		/// Gets the components attached to this actor.
+		/// </summary>
+		inline const std::vector<std::unique_ptr<Component>>& GetComponents() const
+		{
+			return components;
+		}
+
+		/// <summary>
+		/// Public version of CreateComponent, for code that adds components by name (scenes, editor, KCOMPONENT).
+		/// </summary>
+		template <typename Type, typename ...Args, IS_BASE_OF(Component, Type)>
+		inline Type* AddComponent(Args&&... _args)
+		{
+			return CreateComponent<Type>(std::forward<Args>(_args)...);
+		}
+
+		/// <summary>
+		/// Removes a component given by pointer (the editor does not know its type).
+		/// </summary>
+		inline void RemoveComponentInstance(Component* _component)
+		{
+			if (!_component) return;
+			_component->Deconstruct();
+			_component->BeginDestroy();
+			std::erase_if(components, [&](const std::unique_ptr<Component>& _item) { return _item.get() == _component; });
+		}
+
+		/// <summary>
 		/// Removes a child actor from this actor's hierarchy.
 		/// </summary>
 		/// <param name="_toRemove">Pointer to the child actor to remove.</param>

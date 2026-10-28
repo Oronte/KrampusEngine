@@ -18,6 +18,8 @@ namespace Krampus
 
 		void OnUpdate(const Float& _deltaTime) override
 		{
+			if (world->IsLevelPaused()) return;
+
 			if (Level* _level = world->GetLevelManager()->GetCurrentLevel())
 				_level->Update(_deltaTime);
 		}

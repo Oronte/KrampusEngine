@@ -76,5 +76,6 @@ Int Krampus::ShapeObject::GetPointCount() const
 
 void Krampus::ShapeObject::SetTexture(const String& _path, TextureExtensionType _textureType, const IRect& _rect, const Bool& _isRepeated, const Bool& _smooth)
 {
+	texturePath = _path;
 	M_TEXTURE.Load(this, _path, _textureType, _rect, _isRepeated, _smooth);
 }

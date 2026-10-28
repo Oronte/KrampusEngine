@@ -48,6 +48,16 @@ namespace Krampus
         void OnCollisionResolve();
 
 		/// <summary>
+		/// Body type as box2d numbers it: 0 static, 1 kinematic, 2 dynamic.
+		/// </summary>
+		int GetBodyType() const;
+
+		/// <summary>
+		/// Sets the body type (0 static, 1 kinematic, 2 dynamic).
+		/// </summary>
+		void SetBodyType(const int& _type);
+
+		/// <summary>
 		/// Configures the Box2D body type as dynamic (fully simulated by forces and gravity).
 		/// </summary>
         void SetDynamic();

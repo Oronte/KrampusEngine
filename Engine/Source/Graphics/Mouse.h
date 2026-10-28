@@ -56,7 +56,7 @@ namespace Krampus
 		/// <param name="_position">Target position in screen pixels.</param>
 		inline void SetScreenPosition(const IVector2& _position) noexcept
 		{
-			sf::Mouse::setPosition(_position);
+			GetWorld()->GetWindowRef().SetMousePosition(_position);
 			Update();
 		}
 
@@ -91,7 +91,7 @@ namespace Krampus
 		inline void Update()
 		{
 			lastPosition = position;
-			position = sf::Mouse::getPosition();
+			position = GetWorld()->GetWindowRef().GetMousePosition();
 		}
 	};
 

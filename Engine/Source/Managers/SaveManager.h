@@ -112,6 +112,16 @@ public:
     /// </summary>
     /// <param name="name">Save slot name.</param>
     /// <returns>Loaded SaveNode root.</returns>
+    /// <summary>
+    /// Same as Save/Load but at an explicit file path (any extension, any folder), e.g. scenes (.ka7).
+    /// </summary>
+    NO_DISCARD static SaveResult SaveToFile(const std::filesystem::path& path,
+                                            const SaveNode& root,
+                                            const Bool& compress = Bool::False());
+
+    NO_DISCARD static SaveResult LoadFromFile(const std::filesystem::path& path,
+                                              SaveNode& outRoot);
+
     NO_DISCARD static SaveNode LoadOrThrow(const String& name);
 
     /// <summary>
