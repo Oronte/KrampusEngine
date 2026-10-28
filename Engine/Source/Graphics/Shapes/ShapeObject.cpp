@@ -28,8 +28,10 @@ Krampus::ShapeObject::ShapeObject(const RectangleShapeData& _data)
 
 void Krampus::ShapeObject::SetSize(const FVector2& _size)
 {
-	if (shapeType != ShapeType::Rectangle) shape = std::make_unique<RectangleShape>(_size);
-	else Cast<RectangleShape>(shape.get())->SetSize(_size);
+	if (shapeType != ShapeType::Rectangle) SetShapeType(ShapeType::Rectangle);
+	Cast<RectangleShape>(shape.get())->SetSize(_size);
+	sizeData.size = _size;
+	shape->SetOriginAtMiddle();
 }
 
 FVector2 Krampus::ShapeObject::GetSize() const
@@ -44,8 +46,10 @@ FVector2 Krampus::ShapeObject::GetSize() const
 
 void Krampus::ShapeObject::SetRadius(const float& _radius)
 {
-	if (shapeType != ShapeType::Circle) shape = std::make_unique<CircleShape>(_radius);
-	else Cast<CircleShape>(shape.get())->SetRadius(_radius);
+	if (shapeType != ShapeType::Circle) SetShapeType(ShapeType::Circle);
+	Cast<CircleShape>(shape.get())->SetRadius(_radius);
+	sizeData.radius = _radius;
+	shape->SetOriginAtMiddle();
 }
 
 Float Krampus::ShapeObject::GetRadius() const
@@ -60,8 +64,8 @@ Float Krampus::ShapeObject::GetRadius() const
 
 void Krampus::ShapeObject::SetPointCount(const size_t& _pointCount)
 {
-	if (shapeType != ShapeType::Circle) shape = std::make_unique<CircleShape>(50.0f, _pointCount);
-	else Cast<CircleShape>(shape.get())->SetPointCount(_pointCount);
+	if (shapeType != ShapeType::Circle) SetShapeType(ShapeType::Circle);
+	Cast<CircleShape>(shape.get())->SetPointCount(_pointCount);
 }
 
 Int Krampus::ShapeObject::GetPointCount() const
@@ -77,5 +81,38 @@ Int Krampus::ShapeObject::GetPointCount() const
 void Krampus::ShapeObject::SetTexture(const String& _path, TextureExtensionType _textureType, const IRect& _rect, const Bool& _isRepeated, const Bool& _smooth)
 {
 	texturePath = _path;
+	textureType = _textureType;
 	M_TEXTURE.Load(this, _path, _textureType, _rect, _isRepeated, _smooth);
+}
+
+
+void Krampus::ShapeObject::SetShapeType(const ShapeType& _type)
+{
+	if (_type == shapeType) return;
+
+	const FVector2	_position	= shape->GetPosition();
+	const Angle		_rotation	= shape->GetRotation();
+	const FVector2	_scale		= shape->GetScale();
+	const Color		_fill		= shape->GetFillColor();
+
+	if (_type == ShapeType::Rectangle)
+	{
+		const FVector2 _size(sizeData.radius * 2.0f, sizeData.radius * 2.0f);
+		shape = std::make_unique<RectangleShape>(_size);
+		sizeData.size = _size;
+	}
+	else
+	{
+		const float _radius = std::min(sizeData.size.x, sizeData.size.y) * 0.5f;
+		shape = std::make_unique<CircleShape>(_radius, 30);
+		sizeData.radius = _radius;
+	}
+	shapeType = _type;
+
+	shape->SetOriginAtMiddle();
+	shape->SetPosition(_position);
+	shape->SetRotation(_rotation);
+	shape->SetScale(_scale);
+	shape->SetFillColor(_fill);
+	SetTexture(texturePath, textureType);	// the new shape needs the texture again
 }

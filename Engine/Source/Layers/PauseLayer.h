@@ -20,6 +20,7 @@ namespace Krampus
 
 		void SetPaused(const bool& _paused)
 		{
+			if (paused != _paused) LOG_MSG(_paused ? "Pause: game paused" : "Pause: game resumed");
 			paused = _paused;
 		}
 

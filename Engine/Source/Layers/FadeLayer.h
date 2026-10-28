@@ -75,6 +75,7 @@ namespace Krampus
 
 		void OnLevelChanged()
 		{
+			LOG(VerbosityType::Log, "Fade: new level, fading in");
 			alpha = 1.f;
 			FadeIn(levelFadeTime);
 		}

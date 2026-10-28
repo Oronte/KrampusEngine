@@ -63,6 +63,7 @@ void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_screenPos)
 
 void Krampus::ButtonWidgetComponent::OnClick()
 {
+    if (isHovered) LOG(VerbosityType::Log, "Button: pressed on " + owner->GetName().StdString());
     if (!isPressed && isHovered) onPress.Broadcast();
     isPressed = isHovered;
 }

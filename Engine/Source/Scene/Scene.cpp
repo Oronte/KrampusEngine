@@ -33,12 +33,17 @@ namespace
 		case PropertyType::Bool:
 			if (auto _v = _node.TryGet<Bool>(_key)) return PropertyValue(static_cast<bool>(*_v));
 			break;
+		case PropertyType::Flags:
+		case PropertyType::Enum:
 		case PropertyType::Int:
 			if (auto _v = _node.TryGet<Int>(_key)) return PropertyValue(static_cast<int>(*_v));
 			break;
 		case PropertyType::Float:
 			if (auto _v = _node.TryGet<Float>(_key)) return PropertyValue(static_cast<float>(*_v));
 			break;
+		case PropertyType::Texture:
+		case PropertyType::Font:
+		case PropertyType::Sound:
 		case PropertyType::String:
 			if (auto _v = _node.TryGet<String>(_key)) return PropertyValue(_v->StdString());
 			break;
@@ -262,6 +267,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path)
 
 bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 {
+	LOG(VerbosityType::Log, "Scene: reading " + _path.generic_string());
 	SaveNode _root;
 	const SaveResult _result = SaveManager::LoadFromFile(_path, _root);
 	if (_result != SaveResult::Success)
@@ -289,6 +295,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		_actors[_i] = _actor;
 		ReadComponents(*_actor, _node);
 		ReadCommon(_node, *_actor);
+		LOG(VerbosityType::Log, "Scene: actor " + _actor->GetName().StdString() + " (" + _className + ", " + std::to_string(_actor->GetComponents().size()) + " components)");
 	}
 	LinkParents(_actorNodes, _actors); // every actor exists now
 
@@ -311,8 +318,11 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		_widgets[_i] = _widget;
 		ReadComponents(*_widget, _node);	// before the transform: components follow their owner
 		ReadCommon(_node, *_widget);
+		LOG(VerbosityType::Log, "Scene: widget " + _widget->GetName().StdString() + " (" + _className + ", " + std::to_string(_widget->GetComponents().size()) + " components)");
 	}
 	LinkParents(_widgetNodes, _widgets);
+
+	LOG_MSG("Scene: loaded " + _path.generic_string() + " (" + std::to_string(_actorNodes.size()) + " actors, " + std::to_string(_widgetNodes.size()) + " widgets)");
 
 	return true;
 }
@@ -327,6 +337,7 @@ std::filesystem::path Scene::Resolve(const std::string& _nameOrPath)
 
 void Scene::Open(Engine& _engine, const std::string& _nameOrPath)
 {
+	LOG_MSG("Scene: opening " + Resolve(_nameOrPath).generic_string());
 	_engine.GetLevelManager()->SetLevel<SceneLevel>()->SetScenePath(Resolve(_nameOrPath));
 }
 

@@ -28,6 +28,7 @@ namespace Krampus
 			layers.emplace(layers.begin() + overlayStart, _layer);
 			++overlayStart;
 			_layer->OnAttach();
+			LOG(VerbosityType::Log, "LayerStack: attached " + std::string(typeid(Type).name()));
 			return _layer;
 		}
 
@@ -41,6 +42,7 @@ namespace Krampus
 			Type* _layer = new Type(std::forward<Args>(_args)...);
 			layers.emplace_back(_layer);
 			_layer->OnAttach();
+			LOG(VerbosityType::Log, "LayerStack: attached " + std::string(typeid(Type).name()));
 			return _layer;
 		}
 
@@ -55,6 +57,7 @@ namespace Krampus
 			if (static_cast<size_t>(_it - layers.begin()) < overlayStart)
 				--overlayStart;
 
+			LOG(VerbosityType::Log, "LayerStack: detaching " + std::string(typeid(**_it).name()));
 			(*_it)->OnDetach();
 			layers.erase(_it);
 		}
@@ -66,6 +69,7 @@ namespace Krampus
 		{
 			while (!layers.empty())
 			{
+				LOG(VerbosityType::Log, "LayerStack: detaching " + std::string(typeid(*layers.back()).name()));
 				layers.back()->OnDetach();
 				layers.pop_back();
 			}

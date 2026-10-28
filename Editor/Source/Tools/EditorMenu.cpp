@@ -3,6 +3,11 @@
 #include "Managers/LevelManager.h"
 #include <imgui.h>
 
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <shellapi.h>
+
 using namespace Krampus;
 
 Level* EditorContext::GetLevel() const
@@ -17,6 +22,7 @@ void Krampus::NewScene(EditorContext& _context)
 
 void Krampus::OpenScene(EditorContext& _context, const std::filesystem::path& _path)
 {
+	LOG_MSG(_path.empty() ? std::string("Editor: new scene") : "Editor: opening scene " + _path.generic_string());
 	// The level is swapped at the start of the next frame, so this is safe to call from a panel.
 	_context.engine->GetLevelManager()->SetLevel<SceneLevel>()->SetScenePath(_path);
 	_context.scenePath = _path;
@@ -32,6 +38,7 @@ void Krampus::OpenScene(EditorContext& _context, const std::filesystem::path& _p
 bool Krampus::SaveScene(EditorContext& _context, const std::filesystem::path& _path)
 {
 	Level* _level = _context.GetLevel();
+	LOG(VerbosityType::Log, "Editor: saving scene to " + _path.generic_string());
 	if (!_level || !Scene::Save(*_level, _path)) return false;
 
 	_context.scenePath = _path;
@@ -43,11 +50,13 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 	// The scene being edited is the one the level was made from (the game opens its first scene by itself).
 	if (!_context.playing)
 		if (const SceneLevel* _sceneLevel = Cast<SceneLevel>(_context.GetLevel()))
-			if (_sceneLevel->GetScenePath() != _context.scenePath && _sceneLevel->GetScenePath() != PLAY_SNAPSHOT_PATH && !_sceneLevel->GetScenePath().empty())
+			if (_sceneLevel->GetScenePath() != _context.scenePath && _sceneLevel->GetScenePath() != PLAY_SNAPSHOT_PATH && _sceneLevel->GetScenePath() != RELOAD_BACKUP_PATH && !_sceneLevel->GetScenePath().empty())
 				_context.scenePath = _sceneLevel->GetScenePath();
 
 	static char _saveAsName[128] = "";
 	bool _openSaveAs = false;
+
+	PumpCompile();
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -96,6 +105,19 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 		const std::string _title = _context.scenePath.empty() ? "Untitled scene (not saved)" : _context.scenePath.string();
 		ImGui::SameLine(0.f, 24.f);
 		ImGui::TextDisabled("%s", _title.c_str());
+
+		ImGui::SameLine(std::max(ImGui::GetCursorPosX() + 16.f, ImGui::GetWindowWidth() - 270.f));
+		ImGui::BeginDisabled(IsCompiling());
+		if (ImGui::Button(IsCompiling() ? "Compiling..." : "Compile", ImVec2(100.f, 0.f)))
+			StartCompile();
+		ImGui::EndDisabled();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip("Builds the game (EditorModule). When it is done the editor reloads it by itself, with your scene.");
+		ImGui::SameLine();
+		if (ImGui::Button("Open Solution"))
+			OpenSolution();
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Open the Visual Studio solution. Build EditorModule there (Ctrl+B): the editor reloads the game by itself.");
 		ImGui::EndMainMenuBar();
 	}
 

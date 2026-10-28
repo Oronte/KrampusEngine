@@ -20,6 +20,7 @@ std::shared_ptr<sf::SoundBuffer> Krampus::AudioManager::LoadOrGetSoundBuffer(con
 	if (!_buffer->loadFromFile(_path.StdString()))
 		THROW_EXCEPTION("Cannot load sound: " + _path);
 
+	LOG(VerbosityType::Log, "Audio: loaded " + _path.StdString() + " (" + std::to_string(_buffer->getDuration().asSeconds()) + " s)");
 	cache.emplace(_path, _buffer);
 	return _buffer;
 }
@@ -31,6 +32,7 @@ Krampus::Sound Krampus::AudioManager::CreateSound(const String& _fileName, const
 
 Krampus::Music Krampus::AudioManager::CreateMusic(const String& _fileName, const AudioExtensionType& _type)
 {
+	LOG(VerbosityType::Log, "Audio: opening music " + _fileName.StdString());
 	Music _music;
 	if (!_music.Open(audioPath + _fileName + GetExtensionNameByType(_type)))
 		LOG_ERROR("Cannot load music: " + _fileName);

@@ -46,6 +46,7 @@ namespace Krampus
 		inline LevelType* SetLevel()
 		{
 			levelFactory = [this]() -> std::unique_ptr<Level> { return std::make_unique<LevelType>(GetWorld()); };
+			LOG(VerbosityType::Log, "LevelManager: next level will be " + std::string(typeid(LevelType).name()));
 			pendingAddLevel = std::make_unique<LevelType>(GetWorld());
 			return Cast<LevelType>(pendingAddLevel.get());
 		}
@@ -55,6 +56,7 @@ namespace Krampus
 		/// </summary>
 		inline void ReloadLevel()
 		{
+			LOG(VerbosityType::Log, "LevelManager: reload requested");
 			if (levelFactory)
 				pendingAddLevel = levelFactory();
 		}
@@ -67,6 +69,8 @@ namespace Krampus
 		{
 			if (!pendingAddLevel.get())
 				return Bool::False();
+
+			LOG_MSG("LevelManager: switching level");
 
 			if (currentLevel.get()) 
 				currentLevel->Unload();

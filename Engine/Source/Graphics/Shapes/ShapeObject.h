@@ -84,6 +84,7 @@ namespace Krampus
 		ShapeType				shapeType;
 		ShapeSizeData			sizeData;
 		String					texturePath;
+		TextureExtensionType	textureType	= TextureExtensionType::PNG;
 
 	public:
 		/// <summary>
@@ -178,6 +179,18 @@ namespace Krampus
 		/// <param name="_rect">Sub-rectangle coordinates.</param>
 		/// <param name="_isRepeated">Whether texture repeats/tiles.</param>
 		/// <param name="_smooth">Whether bilinear filtering is enabled.</param>
+		/// <summary>Extension type last given to SetTexture.</summary>
+		inline TextureExtensionType GetTextureType() const
+		{
+			return textureType;
+		}
+
+		/// <summary>
+		/// Turns the shape into a circle or a rectangle, keeping its transform, color and texture.
+		/// The new shape is as big as the old one (a circle of radius r becomes a square of side 2r).
+		/// </summary>
+		void SetShapeType(const ShapeType& _type);
+
 		/// <summary>Path last given to SetTexture (empty if none).</summary>
 		inline const String& GetTexturePath() const
 		{

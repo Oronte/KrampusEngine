@@ -29,7 +29,12 @@ namespace Krampus
 		Float,
 		String,
 		Vector2,
-		Color
+		Color,
+		Flags,		// stored as an int: one bit per name in PropertyInfo::flagNames, shown as check boxes
+		Enum,		// stored as an int: index in PropertyInfo::flagNames, shown as a drop-down list
+		Texture,	// stored as a string ("Folder/Name.png", relative to Content/Textures), picked from a list of pictures
+		Font,		// stored as a string ("Folder/Name.ttf", relative to Content/Fonts), picked from a list
+		Sound		// stored as a string ("Folder/Name.mp3", relative to Content/Audio, empty = none), picked from a list
 	};
 
 	/// <summary>
@@ -45,6 +50,7 @@ namespace Krampus
 		float														min			= 0.f;	// min == max: no limit
 		float														max			= 0.f;
 		bool														readOnly	= false;
+		std::vector<std::string>									flagNames;	// for Flags: name of bit 0, bit 1... ; for Enum: name of value 0, 1...
 	};
 
 	namespace Reflection
@@ -130,6 +136,16 @@ namespace Krampus
 				_set(*static_cast<Class*>(_object), Reflection::FromValue<T>(_value));
 			};
 			properties.push_back(std::move(_property));
+		}
+
+		/// <summary>
+		/// Changes how the last added property is shown and saved: an int becomes Flags (check boxes named _flagNames),
+		/// a string becomes a Texture (picked from the Content/Textures list).
+		/// </summary>
+		void SetLastPropertyType(const PropertyType& _type, std::vector<std::string> _flagNames = { })
+		{
+			properties.back().type = _type;
+			properties.back().flagNames = std::move(_flagNames);
 		}
 
 		template <typename Class, typename T>

@@ -46,6 +46,8 @@ namespace Krampus
 
         sf::Text    text;
         Font        font;
+        String              fontFileName    = "_internal/DefaultFont";
+        FontExtensionType   fontType        = FontExtensionType::OTF;
 
     public:
 
@@ -57,6 +59,8 @@ namespace Krampus
             : text(font, _data.text.StdString(), _data.characterSize)
         {
             M_FONT.LoadFont(font, _data.fontFileName, _data.extentionType);
+            fontFileName = _data.fontFileName;
+            fontType = _data.extentionType;
             SetOriginAtMiddle();
         }
 
@@ -87,7 +91,21 @@ namespace Krampus
         inline void SetFont(const String& _fileName, const FontExtensionType& _type)
         {
             M_FONT.LoadFont(font, _fileName, _type);
+            fontFileName = _fileName;
+            fontType = _type;
             SetOriginAtMiddle();
+        }
+
+        /// <summary>Name of the font file last loaded, without extension ("_internal/DefaultFont").</summary>
+        inline const String& GetFontFileName() const
+        {
+            return fontFileName;
+        }
+
+        /// <summary>Extension type of the font file last loaded.</summary>
+        inline FontExtensionType GetFontType() const
+        {
+            return fontType;
         }
 
         /// <summary>

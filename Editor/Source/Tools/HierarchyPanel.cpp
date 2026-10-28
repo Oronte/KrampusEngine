@@ -44,6 +44,7 @@ namespace
 		{
 			_context.selectedWidget = _widget;
 			_context.selected = nullptr;
+			LOG(VerbosityType::Log, "Hierarchy: selected widget " + _widget->GetName().StdString());
 		}
 
 		if (ImGui::BeginPopupContextItem())
@@ -73,6 +74,7 @@ namespace
 		{
 			_state.context->selected = _actor;
 			_state.context->selectedWidget = nullptr;
+			LOG(VerbosityType::Log, "Hierarchy: selected actor " + _actor->GetName().StdString());
 		}
 
 		if (ImGui::BeginDragDropSource())
@@ -148,6 +150,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					if (!ImGui::MenuItem(_class->name.c_str())) continue;
 
 					Actor* _actor = _class->factory(_level);
+					LOG_MSG("Hierarchy: added actor " + _class->name);
 					const CameraComponent* _camera = _level->GetDefaultCamera();
 					if (_camera && _camera->GetOwner())
 						_actor->SetPosition(_camera->GetOwner()->GetPosition()); // where the Viewport looks
@@ -176,6 +179,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					{
 						if (!ImGui::MenuItem(_class->name.c_str())) continue;
 						_context.selectedWidget = _class->widgetFactory(_level);
+						LOG_MSG("Hierarchy: added widget " + _class->name);
 						_context.selected = nullptr;
 					}
 					ImGui::EndPopup();
@@ -202,6 +206,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 				if (_widgetToDelete)
 				{
+					LOG_MSG("Hierarchy: deleting widget " + _widgetToDelete->GetName().StdString());
 					if (_context.selectedWidget == _widgetToDelete) _context.selectedWidget = nullptr;
 					for (const std::unique_ptr<Widget>& _other : _level->GetHUD().GetWidgets())
 						_other->RemoveChild(_widgetToDelete);
@@ -228,6 +233,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				const bool _cycle = _state.dropTarget && IsDescendantOf(_state, _state.dropTarget, _state.dragged);
 				if (!_cycle)
 				{
+					LOG_MSG("Hierarchy: " + _state.dragged->GetName().StdString() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName().StdString() : std::string(" detached")));
 					if (_old != _state.parentOf.end()) _old->second->RemoveChild(_state.dragged);
 					if (_state.dropTarget) _state.dropTarget->AddChild(_state.dragged);
 				}
@@ -235,6 +241,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 			if (_state.toDelete)
 			{
+				LOG_MSG("Hierarchy: deleting actor " + _state.toDelete->GetName().StdString());
 				const auto _parent = _state.parentOf.find(_state.toDelete);
 				if (_parent != _state.parentOf.end()) _parent->second->RemoveChild(_state.toDelete);
 				if (_context.selected == _state.toDelete) _context.selected = nullptr;

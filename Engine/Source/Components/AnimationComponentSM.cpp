@@ -90,6 +90,13 @@ void Krampus::AnimationComponentSM::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
+	if (!clipStarted)
+	{
+		clipStarted = true;
+		if (animations.empty()) ApplyClip();
+		if (playOnBeginPlay && current) current->Start();
+	}
+
 	if (!current) return;
 	AnimationSM* _nextAnim = current->GetNextAnimation();
 	if (!_nextAnim) return;
@@ -104,4 +111,30 @@ std::string Krampus::AnimationComponentSM::ToString() const
 	for (auto& [_key, _anim] : animations)
 		_animationsName += _key + ", ";
 	return name + std::format(" -> Animations Count = {} : ", animations.size()) + _animationsName;
+}
+
+void Krampus::AnimationComponentSM::ApplyClip()
+{
+	if (clip.frameCount <= 0 || !owner->GetComponent<SpriteComponent>()) return;
+
+	if (const auto _old = animations.find(appliedClip); _old != animations.end())
+	{
+		if (current == _old->second.get())
+		{
+			current->Stop();
+			current = nullptr;
+		}
+		animations.erase(_old);
+	}
+
+	if (animations.contains(clip.name))
+	{
+		LOG_WARNING("AnimationComponentSM: an animation named \"" + clip.name + "\" already exists, the clip was not applied");
+		return;
+	}
+
+	AddAnimation(clip.name, clip.ToData());
+	appliedClip = clip.name;
+	current = GetAnimation(clip.name);
+	clipStarted = false;
 }

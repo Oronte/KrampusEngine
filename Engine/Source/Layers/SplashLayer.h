@@ -40,19 +40,27 @@ namespace Krampus
 				LOG_WARNING("Splash image not found: " + path);
 				Close();
 			}
+			else
+				LOG(VerbosityType::Log, "Splash: showing " + path);
 		}
 
 		void OnUpdate(const Float& _deltaTime) override
 		{
 			elapsed += static_cast<float>(_deltaTime);
 			if (elapsed >= holdTime + 2.f * FADE_TIME)
+			{
+				if (!IsClosed()) LOG(VerbosityType::Log, "Splash: finished");
 				Close();
+			}
 		}
 
 		Bool OnEvent(const sf::Event& _event) override
 		{
 			if (_event.is<sf::Event::KeyPressed>() || _event.is<sf::Event::MouseButtonPressed>())
+			{
+				if (!IsClosed()) LOG(VerbosityType::Log, "Splash: skipped");
 				Close();
+			}
 			return true;
 		}
 

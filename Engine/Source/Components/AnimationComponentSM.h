@@ -49,6 +49,19 @@ namespace Krampus
 	{
 		AnimationSM*												current		= nullptr;
 		std::unordered_map<String, std::unique_ptr<AnimationSM>>	animations;
+		String				appliedClip;	// name of the animation made from clip, so it can be replaced
+		bool				clipStarted	= false;
+
+	public:
+		/// <summary>Animation described by plain values (Inspector, scenes). Call ApplyClip after changing it.</summary>
+		AnimationClip		clip;
+
+		/// <summary>Starts the clip animation when the level starts.</summary>
+		Bool				playOnBeginPlay	= false;
+
+		/// <summary>(Re)creates the animation described by clip on the sprite of the owner and makes it the current one.</summary>
+		void ApplyClip();
+
 
 	public:
 		/// <summary>

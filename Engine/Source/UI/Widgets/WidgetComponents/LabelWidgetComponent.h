@@ -42,6 +42,16 @@ namespace Krampus
 
         /// <summary>Gets the font used by text.</summary>
         /// <returns>Const reference to Font.</returns>
+        inline const String& GetFontFileName() const
+        {
+            return text.GetFontFileName();
+        }
+
+        inline FontExtensionType GetFontType() const
+        {
+            return text.GetFontType();
+        }
+
         inline const Font& GetFont() const
         {
             return text.GetFont();

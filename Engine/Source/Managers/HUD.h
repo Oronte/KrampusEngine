@@ -56,6 +56,7 @@ namespace Krampus
 			Type* _rawWidget = _widget.get();
 			widgets.push_back(std::move(_widget));
 			_rawWidget->Construct();
+			LOG(VerbosityType::Log, "HUD: widget created " + _rawWidget->GetName().StdString() + " (" + std::string(typeid(Type).name()) + ")");
 			return _rawWidget;
 		}
 
@@ -76,6 +77,7 @@ namespace Krampus
 			if (it == widgets.end())
 				return;
 
+			LOG(VerbosityType::Log, "HUD: widget destroyed " + (*it)->GetName().StdString());
 			pendingDeleteWidgets.push_back(std::move(*it));
 
 			widgets.erase(it);

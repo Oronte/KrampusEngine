@@ -36,3 +36,41 @@ std::string Krampus::AnimationWidgetComponent::ToString() const
         _animationsName += _key + ", ";
     return name + std::format(" -> Animations Count = {} : ", animations.size()) + _animationsName;
 }
+
+
+void Krampus::AnimationWidgetComponent::ApplyClip()
+{
+    if (clip.frameCount <= 0 || !owner->GetComponent<ImageWidgetComponent>()) return;
+
+    if (const auto _old = animations.find(appliedClip); _old != animations.end())
+    {
+        if (current == _old->second.get())
+        {
+            current->Stop();
+            current = nullptr;
+        }
+        animations.erase(_old);
+    }
+
+    if (animations.contains(clip.name))
+    {
+        LOG_WARNING("AnimationWidgetComponent: an animation named \"" + clip.name + "\" already exists, the clip was not applied");
+        return;
+    }
+
+    AddAnimation(clip.name, clip.ToData());
+    appliedClip = clip.name;
+    SetCurrentAnimation(clip.name);
+    clipStarted = false;
+}
+
+void Krampus::AnimationWidgetComponent::Tick(const Float& _deltaTime)
+{
+    WidgetComponent::Tick(_deltaTime);
+
+    if (clipStarted) return;
+    clipStarted = true;
+
+    if (animations.empty()) ApplyClip();
+    if (playOnBeginPlay) StartAnimation();
+}

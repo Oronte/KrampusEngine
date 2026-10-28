@@ -139,6 +139,11 @@ namespace Krampus
 		/// Sets the dimensions of the rectangular collision shape.
 		/// </summary>
 		/// <param name="_size">New box dimensions.</param>
+		/// <summary>
+		/// Turns the collision shape into a circle or a rectangle of about the same size.
+		/// </summary>
+		void SetShapeType(const ShapeType& _type);
+
 		void SetSize(const FVector2& _size);
 
 		/// <summary>

@@ -19,11 +19,20 @@ namespace Krampus
 
 	public:
 		/// <summary>
+		/// Gets the camera the level is drawn with (nullptr until the first render).
+		/// </summary>
+		inline CameraComponent* GetCurrent() const
+		{
+			return current;
+		}
+
+		/// <summary>
 		/// Sets the currently active rendering camera.
 		/// </summary>
 		/// <param name="_camera">Pointer to CameraComponent.</param>
 		inline void SetCurrent(CameraComponent* _camera)
 		{
+			LOG(VerbosityType::Log, std::string("Camera: current camera changed to ") + (_camera && _camera->GetOwner() ? _camera->GetOwner()->GetName().StdString() : std::string("none")));
 			current = _camera;
 		}
 

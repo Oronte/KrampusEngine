@@ -54,6 +54,28 @@ namespace Krampus
     };
 
     /// <summary>
+    /// One animation described by plain values, so it can be edited in the Inspector and saved in a scene:
+    /// frames are cut from a sprite sheet, starting at frameOrigin, each frameSize big.
+    /// </summary>
+    struct AnimationClip
+    {
+        String      name        = "Default";
+        Int         frameCount  = 0;            // 0 = no animation
+        Float       duration    = 1.0f;         // seconds for the whole animation
+        FVector2    frameOrigin = FVector2(0.0f, 0.0f);
+        FVector2    frameSize   = FVector2(64.0f, 64.0f);
+        Int         direction   = 0;            // ReadDirection: 0 row, 1 row reversed, 2 column, 3 column reversed
+        Bool        loop        = true;
+
+        AnimationData ToData() const
+        {
+            return AnimationData(frameCount, duration,
+                IRect(IVector2(CAST(int, frameOrigin.x), CAST(int, frameOrigin.y)), IVector2(CAST(int, frameSize.x), CAST(int, frameSize.y))),
+                loop, CAST(ReadDirection, CAST(int, direction)));
+        }
+    };
+
+    /// <summary>
     /// Controls timed frame sequencing on a 2D ShapeObject sprite.
     /// </summary>
     class Animation : public KrampusObject

@@ -37,6 +37,8 @@ void Krampus::FontManager::LoadFont(Font& _font, const String& _fullName)
 		LOG(VerbosityType::Error, "Cannot open file with the following path : \'" + _finalPath + "\' !");
 		SetFontToDefault(_font);
 	}
+	else
+		LOG(VerbosityType::Log, "Font: loaded " + _finalPath);
 }
 
 void Krampus::FontManager::LoadFont(Font& _font, const String& _fileName, const FontExtensionType& _fontType)
@@ -48,4 +50,6 @@ void Krampus::FontManager::LoadFont(Font& _font, const String& _fileName, const 
 		LOG(VerbosityType::Error, "Cannot open file with the following path : \'" + _finalPath + "\' !");
 		SetFontToDefault(_font);
 	}
+	else
+		LOG(VerbosityType::Log, "Font: loaded " + _finalPath);
 }

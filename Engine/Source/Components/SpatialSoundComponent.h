@@ -27,6 +27,15 @@ namespace Krampus
 		/// </summary>
 		Bool playOnBeginPlay	= false;
 
+		/// <summary>Sound file shown in the Inspector (name without extension, empty = silent) and its format.</summary>
+		String soundFile;
+		AudioExtensionType soundType = AudioExtensionType::MP3;
+
+		/// <summary>
+		/// Replaces the sound by a file of Content/Audio, keeping volume, loop, pitch and attenuation. An empty name or a missing file makes it silent.
+		/// </summary>
+		void SetSoundFile(const String& _fileName, const AudioExtensionType& _type);
+
 	public:
 		/// <summary>
 		/// Constructs a SpatialSoundComponent attached to the specified actor.
@@ -58,6 +67,11 @@ namespace Krampus
 		/// <param name="_deltaTime">Elapsed frame time in seconds.</param>
 		virtual void Tick(const Float& _deltaTime) override;
 
+	private:
+		void ApplySpatialSettings();
+
+	public:
+
 		/// <summary>
 		/// Gets the volume of the sound in the range [0, 100].
 		/// </summary>
@@ -81,6 +95,7 @@ namespace Krampus
 		/// </summary>
 		inline virtual void Play() 
 		{
+			LOG(VerbosityType::Log, "Sound: play '" + soundFile.StdString() + "' on " + GetName().StdString());
 			sound.Play();
 		}
 
@@ -97,6 +112,7 @@ namespace Krampus
 		/// </summary>
 		inline virtual void Stop() 
 		{
+			LOG(VerbosityType::Log, "Sound: stop '" + soundFile.StdString() + "' on " + GetName().StdString());
 			sound.Stop();
 		}
 

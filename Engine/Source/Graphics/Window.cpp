@@ -17,12 +17,14 @@ void Krampus::Window::SetView(const CameraComponent* _camera)
 
 void Krampus::Window::Create(const String& _name, const UVector2& _windowSize)
 {
+	LOG_MSG("Window: creating '" + _name.StdString() + "' " + std::to_string(_windowSize.x) + "x" + std::to_string(_windowSize.y));
 	window->create(sf::VideoMode(_windowSize),
 		CAST(sf::String, _name.ToCharPtr()), sf::Style::None);
 }
 
 void Krampus::Window::Create(const String& _name)
 {
+	LOG_MSG("Window: creating '" + _name.StdString() + "' at the desktop size");
 	window->create(sf::VideoMode::getDesktopMode(),
 		CAST(sf::String, _name.ToCharPtr()), sf::Style::None);
 }

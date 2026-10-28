@@ -55,6 +55,7 @@ target_link_libraries(EditorModule PRIVATE
 )
 
 target_compile_definitions(EditorModule PRIVATE
+    KRAMPUS_CMAKE_COMMAND=\"${CMAKE_COMMAND}\"
     $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>:RELEASE>
     $<$<CONFIG:Ship>:RELEASE>
@@ -68,6 +69,8 @@ endif()
 set_target_properties(EditorModule PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
     PDB_OUTPUT_DIRECTORY "${BIN_DIR}"
+    # A new PDB name at every link: the running editor keeps the PDB of the DLL it loaded, so Visual Studio could not write it again.
+    LINK_FLAGS "/PDB:\"$(OutDir)EditorModule_$([System.DateTime]::Now.ToString('HHmmssfff')).pdb\""
 )
 
 # ---------------------------------------------------------------------------------------------------------------

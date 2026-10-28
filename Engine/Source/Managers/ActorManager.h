@@ -57,6 +57,7 @@ namespace Krampus
 			actors.push_back(std::move(_actor));
 			_rawActor->Construct();
 			if (isPlaying) _rawActor->BeginPlay();
+			LOG(VerbosityType::Log, "Actor: spawned " + _rawActor->GetName().StdString() + " (" + std::string(typeid(Type).name()) + ")");
 			return _rawActor;
 		}
 
@@ -76,6 +77,7 @@ namespace Krampus
 			_rawActor->SetTransform(_transform);
 			_rawActor->Construct();
 			if (isPlaying) _rawActor->BeginPlay();
+			LOG(VerbosityType::Log, "Actor: spawned " + _rawActor->GetName().StdString() + " (" + std::string(typeid(Type).name()) + ")");
 			return _rawActor;
 		}
 
@@ -96,6 +98,7 @@ namespace Krampus
 			if (it == actors.end())
 				return;
 
+			LOG(VerbosityType::Log, "Actor: destroyed " + (*it)->GetName().StdString());
 			pendingDeleteActors.push_back(std::move(*it));
 
 			actors.erase(it);

@@ -1,8 +1,13 @@
 #include "EditorLayer.h"
 #include "Layers/ScreenSpace.h"
+#include "EditorThumbnails.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui-SFML.h>
+#include "GameFramework/Level.h"
+#include "Components/CameraComponent.h"
+#include "Actors/Actor.h"
+#include "UI/Widgets/Widget.h"
 
 using namespace Krampus;
 
@@ -23,6 +28,7 @@ namespace
 
 void EditorLayer::OnAttach()
 {
+	LOG_MSG("Editor: starting");
 	std::filesystem::create_directories(std::filesystem::path(iniPath).parent_path());
 
 	initialized = ImGui::SFML::Init(window.GetRenderWindow());
@@ -43,6 +49,9 @@ void EditorLayer::OnAttach()
 
 void EditorLayer::OnDetach()
 {
+	LOG_MSG(std::string("Editor: stopping") + (IsHotReloading() ? " (hot reload)" : ""));
+	if (IsHotReloading()) SaveSession(context);
+	ClearThumbnails();
 	Logger::collectEntries = false;
 	context.engine->SetLevelPaused(false);
 	window.ResetMouseViewport();
@@ -194,4 +203,111 @@ void EditorLayer::DrawConsole()
 		ImGui::EndChild();
 	}
 	ImGui::End();
+}
+
+
+// Move arrows on the selected actor (or HUD widget): drag the red arrow for X, the green one for Y, the square for both.
+// The arrows are drawn in the Viewport; the position is converted back to the game world through the view the level is drawn with.
+void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
+{
+	if (context.playing) return;
+	Level* _level = context.GetLevel();
+	if (!_level) return;
+
+	ITransformable* _target = nullptr;
+	sf::View _view;
+	if (context.selectedWidget)
+	{
+		_target = context.selectedWidget;
+		_view = _level->GetHUD().GetView();
+	}
+	else if (context.selected)
+	{
+		CameraComponent* _camera = _level->GetCameraManager().GetCurrent();
+		if (!_camera) _camera = _level->GetDefaultCamera();
+		if (!_camera || !_camera->GetView()) return;
+		_target = context.selected;
+		_view = *_camera->GetView();
+	}
+	if (!_target) { gizmoAxis = -1; return; }
+
+	const sf::Vector2f	_windowSize(window.GetRenderWindow().getSize());
+	const ImVec2		_rectSize(_max.x - _min.x, _max.y - _min.y);
+	if (_windowSize.x < 1.f || _windowSize.y < 1.f || _rectSize.x < 1.f || _rectSize.y < 1.f) return;
+
+	// window pixel <-> ImGui position inside the picture
+	const auto _toWorld = [&](const ImVec2& _imguiPosition)
+	{
+		const float _x = (_imguiPosition.x - _min.x) * _windowSize.x / _rectSize.x;
+		const float _y = (_imguiPosition.y - _min.y) * _windowSize.y / _rectSize.y;
+		return _view.getInverseTransform().transformPoint(sf::Vector2f(-1.f + 2.f * _x / _windowSize.x, 1.f - 2.f * _y / _windowSize.y));
+	};
+
+	const FVector2 _position = _target->GetPosition();
+	const sf::Vector2i _pixel = window.GetRenderWindow().mapCoordsToPixel(sf::Vector2f(_position.x, _position.y), _view);
+	const ImVec2 _origin(_min.x + _pixel.x * _rectSize.x / _windowSize.x, _min.y + _pixel.y * _rectSize.y / _windowSize.y);
+
+	const bool _visible = _origin.x >= _min.x && _origin.x <= _max.x && _origin.y >= _min.y && _origin.y <= _max.y;
+	if (!_visible && gizmoAxis < 0) return;
+
+	constexpr float ARROW = 70.f;
+	constexpr float GRAB = 8.f;
+
+	// Handles: 0 = X arrow, 1 = Y arrow, 2 = center
+	const ImVec2 _handleMin[3] = { ImVec2(_origin.x + 12.f, _origin.y - GRAB), ImVec2(_origin.x - GRAB, _origin.y + 12.f), ImVec2(_origin.x - 8.f, _origin.y - 8.f) };
+	const ImVec2 _handleSize[3] = { ImVec2(ARROW - 12.f + 6.f, GRAB * 2.f), ImVec2(GRAB * 2.f, ARROW - 12.f + 6.f), ImVec2(16.f, 16.f) };
+	bool _hovered[3] = { false, false, false };
+
+	ImDrawList* _draw = ImGui::GetWindowDrawList();
+	_draw->PushClipRect(_min, _max, true);
+
+	for (int _i = 0; _i < 3; ++_i)
+	{
+		ImGui::SetCursorScreenPos(_handleMin[_i]);
+		ImGui::PushID(_i);
+		ImGui::InvisibleButton("##gizmo", _handleSize[_i]);
+		ImGui::PopID();
+
+		_hovered[_i] = ImGui::IsItemHovered() || (gizmoAxis == _i);
+
+		if (ImGui::IsItemActivated())
+		{
+			gizmoAxis = _i;
+			gizmoStartMouse = ImGui::GetIO().MousePos;
+			LOG(VerbosityType::VeryVerbose, "Gizmo: drag started on axis " + std::to_string(_i));
+			gizmoStartPosition = _position;
+		}
+		if (gizmoAxis == _i && ImGui::IsItemActive())
+		{
+			const sf::Vector2f _start = _toWorld(gizmoStartMouse);
+			const sf::Vector2f _now = _toWorld(ImGui::GetIO().MousePos);
+			FVector2 _next = gizmoStartPosition;
+			if (_i != 1) _next.x += _now.x - _start.x;
+			if (_i != 0) _next.y += _now.y - _start.y;
+			_target->SetPosition(_next);
+		}
+		if (gizmoAxis == _i && !ImGui::IsItemActive())
+		{
+			const FVector2 _end = _target->GetPosition();
+			LOG(VerbosityType::Log, "Gizmo: moved from (" + std::to_string(gizmoStartPosition.x) + ", " + std::to_string(gizmoStartPosition.y) + ") to (" + std::to_string(_end.x) + ", " + std::to_string(_end.y) + ")");
+			gizmoAxis = -1;
+		}
+	}
+
+	const ImU32 _red = _hovered[0] ? IM_COL32(255, 140, 140, 255) : IM_COL32(230, 60, 60, 255);
+	const ImU32 _green = _hovered[1] ? IM_COL32(150, 255, 150, 255) : IM_COL32(70, 200, 80, 255);
+	const ImU32 _yellow = _hovered[2] ? IM_COL32(255, 245, 160, 255) : IM_COL32(240, 200, 60, 255);
+
+	const ImVec2 _endX(_origin.x + ARROW, _origin.y);
+	_draw->AddLine(_origin, _endX, _red, 3.f);
+	_draw->AddTriangleFilled(ImVec2(_endX.x + 10.f, _endX.y), ImVec2(_endX.x - 4.f, _endX.y - 6.f), ImVec2(_endX.x - 4.f, _endX.y + 6.f), _red);
+
+	const ImVec2 _endY(_origin.x, _origin.y + ARROW);
+	_draw->AddLine(_origin, _endY, _green, 3.f);
+	_draw->AddTriangleFilled(ImVec2(_endY.x, _endY.y + 10.f), ImVec2(_endY.x - 6.f, _endY.y - 4.f), ImVec2(_endY.x + 6.f, _endY.y - 4.f), _green);
+
+	_draw->AddRectFilled(ImVec2(_origin.x - 6.f, _origin.y - 6.f), ImVec2(_origin.x + 6.f, _origin.y + 6.f), _yellow, 2.f);
+	_draw->AddRect(ImVec2(_origin.x - 6.f, _origin.y - 6.f), ImVec2(_origin.x + 6.f, _origin.y + 6.f), IM_COL32(0, 0, 0, 200), 2.f);
+
+	_draw->PopClipRect();
 }

@@ -22,6 +22,8 @@ namespace
 		return _result;
 	}
 
+	std::vector<ClassInfo*> Collect(const std::function<bool(const ClassInfo&)>& _filter);
+
 	// The classes of the engine are described once, the first time the registry is read.
 	void EnsureEngineClasses()
 	{
@@ -29,6 +31,9 @@ namespace
 		if (_done) return;
 		_done = true;
 		RegisterEngineClasses();
+		LOG(VerbosityType::Log, "Reflection: " + std::to_string(Classes().size()) + " classes registered (" + std::to_string(Collect([](const ClassInfo& _i) { return static_cast<bool>(_i.factory); }).size()) + " actors, "
+			+ std::to_string(Collect([](const ClassInfo& _i) { return static_cast<bool>(_i.componentFactory); }).size()) + " components, "
+			+ std::to_string(Collect([](const ClassInfo& _i) { return static_cast<bool>(_i.widgetFactory); }).size()) + " widgets)");
 	}
 
 	std::vector<ClassInfo*> Collect(const std::function<bool(const ClassInfo&)>& _filter)

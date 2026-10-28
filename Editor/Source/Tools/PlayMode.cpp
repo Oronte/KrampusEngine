@@ -8,6 +8,8 @@ void Krampus::Play(EditorContext& _context)
 {
 	if (_context.playing) return;
 
+	LOG_MSG("Editor: Play");
+
 	// Whatever the game does while it runs, Stop gets the scene back as it is now.
 	_context.hasSnapshot = false;
 	if (Level* _level = _context.GetLevel())
@@ -26,6 +28,8 @@ void Krampus::Play(EditorContext& _context)
 void Krampus::Stop(EditorContext& _context)
 {
 	if (!_context.playing) return;
+
+	LOG_MSG("Editor: Stop (the scene goes back to how it was before Play)");
 
 	_context.playing = false;
 	_context.engine->SetLevelPaused(true);

@@ -126,6 +126,7 @@ void Krampus::Animation::Reset()
 
 void Krampus::Animation::Start()
 {
+    LOG(VerbosityType::Log, "Animation: start \"" + name.StdString() + "\" (" + std::to_string(static_cast<int>(data.count)) + " frames)");
     Update();
     timer->Play();
     state = State::Playing;
@@ -139,12 +140,14 @@ void Krampus::Animation::Resume()
 
 void Krampus::Animation::Pause()
 {
+    LOG(VerbosityType::VeryVerbose, "Animation: pause \"" + name.StdString() + "\"");
     timer->Pause();
     state = State::Stoped;
 }
 
 void Krampus::Animation::Stop()
 {
+    LOG(VerbosityType::Log, "Animation: stop \"" + name.StdString() + "\"");
     Pause();
     Reset();
 }

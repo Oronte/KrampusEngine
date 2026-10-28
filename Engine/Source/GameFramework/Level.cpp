@@ -25,12 +25,14 @@ void Level::Load()
 
 	actorManager.BeginPlay();
 	hud.BeginPlay();
+	LOG_MSG("Level: loaded " + std::string(typeid(*this).name()) + " (" + std::to_string(actorManager.GetActors().size()) + " actors, " + std::to_string(hud.GetWidgets().size()) + " widgets)");
 }
 
 void Krampus::Level::Unload()
 {
 	if (!isLoaded) return;
 	isLoaded = false;
+	LOG_MSG("Level: unloading " + std::string(typeid(*this).name()));
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	actorManager.Deconstruct();
 	actorManager.BeginDestroy();

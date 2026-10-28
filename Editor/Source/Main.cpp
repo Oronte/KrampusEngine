@@ -6,10 +6,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -28,11 +30,31 @@ class GameModule
 	int						counter		= 0;
 
 public:
+	/// Every link writes a new EditorModule_<time>.pdb (see Editor/CMakeLists.txt). Keeps the newest ones, deletes the others;
+	/// a PDB still in use cannot be deleted and is just kept.
+	static void CleanOldPdbs(const fs::path& _directory, const size_t _keep)
+	{
+		std::error_code _error;
+		std::vector<fs::directory_entry> _pdbs;
+		for (const fs::directory_entry& _entry : fs::directory_iterator(_directory, _error))
+		{
+			const std::string _name = _entry.path().filename().string();
+			if (_name.starts_with("EditorModule_") && _entry.path().extension() == ".pdb")
+				_pdbs.push_back(_entry);
+		}
+
+		std::sort(_pdbs.begin(), _pdbs.end(), [](const fs::directory_entry& _a, const fs::directory_entry& _b) { return _a.last_write_time() > _b.last_write_time(); });
+		for (size_t _i = _keep; _i < _pdbs.size(); ++_i)
+			fs::remove(_pdbs[_i].path(), _error);
+	}
+
+public:
 	explicit GameModule(const fs::path& _source)
 		: source(_source)
 	{
 		// Copies left behind by a crashed session.
 		std::error_code _error;
+		CleanOldPdbs(source.parent_path(), 2);
 		for (const fs::directory_entry& _entry : fs::directory_iterator(source.parent_path(), _error))
 			if (_entry.path().filename().string().starts_with("EditorModule_live_"))
 				fs::remove(_entry.path(), _error);
@@ -184,8 +206,12 @@ int main()
 		if (_reload)
 		{
 			std::cout << "[Editor] Reloading EditorModule.dll..." << std::endl;
+			// The module saves the scene being edited when it stops and opens it again when it starts (see Session.cpp).
+			SetEnvironmentVariableW(L"KRAMPUS_HOT_RELOAD", L"1");
 			_game.Unload();
+			GameModule::CleanOldPdbs(_exeDir, 3);
 			_game.Load(_window);
+			SetEnvironmentVariableW(L"KRAMPUS_HOT_RELOAD", nullptr);
 		}
 
 		if (_game.IsLoaded())

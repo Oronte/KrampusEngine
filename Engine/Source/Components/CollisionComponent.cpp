@@ -134,6 +134,7 @@ bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
 		if (collidingComponents.contains(_other))
 		{
 			collidingComponents.erase(_other);
+			LOG(VerbosityType::VeryVerbose, "Collision: exit " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 			onCollisionExit.Broadcast(_other);
 			_other->onCollisionExit.Broadcast(this);
 		}
@@ -146,6 +147,7 @@ bool Krampus::CollisionComponent::CircleToCircle(CollisionComponent* _other)
 	if (!collidingComponents.contains(_other))
 	{
 		collidingComponents.insert(_other);
+		LOG(VerbosityType::Verbose, "Collision: enter " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 		onCollisionEnter.Broadcast(_hitInfo);
 		_other->onCollisionEnter.Broadcast(_otherHitInfo);
 
@@ -170,6 +172,7 @@ bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
 		if (collidingComponents.contains(_other))
 		{
 			collidingComponents.erase(_other);
+			LOG(VerbosityType::VeryVerbose, "Collision: exit " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 			onCollisionExit.Broadcast(_other);
 			_other->onCollisionExit.Broadcast(this);
 		}
@@ -183,6 +186,7 @@ bool Krampus::CollisionComponent::RectToRectOBB(CollisionComponent* _other)
 	if (!collidingComponents.contains(_other))
 	{
 		collidingComponents.insert(_other);
+		LOG(VerbosityType::Verbose, "Collision: enter " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 		onCollisionEnter.Broadcast(_hitInfo);
 		_other->onCollisionEnter.Broadcast(_otherHitInfo);
 	}
@@ -206,6 +210,7 @@ bool Krampus::CollisionComponent::RectToRectAABB(CollisionComponent* _other)
 		if (collidingComponents.contains(_other))
 		{
 			collidingComponents.erase(_other);
+			LOG(VerbosityType::VeryVerbose, "Collision: exit " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 			onCollisionExit.Broadcast(_other);
 			_other->onCollisionExit.Broadcast(this);
 		}
@@ -218,6 +223,7 @@ bool Krampus::CollisionComponent::RectToRectAABB(CollisionComponent* _other)
 	if (!collidingComponents.contains(_other))
 	{
 		collidingComponents.insert(_other);
+		LOG(VerbosityType::Verbose, "Collision: enter " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 		onCollisionEnter.Broadcast(_hitInfo);
 		_other->onCollisionEnter.Broadcast(_otherHitInfo);
 	}
@@ -242,6 +248,7 @@ bool Krampus::CollisionComponent::CircleToRect(CollisionComponent* _circle, Coll
 		if (collidingComponents.contains(_other))
 		{
 			collidingComponents.erase(_other);
+			LOG(VerbosityType::VeryVerbose, "Collision: exit " + GetOwner()->GetName().StdString() + " <-> " + _other->GetOwner()->GetName().StdString());
 			onCollisionExit.Broadcast(_other);
 			_other->onCollisionExit.Broadcast(this);
 		}
@@ -292,4 +299,21 @@ void Krampus::CollisionComponent::DrawDebug()
 std::string Krampus::CollisionComponent::ToString() const
 {
 	return std::string();
+}
+
+
+void Krampus::CollisionComponent::SetShapeType(const ShapeType& _type)
+{
+	if (_type == shapeType) return;
+
+	if (_type == ShapeType::Rectangle)
+	{
+		const Float _side = sizeData.radius * 2.0f;
+		sizeData.size = FVector2(_side, _side);
+	}
+	else
+	{
+		sizeData.radius = FMath::MinVal(sizeData.size.x, sizeData.size.y) * 0.5f;
+	}
+	shapeType = _type;
 }
