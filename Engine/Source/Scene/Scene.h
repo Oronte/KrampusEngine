@@ -14,8 +14,9 @@ namespace Krampus
 	public:
 		static constexpr const char*	EXTENSION	= ".ka7";
 
+		/// <param name="_quiet">No warnings and a log line for the file only (used for the editor history, which saves often).</param>
 		/// <returns>False if the file could not be written.</returns>
-		static bool Save(Level& _level, const std::filesystem::path& _path);
+		static bool Save(Level& _level, const std::filesystem::path& _path, const bool& _quiet = false);
 
 		/// <summary>
 		/// Spawns the actors stored in the file into the level.

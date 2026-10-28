@@ -1,6 +1,7 @@
 ﻿#include "SaveManager.h"
 #include <Utilities/Debug/Exception.h>
 #include "Utilities/Debug/Logger.h"
+#include "Core/AssetPack.h"
 
 
 String                      SaveManager::saveDirectory = SaveManager::SAVE_DIRECTORY;
@@ -598,7 +599,7 @@ SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode
     const String name = String(path.string());
     LOG(Krampus::VerbosityType::Log, "SaveManager: reading " + path.generic_string());
 
-    if (!std::filesystem::exists(path)) 
+    if (!Krampus::AssetPack::Exists(path)) 
     {
         if (onLoad) onLoad(name, SaveResult::ErrorNotFound);
         return SaveResult::ErrorNotFound;
@@ -606,12 +607,14 @@ SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode
 
     try 
     {
-        std::ifstream file(path, std::ios::binary);
-        if (!file) 
+        // A scene of a packed game is in its exe, a save is a file: the pack is asked first.
+        std::unique_ptr<std::istream> fileStream = Krampus::AssetPack::OpenStream(path);
+        if (!fileStream)
         {
             if (onLoad) onLoad(name, SaveResult::ErrorIO);
             return SaveResult::ErrorIO;
         }
+        std::istream& file = *fileStream;
 
         unsigned char rawHdrBuf[32] = {};
         file.read(reinterpret_cast<char*>(rawHdrBuf), 32);

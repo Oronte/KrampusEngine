@@ -66,13 +66,8 @@ public:
     /// <summary>Current save format schema version.</summary>
     static inline const Short  CURRENT_VERSION = Short(1);
 
-#if SHIP
-    /// <summary>Default save directory in ship build.</summary>
-    static inline const String SAVE_DIRECTORY  = String("../../Content/Saves/");
-#else
     /// <summary>Default save directory in dev build.</summary>
     static inline const String SAVE_DIRECTORY  = String(CONTENT_PATH + "Saves/");
-#endif
 
     /// <summary>File extension for Krampus save files.</summary>
     static inline const String SAVE_EXTENSION  = String(".ksave");

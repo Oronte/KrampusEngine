@@ -21,6 +21,8 @@ target_link_directories(Engine PUBLIC
 
 target_compile_definitions(Engine PUBLIC
     PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
+    # A shipped game links SFML statically (see Ship/CMakeLists.txt): its headers must know it, in the Engine and in everything that includes it.
+    $<$<CONFIG:Ship>:SFML_STATIC>
 )
 
 target_compile_definitions(Engine PRIVATE

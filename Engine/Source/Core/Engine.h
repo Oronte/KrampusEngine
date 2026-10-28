@@ -1,6 +1,7 @@
 #pragma once
 #include "Graphics/Window.h"
 #include "Managers/LayerStack.h"
+#include "Core/Settings.h"
 
 namespace Krampus
 {
@@ -20,6 +21,7 @@ namespace Krampus
 		Window						window;
 		Mouse*						mouse = nullptr;
 		LayerStack					layerStack;
+		EngineSettings				settings;
 		Bool						levelPaused = false;
 		Event<>::ListenerHandle		handle;
 
@@ -80,6 +82,14 @@ namespace Krampus
 		inline Bool IsLevelPaused() const
 		{
 			return levelPaused;
+		}
+
+		/// <summary>
+		/// Gets the settings (Logger, physics, time, window, audio), stored in Content/Settings/EngineSettings.cfg.
+		/// </summary>
+		inline EngineSettings& GetSettings()
+		{
+			return settings;
 		}
 
 		/// <summary>

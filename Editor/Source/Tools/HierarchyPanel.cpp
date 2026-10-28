@@ -3,6 +3,7 @@
 #include "Managers/LevelManager.h"
 #include "Components/CameraComponent.h"
 #include "UI/Widgets/Widget.h"
+#include "Shortcuts.h"
 #include <imgui.h>
 
 using namespace Krampus;
@@ -121,6 +122,9 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 {
 	if (ImGui::Begin("Hierarchy"))
 	{
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && Shortcuts::Pressed("Delete Selection"))
+			DeleteSelection(_context);
+
 		Level* _level = _context.GetLevel();
 		if (_level)
 		{
@@ -149,6 +153,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				{
 					if (!ImGui::MenuItem(_class->name.c_str())) continue;
 
+					_context.history.Record(_context, "Add " + _class->name);
 					Actor* _actor = _class->factory(_level);
 					LOG_MSG("Hierarchy: added actor " + _class->name);
 					const CameraComponent* _camera = _level->GetDefaultCamera();
@@ -178,6 +183,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					for (ClassInfo* _class : ClassRegistry::GetWidgetClasses())
 					{
 						if (!ImGui::MenuItem(_class->name.c_str())) continue;
+						_context.history.Record(_context, "Add " + _class->name);
 						_context.selectedWidget = _class->widgetFactory(_level);
 						LOG_MSG("Hierarchy: added widget " + _class->name);
 						_context.selected = nullptr;
@@ -206,6 +212,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 				if (_widgetToDelete)
 				{
+					_context.history.Record(_context, "Delete " + _widgetToDelete->GetName().StdString());
 					LOG_MSG("Hierarchy: deleting widget " + _widgetToDelete->GetName().StdString());
 					if (_context.selectedWidget == _widgetToDelete) _context.selectedWidget = nullptr;
 					for (const std::unique_ptr<Widget>& _other : _level->GetHUD().GetWidgets())
@@ -233,6 +240,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				const bool _cycle = _state.dropTarget && IsDescendantOf(_state, _state.dropTarget, _state.dragged);
 				if (!_cycle)
 				{
+					_context.history.Record(_context, "Reparent " + _state.dragged->GetName().StdString());
 					LOG_MSG("Hierarchy: " + _state.dragged->GetName().StdString() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName().StdString() : std::string(" detached")));
 					if (_old != _state.parentOf.end()) _old->second->RemoveChild(_state.dragged);
 					if (_state.dropTarget) _state.dropTarget->AddChild(_state.dragged);
@@ -241,6 +249,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 			if (_state.toDelete)
 			{
+				_context.history.Record(_context, "Delete " + _state.toDelete->GetName().StdString());
 				LOG_MSG("Hierarchy: deleting actor " + _state.toDelete->GetName().StdString());
 				const auto _parent = _state.parentOf.find(_state.toDelete);
 				if (_parent != _state.parentOf.end()) _parent->second->RemoveChild(_state.toDelete);
@@ -250,4 +259,33 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 		}
 	}
 	ImGui::End();
+}
+
+void Krampus::DeleteSelection(EditorContext& _context)
+{
+	Level* _level = _context.GetLevel();
+	if (!_level || _context.playing) return;
+
+	if (_context.selected)
+	{
+		// The level keeps a pointer to its default camera: deleting it would leave that pointer dangling.
+		const CameraComponent* _camera = _level->GetDefaultCamera();
+		if (_camera && _camera->GetOwner() == _context.selected) return;
+
+		_context.history.Record(_context, "Delete " + _context.selected->GetName().StdString());
+		LOG_MSG("Editor: deleting actor " + _context.selected->GetName().StdString());
+		for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+			_actor->RemoveChild(_context.selected);
+		_context.selected->Destroy();
+		_context.selected = nullptr;
+	}
+	else if (_context.selectedWidget)
+	{
+		_context.history.Record(_context, "Delete " + _context.selectedWidget->GetName().StdString());
+		LOG_MSG("Editor: deleting widget " + _context.selectedWidget->GetName().StdString());
+		for (const std::unique_ptr<Widget>& _widget : _level->GetHUD().GetWidgets())
+			_widget->RemoveChild(_context.selectedWidget);
+		_context.selectedWidget->Destroy();
+		_context.selectedWidget = nullptr;
+	}
 }

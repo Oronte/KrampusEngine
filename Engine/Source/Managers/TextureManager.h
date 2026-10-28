@@ -12,11 +12,7 @@ namespace Krampus
 	/// </summary>
 	class TextureManager : public Singleton<TextureManager>
 	{
-#ifdef SHIP
-		String		texturePath					= "../../Content/Textures/";
-#else
 		String		texturePath					= CONTENT_PATH + "Textures/";
-#endif
 		String		defaultTexturePath			= "_internal/Default";
 		String		defaultTextureExtension		= "png";
 		Texture		defaultTexture;

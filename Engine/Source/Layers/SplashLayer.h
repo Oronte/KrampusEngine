@@ -1,5 +1,6 @@
 #pragma once
 #include "Layers/ScreenSpace.h"
+#include "Core/AssetPack.h"
 
 namespace Krampus
 {
@@ -35,7 +36,10 @@ namespace Krampus
 
 		void OnAttach() override
 		{
-			if (!texture.loadFromFile(path))
+			const std::uint8_t* _data = nullptr;
+			std::size_t _size = 0;
+			const bool _loaded = AssetPack::Find(path, _data, _size) ? texture.loadFromMemory(_data, _size) : texture.loadFromFile(path);
+			if (!_loaded)
 			{
 				LOG_WARNING("Splash image not found: " + path);
 				Close();

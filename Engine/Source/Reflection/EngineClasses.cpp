@@ -12,6 +12,7 @@
 #include "Components/RigidbodyComponent.h"
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
+#include "Core/Settings.h"
 #include "UI/Widgets/ButtonWidget.h"
 #include "UI/Widgets/WidgetComponents/AnimationWidgetComponent.h"
 #include "UI/Widgets/WidgetComponents/ButtonWidgetComponent.h"
@@ -127,6 +128,24 @@ namespace
 		_info.AddAccessor<C, float>("lineSpacing",
 			[](C& _c) { return static_cast<float>(_c.GetLineSpacing()); },
 			[](C& _c, const float& _v) { _c.SetLineSpacing(_v); });
+	}
+
+	// A setting that is stored in the section and applied right away to the running engine.
+	template <typename C, typename T>
+	void AddLive(ClassInfo& _info, const char* _name, T C::* _member, const float& _min = 0.f, const float& _max = 0.f)
+	{
+		_info.AddAccessor<C, T>(_name,
+			[_member](C& _c) { return _c.*_member; },
+			[_member](C& _c, const T& _v) { _c.*_member = _v; _c.Apply(); }, _min, _max);
+	}
+
+	// A Logger flag: the value lives in a static field of Logger.
+	void AddLoggerFlag(ClassInfo& _info, const char* _name, Bool& _field)
+	{
+		Bool* _pointer = &_field;
+		_info.AddAccessor<LoggerSettings, bool>(_name,
+			[_pointer](LoggerSettings&) { return static_cast<bool>(*_pointer); },
+			[_pointer](LoggerSettings&, const bool& _v) { *_pointer = Bool(_v); });
 	}
 
 	const char* ExtensionOf(const TextureExtensionType& _type)
@@ -352,6 +371,50 @@ void Krampus::RegisterEngineClasses()
 		ClassInfo& _info = Describe("InputComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<InputComponent>(); };
 		_info.AddProperty<InputComponent, Bool>("enabled", &InputComponent::enabled);
+	}
+
+	// ================= Settings (the Settings window of the editor) =================
+	{
+		ClassInfo& _info = Describe("LoggerSettings", "IGameObject");
+		AddLoggerFlag(_info, "verboseLogging", Logger::verboseLogging);
+		AddLoggerFlag(_info, "veryVerboseLogging", Logger::veryVerboseLogging);
+		AddLoggerFlag(_info, "colorText", Logger::canColorText);
+		AddLoggerFlag(_info, "playSounds", Logger::canPlaySound);
+		AddLoggerFlag(_info, "messageSound", Logger::canPlayMsgSound);
+		AddLoggerFlag(_info, "warningSound", Logger::canPlayWarningSound);
+		AddLoggerFlag(_info, "errorSound", Logger::canPlayErrorSound);
+		AddLoggerFlag(_info, "fatalSound", Logger::canPlayFatalSound);
+	}
+
+	{
+		ClassInfo& _info = Describe("PhysicsSettings", "IGameObject");
+		AddLive(_info, "gravity", &PhysicsSettings::gravity);
+		AddLive(_info, "subSteps", &PhysicsSettings::subSteps, 1.f, 32.f);
+		AddLive(_info, "sleeping", &PhysicsSettings::sleeping);
+		AddLive(_info, "continuous", &PhysicsSettings::continuous);
+		AddLive(_info, "warmStarting", &PhysicsSettings::warmStarting);
+		AddLive(_info, "maxLinearSpeed", &PhysicsSettings::maxLinearSpeed, 1.f, 2000.f);
+		AddLive(_info, "restitutionThreshold", &PhysicsSettings::restitutionThreshold, 0.f, 20.f);
+		AddLive(_info, "hitEventThreshold", &PhysicsSettings::hitEventThreshold, 0.f, 20.f);
+		AddLive(_info, "contactHertz", &PhysicsSettings::contactHertz, 1.f, 120.f);
+		AddLive(_info, "contactDampingRatio", &PhysicsSettings::contactDampingRatio, 0.f, 50.f);
+		AddLive(_info, "maxContactPushSpeed", &PhysicsSettings::maxContactPushSpeed, 0.f, 20.f);
+	}
+
+	{
+		ClassInfo& _info = Describe("TimeSettings", "IGameObject");
+		AddLive(_info, "timeScale", &TimeSettings::timeScale, 0.f, 5.f);
+		AddLive(_info, "maxFrameRate", &TimeSettings::maxFrameRate, 0.f, 1000.f);	// 0 = unlimited
+	}
+
+	{
+		ClassInfo& _info = Describe("WindowSettings", "IGameObject");
+		AddLive(_info, "verticalSync", &WindowSettings::verticalSync);
+	}
+
+	{
+		ClassInfo& _info = Describe("AudioSettings", "IGameObject");
+		AddLive(_info, "globalVolume", &AudioSettings::globalVolume, 0.f, 100.f);
 	}
 
 	// ================= HUD widgets =================

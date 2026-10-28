@@ -1,4 +1,5 @@
 #include "Texture.h"
+#include "Core/AssetPack.h"
 
 Krampus::Texture::Texture(const String& _path, const Bool& _rgb)
 {
@@ -57,6 +58,10 @@ Bool Krampus::Texture::LoadFromFile(const String& _filename, const Bool& _rgb, c
 		LOG(VerbosityType::Error, "You try to use a non initialize texture (potential fake values)");
 		return false;
 	}
+	const std::uint8_t* _data = nullptr;
+	std::size_t _size = 0;
+	if (AssetPack::Find(_filename.StdString(), _data, _size))	// a packed game has its files in its exe
+		return texture->loadFromMemory(_data, _size, _rgb, _area);
 	return texture->loadFromFile(std::filesystem::path(_filename.StdString()), _rgb, _area);
 }
 

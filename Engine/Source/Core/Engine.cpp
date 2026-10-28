@@ -30,6 +30,9 @@ Engine::Engine(sf::RenderWindow* _hostWindow)
 		window.SetFramerateLimit(0);
 	}
 
+	settings.Attach(this);
+	settings.Load();
+
 	layerStack.PushLayer<LevelLayer>(this);
 	layerStack.PushOverlay<Krampus::FadeLayer>(this);
 	layerStack.PushOverlay<Krampus::PauseLayer>();

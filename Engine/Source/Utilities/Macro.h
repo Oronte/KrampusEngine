@@ -74,5 +74,9 @@
 #define NAME_OF(var)					#var
 #define CURRENT_PATH					std::filesystem::current_path().string()
 #define PROJECT_ROOT					std::string(PROJECT_ROOT_DIR)
+#ifdef SHIP
+#define CONTENT_PATH					std::string("Content/")		// a shipped game finds Content next to its exe (the exe moves to its own folder at start)
+#else
 #define CONTENT_PATH					PROJECT_ROOT + "/Content/"
+#endif
 #define PX_TO_M							100.0f

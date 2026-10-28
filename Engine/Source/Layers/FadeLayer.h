@@ -75,6 +75,7 @@ namespace Krampus
 
 		void OnLevelChanged()
 		{
+			if (world->GetLevelManager()->IsChangeSilent()) return;	// a scene swapped in place (undo) does not fade
 			LOG(VerbosityType::Log, "Fade: new level, fading in");
 			alpha = 1.f;
 			FadeIn(levelFadeTime);

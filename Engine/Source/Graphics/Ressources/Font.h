@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/AssetPack.h"
 #include "Utilities/Macro.h"
 
 namespace Krampus
@@ -63,6 +64,10 @@ namespace Krampus
 		/// <returns>True if loaded successfully, false otherwise.</returns>
 		inline Bool Open(const String& _path)
 		{
+			const std::uint8_t* _data = nullptr;
+			std::size_t _size = 0;
+			if (AssetPack::Find(_path.StdString(), _data, _size))	// a packed game has its files in its exe (the bytes stay in memory for the whole run)
+				return font.openFromMemory(_data, _size);
 			return font.openFromFile(_path.StdString());
 		}
 

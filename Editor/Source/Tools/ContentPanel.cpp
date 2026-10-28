@@ -1,5 +1,6 @@
 #include "EditorContext.h"
 #include "EditorThumbnails.h"
+#include "Shortcuts.h"
 #include "Scene/Scene.h"
 #include <imgui.h>
 
@@ -677,14 +678,14 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 					if (ImGui::MenuItem("Show in Explorer")) ShowInExplorer(_entry.path());
 					if (ImGui::MenuItem("Copy Path")) ImGui::SetClipboardText(_entry.path().generic_string().c_str());
 					ImGui::Separator();
-					if (ImGui::MenuItem("Rename", "F2", false, CanDelete(_entry.path())))
+					if (ImGui::MenuItem("Rename", Shortcuts::Text("Rename File").c_str(), false, CanDelete(_entry.path())))
 					{
 						_renameTarget = _entry.path();
 						std::snprintf(_renameBuffer, sizeof(_renameBuffer), "%s", (std::filesystem::is_directory(_renameTarget) ? _renameTarget.filename() : _renameTarget.stem()).string().c_str());
 						_renameError.clear();
 						_askRename = true;
 					}
-					if (ImGui::MenuItem("Delete", "Del", false, CanDelete(_entry.path())))
+					if (ImGui::MenuItem("Delete", Shortcuts::Text("Delete File").c_str(), false, CanDelete(_entry.path())))
 					{
 						_pendingDelete = FilesToDelete(_entry.path());
 						_askDelete = true;
@@ -698,7 +699,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 				ImGui::TextDisabled(_lowerFilter.empty() ? "This folder is empty" : "Nothing matches the search");
 
 			// F2 on the selected tile.
-			if (!_selected.empty() && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_F2, false) && CanDelete(_selected))
+			if (!_selected.empty() && ImGui::IsWindowFocused() && Shortcuts::Pressed("Rename File") && CanDelete(_selected))
 			{
 				_renameTarget = _selected;
 				std::snprintf(_renameBuffer, sizeof(_renameBuffer), "%s", (std::filesystem::is_directory(_renameTarget) ? _renameTarget.filename() : _renameTarget.stem()).string().c_str());
@@ -707,7 +708,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 			}
 
 			// Delete key on the selected tile.
-			if (!_selected.empty() && ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_Delete, false) && CanDelete(_selected))
+			if (!_selected.empty() && ImGui::IsWindowFocused() && Shortcuts::Pressed("Delete File") && CanDelete(_selected))
 			{
 				_pendingDelete = FilesToDelete(_selected);
 				_askDelete = true;

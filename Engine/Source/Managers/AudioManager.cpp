@@ -1,8 +1,9 @@
 #include "AudioManager.h"
+#include "Core/AssetPack.h"
 
 Krampus::AudioManager::AudioManager()
 {
-	std::filesystem::create_directories(audioPath.StdString());
+	if (!AssetPack::IsMounted()) std::filesystem::create_directories(audioPath.StdString());	// a packed game has no Content folder
 }
 
 std::string Krampus::AudioManager::GetExtensionNameByType(const AudioExtensionType& _type) const
@@ -17,7 +18,10 @@ std::shared_ptr<sf::SoundBuffer> Krampus::AudioManager::LoadOrGetSoundBuffer(con
 		return _iterator->second;
 
 	std::shared_ptr<sf::SoundBuffer> _buffer = std::make_shared<sf::SoundBuffer>();
-	if (!_buffer->loadFromFile(_path.StdString()))
+	const std::uint8_t* _bytes = nullptr;
+	std::size_t _length = 0;
+	const bool _loaded = AssetPack::Find(_path.StdString(), _bytes, _length) ? _buffer->loadFromMemory(_bytes, _length) : _buffer->loadFromFile(_path.StdString());
+	if (!_loaded)
 		THROW_EXCEPTION("Cannot load sound: " + _path);
 
 	LOG(VerbosityType::Log, "Audio: loaded " + _path.StdString() + " (" + std::to_string(_buffer->getDuration().asSeconds()) + " s)");

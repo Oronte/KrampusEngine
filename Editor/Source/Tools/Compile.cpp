@@ -23,6 +23,7 @@ namespace
 		std::set<std::string>		reported;						// error lines already shown (MSBuild repeats some)
 		int							errors		= 0;
 		int							warnings	= 0;
+		bool						shipping	= false;						// the Package target (Ship configuration) instead of EditorModule
 	};
 
 	CompileState g_compile;
@@ -54,10 +55,15 @@ namespace
 		else if (_lower.find("warning") != std::string::npos)
 		{
 			++g_compile.warnings;
+			if (_lower.find("cmake warning") != std::string::npos) LOG_WARNING(_line);	// the package script warns about a missing scene...
 		}
-		else if (_line.find("EditorModule.vcxproj ->") != std::string::npos)
+		else if (_line.find("EditorModule.vcxproj ->") != std::string::npos || _line.find("KrampusGame.vcxproj ->") != std::string::npos)
 		{
 			LOG_MSG(_line);
+		}
+		else if (_line.rfind("-- Package", 0) == 0)
+		{
+			LOG_MSG(_line.substr(3));	// what the package script says
 		}
 	}
 
@@ -86,17 +92,22 @@ bool Krampus::IsCompiling()
 	return g_compile.process != nullptr;
 }
 
-void Krampus::StartCompile()
+namespace
 {
+	void StartBuild(const bool& _shipping)
+	{
 	if (IsCompiling()) return;
 
 	PrepareSolutionForBuild();
 
 #ifdef DEBUG
-	const char* _config = "Debug";
+	const char* _editorConfig = "Debug";
 #else
-	const char* _config = "Release";
+	const char* _editorConfig = "Release";
 #endif
+	// The editor builds its own module in its own configuration; a package is always made in Ship.
+	const char* _config = _shipping ? "Ship" : _editorConfig;
+	const char* _target = _shipping ? "Package" : "EditorModule";
 
 	SECURITY_ATTRIBUTES _security { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
 	HANDLE _read = nullptr, _write = nullptr;
@@ -116,7 +127,7 @@ void Krampus::StartCompile()
 	const std::string _cmake = KRAMPUS_CMAKE_COMMAND;
 	const std::string _config2 = _config;
 	std::wstring _command = L"\"" + std::wstring(_cmake.begin(), _cmake.end()) + L"\" --build \"Build/vs2026\" --config "
-		+ std::wstring(_config2.begin(), _config2.end()) + L" --target EditorModule -- /nologo /verbosity:minimal";
+		+ std::wstring(_config2.begin(), _config2.end()) + L" --target " + std::wstring(_target, _target + std::strlen(_target)) + L" -- /nologo /verbosity:minimal";
 
 	const std::wstring _directory = std::filesystem::current_path().wstring();
 	PROCESS_INFORMATION _process { };
@@ -135,7 +146,30 @@ void Krampus::StartCompile()
 	g_compile = CompileState { };
 	g_compile.process = _process.hProcess;
 	g_compile.pipe = _read;
-	LOG_MSG(std::string("Compiling EditorModule (") + _config + ")...");
+	g_compile.shipping = _shipping;
+	LOG_MSG(_shipping ? "Packaging the game (Ship build: the engine and the game are compiled again and gathered with their Content and the runtime DLLs in a folder, a few minutes the first time)..."
+		: std::string("Compiling EditorModule (") + _config + ")...");
+	}
+}
+
+void Krampus::StartCompile()
+{
+	StartBuild(false);
+}
+
+void Krampus::StartShip()
+{
+	StartBuild(true);
+}
+
+bool Krampus::IsShipping()
+{
+	return g_compile.shipping;
+}
+
+std::filesystem::path Krampus::GetPackageDirectory()
+{
+	return std::filesystem::path("Bin/windows-x64/Ship/Package");
 }
 
 void Krampus::PumpCompile()
@@ -155,10 +189,15 @@ void Krampus::PumpCompile()
 
 	const int _errors = g_compile.errors;
 	const int _warnings = g_compile.warnings;
+	const bool _shipping = g_compile.shipping;
 	g_compile = CompileState { };
 
-	if (_exitCode == 0)
+	if (_exitCode == 0 && _shipping)
+		LOG_MSG("Package ready: " + std::filesystem::absolute(GetPackageDirectory()).generic_string() + " (copy the whole folder to another PC and run KrampusGame.exe: nothing to install).");
+	else if (_exitCode == 0)
 		LOG_MSG("Compilation succeeded (" + std::to_string(_warnings) + " warnings). The game reloads in a moment.");
+	else if (_shipping)
+		LOG_ERROR("Packaging FAILED (" + std::to_string(_errors) + " errors, see above).");
 	else
 		LOG_ERROR("Compilation FAILED (" + std::to_string(_errors) + " errors, see above). Fix them and press Compile again.");
 }

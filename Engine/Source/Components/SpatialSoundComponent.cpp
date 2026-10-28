@@ -1,4 +1,5 @@
 #include "SpatialSoundComponent.h"
+#include "Core/AssetPack.h"
 #include "Actors/Actor.h"
 
 namespace
@@ -85,7 +86,7 @@ void Krampus::SpatialSoundComponent::SetSoundFile(const String& _fileName, const
 	sound.Stop();
 
 	const std::string _name = _fileName.StdString();
-	const bool _exists = !_name.empty() && std::filesystem::exists(CONTENT_PATH + "Audio/" + _name + std::string(_type == AudioExtensionType::WAV ? ".wav" : ".mp3"));
+	const bool _exists = !_name.empty() && AssetPack::Exists(CONTENT_PATH + "Audio/" + _name + std::string(_type == AudioExtensionType::WAV ? ".wav" : ".mp3"));
 	if (!_name.empty() && !_exists)
 		LOG_WARNING("SpatialSoundComponent: sound file not found: " + _name);
 

@@ -200,7 +200,7 @@ namespace
 	}
 }
 
-bool Scene::Save(Level& _level, const std::filesystem::path& _path)
+bool Scene::Save(Level& _level, const std::filesystem::path& _path, const bool& _quiet)
 {
 	const CameraComponent* _camera = _level.GetDefaultCamera();
 	const Actor* _defaultCamera = _camera ? _camera->GetOwner() : nullptr;
@@ -212,7 +212,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path)
 		if (_actor.get() == _defaultCamera) continue;
 		if (!_class || !_class->factory)
 		{
-			LOG_WARNING("Scene: '" + _actor->GetName().StdString() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not saved");
+			if (!_quiet) LOG_WARNING("Scene: '" + _actor->GetName().StdString() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not saved");
 			continue;
 		}
 		_savedActors.push_back(_actor.get());
@@ -233,7 +233,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path)
 		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(*_widget));
 		if (!_class || !_class->widgetFactory)
 		{
-			LOG_WARNING("Scene: widget '" + _widget->GetName().StdString() + "' (" + ClassNameOf(*_widget) + ") is not a registered widget class, not saved");
+			if (!_quiet) LOG_WARNING("Scene: widget '" + _widget->GetName().StdString() + "' (" + ClassNameOf(*_widget) + ") is not a registered widget class, not saved");
 			continue;
 		}
 		_savedWidgets.push_back(_widget.get());
@@ -261,7 +261,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path)
 		LOG_ERROR("Scene: cannot write " + _path.string());
 		return false;
 	}
-	LOG_MSG("Scene saved: " + _path.string() + " (" + std::to_string(_savedActors.size()) + " actors, " + std::to_string(_savedWidgets.size()) + " widgets)");
+	LOG(_quiet ? VerbosityType::VeryVerbose : VerbosityType::Display, "Scene saved: " + _path.string() + " (" + std::to_string(_savedActors.size()) + " actors, " + std::to_string(_savedWidgets.size()) + " widgets)");
 	return true;
 }
 
@@ -322,7 +322,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 	}
 	LinkParents(_widgetNodes, _widgets);
 
-	LOG_MSG("Scene: loaded " + _path.generic_string() + " (" + std::to_string(_actorNodes.size()) + " actors, " + std::to_string(_widgetNodes.size()) + " widgets)");
+	LOG(_level.GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Scene: loaded " + _path.generic_string() + " (" + std::to_string(_actorNodes.size()) + " actors, " + std::to_string(_widgetNodes.size()) + " widgets)");
 
 	return true;
 }

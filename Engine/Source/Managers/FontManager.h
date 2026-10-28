@@ -13,11 +13,7 @@ namespace Krampus
 	/// </summary>
 	class FontManager : public Singleton<FontManager>
 	{
-#ifdef SHIP
-		String	fontPath				= "../../Content/Fonts/";
-#else
 		String	fontPath				= CONTENT_PATH + "Fonts/";
-#endif
 		String	defaultFontPath			= "_internal/DefaultFont";
 		String	defaultFontExtension	= "otf";
 		Font	defaultFont;

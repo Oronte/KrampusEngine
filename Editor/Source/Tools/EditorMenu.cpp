@@ -1,6 +1,7 @@
 #include "EditorContext.h"
 #include "Scene/Scene.h"
 #include "Managers/LevelManager.h"
+#include "Shortcuts.h"
 #include <imgui.h>
 
 #define NOMINMAX
@@ -22,6 +23,7 @@ void Krampus::NewScene(EditorContext& _context)
 
 void Krampus::OpenScene(EditorContext& _context, const std::filesystem::path& _path)
 {
+	_context.history.Clear();	// the steps of another scene do not apply
 	LOG_MSG(_path.empty() ? std::string("Editor: new scene") : "Editor: opening scene " + _path.generic_string());
 	// The level is swapped at the start of the next frame, so this is safe to call from a panel.
 	_context.engine->GetLevelManager()->SetLevel<SceneLevel>()->SetScenePath(_path);
@@ -50,7 +52,7 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 	// The scene being edited is the one the level was made from (the game opens its first scene by itself).
 	if (!_context.playing)
 		if (const SceneLevel* _sceneLevel = Cast<SceneLevel>(_context.GetLevel()))
-			if (_sceneLevel->GetScenePath() != _context.scenePath && _sceneLevel->GetScenePath() != PLAY_SNAPSHOT_PATH && _sceneLevel->GetScenePath() != RELOAD_BACKUP_PATH && !_sceneLevel->GetScenePath().empty())
+			if (_sceneLevel->GetScenePath() != _context.scenePath && _sceneLevel->GetScenePath() != PLAY_SNAPSHOT_PATH && _sceneLevel->GetScenePath() != RELOAD_BACKUP_PATH && _sceneLevel->GetScenePath().parent_path() != EditHistory::Directory() && !_sceneLevel->GetScenePath().empty())
 				_context.scenePath = _sceneLevel->GetScenePath();
 
 	static char _saveAsName[128] = "";
@@ -81,7 +83,7 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 			}
 
 			ImGui::Separator();
-			if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+			if (ImGui::MenuItem("Save Scene", Shortcuts::Text("Save Scene").c_str()))
 			{
 				if (_context.scenePath.empty()) _openSaveAs = true;
 				else SaveScene(_context, _context.scenePath);
@@ -89,6 +91,53 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 			if (ImGui::MenuItem("Save Scene As..."))
 				_openSaveAs = true;
 
+			ImGui::Separator();
+			if (ImGui::MenuItem("Package Game (folder for another PC)", Shortcuts::Text("Package Game").c_str(), false, !IsCompiling()))
+				StartShip();
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+				ImGui::SetTooltip("Builds the engine and the game in Ship mode (no editor, optimized) and makes a folder that runs on any Windows PC, nothing to install: Bin/windows-x64/Ship/Package.");
+			const std::filesystem::path _package = GetPackageDirectory();
+			if (ImGui::MenuItem("Open Package Folder", nullptr, false, std::filesystem::exists(_package)))
+				ShellExecuteW(nullptr, L"open", std::filesystem::absolute(_package).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Edit"))
+		{
+			const EditHistory& _history = _context.history;
+			const std::string _undoText = _history.CanUndo() ? "Undo " + _history.UndoLabel() : std::string("Undo");
+			const std::string _redoText = _history.CanRedo() ? "Redo " + _history.RedoLabel() : std::string("Redo");
+			if (ImGui::MenuItem(_undoText.c_str(), Shortcuts::Text("Undo").c_str(), false, _history.CanUndo() && !_context.playing))
+				_context.history.Undo(_context);
+			if (ImGui::MenuItem(_redoText.c_str(), Shortcuts::Text("Redo").c_str(), false, _history.CanRedo() && !_context.playing))
+				_context.history.Redo(_context);
+			ImGui::Separator();
+			if (ImGui::MenuItem("Delete Selection", Shortcuts::Text("Delete Selection").c_str(), false, (_context.selected || _context.selectedWidget) && !_context.playing))
+				DeleteSelection(_context);
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Settings"))
+		{
+			const std::vector<SettingsSection*>& _sections = _context.engine->GetSettings().GetSections();
+			for (size_t _i = 0; _i < _sections.size(); ++_i)
+			{
+				if (!ImGui::MenuItem(_sections[_i]->Title())) continue;
+				_context.settingsOpen = true;
+				_context.settingsPage = static_cast<int>(_i);
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Editor"))
+			{
+				_context.settingsOpen = true;
+				_context.settingsPage = static_cast<int>(_sections.size());
+			}
+			if (ImGui::MenuItem("Shortcuts"))
+			{
+				_context.settingsOpen = true;
+				_context.settingsPage = static_cast<int>(_sections.size()) + 1;
+			}
 			ImGui::EndMenu();
 		}
 
@@ -108,7 +157,7 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 
 		ImGui::SameLine(std::max(ImGui::GetCursorPosX() + 16.f, ImGui::GetWindowWidth() - 270.f));
 		ImGui::BeginDisabled(IsCompiling());
-		if (ImGui::Button(IsCompiling() ? "Compiling..." : "Compile", ImVec2(100.f, 0.f)))
+		if (ImGui::Button(IsCompiling() ? (IsShipping() ? "Packaging..." : "Compiling...") : "Compile", ImVec2(100.f, 0.f)))
 			StartCompile();
 		ImGui::EndDisabled();
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
@@ -121,7 +170,7 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 		ImGui::EndMainMenuBar();
 	}
 
-	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
+	if (Shortcuts::Pressed("Save Scene"))
 	{
 		if (_context.scenePath.empty()) _openSaveAs = true;
 		else SaveScene(_context, _context.scenePath);

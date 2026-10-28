@@ -1,10 +1,11 @@
 #include "TextureManager.h"
+#include "Core/AssetPack.h"
 
 using namespace Krampus;
 
 Krampus::TextureManager::TextureManager()
 {
-	std::filesystem::create_directories(texturePath.StdString());
+	if (!AssetPack::IsMounted()) std::filesystem::create_directories(texturePath.StdString());
 	LoadDefaultTexture();
 }
 
@@ -32,7 +33,11 @@ std::shared_ptr<sf::Texture> Krampus::TextureManager::LoadOrGetSharedTexture(con
 	std::shared_ptr<sf::Texture> _texture = std::make_shared<sf::Texture>();
 	bool _loaded = false;
 
-	if (_rect == IRect()) _loaded = _texture->loadFromFile(_finalPath);
+	const std::uint8_t* _bytes = nullptr;
+	std::size_t _length = 0;
+	if (AssetPack::Find(_finalPath, _bytes, _length))	// a packed game has its files in its exe
+		_loaded = _rect == IRect() ? _texture->loadFromMemory(_bytes, _length) : _texture->loadFromMemory(_bytes, _length, false, _rect);
+	else if (_rect == IRect()) _loaded = _texture->loadFromFile(_finalPath);
 	else _loaded = _texture->loadFromFile(_finalPath, false, _rect);
 
 	if (!_loaded)

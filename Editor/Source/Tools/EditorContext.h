@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Engine.h"
+#include "EditHistory.h"
 
 namespace Krampus
 {
@@ -18,7 +19,10 @@ namespace Krampus
 		Widget*						selectedWidget	= nullptr;	// a HUD widget is selected instead of an actor
 		bool						playing		= false;	// the level runs (Play) or is frozen (edit mode)
 		bool						hasSnapshot	= false;	// the scene was saved at Play and is restored at Stop
+		bool						settingsOpen	= false;	// the Settings window is shown
+		int							settingsPage	= 0;		// section shown in it
 		std::filesystem::path		scenePath;	// scene being edited, empty until it is saved once
+		EditHistory					history;	// Undo / Redo
 
 		/// <returns>The level shown in the Viewport.</returns>
 		Level* GetLevel() const;
@@ -42,6 +46,14 @@ namespace Krampus
 
 	// Compile button (Compile.cpp): builds EditorModule in the background, messages go to the Console.
 	void StartCompile();
+
+	/// <summary>
+	/// Builds the engine and the game in Ship mode and gathers the game to give away (exe, DLLs, Content) in GetPackageDirectory().
+	/// Same background build as Compile.
+	/// </summary>
+	void StartShip();
+	bool IsShipping();	// the build in progress is a package
+	std::filesystem::path GetPackageDirectory();
 	bool IsCompiling();
 	void PumpCompile();	// every frame
 
@@ -66,6 +78,16 @@ namespace Krampus
 	/// Runs CMake (and waits) if scripts were added or removed since the solution was generated, so that the next build sees them.
 	/// </summary>
 	void PrepareSolutionForBuild();
+
+	/// <summary>
+	/// Draws the properties of an object (the Inspector widgets). Returns true if one was edited this frame.
+	/// </summary>
+	bool DrawObjectProperties(IGameObject& _object);
+
+	/// <summary>
+	/// Deletes the selected actor or HUD widget (the default camera cannot be deleted). Undoable.
+	/// </summary>
+	void DeleteSelection(EditorContext& _context);
 
 	// Panels and menu, drawn every frame between ImGui::NewFrame and Render.
 	void DrawMainMenuBar(EditorContext& _context);

@@ -20,19 +20,21 @@ void Level::Load()
 {
 	if (isLoaded) return;
 
+	GetWorld()->GetSettings().ApplyToLevel(*this);	// physics world and time of the project
+
 	InitLevel();
 	isLoaded = true;
 
 	actorManager.BeginPlay();
 	hud.BeginPlay();
-	LOG_MSG("Level: loaded " + std::string(typeid(*this).name()) + " (" + std::to_string(actorManager.GetActors().size()) + " actors, " + std::to_string(hud.GetWidgets().size()) + " widgets)");
+	LOG(GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Level: loaded " + std::string(typeid(*this).name()) + " (" + std::to_string(actorManager.GetActors().size()) + " actors, " + std::to_string(hud.GetWidgets().size()) + " widgets)");
 }
 
 void Krampus::Level::Unload()
 {
 	if (!isLoaded) return;
 	isLoaded = false;
-	LOG_MSG("Level: unloading " + std::string(typeid(*this).name()));
+	LOG(GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Level: unloading " + std::string(typeid(*this).name()));
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	actorManager.Deconstruct();
 	actorManager.BeginDestroy();

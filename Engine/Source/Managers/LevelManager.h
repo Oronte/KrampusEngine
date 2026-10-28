@@ -13,6 +13,8 @@ namespace Krampus
 		std::unique_ptr<Level>	currentLevel	=	nullptr;
 		std::unique_ptr<Level>	pendingAddLevel =	nullptr;
 		std::function<std::unique_ptr<Level>()>	levelFactory;	// builds a new instance of the last level given to SetLevel
+		int						levelSerial		= 0;		// counts the levels loaded so far
+		bool					silentChange	= false;	// the next level change is a technical one (undo): no fade, quiet logs
 
 	public:
 		/// <summary>
@@ -35,6 +37,36 @@ namespace Krampus
 				return nullptr;
 			}
 			return _level;
+		}
+
+		/// <summary>
+		/// Number of levels loaded so far: changes each time a level is swapped in.
+		/// </summary>
+		inline int GetLevelSerial() const
+		{
+			return levelSerial;
+		}
+
+		/// <summary>
+		/// Makes the next level change silent: no fade in, and its messages go to the log file only. Used by the editor to swap a scene in place (undo).
+		/// </summary>
+		inline void SetNextChangeSilent()
+		{
+			silentChange = true;
+		}
+
+		/// <returns>True while a silent level change is in progress.</returns>
+		inline bool IsChangeSilent() const
+		{
+			return silentChange;
+		}
+
+		/// <summary>
+		/// The level in progress, or nullptr when there is none (no error is logged, unlike GetCurrentLevel).
+		/// </summary>
+		inline Level* Peek() const
+		{
+			return currentLevel.get();
 		}
 
 		/// <summary>
@@ -70,7 +102,7 @@ namespace Krampus
 			if (!pendingAddLevel.get())
 				return Bool::False();
 
-			LOG_MSG("LevelManager: switching level");
+			LOG(silentChange ? VerbosityType::Log : VerbosityType::Display, "LevelManager: switching level");
 
 			if (currentLevel.get()) 
 				currentLevel->Unload();
@@ -79,8 +111,10 @@ namespace Krampus
 			currentLevel = std::move(pendingAddLevel);
 			pendingAddLevel = nullptr;
 
+			++levelSerial;
 			currentLevel->Load();
 			onLevelChanged.Broadcast();
+			silentChange = false;
 
 			return Bool::True();
 		}

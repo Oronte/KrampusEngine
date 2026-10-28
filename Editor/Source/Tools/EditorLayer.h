@@ -2,6 +2,7 @@
 #include "Core/Layer.h"
 #include "Utilities/Debug/Logger.h"
 #include "EditorContext.h"
+#include "EditorSettings.h"
 #include <imgui.h>
 
 namespace Krampus
@@ -14,7 +15,6 @@ namespace Krampus
 	/// </summary>
 	class EditorLayer : public Layer
 	{
-		static constexpr size_t		MAX_CONSOLE_LINES	= 2000;
 
 		Window&						window;
 		EditorContext				context;
@@ -25,12 +25,18 @@ namespace Krampus
 		bool						viewportHovered		= false;
 		bool						layoutChecked		= false;
 
-		int							gizmoAxis			= -1;		// handle being dragged: 0 X arrow, 1 Y arrow, 2 center, -1 none
+		int							gizmoAxis			= -1;		// handle being dragged: 0 X arrow, 1 Y arrow, 2 center, 3 rotation ring, 4 X box, 5 Y box, 6 grey box, -1 none
+		int							gizmoMode			= 0;		// 0 all tools, 1 move, 2 rotate, 3 scale
+		float						gizmoStartRotation	= 0.f;		// degrees
+		FVector2					gizmoStartScale;
+		float						gizmoLastAngle		= 0.f;		// radians, mouse around the center
+		float						gizmoAccum			= 0.f;		// radians turned since the drag started
 		ImVec2						gizmoStartMouse;
 		FVector2					gizmoStartPosition;
 
 		std::vector<Logger::Entry>	consoleLines;
-		bool						autoScroll			= true;
+		EditorSettings				editorSettings;		// preferences of the editor (Settings window)
+		bool						settingsDirty		= false;	// a setting was changed and not saved yet
 
 	public:
 		EditorLayer(Engine* _engine)
@@ -52,6 +58,9 @@ namespace Krampus
 		void BuildDefaultLayout(unsigned int _dockspace);
 		void DrawViewport();
 		void DrawGizmo(const ImVec2& _min, const ImVec2& _max);
+		void DrawSettingsWindow();
+		void HandleShortcuts();
+		void SaveSettings();
 		void DrawConsole();
 	};
 }

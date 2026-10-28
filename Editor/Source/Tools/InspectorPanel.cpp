@@ -226,6 +226,19 @@ namespace
 		return _changed;
 	}
 
+	bool g_propertyEdited = false;	// set by DrawProperty, read by DrawObjectProperties
+	EditorContext* g_historyContext = nullptr;	// set while the Inspector draws: its edits can be undone (the Settings page edits no scene object)
+
+	void RecordEdit(const std::string& _label, const std::string& _key = "")
+	{
+		if (g_historyContext) g_historyContext->history.Record(*g_historyContext, _label, _key);
+	}
+
+	std::string KeyOf(const void* _object, const std::string& _what)
+	{
+		return std::to_string(reinterpret_cast<std::uintptr_t>(_object)) + "." + _what;
+	}
+
 	std::string ValueText(const PropertyValue& _value)
 	{
 		return std::visit([](const auto& _v) -> std::string
@@ -335,6 +348,8 @@ namespace
 
 		if (_changed && !_property.readOnly)
 		{
+			g_propertyEdited = true;
+			RecordEdit("Edit " + _property.name, KeyOf(&_object, _property.name));
 			LOG(VerbosityType::Log, "Inspector: " + _object.GetName().StdString() + "." + _property.name + " = " + ValueText(_value));
 			_property.set(&_object, _value);
 		}
@@ -354,16 +369,25 @@ namespace
 		FVector2 _position = _actor.GetPosition();
 		float _positionValues[2] = { _position.x, _position.y };
 		if (ImGui::DragFloat2("Position", _positionValues, 0.5f))
+		{
+			RecordEdit("Move", KeyOf(&_actor, "position"));
 			_actor.SetPosition(FVector2(_positionValues[0], _positionValues[1]));
+		}
 
 		float _rotation = _actor.GetRotation().ToDegrees();
 		if (ImGui::DragFloat("Rotation", &_rotation, 0.5f))
+		{
+			RecordEdit("Rotate", KeyOf(&_actor, "rotation"));
 			_actor.SetRotation(Angle::FromDegrees(_rotation));
+		}
 
 		FVector2 _scale = _actor.GetScale();
 		float _scaleValues[2] = { _scale.x, _scale.y };
 		if (ImGui::DragFloat2("Scale", _scaleValues, 0.01f))
+		{
+			RecordEdit("Scale", KeyOf(&_actor, "scale"));
 			_actor.SetScale(FVector2(_scaleValues[0], _scaleValues[1]));
+		}
 	}
 }
 
@@ -375,13 +399,19 @@ namespace
 		char _name[128];
 		std::snprintf(_name, sizeof(_name), "%s", _owner.GetName().StdString().c_str());
 		if (ImGui::InputText("Name", _name, sizeof(_name)))
-			_owner.SetName(String(_name));
+			{
+				RecordEdit("Rename", KeyOf(&_owner, "name"));
+				_owner.SetName(String(_name));
+			}
 
 		bool _active = _owner.IsActive();
 		if (ImGui::Checkbox("Active", &_active))
 		{
 			LOG(VerbosityType::Log, "Inspector: " + _owner.GetName().StdString() + (_active ? " activated" : " deactivated"));
-			_owner.SetActive(Bool(_active));
+			{
+				RecordEdit(_active ? "Activate" : "Deactivate");
+				_owner.SetActive(Bool(_active));
+			}
 		}
 	}
 
@@ -450,6 +480,7 @@ namespace
 				if (ImGui::MenuItem(_class->name.c_str(), nullptr, false, !_already))
 				{
 					LOG_MSG("Inspector: adding " + _class->name + " to " + _actor.GetName().StdString());
+					RecordEdit("Add " + _class->name);
 					_class->componentFactory(&_actor);
 				}
 			}
@@ -469,6 +500,7 @@ namespace
 				if (ImGui::MenuItem(_class->name.c_str(), nullptr, false, !_already))
 				{
 					LOG_MSG("Inspector: adding " + _class->name + " to widget " + _widget.GetName().StdString());
+					RecordEdit("Add " + _class->name);
 					_class->widgetComponentFactory(&_widget);
 				}
 			}
@@ -491,6 +523,7 @@ namespace
 		if (Component* _toRemove = DrawComponents(_actor.GetComponents()))
 			{
 				LOG_MSG("Inspector: removing " + ClassNameOf(*_toRemove) + " from " + _actor.GetName().StdString());
+				RecordEdit("Remove " + ClassNameOf(*_toRemove));
 				_actor.RemoveComponentInstance(_toRemove);
 			}
 
@@ -516,6 +549,7 @@ namespace
 		if (WidgetComponent* _toRemove = DrawComponents(_widget.GetComponents()))
 			{
 				LOG_MSG("Inspector: removing " + ClassNameOf(*_toRemove) + " from widget " + _widget.GetName().StdString());
+				RecordEdit("Remove " + ClassNameOf(*_toRemove));
 				_widget.RemoveComponentInstance(_toRemove);
 			}
 
@@ -528,6 +562,7 @@ namespace
 
 void Krampus::DrawInspectorPanel(EditorContext& _context)
 {
+	g_historyContext = &_context;
 	if (ImGui::Begin("Inspector"))
 	{
 		if (_context.selectedWidget)
@@ -538,4 +573,12 @@ void Krampus::DrawInspectorPanel(EditorContext& _context)
 			ImGui::TextDisabled("Select an actor or a HUD widget in the Hierarchy");
 	}
 	ImGui::End();
+	g_historyContext = nullptr;
+}
+
+bool Krampus::DrawObjectProperties(IGameObject& _object)
+{
+	g_propertyEdited = false;
+	DrawProperties(_object);
+	return g_propertyEdited;
 }

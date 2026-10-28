@@ -1,4 +1,5 @@
 #include "Image.h"
+#include "Core/AssetPack.h"
 
 Krampus::Image::Image()
 {
@@ -42,6 +43,10 @@ void Krampus::Image::ResizeFromPixels(const UVector2& _size, const std::uint8_t*
 
 Bool Krampus::Image::LoadFromFile(const String& _filename)
 {
+	const std::uint8_t* _data = nullptr;
+	std::size_t _size = 0;
+	if (AssetPack::Find(_filename.StdString(), _data, _size))
+		return image.loadFromMemory(_data, _size);
 	return image.loadFromFile(std::filesystem::path(_filename.StdString()));
 }
 

@@ -2,7 +2,7 @@
 
 Krampus::FontManager::FontManager()
 {
-	std::filesystem::create_directories(fontPath.StdString());
+	if (!AssetPack::IsMounted()) std::filesystem::create_directories(fontPath.StdString());
 	LoadDefaultFont();
 }
 
