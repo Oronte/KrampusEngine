@@ -234,7 +234,7 @@ namespace Krampus
 		/// <param name="_hostWindow">Already opened window.</param>
 		inline void Attach(sf::RenderWindow* _hostWindow)
 		{
-			LOG_MSG("Window: using the window of the host application");
+			LOG(VerbosityType::Log, "Window: using the window of the host application");
 			window = _hostWindow;
 		}
 

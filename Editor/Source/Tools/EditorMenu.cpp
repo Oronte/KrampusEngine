@@ -16,6 +16,12 @@ Level* EditorContext::GetLevel() const
 	return engine->GetLevelManager()->GetCurrentLevel<Level>();
 }
 
+sf::View EditorContext::GetCameraView(const sf::Vector2f& _windowSize) const
+{
+	const float _zoom = std::max(cameraZoom, 0.01f);
+	return sf::View(sf::Vector2f(cameraCenter.x, cameraCenter.y), sf::Vector2f(_windowSize.x / _zoom, _windowSize.y / _zoom));
+}
+
 void Krampus::NewScene(EditorContext& _context)
 {
 	OpenScene(_context, std::filesystem::path());
@@ -24,7 +30,7 @@ void Krampus::NewScene(EditorContext& _context)
 void Krampus::OpenScene(EditorContext& _context, const std::filesystem::path& _path)
 {
 	_context.history.Clear();	// the steps of another scene do not apply
-	LOG_MSG(_path.empty() ? std::string("Editor: new scene") : "Editor: opening scene " + _path.generic_string());
+	LOG(VerbosityType::Log, _path.empty() ? std::string("Editor: new scene") : "Editor: opening scene " + _path.generic_string());
 	// The level is swapped at the start of the next frame, so this is safe to call from a panel.
 	_context.engine->GetLevelManager()->SetLevel<SceneLevel>()->SetScenePath(_path);
 	_context.scenePath = _path;
@@ -137,6 +143,17 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 			{
 				_context.settingsOpen = true;
 				_context.settingsPage = static_cast<int>(_sections.size()) + 1;
+			}
+			if (ImGui::MenuItem("Colors"))
+			{
+				_context.settingsOpen = true;
+				_context.settingsPage = static_cast<int>(_sections.size()) + 2;
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Level"))
+			{
+				_context.settingsOpen = true;
+				_context.settingsPage = static_cast<int>(_sections.size()) + 3;
 			}
 			ImGui::EndMenu();
 		}

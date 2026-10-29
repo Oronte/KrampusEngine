@@ -112,7 +112,6 @@ void Krampus::CollisionComponent::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
 
-	DrawDebug();
 }
 
 bool Krampus::CollisionComponent::CanCollide(const CollisionComponent* _other) const

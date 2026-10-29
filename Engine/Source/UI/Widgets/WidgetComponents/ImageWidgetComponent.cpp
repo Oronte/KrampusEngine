@@ -64,7 +64,6 @@ void Krampus::ImageWidgetComponent::Draw(Window &_window)
 {
     if (!isActive) return;
     _window.Draw(*shape);
-    DrawDebug();
 }
 
 void Krampus::ImageWidgetComponent::DrawDebug()
@@ -75,11 +74,11 @@ void Krampus::ImageWidgetComponent::DrawDebug()
     switch (shape->GetShapeType())
     {
         case ShapeType::Circle:
-            Debug::DrawDebugCircle(GetLevel(), GetPosition(), shape->GetSizeData().radius, 15, Color::Green());
+            Debug::DrawDebugCircle(GetLevel(), GetPosition(), shape->GetSizeData().radius * std::max(GetScale().x, GetScale().y), 15, Color::Green());
             break;
 
         case ShapeType::Rectangle:
-            Debug::DrawDebugRect(GetLevel(), GetPosition(), shape->GetSizeData().size, GetRotation(), Color::Green());
+            Debug::DrawDebugRect(GetLevel(), GetPosition(), FVector2(shape->GetSizeData().size.x * GetScale().x, shape->GetSizeData().size.y * GetScale().y), GetRotation(), Color::Green());
             break;
     };
 #endif

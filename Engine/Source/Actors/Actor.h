@@ -84,7 +84,7 @@ namespace Krampus
 		inline void RemoveComponentInstance(Component* _component)
 		{
 			if (!_component) return;
-			LOG(VerbosityType::Log, "Component: " + std::string(typeid(*_component).name()) + " removed from " + GetName().StdString());
+			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(*_component).name()) + " removed from " + GetName().StdString());
 			_component->Deconstruct();
 			_component->BeginDestroy();
 			std::erase_if(components, [&](const std::unique_ptr<Component>& _item) { return _item.get() == _component; });
@@ -134,7 +134,7 @@ namespace Krampus
 			Type* _rawComponent = _component.get();
 			components.push_back(std::move(_component));
 			_rawComponent->Construct();
-			LOG(VerbosityType::Log, "Component: " + std::string(typeid(Type).name()) + " added to " + GetName().StdString());
+			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(Type).name()) + " added to " + GetName().StdString());
 			return _rawComponent;
 		}
 
@@ -152,7 +152,7 @@ namespace Krampus
 				return;
 			}
 
-			LOG(VerbosityType::Log, "Component: " + std::string(typeid(Type).name()) + " removed from " + GetName().StdString());
+			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(Type).name()) + " removed from " + GetName().StdString());
 			_component->Deconstruct();
 			_component->BeginDestroy();
 

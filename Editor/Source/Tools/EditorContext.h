@@ -24,8 +24,17 @@ namespace Krampus
 		std::filesystem::path		scenePath;	// scene being edited, empty until it is saved once
 		EditHistory					history;	// Undo / Redo
 
+		// The editor's own camera, used to look at the scene when it is not playing (right mouse to move, wheel to zoom).
+		// It is not an actor of the scene: it is never saved and the game does not see it.
+		bool						cameraReady	= false;	// false until it has been put at the center of the window once
+		FVector2					cameraCenter;			// world position seen at the middle of the Viewport
+		float						cameraZoom	= 1.f;		// 2 = twice as close
+
 		/// <returns>The level shown in the Viewport.</returns>
 		Level* GetLevel() const;
+
+		/// <returns>The view of the editor's camera for a window of this size.</returns>
+		sf::View GetCameraView(const sf::Vector2f& _windowSize) const;
 	};
 
 	inline const std::filesystem::path		CONTENT_DIRECTORY	= "Content";

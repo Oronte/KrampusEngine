@@ -28,8 +28,6 @@ namespace Krampus
 		Color				backgroundColor			= Color::Black();
 		Bool				isLoaded				= false;
 
-		CameraActor*		mainCamera				= nullptr;
-
 	protected:
 		/// <summary>
 		/// Constructs a Level associated with the specified Engine instance.
@@ -45,6 +43,12 @@ namespace Krampus
 		inline void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
+		}
+
+		/// <returns>The color the window is cleared with before the level is drawn.</returns>
+		inline const Color& GetBackgroundColor() const
+		{
+			return backgroundColor;
 		}
 
 		/// <summary>
@@ -174,9 +178,10 @@ namespace Krampus
 		Float UpdateTime();
 
 		/// <summary>
-		/// Gets the default active camera component in this level.
+		/// Gets the camera the level is seen through: the current one, else the first CameraComponent of any actor.
+		/// A level that starts without any camera gets one (a CameraActor at the center of the window); it is an actor like another and can be deleted.
 		/// </summary>
-		/// <returns>Pointer to the default CameraComponent.</returns>
+		/// <returns>Pointer to a CameraComponent, or nullptr if the level has none.</returns>
 		CameraComponent* GetDefaultCamera() const;
 	};
 

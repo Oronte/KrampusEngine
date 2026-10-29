@@ -52,6 +52,7 @@ namespace Krampus
 		float														max			= 0.f;
 		bool														readOnly	= false;
 		std::vector<std::string>									flagNames;	// for Flags: name of bit 0, bit 1... ; for Enum: name of value 0, 1...
+		std::function<bool(IGameObject*)>							visible;	// empty: always shown; else the Inspector hides the property when it returns false (the value is still saved)
 	};
 
 	namespace Reflection
@@ -147,6 +148,18 @@ namespace Krampus
 		{
 			properties.back().type = _type;
 			properties.back().flagNames = std::move(_flagNames);
+		}
+
+		/// <summary>
+		/// The last added property is only shown in the Inspector while _visible returns true (a radius only matters for a circle).
+		/// </summary>
+		template <typename Class>
+		void SetLastPropertyVisible(std::function<bool(Class&)> _visible)
+		{
+			properties.back().visible = [_visible](IGameObject* _object)
+			{
+				return _visible(*static_cast<Class*>(_object));
+			};
 		}
 
 		template <typename Class, typename T>

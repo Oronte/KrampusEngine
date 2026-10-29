@@ -7,7 +7,7 @@ namespace Krampus
 	/// <summary>
 	/// Saves and loads the actors of a level as a .ka7 scene file (the SaveNode binary format).
 	/// Only actors whose class is registered with KACTOR are saved, with their transform, hierarchy and KPROPERTY values
-	/// (also for their components). The level's default camera is not saved: every level creates its own.
+	/// (also for their components). Cameras are saved like any actor; a level that has none gets one when it starts.
 	/// </summary>
 	class Scene
 	{

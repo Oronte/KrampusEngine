@@ -16,6 +16,14 @@ namespace Krampus
 		virtual void DrawDebug() = 0;
 
 	public:
+		/// <summary>
+		/// Called by the CameraManager every frame for every debuggable component: draws the outline when debugging is on.
+		/// </summary>
+		void RenderDebug()
+		{
+			if (useDebug) DrawDebug();
+		}
+
 		Bool IsDebugging() const
 		{
 			return useDebug;

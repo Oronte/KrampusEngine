@@ -37,14 +37,11 @@ namespace Krampus
 		std::string					lastKey;
 		double						lastKeyTime		= -10.0;
 
-		// A swap is made at the start of the next frame: what is put back afterwards (selection, viewport camera).
+		// A swap is made at the start of the next frame: what is put back afterwards (selection).
 		bool						pending			= false;
 		int							pendingSerial	= 0;
 		Selection					pendingSelection;
 		std::filesystem::path		pendingFile;
-		FVector2					cameraPosition;
-		float						cameraRotation	= 0.f;
-		FVector2					cameraScale		= FVector2(1.f, 1.f);
 
 	public:
 		static std::filesystem::path Directory();

@@ -26,14 +26,13 @@ void Krampus::LabelComponent::Draw(Window& _window)
 {
 	if (!isActive) return;
 	_window.Draw(text);
-	DrawDebug();
 }
 
 void Krampus::LabelComponent::DrawDebug()
 {
 #ifdef DEBUG
 	if (!IsDebugging()) return;
-	Debug::DrawDebugRect(GetLevel(), GetPosition(), GetLocalBounds().GetSize(), GetRotation(), Color::Green());
+	{ const FRect _bounds = GetGlobalBounds(); Debug::DrawDebugRect(GetLevel(), _bounds.GetPosition() + _bounds.GetSize() / 2.0f, _bounds.GetSize(), Angle(), Color::Green()); }
 #endif
 
 }

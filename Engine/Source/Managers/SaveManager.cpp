@@ -539,7 +539,7 @@ SaveResult SaveManager::Save(const String& name, const SaveNode& root, const Boo
 SaveResult SaveManager::SaveToFile(const std::filesystem::path& path, const SaveNode& root, const Bool& compress)
 {
     const String name = String(path.string());
-    LOG(Krampus::VerbosityType::Log, "SaveManager: writing " + path.generic_string() + (compress ? " (compressed)" : ""));
+    LOG(Krampus::VerbosityType::Verbose, "SaveManager: writing " + path.generic_string() + (compress ? " (compressed)" : ""));
     std::error_code dirError;
     std::filesystem::create_directories(path.parent_path(), dirError);
     try 
@@ -597,7 +597,7 @@ SaveResult SaveManager::Load(const String& name, SaveNode& outRoot)
 SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode& outRoot)
 {
     const String name = String(path.string());
-    LOG(Krampus::VerbosityType::Log, "SaveManager: reading " + path.generic_string());
+    LOG(Krampus::VerbosityType::Verbose, "SaveManager: reading " + path.generic_string());
 
     if (!Krampus::AssetPack::Exists(path)) 
     {

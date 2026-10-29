@@ -1,5 +1,7 @@
 #pragma once
 #include "Component.h"
+#include "Utilities/System/Debuggable.h"
+#include "Utilities/System/CollisionChannel.h"
 #include "box2d/box2d.h"
 
 namespace Krampus
@@ -7,9 +9,10 @@ namespace Krampus
 	/// <summary>
 	/// Component that integrates Box2D 2D rigid body physics simulation with an actor.
 	/// </summary>
-    class PhysicsComponent : public Component
+    class PhysicsComponent : public Component, public IDebuggable
     {
-        b2BodyId    id;
+        b2BodyId    bodyId;
+		b2ShapeId   shapeId;
 
         Event<>::ListenerHandle collisionResolveHandle;
         Event<FVector2>::ListenerHandle moveHandle;
@@ -217,7 +220,36 @@ namespace Krampus
 		/// <param name="_bullet">A boolean value indicating if the object should be treated as a bullet (true) or not (false).</param>
 		void SetBullet(const bool& _bullet);
 
+		/// <summary>
+		/// Sets the collision filter for the physics object, defining its category, mask, and group index.
+		/// </summary>
+		/// <param name="_category"></param>
+		/// <param name="_mask"></param>
+		/// <param name="groupIndex"></param>
+		void SetFilter(const CollisionChannel& _category, const CollisionChannel& _mask, int32_t groupIndex = 0);
+
+		/// <summary>Whether the rotation is fixed.</summary>
+		bool IsFixedRotation() const;
+
+		/// <summary>Whether the body takes part in the simulation (see Enable / Disable).</summary>
+		bool IsEnabled() const;
+
+		/// <summary>Whether the shape reports contact events.</summary>
+		bool AreContactEventsEnabled() const;
+
+		/// <summary>Whether the body is treated as a bullet (continuous collision against other dynamic bodies).</summary>
+		bool IsBullet() const;
+
+		/// <summary>Gets the collision filter set by SetFilter.</summary>
+		void GetFilter(CollisionChannel& _category, CollisionChannel& _mask, int32_t& _groupIndex) const;
+
     private:
+        void DrawDebug() override;	// outline of the box2d shape, where the body is
+
+        bool        isCircle    = false;			// what MakeCircle / MakeRectangle built, to outline it
+        Float       debugRadius = 0.f;
+        FVector2    debugSize;
+
         void Init();
         void MakeCircle(const Float& _radius);
         void MakeRectangle(const FVector2& _size);

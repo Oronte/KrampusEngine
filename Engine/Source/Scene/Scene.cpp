@@ -203,14 +203,10 @@ namespace
 
 bool Scene::Save(Level& _level, const std::filesystem::path& _path, const bool& _quiet)
 {
-	const CameraComponent* _camera = _level.GetDefaultCamera();
-	const Actor* _defaultCamera = _camera ? _camera->GetOwner() : nullptr;
-
 	std::vector<Actor*> _savedActors;
 	for (const std::unique_ptr<Actor>& _actor : _level.GetActorManager().GetActors())
 	{
 		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(*_actor));
-		if (_actor.get() == _defaultCamera) continue;
 		if (!_class || !_class->factory)
 		{
 			if (!_quiet) LOG_WARNING("Scene: '" + _actor->GetName().StdString() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not saved");
@@ -253,6 +249,8 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path, const bool& 
 	_root.Set("version", Int(SCENE_VERSION));
 	_root.Set("actors", std::move(_actorNodes));
 	_root.Set("widgets", std::move(_widgetNodes));
+	const Color& _background = _level.GetBackgroundColor();
+	_root.Set("background", std::vector<Int>{ Int(_background.r), Int(_background.g), Int(_background.b), Int(_background.a) });
 
 	std::error_code _error;
 	if (_path.has_parent_path()) std::filesystem::create_directories(_path.parent_path(), _error);
@@ -268,7 +266,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path, const bool& 
 
 bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 {
-	LOG(VerbosityType::Log, "Scene: reading " + _path.generic_string());
+	LOG(VerbosityType::Verbose, "Scene: reading " + _path.generic_string());
 	SaveNode _root;
 	const SaveResult _result = SaveManager::LoadFromFile(_path, _root);
 	if (_result != SaveResult::Success)
@@ -276,6 +274,12 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		LOG_ERROR("Scene: cannot read " + _path.string() + ": " + ToString(_result));
 		return false;
 	}
+
+	// ---- Level settings (a scene saved before they existed keeps the level's own color)
+	if (auto _background = _root.TryGet<std::vector<Int>>("background"); _background && _background->size() == 4)
+		_level.SetBackgroundColor(Color(
+			static_cast<std::uint8_t>(static_cast<int>((*_background)[0])), static_cast<std::uint8_t>(static_cast<int>((*_background)[1])),
+			static_cast<std::uint8_t>(static_cast<int>((*_background)[2])), static_cast<std::uint8_t>(static_cast<int>((*_background)[3]))));
 
 	// ---- Actors
 	const std::vector<SaveNodePtr> _actorNodes = _root.GetNodes("actors");
@@ -296,7 +300,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		_actors[_i] = _actor;
 		ReadComponents(*_actor, _node);
 		ReadCommon(_node, *_actor);
-		LOG(VerbosityType::Log, "Scene: actor " + _actor->GetName().StdString() + " (" + _className + ", " + std::to_string(_actor->GetComponents().size()) + " components)");
+		LOG(VerbosityType::Verbose, "Scene: actor " + _actor->GetName().StdString() + " (" + _className + ", " + std::to_string(_actor->GetComponents().size()) + " components)");
 	}
 	LinkParents(_actorNodes, _actors); // every actor exists now
 
@@ -319,7 +323,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		_widgets[_i] = _widget;
 		ReadComponents(*_widget, _node);	// before the transform: components follow their owner
 		ReadCommon(_node, *_widget);
-		LOG(VerbosityType::Log, "Scene: widget " + _widget->GetName().StdString() + " (" + _className + ", " + std::to_string(_widget->GetComponents().size()) + " components)");
+		LOG(VerbosityType::Verbose, "Scene: widget " + _widget->GetName().StdString() + " (" + _className + ", " + std::to_string(_widget->GetComponents().size()) + " components)");
 	}
 	LinkParents(_widgetNodes, _widgets);
 
@@ -338,13 +342,13 @@ std::filesystem::path Scene::Resolve(const std::string& _nameOrPath)
 
 void Scene::Open(Engine& _engine, const std::string& _nameOrPath)
 {
-	LOG_MSG("Scene: opening " + Resolve(_nameOrPath).generic_string());
+	LOG(VerbosityType::Log, "Scene: opening " + Resolve(_nameOrPath).generic_string());
 	_engine.GetLevelManager()->SetLevel<SceneLevel>()->SetScenePath(Resolve(_nameOrPath));
 }
 
 void SceneLevel::InitLevel()
 {
-	Level::InitLevel(); // default camera
+	Level::InitLevel();
 
 	if (!scenePath.empty())
 		Scene::Load(*this, scenePath);

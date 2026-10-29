@@ -102,22 +102,13 @@ void EditHistory::Record(EditorContext& _context, const std::string& _label, con
 		std::filesystem::remove(undoStack.front().file, _error);
 		undoStack.erase(undoStack.begin());
 	}
-	LOG(VerbosityType::Log, "History: step '" + _label + "' (" + std::to_string(undoStack.size()) + " in the undo list)");
+	LOG(VerbosityType::Verbose, "History: step '" + _label + "' (" + std::to_string(undoStack.size()) + " in the undo list)");
 }
 
 void EditHistory::Restore(EditorContext& _context, const Entry& _entry)
 {
 	Level* _level = _context.GetLevel();
 	LevelManager* _levels = _context.engine->GetLevelManager();
-
-	// The camera of the Viewport is not in the scene file: it keeps its place.
-	if (_level && _level->GetDefaultCamera() && _level->GetDefaultCamera()->GetOwner())
-	{
-		const Actor* _camera = _level->GetDefaultCamera()->GetOwner();
-		cameraPosition = _camera->GetPosition();
-		cameraRotation = static_cast<float>(_camera->GetRotation().ToDegrees());
-		cameraScale = _camera->GetScale();
-	}
 
 	_levels->SetNextChangeSilent();
 	_levels->SetLevel<SceneLevel>()->SetScenePath(_entry.file);
@@ -177,14 +168,6 @@ void EditHistory::Update(EditorContext& _context)
 	Level* _level = _context.GetLevel();
 	if (_level)
 	{
-		if (_level->GetDefaultCamera() && _level->GetDefaultCamera()->GetOwner())
-		{
-			Actor* _camera = _level->GetDefaultCamera()->GetOwner();
-			_camera->SetPosition(cameraPosition);
-			_camera->SetRotation(Angle::FromDegrees(cameraRotation));
-			_camera->SetScale(cameraScale);
-		}
-
 		if (pendingSelection.kind == 1)
 		{
 			const auto& _actors = _level->GetActorManager().GetActors();

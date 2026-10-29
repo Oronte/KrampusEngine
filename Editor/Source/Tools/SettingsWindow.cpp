@@ -1,6 +1,7 @@
 #include "EditorLayer.h"
 #include "EditorSettings.h"
 #include "Shortcuts.h"
+#include "EditorTheme.h"
 #include <imgui.h>
 
 #define NOMINMAX
@@ -13,7 +14,7 @@ using namespace Krampus;
 void EditorLayer::SaveSettings()
 {
 	const bool _engine = context.engine->GetSettings().Save();
-	const bool _editor = EngineSettings::SaveSections(EditorSettings::GetPath(), { &editorSettings });
+	const bool _editor = EngineSettings::SaveSections(EditorSettings::GetPath(), { &editorSettings }) && EditorTheme::Save();
 	if (_engine && _editor)
 	{
 		settingsDirty = false;
@@ -33,7 +34,7 @@ void EditorLayer::DrawSettingsWindow()
 
 	std::vector<SettingsSection*> _pages = context.engine->GetSettings().GetSections();
 	_pages.push_back(&editorSettings);
-	context.settingsPage = std::clamp(context.settingsPage, 0, static_cast<int>(_pages.size()));
+	context.settingsPage = std::clamp(context.settingsPage, 0, static_cast<int>(_pages.size()) + 2);
 
 	ImGui::SetNextWindowSize(ImVec2(760.f, 500.f), ImGuiCond_FirstUseEver);
 	bool _open = true;
@@ -49,6 +50,10 @@ void EditorLayer::DrawSettingsWindow()
 			}
 			if (ImGui::Selectable("Shortcuts", context.settingsPage == static_cast<int>(_pages.size())))
 				context.settingsPage = static_cast<int>(_pages.size());
+			if (ImGui::Selectable("Colors", context.settingsPage == static_cast<int>(_pages.size()) + 1))
+				context.settingsPage = static_cast<int>(_pages.size()) + 1;
+			if (ImGui::Selectable("Level", context.settingsPage == static_cast<int>(_pages.size()) + 2))
+				context.settingsPage = static_cast<int>(_pages.size()) + 2;
 		}
 		ImGui::EndChild();
 		ImGui::SameLine();
@@ -57,6 +62,51 @@ void EditorLayer::DrawSettingsWindow()
 		{
 			ImGui::BeginGroup();
 			Shortcuts::DrawSettingsPage();
+			ImGui::EndGroup();
+		}
+		else if (context.settingsPage == static_cast<int>(_pages.size()) + 2)
+		{
+			// The settings of the open scene itself: saved in its .ka7 (File > Save Scene), not in the settings files.
+			ImGui::BeginGroup();
+			ImGui::SeparatorText("Level");
+			ImGui::TextWrapped("Settings of the open scene%s. They are saved in the scene file (Save Scene), not with the other settings.",
+				context.scenePath.empty() ? "" : (" (" + context.scenePath.stem().string() + ")").c_str());
+			ImGui::Spacing();
+
+			if (Level* _level = context.GetLevel())
+			{
+				const Color _color = _level->GetBackgroundColor();
+				float _components[4] = { _color.r / 255.f, _color.g / 255.f, _color.b / 255.f, _color.a / 255.f };
+				if (ImGui::ColorEdit4("backgroundColor", _components))
+				{
+					context.history.Record(context, "Edit backgroundColor", "level.backgroundColor");
+					const Color _new(
+						static_cast<std::uint8_t>(_components[0] * 255.f + 0.5f), static_cast<std::uint8_t>(_components[1] * 255.f + 0.5f),
+						static_cast<std::uint8_t>(_components[2] * 255.f + 0.5f), static_cast<std::uint8_t>(_components[3] * 255.f + 0.5f));
+					_level->SetBackgroundColor(_new);
+					LOG(VerbosityType::Verbose, "Level: backgroundColor = rgba(" + std::to_string(_new.r) + ", " + std::to_string(_new.g) + ", " + std::to_string(_new.b) + ", " + std::to_string(_new.a) + ")");
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Reset"))
+				{
+					context.history.Record(context, "Reset backgroundColor");
+					_level->SetBackgroundColor(Color::Black());
+				}
+			}
+			ImGui::EndGroup();
+		}
+		else if (context.settingsPage == static_cast<int>(_pages.size()) + 1)
+		{
+			ImGui::BeginGroup();
+			ImGui::BeginDisabled(!settingsDirty);
+			if (ImGui::Button("Save")) SaveSettings();
+			ImGui::EndDisabled();
+			ImGui::SameLine();
+			if (ImGui::Button("Reload from file")) EditorTheme::Load();
+			ImGui::SameLine();
+			if (settingsDirty) ImGui::TextColored(ImVec4(1.f, 0.85f, 0.3f, 1.f), "unsaved changes");
+			else ImGui::TextDisabled("saved");
+			if (EditorTheme::DrawSettingsPage()) settingsDirty = true;
 			ImGui::EndGroup();
 		}
 		else

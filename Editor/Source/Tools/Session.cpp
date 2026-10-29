@@ -31,7 +31,8 @@ void Krampus::SaveSession(EditorContext& _context)
 	if (!_saved) return;
 
 	std::ofstream _file(SESSION_FILE, std::ios::trunc);
-	_file << _context.scenePath.generic_string();
+	_file << _context.scenePath.generic_string() << "\n"
+		<< _context.cameraCenter.x << " " << _context.cameraCenter.y << " " << _context.cameraZoom << "\n";	// the editor camera survives too
 }
 
 void Krampus::RestoreSession(EditorContext& _context)
@@ -42,6 +43,14 @@ void Krampus::RestoreSession(EditorContext& _context)
 	std::ifstream _file(SESSION_FILE);
 	std::string _scene;
 	std::getline(_file, _scene);
+
+	float _x = 0.f, _y = 0.f, _zoom = 1.f;
+	if (_file >> _x >> _y >> _zoom)
+	{
+		_context.cameraCenter = FVector2(_x, _y);
+		_context.cameraZoom = _zoom;
+		_context.cameraReady = true;
+	}
 
 	_context.scenePath = _scene;
 	Scene::Open(*_context.engine, RELOAD_BACKUP_PATH.generic_string());

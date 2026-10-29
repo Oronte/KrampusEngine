@@ -36,6 +36,24 @@ namespace
 		return _info;
 	}
 
+	// Draw order and debug outline, for the components that are drawn (IDrawable) and/or can outline themselves (IDebuggable).
+	template <typename C>
+	void AddDebugProperty(ClassInfo& _info)
+	{
+		_info.AddAccessor<C, bool>("useDebug",
+			[](C& _c) { return static_cast<bool>(_c.IsDebugging()); },
+			[](C& _c, const bool& _v) { if (_v) _c.UseDebug(); else _c.DisableDebug(); });
+	}
+
+	template <typename C>
+	void AddDrawableProperties(ClassInfo& _info)
+	{
+		_info.AddAccessor<C, int>("zOrder",		// 0 behind, 255 in front
+			[](C& _c) { return static_cast<int>(_c.GetZOrder()); },
+			[](C& _c, const int& _v) { _c.SetZOrder(static_cast<uint8_t>(std::clamp(_v, 0, 255))); }, 0.f, 255.f);
+		AddDebugProperty<C>(_info);
+	}
+
 	// Sprite and ImageWidgetComponent have the same shape API.
 	template <typename C>
 	void AddShapeProperties(ClassInfo& _info)
@@ -48,21 +66,54 @@ namespace
 		_info.AddAccessor<C, FVector2>("size",
 			[](C& _c) { return _c.GetShapeType() == ShapeType::Rectangle ? _c.GetSize() : FVector2(); },
 			[](C& _c, const FVector2& _v) { if (_c.GetShapeType() == ShapeType::Rectangle) _c.SetSize(_v); });
+		_info.SetLastPropertyVisible<C>([](C& _c) { return _c.GetShapeType() == ShapeType::Rectangle; });	// size
 		_info.AddAccessor<C, float>("radius",
 			[](C& _c) { return _c.GetShapeType() == ShapeType::Circle ? static_cast<float>(_c.GetRadius()) : 0.f; },
 			[](C& _c, const float& _v) { if (_c.GetShapeType() == ShapeType::Circle) _c.SetRadius(_v); }, 0.f, 0.f);
+		_info.SetLastPropertyVisible<C>([](C& _c) { return _c.GetShapeType() == ShapeType::Circle; });	// radius
 		_info.AddAccessor<C, int>("pointCount",
 			[](C& _c) { return _c.GetShapeType() == ShapeType::Circle ? static_cast<int>(_c.GetPointCount()) : 0; },
 			[](C& _c, const int& _v) { if (_c.GetShapeType() == ShapeType::Circle) _c.SetPointCount(static_cast<size_t>(std::max(3, _v))); });
+		_info.SetLastPropertyVisible<C>([](C& _c) { return _c.GetShapeType() == ShapeType::Circle; });	// pointCount
 		_info.AddAccessor<C, std::string>("texture",
 			[](C& _c) { return TextureToString(*_c.GetShapeObject()); },
 			[](C& _c, const std::string& _v)
 			{
 				TextureExtensionType _type = TextureExtensionType::PNG;
 				const std::string _path = SplitTexture(_v, _type);
-				_c.SetTexture(_path, _type);
+				// Another picture keeps how the old one was filtered, and shows all of itself (the old rectangle would not fit it).
+				const Bool _smooth = _c.GetShapeObject()->GetTextureRef().IsSmooth();
+				const Bool _repeated = _c.GetShapeObject()->GetTextureRef().IsRepeated();
+				_c.SetTexture(_path, _type, IRect(), _repeated, _smooth);
+				_c.GetShapeObject()->GetShape()->SetTexture(&_c.GetShapeObject()->GetTextureRef(), true);
 			});
 		_info.SetLastPropertyType(PropertyType::Texture);
+
+		// Which part of the picture the shape shows (position and size in pixels of the picture), and how the picture is filtered.
+		// Smooth and repeated belong to the picture itself: every shape that uses the same file shares them.
+		_info.AddAccessor<C, FVector2>("textureRectPosition",
+			[](C& _c) { return FVector2(static_cast<float>(_c.GetShapeObject()->GetShape()->GetTextureRect().GetPosition().x), static_cast<float>(_c.GetShapeObject()->GetShape()->GetTextureRect().GetPosition().y)); },
+			[](C& _c, const FVector2& _v)
+			{
+				IRect _rect = _c.GetShapeObject()->GetShape()->GetTextureRect();
+				_rect.SetPosition(IVector2(static_cast<int>(_v.x), static_cast<int>(_v.y)));
+				_c.GetShapeObject()->GetShape()->SetTextureRect(_rect);
+			});
+		_info.AddAccessor<C, FVector2>("textureRectSize",
+			[](C& _c) { return FVector2(static_cast<float>(_c.GetShapeObject()->GetShape()->GetTextureRect().GetSize().x), static_cast<float>(_c.GetShapeObject()->GetShape()->GetTextureRect().GetSize().y)); },
+			[](C& _c, const FVector2& _v)
+			{
+				IRect _rect = _c.GetShapeObject()->GetShape()->GetTextureRect();
+				_rect.SetSize(IVector2(std::max(1, static_cast<int>(_v.x)), std::max(1, static_cast<int>(_v.y))));
+				_c.GetShapeObject()->GetShape()->SetTextureRect(_rect);
+			});
+		_info.AddAccessor<C, bool>("isSmooth",
+			[](C& _c) { return static_cast<bool>(_c.GetShapeObject()->GetTextureRef().IsSmooth()); },
+			[](C& _c, const bool& _v) { _c.GetShapeObject()->GetTextureRef().SetSmooth(Bool(_v)); });
+		_info.AddAccessor<C, bool>("isRepeated",
+			[](C& _c) { return static_cast<bool>(_c.GetShapeObject()->GetTextureRef().IsRepeated()); },
+			[](C& _c, const bool& _v) { _c.GetShapeObject()->GetTextureRef().SetRepeated(Bool(_v)); });
+		AddDrawableProperties<C>(_info);
 	}
 
 	// The three animation components describe one animation (a clip of a sprite sheet) with the same plain values.
@@ -128,6 +179,14 @@ namespace
 		_info.AddAccessor<C, float>("lineSpacing",
 			[](C& _c) { return static_cast<float>(_c.GetLineSpacing()); },
 			[](C& _c, const float& _v) { _c.SetLineSpacing(_v); });
+		_info.AddAccessor<C, int>("style",		// Bold, Italic, Underlined, StrikeThrough (SFML's bits 0 to 3)
+			[](C& _c) { return static_cast<int>(static_cast<unsigned int>(_c.GetStyle())); },
+			[](C& _c, const int& _v) { _c.SetStyle(static_cast<unsigned int>(_v & 15)); });
+		_info.SetLastPropertyType(PropertyType::Flags, { "Bold", "Italic", "Underlined", "StrikeThrough" });
+		_info.AddAccessor<C, FVector2>("origin",	// the point of the text that sits on the owner's position
+			[](C& _c) { return _c.GetOrigin(); },
+			[](C& _c, const FVector2& _v) { _c.SetOrigin(_v); });
+		AddDrawableProperties<C>(_info);
 	}
 
 	// A setting that is stored in the section and applied right away to the running engine.
@@ -237,9 +296,11 @@ void Krampus::RegisterEngineClasses()
 		_info.AddAccessor<CollisionComponent, FVector2>("size",
 			[](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Rectangle ? _c.GetSize() : FVector2(); },
 			[](CollisionComponent& _c, const FVector2& _v) { if (_c.GetShapeType() == ShapeType::Rectangle) _c.SetSize(_v); });
+		_info.SetLastPropertyVisible<CollisionComponent>([](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Rectangle; });	// size
 		_info.AddAccessor<CollisionComponent, float>("radius",
 			[](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Circle ? static_cast<float>(_c.GetRadius()) : 0.f; },
 			[](CollisionComponent& _c, const float& _v) { if (_c.GetShapeType() == ShapeType::Circle) _c.SetRadius(_v); });
+		_info.SetLastPropertyVisible<CollisionComponent>([](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Circle; });	// radius
 		_info.AddAccessor<CollisionComponent, int>("channel",
 			[](CollisionComponent& _c) { return ChannelToInt(_c.channel); },
 			[](CollisionComponent& _c, const int& _v) { _c.channel = IntToChannel(_v); });
@@ -248,6 +309,7 @@ void Krampus::RegisterEngineClasses()
 			[](CollisionComponent& _c) { return ChannelToInt(_c.mask); },
 			[](CollisionComponent& _c, const int& _v) { _c.mask = IntToChannel(_v); });
 		_info.SetLastPropertyType(PropertyType::Flags, ChannelNames());
+		AddDebugProperty<CollisionComponent>(_info);	// the red outline of the collision shape
 	}
 
 	{
@@ -276,6 +338,59 @@ void Krampus::RegisterEngineClasses()
 		_info.AddAccessor<PhysicsComponent, float>("gravityScale",
 			[](PhysicsComponent& _c) { return static_cast<float>(_c.GetGravityScale()); },
 			[](PhysicsComponent& _c, const float& _v) { _c.SetGravityScale(_v); });
+		_info.AddAccessor<PhysicsComponent, FVector2>("linearVelocity",
+			[](PhysicsComponent& _c) { return _c.GetLinearVelocity(); },
+			[](PhysicsComponent& _c, const FVector2& _v) { _c.SetLinearVelocity(_v); });
+		_info.AddAccessor<PhysicsComponent, float>("angularVelocity",
+			[](PhysicsComponent& _c) { return static_cast<float>(_c.GetAngularVelocity()); },
+			[](PhysicsComponent& _c, const float& _v) { _c.SetAngularVelocity(_v); });
+
+		// Mass data: each value is changed alone, the two others are kept (SetMassData takes the three together).
+		_info.AddAccessor<PhysicsComponent, float>("mass",
+			[](PhysicsComponent& _c) { Float _m, _i; FVector2 _center; _c.GetMassData(_m, _i, _center); return static_cast<float>(_m); },
+			[](PhysicsComponent& _c, const float& _v) { Float _m, _i; FVector2 _center; _c.GetMassData(_m, _i, _center); _c.SetMassData(Float(std::max(0.f, _v)), _i, _center); });
+		_info.AddAccessor<PhysicsComponent, float>("rotationalInertia",
+			[](PhysicsComponent& _c) { Float _m, _i; FVector2 _center; _c.GetMassData(_m, _i, _center); return static_cast<float>(_i); },
+			[](PhysicsComponent& _c, const float& _v) { Float _m, _i; FVector2 _center; _c.GetMassData(_m, _i, _center); _c.SetMassData(_m, Float(std::max(0.f, _v)), _center); });
+		_info.AddAccessor<PhysicsComponent, FVector2>("centerOfMass",
+			[](PhysicsComponent& _c) { Float _m, _i; FVector2 _center; _c.GetMassData(_m, _i, _center); return _center; },
+			[](PhysicsComponent& _c, const FVector2& _v) { Float _m, _i; FVector2 _center; _c.GetMassData(_m, _i, _center); _c.SetMassData(_m, _i, _v); });
+
+		_info.AddAccessor<PhysicsComponent, bool>("fixedRotation",
+			[](PhysicsComponent& _c) { return _c.IsFixedRotation(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.SetFixedRotation(_v); });
+		_info.AddAccessor<PhysicsComponent, bool>("sleepingAllowed",
+			[](PhysicsComponent& _c) { return _c.IsSleepingAllowed(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.EnableSleeping(_v); });
+		_info.AddAccessor<PhysicsComponent, float>("sleepThreshold",
+			[](PhysicsComponent& _c) { return static_cast<float>(_c.GetSleepThreshold()); },
+			[](PhysicsComponent& _c, const float& _v) { _c.SetSleepThreshold(_v); });
+		_info.AddAccessor<PhysicsComponent, bool>("awake",
+			[](PhysicsComponent& _c) { return _c.IsAwake(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.SetAwake(_v); });
+		_info.AddAccessor<PhysicsComponent, bool>("enabled",	// a disabled body is out of the simulation
+			[](PhysicsComponent& _c) { return _c.IsEnabled(); },
+			[](PhysicsComponent& _c, const bool& _v) { if (_v) _c.Enable(); else _c.Disable(); });
+		_info.AddAccessor<PhysicsComponent, bool>("contactEvents",
+			[](PhysicsComponent& _c) { return _c.AreContactEventsEnabled(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.EnableContactEvents(_v); });
+		_info.AddAccessor<PhysicsComponent, bool>("bullet",
+			[](PhysicsComponent& _c) { return _c.IsBullet(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.SetBullet(_v); });
+
+		// Collision filter (SetFilter takes the three together).
+		_info.AddAccessor<PhysicsComponent, int>("filterCategory",
+			[](PhysicsComponent& _c) { CollisionChannel _cat, _mask; int32_t _group; _c.GetFilter(_cat, _mask, _group); return ChannelToInt(_cat); },
+			[](PhysicsComponent& _c, const int& _v) { CollisionChannel _cat, _mask; int32_t _group; _c.GetFilter(_cat, _mask, _group); _c.SetFilter(IntToChannel(_v), _mask, _group); });
+		_info.SetLastPropertyType(PropertyType::Flags, ChannelNames());
+		_info.AddAccessor<PhysicsComponent, int>("filterMask",
+			[](PhysicsComponent& _c) { CollisionChannel _cat, _mask; int32_t _group; _c.GetFilter(_cat, _mask, _group); return ChannelToInt(_mask); },
+			[](PhysicsComponent& _c, const int& _v) { CollisionChannel _cat, _mask; int32_t _group; _c.GetFilter(_cat, _mask, _group); _c.SetFilter(_cat, IntToChannel(_v), _group); });
+		_info.SetLastPropertyType(PropertyType::Flags, ChannelNames());
+		_info.AddAccessor<PhysicsComponent, int>("filterGroup",	// bodies of the same negative group never collide, of the same positive group always do
+			[](PhysicsComponent& _c) { CollisionChannel _cat, _mask; int32_t _group; _c.GetFilter(_cat, _mask, _group); return static_cast<int>(_group); },
+			[](PhysicsComponent& _c, const int& _v) { CollisionChannel _cat, _mask; int32_t _group; _c.GetFilter(_cat, _mask, _group); _c.SetFilter(_cat, _mask, static_cast<int32_t>(_v)); });
+		AddDebugProperty<PhysicsComponent>(_info);	// cyan outline of the box2d shape
 	}
 
 	{
@@ -308,6 +423,7 @@ void Krampus::RegisterEngineClasses()
 		_info.AddAccessor<CameraComponent, FVector2>("size",
 			[](CameraComponent& _c) { return FVector2(_c.GetView()->getSize().x, _c.GetView()->getSize().y); },
 			[](CameraComponent& _c, const FVector2& _v) { _c.SetSize(_v); });
+		AddDebugProperty<CameraComponent>(_info);	// yellow outline of the area it shows
 	}
 
 	{
@@ -325,6 +441,18 @@ void Krampus::RegisterEngineClasses()
 		_info.AddAccessor<AudioListenerComponent, bool>("listening",
 			[](AudioListenerComponent& _c) { return static_cast<bool>(_c.AudioListenerComponent::IsActive()); },
 			[](AudioListenerComponent& _c, const bool& _v) { _c.AudioListenerComponent::SetActive(Bool(_v)); });
+
+		// The hearing cone (SetCone takes the three together): sound inside the inner angle is heard fully, outside the outer angle at outerGain.
+		_info.AddAccessor<AudioListenerComponent, float>("coneInnerAngle",		// degrees
+			[](AudioListenerComponent& _c) { return _c.GetCone().innerAngle.asDegrees(); },
+			[](AudioListenerComponent& _c, const float& _v) { sf::Listener::Cone _cone = _c.GetCone(); _cone.innerAngle = sf::degrees(std::clamp(_v, 0.f, 360.f)); _c.SetCone(_cone); }, 0.f, 360.f);
+		_info.AddAccessor<AudioListenerComponent, float>("coneOuterAngle",		// degrees
+			[](AudioListenerComponent& _c) { return _c.GetCone().outerAngle.asDegrees(); },
+			[](AudioListenerComponent& _c, const float& _v) { sf::Listener::Cone _cone = _c.GetCone(); _cone.outerAngle = sf::degrees(std::clamp(_v, 0.f, 360.f)); _c.SetCone(_cone); }, 0.f, 360.f);
+		_info.AddAccessor<AudioListenerComponent, float>("coneOuterGain",		// 0 silent, 1 full volume
+			[](AudioListenerComponent& _c) { return _c.GetCone().outerGain; },
+			[](AudioListenerComponent& _c, const float& _v) { sf::Listener::Cone _cone = _c.GetCone(); _cone.outerGain = std::clamp(_v, 0.f, 1.f); _c.SetCone(_cone); }, 0.f, 1.f);
+		AddDebugProperty<AudioListenerComponent>(_info);	// the cone and its direction
 	}
 
 	{

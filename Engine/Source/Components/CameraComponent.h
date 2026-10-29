@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "Utilities/System/Debuggable.h"
 
 namespace Krampus
 {
@@ -7,7 +8,7 @@ namespace Krampus
 	/// <summary>
 	/// Component that provides a 2D camera view into the scene, managing viewport, zoom, and orientation.
 	/// </summary>
-	class CameraComponent : public Component
+	class CameraComponent : public Component, public IDebuggable
 	{
 		std::unique_ptr<sf::View>	view;
 
@@ -155,6 +156,7 @@ namespace Krampus
 
 	private:
 		virtual void BeginDestroy() override;
+		void DrawDebug() override;	// outline of the area the camera shows
 
 		void InitEvent();
 

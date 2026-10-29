@@ -113,7 +113,8 @@ void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const String& _pat
 		texRef.SetSmooth(_smooth);
 	}
 
-	LOG(VerbosityType::Log, "Texture: " + textureRelative + (sharedTex ? " applied" : " not found, default texture used"));
+	// A missing picture is a problem the user must see; a loaded one is only detail.
+	LOG(sharedTex ? VerbosityType::Verbose : VerbosityType::Warning, "Texture: " + textureRelative + (sharedTex ? " applied" : " not found, default texture used"));
 
 	// finally link shape to the texture pointer
 	SetTexture(_shapeObject->GetShape(), &texRef);

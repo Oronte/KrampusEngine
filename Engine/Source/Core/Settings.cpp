@@ -230,7 +230,7 @@ void EngineSettings::Attach(Engine* _engine)
 void EngineSettings::LoadFile()
 {
 	if (LoadSections(GetPath(), sections))
-		LOG_MSG("Settings: loaded " + GetPath().generic_string());
+		LOG(VerbosityType::Log, "Settings: loaded " + GetPath().generic_string());
 	else
 		LOG(VerbosityType::Log, "Settings: no file yet (" + GetPath().generic_string() + "), defaults used");
 }
@@ -289,7 +289,7 @@ bool EngineSettings::SaveSections(const std::filesystem::path& _path, const std:
 			_file << _property->name << " = " << ValueToText(_property->get(_section)) << "\n";
 	}
 
-	LOG(VerbosityType::Log, "Settings: saved " + _path.generic_string());
+	LOG(VerbosityType::Verbose, "Settings: saved " + _path.generic_string());
 	return _file.good();
 }
 

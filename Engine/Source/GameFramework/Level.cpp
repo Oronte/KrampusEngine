@@ -12,8 +12,15 @@ Krampus::Level::Level(Engine* _engine)
 
 void Level::InitLevel()
 {
-	mainCamera = SpawnActor<CameraActor>();
-	mainCamera->SetPosition(GetWindow().GetSize() / 2.0f);
+}
+
+// A level with no camera at all would draw nothing: give it one, once, when it starts. Not before, so that the cameras
+// of a scene or of the level's own InitLevel are used instead of an extra one.
+static bool HasCamera(Level& _level)
+{
+	for (const std::unique_ptr<Actor>& _actor : _level.GetActorManager().GetActors())
+		if (_actor->GetComponent<CameraComponent>()) return true;
+	return false;
 }
 
 void Level::Load()
@@ -23,6 +30,12 @@ void Level::Load()
 	GetWorld()->GetSettings().ApplyToLevel(*this);	// physics world and time of the project
 
 	InitLevel();
+	if (!HasCamera(*this))
+	{
+		CameraActor* _camera = SpawnActor<CameraActor>();
+		_camera->SetPosition(GetWindow().GetSize() / 2.0f);
+		LOG(VerbosityType::Log, "Level: no camera, created one");
+	}
 	isLoaded = true;
 
 	actorManager.BeginPlay();
@@ -65,5 +78,10 @@ Float Krampus::Level::UpdateTime()
 
 CameraComponent* Level::GetDefaultCamera() const
 {
-	return mainCamera->GetComponent<CameraComponent>();
+	if (CameraComponent* _current = cameraManager.GetCurrent())
+		return _current;
+	for (const std::unique_ptr<Actor>& _actor : actorManager.GetActors())
+		if (CameraComponent* _camera = _actor->GetComponent<CameraComponent>())
+			return _camera;
+	return nullptr;
 }

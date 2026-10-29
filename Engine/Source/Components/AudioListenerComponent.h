@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "Utilities/System/Debuggable.h"
 
 namespace Krampus
 {
@@ -7,7 +8,7 @@ namespace Krampus
 	/// <summary>
 	/// Component that represents the 2D/3D audio listener in the scene, updating the global audio listener position and orientation.
 	/// </summary>
-	class AudioListenerComponent : public Component
+	class AudioListenerComponent : public Component, public IDebuggable
 	{
 		Bool		topView			= false;
 		Bool		active			= true;
@@ -103,6 +104,7 @@ namespace Krampus
 		virtual void Tick(const Float& _deltaTime)	override;
 
 	private:
+		void DrawDebug() override;	// the hearing cone
 		void UpdateListener();
 		Bool HasChanged(const FVector2& _position, const FVector2& _forward, const FVector2& _up) const;
 

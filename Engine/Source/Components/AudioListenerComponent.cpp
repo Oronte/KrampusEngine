@@ -1,4 +1,6 @@
 #include "AudioListenerComponent.h"
+#include "GameFramework/Level.h"
+#include "Utilities/Debug/Debug.h"
 
 Krampus::AudioListenerComponent::AudioListenerComponent(Actor* _owner, const Bool& _topView)
 	: Component(_owner), topView(_topView)
@@ -94,4 +96,30 @@ std::string Krampus::AudioListenerComponent::ToString() const
 		+	" -> Is Top View = "	+ topView.ToString()
 		+	" | Active = "			+ active.ToString()
 		+	" | Volume = "			+ std::to_string(sf::Listener::getGlobalVolume());
+}
+
+void Krampus::AudioListenerComponent::DrawDebug()
+{
+#ifdef DEBUG
+	// Where the listener hears from: a line along its direction, the inner cone (green: full volume) and the outer cone (yellow: reduced to outerGain).
+	const FVector2 _position = GetPosition();
+	const FVector2 _forward = (topView ? GetUpVector() : GetRightVector()).Normalized();
+	const sf::Listener::Cone _cone = sf::Listener::getCone();
+	constexpr float _length = 220.0f;
+
+	const auto _edge = [&](const float& _degrees, const Color& _color)
+	{
+		const FVector2 _end = (_position + _forward * _length).RotateAround(_position, _degrees * FMath::pi / 180.0f);
+		Debug::DrawDebugLine(GetLevel(), _position, (_end - _position).Normalized(), _length, 2.0f, _color);
+	};
+
+	Debug::DrawDebugCircle(GetLevel(), _position, 16.0f, 15, Color::Cyan());
+	Debug::DrawDebugLine(GetLevel(), _position, _forward, _length, 2.0f, Color::Cyan());
+	const float _inner = _cone.innerAngle.asDegrees() * 0.5f;
+	const float _outer = _cone.outerAngle.asDegrees() * 0.5f;
+	_edge(_inner, Color::Green());
+	_edge(-_inner, Color::Green());
+	_edge(_outer, Color::Yellow());
+	_edge(-_outer, Color::Yellow());
+#endif
 }

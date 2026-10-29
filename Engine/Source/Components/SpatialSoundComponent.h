@@ -95,7 +95,7 @@ namespace Krampus
 		/// </summary>
 		inline virtual void Play() 
 		{
-			LOG(VerbosityType::Log, "Sound: play '" + soundFile.StdString() + "' on " + GetName().StdString());
+			LOG(VerbosityType::Verbose, "Sound: play '" + soundFile.StdString() + "' on " + GetName().StdString());
 			sound.Play();
 		}
 
@@ -112,7 +112,7 @@ namespace Krampus
 		/// </summary>
 		inline virtual void Stop() 
 		{
-			LOG(VerbosityType::Log, "Sound: stop '" + soundFile.StdString() + "' on " + GetName().StdString());
+			LOG(VerbosityType::Verbose, "Sound: stop '" + soundFile.StdString() + "' on " + GetName().StdString());
 			sound.Stop();
 		}
 

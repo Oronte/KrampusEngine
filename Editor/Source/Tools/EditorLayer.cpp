@@ -2,6 +2,7 @@
 #include "Layers/ScreenSpace.h"
 #include "EditorThumbnails.h"
 #include "Shortcuts.h"
+#include "EditorTheme.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui-SFML.h>
@@ -18,11 +19,11 @@ namespace
 	{
 		switch (_type)
 		{
-		case VerbosityType::Warning:	return ImVec4(1.f, 0.85f, 0.2f, 1.f);
-		case VerbosityType::Error:		return ImVec4(1.f, 0.35f, 0.35f, 1.f);
-		case VerbosityType::Fatal:		return ImVec4(1.f, 0.2f, 0.6f, 1.f);
-		case VerbosityType::Display:	return ImVec4(1.f, 1.f, 1.f, 1.f);
-		default:						return ImVec4(0.6f, 0.6f, 0.7f, 1.f);
+		case VerbosityType::Warning:	return EditorTheme::Get(EditorTheme::Custom::ConsoleWarning);
+		case VerbosityType::Error:		return EditorTheme::Get(EditorTheme::Custom::ConsoleError);
+		case VerbosityType::Fatal:		return EditorTheme::Get(EditorTheme::Custom::ConsoleFatal);
+		case VerbosityType::Display:	return EditorTheme::Get(EditorTheme::Custom::ConsoleMessage);
+		default:						return EditorTheme::Get(EditorTheme::Custom::ConsoleLog);
 		}
 	}
 }
@@ -46,6 +47,7 @@ void EditorLayer::OnAttach()
 	ImGuiIO& _io = ImGui::GetIO();
 	_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	_io.IniFilename = iniPath.c_str();
+	EditorTheme::Load();
 
 	context.engine->SetLevelPaused(true); // edit mode: the level is shown but not running until Play
 	Logger::collectEntries = true;
@@ -57,12 +59,31 @@ void EditorLayer::OnDetach()
 	if (IsHotReloading()) SaveSettings();	// the settings changed and not saved yet survive a rebuild
 	if (IsHotReloading()) SaveSession(context);
 	ClearThumbnails();
+	if (Level* _level = context.GetLevel()) _level->GetCameraManager().ClearViewOverride();
 	Logger::collectEntries = false;
 	context.engine->SetLevelPaused(false);
 	window.ResetMouseViewport();
 	if (initialized)
 		ImGui::SFML::Shutdown();
 	initialized = false;
+}
+
+// The scene is looked at through the editor's own camera while it is not playing; Play gives the view back to the cameras of the scene.
+// Set every frame because each level (new scene, Undo, Stop) has its own camera manager.
+void EditorLayer::OnUpdate(const Float& _deltaTime)
+{
+	Level* _level = context.GetLevel();
+	if (!_level) return;
+
+	const sf::Vector2f _windowSize(window.GetRenderWindow().getSize());
+	if (!context.cameraReady && _windowSize.x > 0.f)
+	{
+		context.cameraCenter = FVector2(_windowSize.x * 0.5f, _windowSize.y * 0.5f);	// where the old default camera was
+		context.cameraReady = true;
+	}
+
+	if (context.playing) _level->GetCameraManager().ClearViewOverride();
+	else _level->GetCameraManager().SetViewOverride(context.GetCameraView(_windowSize));
 }
 
 Bool EditorLayer::OnEvent(const sf::Event& _event)
@@ -97,7 +118,10 @@ void EditorLayer::OnRender(Window& _window)
 
 	const sf::View _gameView = _renderWindow.getView();
 	UseScreenView(_window);
-	_renderWindow.clear(sf::Color(25, 25, 28));
+	{
+		const ImVec4 _background = EditorTheme::Get(EditorTheme::Custom::Background);
+		_renderWindow.clear(sf::Color(static_cast<std::uint8_t>(_background.x * 255.f), static_cast<std::uint8_t>(_background.y * 255.f), static_cast<std::uint8_t>(_background.z * 255.f)));
+	}
 
 	ImGui::GetIO().FontGlobalScale = editorSettings.uiScale;
 	ImGui::SFML::Update(_renderWindow, clock.restart());
@@ -177,11 +201,61 @@ void EditorLayer::DrawViewport()
 			const ImVec2 _max = ImGui::GetItemRectMax();
 			window.SetMouseViewport(sf::FloatRect({ _min.x, _min.y }, { _max.x - _min.x, _max.y - _min.y }));
 			viewportHovered = ImGui::IsItemHovered();
+			MoveCamera(_min, _max);
 			DrawGizmo(_min, _max);
 		}
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
+}
+
+// The editor camera, like Unreal's: hold the right mouse button (or the middle one) and move the mouse to slide the view, 
+// turn the wheel to zoom where the mouse points, F to look at the selection.
+void EditorLayer::MoveCamera(const ImVec2& _min, const ImVec2& _max)
+{
+	ImGuiIO& _io = ImGui::GetIO();
+	if (context.playing || !context.cameraReady) { cameraDragging = false; return; }
+
+	const sf::Vector2f	_windowSize(window.GetRenderWindow().getSize());
+	const float			_pixels = (_max.x - _min.x) > 1.f ? _windowSize.x / (_max.x - _min.x) : 1.f;	// window pixels per screen pixel of the picture
+	const bool			_over = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(_min, _max);
+
+	if (!cameraDragging && _over && gizmoAxis < 0 && (ImGui::IsMouseClicked(ImGuiMouseButton_Right) || ImGui::IsMouseClicked(ImGuiMouseButton_Middle)))
+	{
+		cameraDragging = true;
+		LOG(VerbosityType::VeryVerbose, "Camera: editor camera drag started");
+	}
+	if (cameraDragging && !ImGui::IsMouseDown(ImGuiMouseButton_Right) && !ImGui::IsMouseDown(ImGuiMouseButton_Middle))
+	{
+		cameraDragging = false;
+		LOG(VerbosityType::Verbose, "Camera: editor camera at (" + std::to_string(context.cameraCenter.x) + ", " + std::to_string(context.cameraCenter.y) + ") zoom " + std::to_string(context.cameraZoom));
+	}
+
+	const float _zoom = std::max(context.cameraZoom, 0.01f);
+	if (cameraDragging)
+	{
+		context.cameraCenter.x -= _io.MouseDelta.x * _pixels / _zoom;
+		context.cameraCenter.y -= _io.MouseDelta.y * _pixels / _zoom;
+	}
+
+	if (_over && _io.MouseWheel != 0.f && !_io.WantTextInput)
+	{
+		// Zoom around the mouse: the point of the world under it stays under it.
+		const ImVec2 _middle((_min.x + _max.x) * 0.5f, (_min.y + _max.y) * 0.5f);
+		const float _offsetX = (_io.MousePos.x - _middle.x) * _pixels;
+		const float _offsetY = (_io.MousePos.y - _middle.y) * _pixels;
+		const FVector2 _world(context.cameraCenter.x + _offsetX / _zoom, context.cameraCenter.y + _offsetY / _zoom);
+
+		const float _newZoom = std::clamp(_zoom * std::pow(1.15f, _io.MouseWheel), 0.05f, 20.f);
+		context.cameraZoom = _newZoom;
+		context.cameraCenter = FVector2(_world.x - _offsetX / _newZoom, _world.y - _offsetY / _newZoom);
+	}
+
+	if (_over && !cameraDragging && context.selected && !_io.WantTextInput && Shortcuts::Pressed("Focus Selection"))
+	{
+		context.cameraCenter = context.selected->GetPosition();
+		LOG(VerbosityType::Log, "Camera: editor camera on " + context.selected->GetName().StdString());
+	}
 }
 
 void EditorLayer::DrawConsole()
@@ -239,11 +313,8 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 	}
 	else if (context.selected)
 	{
-		CameraComponent* _camera = _level->GetCameraManager().GetCurrent();
-		if (!_camera) _camera = _level->GetDefaultCamera();
-		if (!_camera || !_camera->GetView()) return;
 		_target = context.selected;
-		_view = *_camera->GetView();
+		_view = context.GetCameraView(sf::Vector2f(window.GetRenderWindow().getSize()));
 	}
 	if (!_target) { gizmoAxis = -1; return; }
 
@@ -260,11 +331,11 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 	{
 		if (_mode > 0) ImGui::SameLine();
 		const bool _selected = gizmoMode == _mode;
-		if (_selected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.45f, 0.85f, 1.f));
+		if (_selected) ImGui::PushStyleColor(ImGuiCol_Button, EditorTheme::Get(EditorTheme::Custom::Selection));
 		if (ImGui::SmallButton(MODE_NAMES[_mode]) && gizmoAxis < 0) gizmoMode = _mode;
 		if (_selected) ImGui::PopStyleColor();
 	}
-	if (viewportHovered && gizmoAxis < 0 && !_io.WantTextInput)
+	if (viewportHovered && gizmoAxis < 0 && !_io.WantTextInput && !cameraDragging)	// W A S D fly the camera while the right button is held
 	{
 		if (Shortcuts::Pressed("Gizmo: All tools")) gizmoMode = 0;
 		if (Shortcuts::Pressed("Gizmo: Move")) gizmoMode = 1;
@@ -444,14 +515,18 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 
 	// ---- Drawing.
 	const auto _hot = [&](const Handle& _id) { return _over[_id] || gizmoAxis == _id; };
-	const ImU32 _red = _hot(MoveX) ? IM_COL32(255, 140, 140, 255) : IM_COL32(230, 60, 60, 255);
-	const ImU32 _green = _hot(MoveY) ? IM_COL32(150, 255, 150, 255) : IM_COL32(70, 200, 80, 255);
-	const ImU32 _yellow = _hot(MoveFree) ? IM_COL32(255, 245, 160, 255) : IM_COL32(240, 200, 60, 255);
+	const ImU32 _baseRed = EditorTheme::GetU32(EditorTheme::Custom::GizmoX);
+	const ImU32 _baseGreen = EditorTheme::GetU32(EditorTheme::Custom::GizmoY);
+	const ImU32 _baseYellow = EditorTheme::GetU32(EditorTheme::Custom::GizmoFree);
+	const ImU32 _baseRing = EditorTheme::GetU32(EditorTheme::Custom::GizmoRing);
+	const ImU32 _red = _hot(MoveX) ? EditorTheme::Lighten(_baseRed) : _baseRed;
+	const ImU32 _green = _hot(MoveY) ? EditorTheme::Lighten(_baseGreen) : _baseGreen;
+	const ImU32 _yellow = _hot(MoveFree) ? EditorTheme::Lighten(_baseYellow) : _baseYellow;
 	const ImU32 _black = IM_COL32(0, 0, 0, 200);
 
 	if (_rotate)
 	{
-		const ImU32 _ring = _hot(Ring) ? IM_COL32(255, 235, 120, 255) : IM_COL32(110, 170, 255, 235);
+		const ImU32 _ring = _hot(Ring) ? EditorTheme::Lighten(_baseRing) : _baseRing;
 		_draw->AddCircle(_origin, RING, IM_COL32(0, 0, 0, 120), 72, 5.f);
 		_draw->AddCircle(_origin, RING, _ring, 72, _hot(Ring) ? 3.f : 2.f);
 
@@ -487,8 +562,8 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 
 	if (_scale)
 	{
-		const ImU32 _redBox = _hot(ScaleX) ? IM_COL32(255, 170, 170, 255) : IM_COL32(200, 50, 50, 255);
-		const ImU32 _greenBox = _hot(ScaleY) ? IM_COL32(170, 255, 170, 255) : IM_COL32(50, 170, 60, 255);
+		const ImU32 _redBox = _hot(ScaleX) ? EditorTheme::Lighten(_baseRed) : EditorTheme::Darken(_baseRed);
+		const ImU32 _greenBox = _hot(ScaleY) ? EditorTheme::Lighten(_baseGreen) : EditorTheme::Darken(_baseGreen);
 		const ImU32 _greyBox = _hot(ScaleAll) ? IM_COL32(255, 255, 255, 255) : IM_COL32(190, 190, 200, 255);
 
 		const ImVec2 _x(_origin.x + SCALE_AT, _origin.y);

@@ -394,7 +394,7 @@ namespace
 		{
 			g_propertyEdited = true;
 			RecordEdit("Edit " + _property.name, KeyOf(&_object, _property.name));
-			LOG(VerbosityType::Log, "Inspector: " + _object.GetName().StdString() + "." + _property.name + " = " + ValueText(_value));
+			LOG(VerbosityType::Verbose, "Inspector: " + _object.GetName().StdString() + "." + _property.name + " = " + ValueText(_value));
 			_property.set(&_object, _value);
 		}
 	}
@@ -405,7 +405,10 @@ namespace
 		if (!_class) return;
 
 		for (const PropertyInfo* _property : _class->GetProperties())
+		{
+			if (_property->visible && !_property->visible(&_object)) continue;	// e.g. the radius of a rectangle
 			DrawProperty(*_property, _object);
+		}
 	}
 
 	void DrawTransform(ITransformable& _actor)
@@ -451,7 +454,7 @@ namespace
 		bool _active = _owner.IsActive();
 		if (ImGui::Checkbox("Active", &_active))
 		{
-			LOG(VerbosityType::Log, "Inspector: " + _owner.GetName().StdString() + (_active ? " activated" : " deactivated"));
+			LOG(VerbosityType::Verbose, "Inspector: " + _owner.GetName().StdString() + (_active ? " activated" : " deactivated"));
 			{
 				RecordEdit(_active ? "Activate" : "Deactivate");
 				_owner.SetActive(Bool(_active));
@@ -523,7 +526,7 @@ namespace
 				const bool _already = HasComponentOfClass(_actor.GetComponents(), _class->name);	// one per type
 				if (ImGui::MenuItem(_class->name.c_str(), nullptr, false, !_already))
 				{
-					LOG_MSG("Inspector: adding " + _class->name + " to " + _actor.GetName().StdString());
+					LOG(VerbosityType::Log, "Inspector: adding " + _class->name + " to " + _actor.GetName().StdString());
 					RecordEdit("Add " + _class->name);
 					_class->componentFactory(&_actor);
 				}
@@ -543,7 +546,7 @@ namespace
 				const bool _already = HasComponentOfClass(_widget.GetComponents(), _class->name);
 				if (ImGui::MenuItem(_class->name.c_str(), nullptr, false, !_already))
 				{
-					LOG_MSG("Inspector: adding " + _class->name + " to widget " + _widget.GetName().StdString());
+					LOG(VerbosityType::Log, "Inspector: adding " + _class->name + " to widget " + _widget.GetName().StdString());
 					RecordEdit("Add " + _class->name);
 					_class->widgetComponentFactory(&_widget);
 				}
@@ -566,7 +569,7 @@ namespace
 
 		if (Component* _toRemove = DrawComponents(_actor.GetComponents()))
 			{
-				LOG_MSG("Inspector: removing " + ClassNameOf(*_toRemove) + " from " + _actor.GetName().StdString());
+				LOG(VerbosityType::Log, "Inspector: removing " + ClassNameOf(*_toRemove) + " from " + _actor.GetName().StdString());
 				RecordEdit("Remove " + ClassNameOf(*_toRemove));
 				_actor.RemoveComponentInstance(_toRemove);
 			}
@@ -592,7 +595,7 @@ namespace
 
 		if (WidgetComponent* _toRemove = DrawComponents(_widget.GetComponents()))
 			{
-				LOG_MSG("Inspector: removing " + ClassNameOf(*_toRemove) + " from widget " + _widget.GetName().StdString());
+				LOG(VerbosityType::Log, "Inspector: removing " + ClassNameOf(*_toRemove) + " from widget " + _widget.GetName().StdString());
 				RecordEdit("Remove " + ClassNameOf(*_toRemove));
 				_widget.RemoveComponentInstance(_toRemove);
 			}

@@ -36,7 +36,6 @@ namespace
 	struct HierarchyState
 	{
 		EditorContext*									context;
-		Actor*											defaultCamera	= nullptr;
 		std::unordered_map<Actor*, Actor*>				parentOf;
 		Actor*											toDelete	= nullptr;
 		Actor*											dragged		= nullptr;
@@ -66,7 +65,7 @@ namespace
 		{
 			_context.selectedWidget = _widget;
 			_context.selected = nullptr;
-			LOG(VerbosityType::Log, "Hierarchy: selected widget " + _widget->GetName().StdString());
+			LOG(VerbosityType::Verbose, "Hierarchy: selected widget " + _widget->GetName().StdString());
 		}
 
 		// Drag a widget onto another one to attach it (it then moves with it).
@@ -124,7 +123,7 @@ namespace
 		{
 			_state.context->selected = _actor;
 			_state.context->selectedWidget = nullptr;
-			LOG(VerbosityType::Log, "Hierarchy: selected actor " + _actor->GetName().StdString());
+			LOG(VerbosityType::Verbose, "Hierarchy: selected actor " + _actor->GetName().StdString());
 		}
 
 		if (ImGui::BeginDragDropSource())
@@ -152,8 +151,7 @@ namespace
 
 		if (ImGui::BeginPopupContextItem())
 		{
-			// The level keeps a pointer to its default camera: deleting it would leave that pointer dangling.
-			if (_actor != _state.defaultCamera && ImGui::MenuItem("Delete"))
+			if (ImGui::MenuItem("Delete"))
 				_state.toDelete = _actor;
 			if (_state.parentOf.contains(_actor) && ImGui::MenuItem("Unparent"))
 			{
@@ -186,8 +184,6 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 		{
 			HierarchyState _state;
 			_state.context = &_context;
-			if (const CameraComponent* _camera = _level->GetDefaultCamera())
-				_state.defaultCamera = _camera->GetOwner();
 
 			std::vector<Actor*> _actors;
 			for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
@@ -211,10 +207,8 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 					_context.history.Record(_context, "Add " + _class->name);
 					Actor* _actor = _class->factory(_level);
-					LOG_MSG("Hierarchy: added actor " + _class->name);
-					const CameraComponent* _camera = _level->GetDefaultCamera();
-					if (_camera && _camera->GetOwner())
-						_actor->SetPosition(_camera->GetOwner()->GetPosition()); // where the Viewport looks
+					LOG(VerbosityType::Log, "Hierarchy: added actor " + _class->name);
+					_actor->SetPosition(_context.cameraCenter); // where the Viewport looks
 					_context.selected = _actor;
 					_context.selectedWidget = nullptr;
 				}
@@ -240,7 +234,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 						if (!ImGui::MenuItem(_class->name.c_str())) continue;
 						_context.history.Record(_context, "Add " + _class->name);
 						_context.selectedWidget = _class->widgetFactory(_level);
-						LOG_MSG("Hierarchy: added widget " + _class->name);
+						LOG(VerbosityType::Log, "Hierarchy: added widget " + _class->name);
 						_context.selected = nullptr;
 					}
 					ImGui::EndPopup();
@@ -271,7 +265,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				{
 					Widget* _widgetToDelete = _widgetOps.toDelete;
 					_context.history.Record(_context, "Delete " + _widgetToDelete->GetName().StdString());
-					LOG_MSG("Hierarchy: deleting widget " + _widgetToDelete->GetName().StdString());
+					LOG(VerbosityType::Log, "Hierarchy: deleting widget " + _widgetToDelete->GetName().StdString());
 					if (_context.selectedWidget == _widgetToDelete) _context.selectedWidget = nullptr;
 					for (const std::unique_ptr<Widget>& _other : _level->GetHUD().GetWidgets())
 						_other->RemoveChild(_widgetToDelete);
@@ -307,7 +301,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				if (!_cycle && _currentParent != _widgetOps.dropTarget)
 				{
 					_context.history.Record(_context, "Reparent " + _moved->GetName().StdString());
-					LOG_MSG("Hierarchy: widget " + _moved->GetName().StdString() + (_widgetOps.dropTarget ? " attached to " + _widgetOps.dropTarget->GetName().StdString() : std::string(" detached")));
+					LOG(VerbosityType::Log, "Hierarchy: widget " + _moved->GetName().StdString() + (_widgetOps.dropTarget ? " attached to " + _widgetOps.dropTarget->GetName().StdString() : std::string(" detached")));
 					if (_currentParent) _currentParent->RemoveChild(_moved);
 					if (_widgetOps.dropTarget) _widgetOps.dropTarget->AddChild(_moved);
 				}
@@ -321,7 +315,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				if (!_cycle && _currentParent != _state.dropTarget)	// already attached there: nothing to do
 				{
 					_context.history.Record(_context, "Reparent " + _state.dragged->GetName().StdString());
-					LOG_MSG("Hierarchy: " + _state.dragged->GetName().StdString() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName().StdString() : std::string(" detached")));
+					LOG(VerbosityType::Log, "Hierarchy: " + _state.dragged->GetName().StdString() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName().StdString() : std::string(" detached")));
 					if (_old != _state.parentOf.end()) _old->second->RemoveChild(_state.dragged);
 					if (_state.dropTarget) _state.dropTarget->AddChild(_state.dragged);
 				}
@@ -330,7 +324,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 			if (_state.toDelete)
 			{
 				_context.history.Record(_context, "Delete " + _state.toDelete->GetName().StdString());
-				LOG_MSG("Hierarchy: deleting actor " + _state.toDelete->GetName().StdString());
+				LOG(VerbosityType::Log, "Hierarchy: deleting actor " + _state.toDelete->GetName().StdString());
 				const auto _parent = _state.parentOf.find(_state.toDelete);
 				if (_parent != _state.parentOf.end()) _parent->second->RemoveChild(_state.toDelete);
 				if (_context.selected == _state.toDelete) _context.selected = nullptr;
@@ -348,12 +342,8 @@ void Krampus::DeleteSelection(EditorContext& _context)
 
 	if (_context.selected)
 	{
-		// The level keeps a pointer to its default camera: deleting it would leave that pointer dangling.
-		const CameraComponent* _camera = _level->GetDefaultCamera();
-		if (_camera && _camera->GetOwner() == _context.selected) return;
-
 		_context.history.Record(_context, "Delete " + _context.selected->GetName().StdString());
-		LOG_MSG("Editor: deleting actor " + _context.selected->GetName().StdString());
+		LOG(VerbosityType::Log, "Editor: deleting actor " + _context.selected->GetName().StdString());
 		for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
 			_actor->RemoveChild(_context.selected);
 		_context.selected->Destroy();
@@ -362,7 +352,7 @@ void Krampus::DeleteSelection(EditorContext& _context)
 	else if (_context.selectedWidget)
 	{
 		_context.history.Record(_context, "Delete " + _context.selectedWidget->GetName().StdString());
-		LOG_MSG("Editor: deleting widget " + _context.selectedWidget->GetName().StdString());
+		LOG(VerbosityType::Log, "Editor: deleting widget " + _context.selectedWidget->GetName().StdString());
 		for (const std::unique_ptr<Widget>& _widget : _level->GetHUD().GetWidgets())
 			_widget->RemoveChild(_context.selectedWidget);
 		_context.selectedWidget->Destroy();

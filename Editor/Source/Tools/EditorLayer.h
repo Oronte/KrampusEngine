@@ -23,6 +23,7 @@ namespace Krampus
 		std::string					iniPath				= "Content/Editor/imgui.ini";
 		bool						initialized			= false;
 		bool						viewportHovered		= false;
+		bool						cameraDragging		= false;	// right or middle mouse held: the editor camera is being moved
 		bool						layoutChecked		= false;
 
 		int							gizmoAxis			= -1;		// handle being dragged: 0 X arrow, 1 Y arrow, 2 center, 3 rotation ring, 4 X box, 5 Y box, 6 grey box, -1 none
@@ -47,6 +48,7 @@ namespace Krampus
 
 		void OnAttach() override;
 		void OnDetach() override;
+		void OnUpdate(const Float& _deltaTime) override;
 		Bool BlocksInput() const override { return !context.playing; } // outside Play mode the game gets no input
 		/// <summary>After a hot reload: opens again the scene that was being edited. Call it once the game chose its first scene.</summary>
 		void RestoreSession() { Krampus::RestoreSession(context); }
@@ -58,6 +60,7 @@ namespace Krampus
 		void BuildDefaultLayout(unsigned int _dockspace);
 		void DrawViewport();
 		void DrawGizmo(const ImVec2& _min, const ImVec2& _max);
+		void MoveCamera(const ImVec2& _min, const ImVec2& _max);
 		void DrawSettingsWindow();
 		void HandleShortcuts();
 		void SaveSettings();

@@ -94,6 +94,9 @@ void Krampus::ShapeObject::SetShapeType(const ShapeType& _type)
 	const Angle		_rotation	= shape->GetRotation();
 	const FVector2	_scale		= shape->GetScale();
 	const Color		_fill		= shape->GetFillColor();
+	const IRect		_rect		= shape->GetTextureRect();	// what the new shape shows of the picture, and how the picture is filtered
+	const Bool		_repeated	= texture.IsRepeated();
+	const Bool		_smooth		= texture.IsSmooth();
 
 	if (_type == ShapeType::Rectangle)
 	{
@@ -114,5 +117,6 @@ void Krampus::ShapeObject::SetShapeType(const ShapeType& _type)
 	shape->SetRotation(_rotation);
 	shape->SetScale(_scale);
 	shape->SetFillColor(_fill);
-	SetTexture(texturePath, textureType);	// the new shape needs the texture again
+	SetTexture(texturePath, textureType, IRect(), _repeated, _smooth);	// the new shape needs the texture again
+	if (_rect.GetSize().x > 0 && _rect.GetSize().y > 0) shape->SetTextureRect(_rect);
 }

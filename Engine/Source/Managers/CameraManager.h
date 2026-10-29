@@ -13,9 +13,12 @@ namespace Krampus
 	class CameraManager : public KrampusObject
 	{
 		CameraComponent*							current		= nullptr;
+		std::optional<sf::View>						viewOverride;	// when set, the world is drawn through this view instead of the current camera
 		std::map<uint8_t, std::vector<IDrawable*>>	actors;
 		std::map<uint8_t, std::vector<IDrawable*>>	widgets;
-		std::vector<std::shared_ptr<Vertices>>		debugs;
+		std::vector<std::shared_ptr<Vertices>>		debugs;			// outlines drawn in the world, through the camera
+		std::vector<std::shared_ptr<Vertices>>		screenDebugs;	// outlines of HUD widgets, drawn in the HUD view
+		bool										drawingScreenDebug	= false;
 
 	public:
 		/// <summary>
@@ -27,12 +30,41 @@ namespace Krampus
 		}
 
 		/// <summary>
+		/// Adds an outline to what is drawn this frame: in the HUD view while the debug outlines of widgets are drawn, in the world otherwise.
+		/// </summary>
+		inline void PushDebug(const std::shared_ptr<Vertices>& _vertices)
+		{
+			(drawingScreenDebug ? screenDebugs : debugs).push_back(_vertices);
+		}
+
+		/// <summary>
+		/// Draws the outline of every component that uses debug (IDebuggable): of the actors in the world (_screen false), of the HUD widgets (_screen true).
+		/// </summary>
+		void RenderDebuggables(Window& _window, const Bool& _screen);
+
+		/// <summary>
+		/// Draws the world through this view, whatever the cameras of the level are (the editor's free camera). Call it every frame it must hold.
+		/// </summary>
+		inline void SetViewOverride(const sf::View& _view)
+		{
+			viewOverride = _view;
+		}
+
+		/// <summary>
+		/// Goes back to the cameras of the level.
+		/// </summary>
+		inline void ClearViewOverride()
+		{
+			viewOverride.reset();
+		}
+
+		/// <summary>
 		/// Sets the currently active rendering camera.
 		/// </summary>
 		/// <param name="_camera">Pointer to CameraComponent.</param>
 		inline void SetCurrent(CameraComponent* _camera)
 		{
-			LOG(VerbosityType::Log, std::string("Camera: current camera changed to ") + (_camera && _camera->GetOwner() ? _camera->GetOwner()->GetName().StdString() : std::string("none")));
+			LOG(VerbosityType::Verbose, std::string("Camera: current camera changed to ") + (_camera && _camera->GetOwner() ? _camera->GetOwner()->GetName().StdString() : std::string("none")));
 			current = _camera;
 		}
 
