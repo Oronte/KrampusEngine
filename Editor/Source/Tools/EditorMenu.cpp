@@ -126,6 +126,8 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 
 		if (ImGui::BeginMenu("Tools"))
 		{
+			if (ImGui::MenuItem("Network"))
+				OpenNetworkWindow();
 			if (ImGui::MenuItem("Animation Editor"))
 				OpenAnimationEditor();
 			ImGui::EndMenu();

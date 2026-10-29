@@ -147,7 +147,7 @@ namespace
 		}
 
 		// Files the project still lists but that are gone (deleted outside the editor): the build would fail on them.
-		const std::string _marker = "Content\Scripts\\";
+		const std::string _marker = "Content\\Scripts\\";
 		for (size_t _position = _project.find(_marker); _position != std::string::npos; _position = _project.find(_marker, _position))
 		{
 			const size_t _begin = _project.rfind('"', _position) + 1;

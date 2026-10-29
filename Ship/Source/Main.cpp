@@ -8,6 +8,8 @@
 //Core engine includes
 #include "Core/AssetPack.h"
 #include "Core/Engine.h"
+#include "Network/NetworkManager.h"
+#include "Scene/Scene.h"
 #include "Utilities/KrampusInclude.h"
 
 //Game
@@ -42,7 +44,7 @@ namespace
 	}
 }
 
-int main()
+int main(int argc, char** argv)
 {
 	Prepare();
 
@@ -50,6 +52,26 @@ int main()
 	{
 		Krampus::Engine _engine;
 		Krampus::GameStart(_engine);
+
+		// Command line: --scene Name opens a scene; --host [port] / --join address[:port] start a network game (to test with two copies)
+		for (int _i = 1; _i < argc; ++_i)
+		{
+			const std::string _argument = argv[_i];
+			if (_argument == "--host")
+			{
+				if (_i + 1 < argc && std::isdigit(static_cast<unsigned char>(argv[_i + 1][0])))
+					_engine.GetNetwork()->Host(static_cast<unsigned short>(std::atoi(argv[++_i])));
+				else
+					_engine.GetNetwork()->Host();
+			}
+			else if (_argument == "--scene" && _i + 1 < argc)
+				Krampus::Scene::Open(_engine, argv[++_i]);
+			else if (_argument == "--join")
+			{
+				if (_i + 1 < argc) _engine.GetNetwork()->Join(argv[++_i]);
+				else _engine.GetNetwork()->Join();
+			}
+		}
 		_engine.Start();
 	}
 	catch (const Krampus::Exception& _exception)

@@ -60,8 +60,8 @@ namespace Krampus
 		/// <summary>
 		/// Gets the sub-rectangle of the texture mapped onto the shape.
 		/// </summary>
-		/// <returns>Texture rectangle.</returns>
-        inline const IRect& GetTextureRect() const
+		/// <returns>Texture rectangle (a copy: SFML gives it by value).</returns>
+        inline IRect GetTextureRect() const
         {
             if (!shape)
             {

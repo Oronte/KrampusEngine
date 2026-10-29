@@ -159,7 +159,7 @@ namespace Krampus
         String          name;
         AnimationData   data;
         ShapeObject*    shape;
-        Timer*          timer;
+        Timer*          timer = nullptr;
         State           state;
 
     public:
@@ -294,4 +294,54 @@ namespace Krampus
         void Stop();
     };
 
+
+    /// <summary>
+    /// Makes the animations described by clips on a component that keeps them in a map: removes what the previous clips made
+    /// (appliedClips), adds the new ones through _add, and makes startAnimation (else the first clip) the current animation.
+    /// Shared by AnimationComponent, AnimationComponentSM and AnimationWidgetComponent.
+    /// </summary>
+    /// <param name="_animations">The animations of the component (name to unique_ptr of Animation or a subclass).</param>
+    /// <param name="_current">The animation in use; stopped and replaced when needed.</param>
+    /// <param name="_add">Creates one animation: called with the name and the data of a clip.</param>
+    /// <param name="_who">Name of the component, for the warnings.</param>
+    template <typename Map, typename Current, typename AddFunction>
+    void ApplyAnimationClips(const std::vector<AnimationClip>& _clips, const String& _start, std::vector<String>& _appliedClips,
+        Map& _animations, Current*& _current, AddFunction _add, const char* _who)
+    {
+        // Take away what the previous clips made.
+        for (const String& _old : _appliedClips)
+        {
+            const auto _found = _animations.find(_old);
+            if (_found == _animations.end()) continue;
+            if (_current == _found->second.get())
+            {
+                _current->Stop();
+                _current = nullptr;
+            }
+            _animations.erase(_found);
+        }
+        _appliedClips.clear();
+
+        for (const AnimationClip& _clip : _clips)
+        {
+            if (_clip.frameCount <= 0) continue;
+            if (_animations.contains(_clip.name))
+            {
+                LOG_WARNING(std::string(_who) + ": an animation named \"" + _clip.name + "\" already exists, the clip was not applied");
+                continue;
+            }
+            _add(_clip.name, _clip.ToData());
+            _appliedClips.push_back(_clip.name);
+        }
+
+        // The animation the level starts with: the chosen one, else the first clip.
+        const bool _hasStart = std::find(_appliedClips.begin(), _appliedClips.end(), _start) != _appliedClips.end();
+        const String& _first = _appliedClips.empty() ? _start : (_hasStart ? _start : _appliedClips.front());
+        const auto _target = _animations.find(_first);
+        if (_target != _animations.end())
+        {
+            if (_current && _current != _target->second.get()) _current->Stop();
+            _current = _target->second.get();
+        }
+    }
 }

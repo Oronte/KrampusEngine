@@ -1,0 +1,63 @@
+// The one list of the inputs the InputManager knows. It is included several times with a different meaning of the macros
+// (declare the members, poll them, give them a name for the editor...), so a key is added here and nowhere else.
+//
+//   KRAMPUS_KEY(Name, SfmlKey)           a keyboard key: member Name, sf::Keyboard::Key::SfmlKey
+//   KRAMPUS_MOUSE_BUTTON(Name, SfmlName) a mouse button: member Name, sf::Mouse::Button::SfmlName
+//   KRAMPUS_PAD_BUTTON(Name)             a gamepad button: member Name
+//
+// A macro that the includer does not define is empty. All of them are undefined at the end.
+
+#ifndef KRAMPUS_KEY
+#define KRAMPUS_KEY(Name, SfmlKey)
+#endif
+#ifndef KRAMPUS_MOUSE_BUTTON
+#define KRAMPUS_MOUSE_BUTTON(Name, SfmlName)
+#endif
+#ifndef KRAMPUS_PAD_BUTTON
+#define KRAMPUS_PAD_BUTTON(Name)
+#endif
+
+// Letters
+KRAMPUS_KEY(A, A) KRAMPUS_KEY(B, B) KRAMPUS_KEY(C, C) KRAMPUS_KEY(D, D) KRAMPUS_KEY(E, E) KRAMPUS_KEY(F, F) KRAMPUS_KEY(G, G)
+KRAMPUS_KEY(H, H) KRAMPUS_KEY(I, I) KRAMPUS_KEY(J, J) KRAMPUS_KEY(K, K) KRAMPUS_KEY(L, L) KRAMPUS_KEY(M, M) KRAMPUS_KEY(N, N)
+KRAMPUS_KEY(O, O) KRAMPUS_KEY(P, P) KRAMPUS_KEY(Q, Q) KRAMPUS_KEY(R, R) KRAMPUS_KEY(S, S) KRAMPUS_KEY(T, T) KRAMPUS_KEY(U, U)
+KRAMPUS_KEY(V, V) KRAMPUS_KEY(W, W) KRAMPUS_KEY(X, X) KRAMPUS_KEY(Y, Y) KRAMPUS_KEY(Z, Z)
+
+// Digits (top row)
+KRAMPUS_KEY(Num0, Num0) KRAMPUS_KEY(Num1, Num1) KRAMPUS_KEY(Num2, Num2) KRAMPUS_KEY(Num3, Num3) KRAMPUS_KEY(Num4, Num4)
+KRAMPUS_KEY(Num5, Num5) KRAMPUS_KEY(Num6, Num6) KRAMPUS_KEY(Num7, Num7) KRAMPUS_KEY(Num8, Num8) KRAMPUS_KEY(Num9, Num9)
+
+// Modifiers and system keys
+KRAMPUS_KEY(Escape, Escape)
+KRAMPUS_KEY(LControl, LControl) KRAMPUS_KEY(LShift, LShift) KRAMPUS_KEY(LAlt, LAlt) KRAMPUS_KEY(LSystem, LSystem)
+KRAMPUS_KEY(RControl, RControl) KRAMPUS_KEY(RShift, RShift) KRAMPUS_KEY(RAlt, RAlt) KRAMPUS_KEY(RSystem, RSystem)
+KRAMPUS_KEY(Menu, Menu)
+
+// Punctuation
+KRAMPUS_KEY(LBracket, LBracket) KRAMPUS_KEY(RBracket, RBracket) KRAMPUS_KEY(Semicolon, Semicolon) KRAMPUS_KEY(Comma, Comma)
+KRAMPUS_KEY(Period, Period) KRAMPUS_KEY(Quote, Apostrophe) KRAMPUS_KEY(Slash, Slash) KRAMPUS_KEY(Backslash, Backslash)
+KRAMPUS_KEY(Equal, Equal) KRAMPUS_KEY(Hyphen, Hyphen)
+
+// Editing and navigation
+KRAMPUS_KEY(Space, Space) KRAMPUS_KEY(Enter, Enter) KRAMPUS_KEY(Backspace, Backspace) KRAMPUS_KEY(Tab, Tab)
+KRAMPUS_KEY(PageUp, PageUp) KRAMPUS_KEY(PageDown, PageDown) KRAMPUS_KEY(End, End) KRAMPUS_KEY(Home, Home)
+KRAMPUS_KEY(Insert, Insert) KRAMPUS_KEY(Delete, Delete)
+
+// Function keys
+KRAMPUS_KEY(F1, F1) KRAMPUS_KEY(F2, F2) KRAMPUS_KEY(F3, F3) KRAMPUS_KEY(F4, F4) KRAMPUS_KEY(F5, F5) KRAMPUS_KEY(F6, F6)
+KRAMPUS_KEY(F7, F7) KRAMPUS_KEY(F8, F8) KRAMPUS_KEY(F9, F9) KRAMPUS_KEY(F10, F10) KRAMPUS_KEY(F11, F11) KRAMPUS_KEY(F12, F12)
+KRAMPUS_KEY(F13, F13) KRAMPUS_KEY(F14, F14) KRAMPUS_KEY(F15, F15)
+KRAMPUS_KEY(Pause, Pause)
+
+// Mouse buttons
+KRAMPUS_MOUSE_BUTTON(MouseLeftClick, Left) KRAMPUS_MOUSE_BUTTON(MouseRightClick, Right) KRAMPUS_MOUSE_BUTTON(MouseMiddleClick, Middle)
+KRAMPUS_MOUSE_BUTTON(MouseExtraButton1, Extra1) KRAMPUS_MOUSE_BUTTON(MouseExtraButton2, Extra2)
+
+// Gamepad buttons
+KRAMPUS_PAD_BUTTON(ButtonA) KRAMPUS_PAD_BUTTON(ButtonB) KRAMPUS_PAD_BUTTON(ButtonX) KRAMPUS_PAD_BUTTON(ButtonY)
+KRAMPUS_PAD_BUTTON(ButtonStart) KRAMPUS_PAD_BUTTON(ButtonBack) KRAMPUS_PAD_BUTTON(ButtonLB) KRAMPUS_PAD_BUTTON(ButtonRB)
+KRAMPUS_PAD_BUTTON(ButtonLS) KRAMPUS_PAD_BUTTON(ButtonRS)
+
+#undef KRAMPUS_KEY
+#undef KRAMPUS_MOUSE_BUTTON
+#undef KRAMPUS_PAD_BUTTON

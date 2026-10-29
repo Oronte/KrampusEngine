@@ -525,13 +525,18 @@ namespace Krampus
         template<EventCallable<Args...> F>
         NO_DISCARD ListenerHandle AddListener(F&& _callback, const ListenerOptions& _options = {})
         {
-            if constexpr (requires { static_cast<bool>(_callback); })
+            // A null function pointer or an empty std::function is refused instead of crashing at the first Broadcast.
+            bool _isNull = false;
+            if constexpr (std::is_function_v<std::remove_reference_t<F>>)
+                _isNull = false;		// a function itself cannot be null
+            else if constexpr (std::is_pointer_v<std::remove_cvref_t<F>>)
+                _isNull = _callback == nullptr;
+            else if constexpr (requires { _callback.operator bool(); })		// std::function: empty = null (a captureless lambda has no operator bool)
+                _isNull = !_callback.operator bool();
+            if (_isNull)
             {
-                if (!static_cast<bool>(_callback))
-                {
-                    LOG_WARNING("A null callback is detected; an invalid ListenerHandle is returned");
-                    return ListenerHandle();
-                }
+                LOG_WARNING("A null callback is detected; an invalid ListenerHandle is returned");
+                return ListenerHandle();
             }
 
             return Register(Callback(std::forward<F>(_callback)), _options);

@@ -330,7 +330,7 @@ namespace
 
 	bool ValidFileName(const std::string& _name)
 	{
-		return !_name.empty() && _name.find_first_of("\/:*?\"<>|") == std::string::npos && _name.back() != '.' && _name.back() != ' ';
+		return !_name.empty() && _name.find_first_of("\\/:*?\"<>|") == std::string::npos && _name.back() != '.' && _name.back() != ' ';
 	}
 
 	// Gives a new name to a file or folder. A script (.h + .cpp) is renamed as a pair and its class name is changed inside the files.

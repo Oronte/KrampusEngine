@@ -20,7 +20,7 @@ void Krampus::CameraManager::Render(const Bool& splitScreen)
 	if (!viewOverride)
 	{
 		if (!current)
-			current = GetWorld()->GetLevelManager()->GetCurrentLevel()->GetDefaultCamera();
+			if (Level* _level = GetWorld()->GetLevelManager()->GetCurrentLevel()) current = _level->GetDefaultCamera();
 		if (!current)
 		{
 			if (!warned) LOG_WARNING("There is no current camera ! Objects cannot be drawn on the screen.");
@@ -37,7 +37,7 @@ void Krampus::CameraManager::Render(const Bool& splitScreen)
 	RenderDebuggables(_window, false);	// the outlines of components that use debug, then the ones the code asked for
 	RenderDebugs(_window, splitScreen);
 
-	GetWorld()->GetWindowRef().SetView(GetWorld()->GetLevelManager()->GetCurrentLevel()->GetHUD().GetView()); // Widget View
+	if (Level* _hudLevel = GetWorld()->GetLevelManager()->GetCurrentLevel()) GetWorld()->GetWindowRef().SetView(_hudLevel->GetHUD().GetView()); // Widget View
 	RenderWidgets(_window, splitScreen);
 	RenderDebuggables(_window, true);	// widgets are outlined in the HUD view, where they are drawn
 

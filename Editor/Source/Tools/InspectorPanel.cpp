@@ -508,7 +508,8 @@ namespace
 	}
 
 	// Input events of an InputComponent ("A.Press", "MouseWheelScroll"...), each with its own list of function calls.
-	bool DrawInputBindings(const PropertyInfo& _property, IGameObject& _owner, std::string& _text)
+	// _messages: the names are network messages typed by the user (NetworkEventsComponent) instead of input events chosen in a list.
+	bool DrawInputBindings(const PropertyInfo& _property, IGameObject& _owner, std::string& _text, const bool _messages = false)
 	{
 		std::vector<InputComponent::Binding> _bindings = InputComponent::DecodeBindings(_text);
 		bool _changed = false;
@@ -540,8 +541,23 @@ namespace
 
 			if (!_bindings.empty()) ImGui::Separator();
 			if (ImGui::Button("+ Add input"))
-				ImGui::OpenPopup("AddInput");
-			if (ImGui::BeginPopup("AddInput"))
+				ImGui::OpenPopup(_messages ? "AddMessage" : "AddInput");
+			if (_messages && ImGui::BeginPopup("AddMessage"))
+			{
+				static char _messageName[64] = "";
+				ImGui::SetNextItemWidth(200.f);
+				ImGui::InputTextWithHint("##message", "Message name", _messageName, sizeof(_messageName));
+				const bool _used = std::any_of(_bindings.begin(), _bindings.end(), [&](const InputComponent::Binding& _binding) { return _binding.source == _messageName; });
+				if (ImGui::Button("Add") && _messageName[0] && !_used)
+				{
+					_bindings.push_back(InputComponent::Binding{ _messageName, EventList() });
+					_changed = true;
+					_messageName[0] = 0;
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+			if (!_messages && ImGui::BeginPopup("AddInput"))
 			{
 				static char _filter[64] = "";
 				ImGui::SetNextItemWidth(220.f);
@@ -607,6 +623,9 @@ namespace
 			}
 			break;
 		}
+		case PropertyType::MessageBindings:
+			_changed = DrawInputBindings(_property, _object, std::get<std::string>(_value), true);
+			break;
 		case PropertyType::InputBindings:
 			_changed = DrawInputBindings(_property, _object, std::get<std::string>(_value));
 			break;

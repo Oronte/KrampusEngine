@@ -217,7 +217,10 @@ void Krampus::PhysicsComponent::Init()
     bodyId = b2CreateBody(GetLevel()->GetWorldPhysics().GetPhysicsWorldID(), &_body);
 
     if (!b2Body_IsValid(bodyId))
-        LOG_ERROR("The body id is Invalid !");
+    {
+        LOG_ERROR("PhysicsComponent: box2d could not create the body of \"" + GetOwner()->GetName().StdString() + "\"");
+        return;		// nothing below makes sense without a body
+    }
 
      collisionResolveHandle = GetLevel()->GetWorldPhysics().onResolveCollision.AddListener(this, &PhysicsComponent::OnCollisionResolve);
      moveHandle = GetOwner()->onMove.AddListener([this] (FVector2 _pos)

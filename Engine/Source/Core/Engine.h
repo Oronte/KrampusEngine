@@ -8,6 +8,7 @@ namespace Krampus
 
 	class LevelManager;
 	class InputManager;
+	class NetworkManager;
 	class Mouse;
 
 	/// <summary>
@@ -16,10 +17,11 @@ namespace Krampus
 	class Engine
 	{
 		Bool						shouldClose = false;
-		LevelManager*				levelManager = nullptr;
-		InputManager*				inputManager = nullptr;
+		std::unique_ptr<LevelManager>	levelManager;
+		std::unique_ptr<InputManager>	inputManager;
+		std::unique_ptr<NetworkManager>	network;
 		Window						window;
-		Mouse*						mouse = nullptr;
+		std::unique_ptr<Mouse>			mouse;
 		LayerStack					layerStack;
 		EngineSettings				settings;
 		Bool						levelPaused = false;
@@ -38,16 +40,22 @@ namespace Krampus
 		/// <returns>Pointer to the LevelManager.</returns>
 		inline LevelManager* GetLevelManager()
 		{
-			return levelManager;
+			return levelManager.get();
 		}
 
 		/// <summary>
 		/// Gets the InputManager responsible for handling input events.
 		/// </summary>
 		/// <returns>Pointer to the InputManager.</returns>
+		/// <summary>Hosting, joining, messages: see Network/NetworkManager.h.</summary>
+		inline NetworkManager* GetNetwork()
+		{
+			return network.get();
+		}
+
 		inline InputManager* GetInputManager()
 		{
-			return inputManager;
+			return inputManager.get();
 		}
 
 		/// <summary>
@@ -98,7 +106,7 @@ namespace Krampus
 		/// <returns>Pointer to the Mouse instance.</returns>
 		Mouse* GetMouse()
 		{
-			return mouse;
+			return mouse.get();
 		}
 
 		/// <summary>

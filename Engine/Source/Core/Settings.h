@@ -133,6 +133,24 @@ namespace Krampus
 	};
 
 	/// <summary>
+	/// Network: the defaults of Host() and Join(), the ones the "Host" and "Join" functions of event lists use.
+	/// </summary>
+	class NetworkSettings : public SettingsSection
+	{
+	public:
+		int			port			= 7777;				// TCP and UDP
+		std::string	address			= "127.0.0.1";		// the host that Join() goes to
+		std::string	playerName		= "Player";
+		int			maxClients		= 8;
+		float		timeout			= 10.f;				// seconds of silence before a player is dropped
+
+		const char* Title() const override { return "Network"; }
+		const char* Description() const override { return "Hosting and joining a network game (see NetworkManager). Port, the host address to join, player name."; }
+		void Apply() override;
+		void ResetToDefaults() override;
+	};
+
+	/// <summary>
 	/// The packaged game (Ship): the scene it starts on and how its window looks. The editor also opens the start scene when it starts;
 	/// the window options only matter for the exe made by File > Package Game.
 	/// </summary>
@@ -164,6 +182,7 @@ namespace Krampus
 		TimeSettings		time;
 		WindowSettings		window;
 		AudioSettings		audio;
+		NetworkSettings		network;
 		ShipSettings		ship;
 
 	public:

@@ -1,6 +1,7 @@
 #include "Settings.h"
 #include "Core/AssetPack.h"
 #include "Core/Engine.h"
+#include "Network/NetworkManager.h"
 #include "Reflection/Reflection.h"
 #include "Managers/LevelManager.h"
 #include "Managers/WorldPhysics.h"
@@ -70,6 +71,7 @@ namespace
 		case PropertyType::Scene:
 		case PropertyType::Events:
 		case PropertyType::InputBindings:
+		case PropertyType::MessageBindings:
 		case PropertyType::Sound:	return PropertyValue(_text);
 		case PropertyType::Vector2:
 		{
@@ -214,7 +216,7 @@ void ShipSettings::ResetToDefaults()
 // ---- All of them
 
 EngineSettings::EngineSettings()
-	: sections { &logger, &physics, &time, &window, &audio, &ship }
+	: sections { &logger, &physics, &time, &window, &audio, &network, &ship }
 {
 }
 
@@ -333,4 +335,22 @@ bool EngineSettings::LoadSections(const std::filesystem::path& _path, const std:
 		}
 	}
 	return true;
+}
+
+// ---- Network
+
+void NetworkSettings::Apply()
+{
+	if (!engine) return;
+	NetworkManager* _net = engine->GetNetwork();
+	_net->playerName = playerName;
+	_net->maxClients = maxClients;
+	_net->timeout = timeout;
+}
+
+void NetworkSettings::ResetToDefaults()
+{
+	Engine* _engine = engine;
+	*this = NetworkSettings();
+	engine = _engine;
 }

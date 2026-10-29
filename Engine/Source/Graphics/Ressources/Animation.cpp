@@ -92,7 +92,9 @@ Krampus::Animation::Animation(Engine* _engine, const String& _name, ShapeObject*
     name = _name;
     shape = _shape;
     data = _data;
-    timer = GetWorld()->GetLevelManager()->GetCurrentLevel()->GetTimerManager().CreateTimer([&]() { Update(); },
+    Level* _level = GetWorld()->GetLevelManager()->GetCurrentLevel();
+    if (!_level) { LOG_ERROR("Animation \"" + _name + "\": there is no level to run the animation in"); state = State::Stoped; return; }
+    timer = _level->GetTimerManager().CreateTimer([&]() { Update(); },
         ComputeDuration(),
         true,
         false);
@@ -101,7 +103,7 @@ Krampus::Animation::Animation(Engine* _engine, const String& _name, ShapeObject*
 
 Krampus::Animation::~Animation()
 {
-    timer->Stop();
+    if (timer) timer->Stop();
 }
 
 void Krampus::Animation::Update()
@@ -131,34 +133,35 @@ void Krampus::Animation::Update()
 void Krampus::Animation::UpdateTimer(const IRect& _spriteData)
 {
     const float& _duration = ComputeDuration(_spriteData);
+    if (!timer) return;
     timer->SetDuration(_duration);
-    timer->Reset();
+    if (timer) timer->Reset();
 }
 
 void Krampus::Animation::Reset()
 {
     currentIndex = 0;
-    timer->Reset();
+    if (timer) timer->Reset();
 }
 
 void Krampus::Animation::Start()
 {
     LOG(VerbosityType::Verbose, "Animation: start \"" + name.StdString() + "\" (" + std::to_string(static_cast<int>(data.count)) + " frames)");
     Update();
-    timer->Play();
+    if (timer) timer->Play();
     state = State::Playing;
 }
 
 void Krampus::Animation::Resume()
 {
-    timer->Resume();
+    if (timer) timer->Resume();
     state = State::Playing;
 }
 
 void Krampus::Animation::Pause()
 {
     LOG(VerbosityType::VeryVerbose, "Animation: pause \"" + name.StdString() + "\"");
-    timer->Pause();
+    if (timer) timer->Pause();
     state = State::Stoped;
 }
 

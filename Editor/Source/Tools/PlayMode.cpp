@@ -1,3 +1,4 @@
+#include "Network/NetworkManager.h"
 #include "EditorContext.h"
 #include "Scene/Scene.h"
 #include "Managers/LevelManager.h"
@@ -33,6 +34,7 @@ void Krampus::Stop(EditorContext& _context)
 
 	_context.playing = false;
 	_context.engine->SetLevelPaused(true);
+	_context.engine->GetNetwork()->Disconnect();	// the network game ends with the play session
 	_context.selected = nullptr;
 	_context.selectedWidget = nullptr;
 

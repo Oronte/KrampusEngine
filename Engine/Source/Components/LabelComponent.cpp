@@ -20,6 +20,10 @@ Krampus::LabelComponent::LabelComponent(Actor* _owner, const TextData& _data)
 		{
 			text.SetScale(_newScale);
 		});
+	// Start where the owner is: its onMove / onRotate / onScale only fire when it changes afterwards.
+	text.SetPosition(_owner->GetPosition());
+	text.SetRotation(_owner->GetRotation());
+	text.SetScale(_owner->GetScale());
 }
 
 void Krampus::LabelComponent::Draw(Window& _window)

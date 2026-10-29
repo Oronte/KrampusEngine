@@ -584,6 +584,7 @@ SaveResult SaveManager::SaveToFile(const std::filesystem::path& path, const Save
     }
     catch (...) 
     {
+        LOG_WARNING("SaveManager: saving \"" + name + "\" failed (cannot write the file)");
         if (onSave) onSave(name, SaveResult::ErrorIO);
         return SaveResult::ErrorIO;
     }
@@ -665,6 +666,7 @@ SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode
     }
     catch (...) 
     {
+        LOG_WARNING("SaveManager: loading \"" + name + "\" failed (file missing or corrupted)");
         if (onLoad) onLoad(name, SaveResult::ErrorCorrupted);
         return SaveResult::ErrorCorrupted;
     }

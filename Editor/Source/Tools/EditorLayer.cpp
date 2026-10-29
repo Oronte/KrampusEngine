@@ -139,6 +139,7 @@ void EditorLayer::OnRender(Window& _window)
 	DrawInspectorPanel(context);
 	DrawContentPanel(context);
 	DrawAnimationEditor(context);
+	DrawNetworkWindow(context);
 
 	ImGui::SFML::Render(_renderWindow);
 
@@ -589,7 +590,7 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 	{
 		char _text[96];
 		if (gizmoAxis == Ring)
-			std::snprintf(_text, sizeof(_text), "Rotation %.1f deg", _target->GetRotation().ToDegrees());
+			std::snprintf(_text, sizeof(_text), "Rotation %.1f deg", static_cast<float>(_target->GetRotation().ToDegrees()));
 		else if (gizmoAxis >= ScaleX)
 			std::snprintf(_text, sizeof(_text), "Scale %.2f x %.2f", _target->GetScale().x, _target->GetScale().y);
 		else

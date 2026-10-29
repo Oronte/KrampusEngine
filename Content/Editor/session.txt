@@ -1,2 +1,2 @@
 Content/Scenes/TestShip.ka7
-800 450 1
+1325.65 304.773 0.869565

@@ -8,6 +8,9 @@
 #include "Components/CameraComponent.h"
 #include "Components/CollisionComponent.h"
 #include "Components/LabelComponent.h"
+#include "Components/NetworkEventsComponent.h"
+#include "Components/NetworkSyncComponent.h"
+#include "Network/NetworkManager.h"
 #include "Components/PhysicsComponent.h"
 #include "Components/RigidbodyComponent.h"
 #include "Components/SpatialSoundComponent.h"
@@ -675,5 +678,55 @@ void Krampus::RegisterEngineClasses()
 		{
 			if (Engine* _engine = Reflection::CurrentEngine()) _engine->QuitGame();
 		});
+	}
+
+	// ================= Network =================
+	{
+		ClassInfo& _info = Describe("NetworkSettings", "IGameObject");
+		AddLive(_info, "port", &NetworkSettings::port, 1.f, 65535.f);
+		AddLive(_info, "address", &NetworkSettings::address);
+		AddLive(_info, "playerName", &NetworkSettings::playerName);
+		AddLive(_info, "maxClients", &NetworkSettings::maxClients, 1.f, 64.f);
+		AddLive(_info, "timeout", &NetworkSettings::timeout, 1.f, 120.f);
+	}
+
+	{
+		ClassInfo& _info = Describe("NetworkSyncComponent", "Component");
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NetworkSyncComponent>(); };
+		_info.AddProperty<NetworkSyncComponent, Int>("networkId", &NetworkSyncComponent::networkId);
+		_info.AddProperty<NetworkSyncComponent, Bool>("syncPosition", &NetworkSyncComponent::syncPosition);
+		_info.AddProperty<NetworkSyncComponent, Bool>("syncRotation", &NetworkSyncComponent::syncRotation);
+		_info.AddProperty<NetworkSyncComponent, Bool>("syncScale", &NetworkSyncComponent::syncScale);
+		_info.AddProperty<NetworkSyncComponent, Float>("sendRate", &NetworkSyncComponent::sendRate, 1.f, 60.f);
+		_info.AddProperty<NetworkSyncComponent, Bool>("smoothing", &NetworkSyncComponent::smoothing);
+		_info.AddProperty<NetworkSyncComponent, Bool>("reliable", &NetworkSyncComponent::reliable);
+		_info.AddProperty<NetworkSyncComponent, String>("properties", &NetworkSyncComponent::properties);
+	}
+
+	{
+		ClassInfo& _info = Describe("NetworkEventsComponent", "Component");
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NetworkEventsComponent>(); };
+		_info.AddProperty<NetworkEventsComponent, EventList>("onHosted", &NetworkEventsComponent::onHosted);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onConnected", &NetworkEventsComponent::onConnected);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onConnectionFailed", &NetworkEventsComponent::onConnectionFailed);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onDisconnected", &NetworkEventsComponent::onDisconnected);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onPlayerJoined", &NetworkEventsComponent::onPlayerJoined);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onPlayerLeft", &NetworkEventsComponent::onPlayerLeft);
+		_info.AddAccessor<NetworkEventsComponent, std::string>("messages",
+			[](NetworkEventsComponent& _c) { return InputComponent::EncodeBindings(_c.messages); },
+			[](NetworkEventsComponent& _c, const std::string& _v) { _c.messages = InputComponent::DecodeBindings(_v); _c.ApplyMessages(); });
+		_info.SetLastPropertyType(PropertyType::MessageBindings);
+	}
+
+	// Network functions of the "Game" target.
+	{
+		ClassInfo& _info = Describe("Game", "");
+		const auto _net = []() { return Reflection::CurrentEngine()->GetNetwork(); };
+		_info.AddFunction<IGameObject>("Host", [_net](IGameObject&) { _net()->Host(); });
+		_info.AddFunction<IGameObject>("Join", [_net](IGameObject&) { _net()->Join(); });
+		_info.AddFunction<IGameObject, std::string>("JoinAddress", [_net](IGameObject&, const std::string& _address) { _net()->Join(_address); });
+		_info.AddFunction<IGameObject>("Disconnect", [_net](IGameObject&) { _net()->Disconnect(); });
+		_info.AddFunction<IGameObject, std::string>("SendMessage", [_net](IGameObject&, const std::string& _name) { _net()->Send(_name); });
+		_info.AddFunction<IGameObject, std::string>("SpawnNetworked", [_net](IGameObject&, const std::string& _className) { _net()->Spawn(_className); });
 	}
 }

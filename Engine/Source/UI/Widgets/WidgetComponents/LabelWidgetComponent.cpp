@@ -20,6 +20,10 @@ Krampus::LabelWidgetComponent::LabelWidgetComponent(Widget *_owner, const TextDa
         {
             text.SetScale(_newScale);
         });
+    // Start where the owner is: its onMove / onRotate / onScale only fire when it changes afterwards.
+    text.SetPosition(_owner->GetPosition());
+    text.SetRotation(_owner->GetRotation());
+    text.SetScale(_owner->GetScale());
 }
 
 void Krampus::LabelWidgetComponent::Draw(Window &_window)

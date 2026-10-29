@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "Managers/InputManager.h"
+#include "Network/NetworkManager.h"
 #include "Managers/LevelManager.h"
 #include "Managers/AudioManager.h"
 #include "Layers/LevelLayer.h"
@@ -16,9 +17,10 @@ Engine::Engine(sf::RenderWindow* _hostWindow)
 	Logger::Init();	// first: everything below can log
 	LOG_MSG("Engine: starting");
 
-	levelManager = new LevelManager(this);
-	inputManager = new InputManager(this);
-	mouse = new Mouse(this);
+	levelManager = std::make_unique<LevelManager>(this);
+	inputManager = std::make_unique<InputManager>(this);
+	network = std::make_unique<NetworkManager>(this);
+	mouse = std::make_unique<Mouse>(this);
 
 	settings.Attach(this);
 	settings.LoadFile();	// before the window: the Ship section says how it looks
@@ -54,9 +56,10 @@ Engine::Engine(sf::RenderWindow* _hostWindow)
 
 Engine::~Engine()
 {
-	delete levelManager;
-	delete inputManager;
-	delete mouse;
+	levelManager.reset();	// in this order: the level goes first, the input last
+	network.reset();
+	inputManager.reset();
+	mouse.reset();
 }
 
 void Engine::Start()
@@ -79,6 +82,8 @@ void Engine::Update()
 Bool Engine::Tick()
 {
 	if (shouldClose) return false;
+
+	network->Update();	// receives what arrived, even while the level is paused (edit mode)
 
 	levelManager->ChangeLevel();
 	Level* _currentLevel = levelManager->GetCurrentLevel();

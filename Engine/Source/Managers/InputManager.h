@@ -50,97 +50,12 @@ namespace Krampus
 		};
 
 	public:
-		// KEYBOARD
-		Input A;
-		Input B;
-		Input C;
-		Input D;
-		Input E;
-		Input F;
-		Input G;
-		Input H;
-		Input I;
-		Input J;
-		Input K;
-		Input L;
-		Input M;
-		Input N;
-		Input O;
-		Input P;
-		Input Q;
-		Input R;
-		Input S;
-		Input T;
-		Input U;
-		Input V;
-		Input W;
-		Input X;
-		Input Y;
-		Input Z;
-		Input Num0;
-		Input Num1;
-		Input Num2;
-		Input Num3;
-		Input Num4;
-		Input Num5;
-		Input Num6;
-		Input Num7;
-		Input Num8;
-		Input Num9;
-		Input Escape;
-		Input LControl;
-		Input LShift;
-		Input LAlt;
-		Input LSystem;
-		Input RControl;
-		Input RShift;
-		Input RAlt;
-		Input RSystem;
-		Input Menu;
-		Input LBracket;
-		Input RBracket;
-		Input Semicolon;
-		Input Comma;
-		Input Period;
-		Input Quote;
-		Input Slash;
-		Input Backslash;
-		//Input Tilde;
-		Input Equal;
-		Input Hyphen;
-		Input Space;
-		Input Enter;
-		Input Backspace;
-		Input Tab;
-		Input PageUp;
-		Input PageDown;
-		Input End;
-		Input Home;
-		Input Insert;
-		Input Delete;
-		Input F1;
-		Input F2;
-		Input F3;
-		Input F4;
-		Input F5;
-		Input F6;
-		Input F7;
-		Input F8;
-		Input F9;
-		Input F10;
-		Input F11;
-		Input F12;
-		Input F13;
-		Input F14;
-		Input F15;
-		Input Pause;
-
-		// MOUSE BUTTONS
-		Input MouseLeftClick;
-		Input MouseRightClick;
-		Input MouseMiddleClick;
-		Input MouseExtraButton1;
-		Input MouseExtraButton2;
+		// Every key, mouse button and gamepad button is an Input (onPress, onPerform, onRelease): A..Z, Num0..Num9, Space, Enter, F1..F15,
+		// MouseLeftClick, ButtonA... The list is in InputKeys.def, shared with the code that polls them and the one that names them for the editor.
+#define KRAMPUS_KEY(Name, SfmlKey) Input Name;
+#define KRAMPUS_MOUSE_BUTTON(Name, SfmlName) Input Name;
+#define KRAMPUS_PAD_BUTTON(Name) Input Name;
+#include "InputKeys.def"
 
 		// MOUSE MOVEMENT 
 		Event<IVector2> MouseMovedWorld;
@@ -148,6 +63,9 @@ namespace Krampus
 
 		// MOUSE WHEEL 
 		Event<Float> MouseWheelScroll;      // 1 / -1 for each scroll
+
+		// TEXT
+		Event<std::uint32_t> TextEntered;   // unicode of each character typed (8 = Backspace, 13 = Enter)
 
 		// OTHER MOUSE EVENTS
 		Event<> FocusGain;
@@ -161,17 +79,6 @@ namespace Krampus
 		Event<Float> BackTriggerLeft;       // LT [0 ; 100]
 		Event<Float> BackTriggerRight;      // RT [0 ; 100]
 		Event<FVector2> DPad;				// [-100 ; 100]
-
-		Input ButtonA;
-		Input ButtonB;
-		Input ButtonX;
-		Input ButtonY;
-		Input ButtonStart;
-		Input ButtonBack;
-		Input ButtonLB;
-		Input ButtonRB;
-		Input ButtonLS;
-		Input ButtonRS;
 
 		// Other Events
 		Event<IVector2> WindowResize;

@@ -20,18 +20,10 @@ void Krampus::InputManager::BuildEventTable()
 	const auto _addVector = [this](const std::string& _name, Event<FVector2>& _event) { vectorEvents[_name] = &_event; eventNames.push_back(_name); };
 	const auto _addPoint = [this](const std::string& _name, Event<IVector2>& _event) { pointEvents[_name] = &_event; eventNames.push_back(_name); };
 
-#define KINPUT(Name) _addInput(#Name, Name);
-	KINPUT(A) KINPUT(B) KINPUT(C) KINPUT(D) KINPUT(E) KINPUT(F) KINPUT(G) KINPUT(H) KINPUT(I) KINPUT(J) KINPUT(K) KINPUT(L) KINPUT(M)
-	KINPUT(N) KINPUT(O) KINPUT(P) KINPUT(Q) KINPUT(R) KINPUT(S) KINPUT(T) KINPUT(U) KINPUT(V) KINPUT(W) KINPUT(X) KINPUT(Y) KINPUT(Z)
-	KINPUT(Num0) KINPUT(Num1) KINPUT(Num2) KINPUT(Num3) KINPUT(Num4) KINPUT(Num5) KINPUT(Num6) KINPUT(Num7) KINPUT(Num8) KINPUT(Num9)
-	KINPUT(Escape) KINPUT(LControl) KINPUT(LShift) KINPUT(LAlt) KINPUT(LSystem) KINPUT(RControl) KINPUT(RShift) KINPUT(RAlt) KINPUT(RSystem) KINPUT(Menu)
-	KINPUT(LBracket) KINPUT(RBracket) KINPUT(Semicolon) KINPUT(Comma) KINPUT(Period) KINPUT(Quote) KINPUT(Slash) KINPUT(Backslash) KINPUT(Equal) KINPUT(Hyphen)
-	KINPUT(Space) KINPUT(Enter) KINPUT(Backspace) KINPUT(Tab) KINPUT(PageUp) KINPUT(PageDown) KINPUT(End) KINPUT(Home) KINPUT(Insert) KINPUT(Delete)
-	KINPUT(F1) KINPUT(F2) KINPUT(F3) KINPUT(F4) KINPUT(F5) KINPUT(F6) KINPUT(F7) KINPUT(F8) KINPUT(F9) KINPUT(F10) KINPUT(F11) KINPUT(F12) KINPUT(F13) KINPUT(F14) KINPUT(F15)
-	KINPUT(Pause)
-	KINPUT(MouseLeftClick) KINPUT(MouseRightClick) KINPUT(MouseMiddleClick) KINPUT(MouseExtraButton1) KINPUT(MouseExtraButton2)
-	KINPUT(ButtonA) KINPUT(ButtonB) KINPUT(ButtonX) KINPUT(ButtonY) KINPUT(ButtonStart) KINPUT(ButtonBack) KINPUT(ButtonLB) KINPUT(ButtonRB) KINPUT(ButtonLS) KINPUT(ButtonRS)
-#undef KINPUT
+#define KRAMPUS_KEY(Name, SfmlKey) _addInput(#Name, Name);
+#define KRAMPUS_MOUSE_BUTTON(Name, SfmlName) _addInput(#Name, Name);
+#define KRAMPUS_PAD_BUTTON(Name) _addInput(#Name, Name);
+#include "InputKeys.def"
 
 	_addPoint("MouseMovedWorld", MouseMovedWorld);
 	_addPoint("MouseMovedScreen", MouseMovedScreen);

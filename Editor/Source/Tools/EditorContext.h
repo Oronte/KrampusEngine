@@ -107,4 +107,8 @@ namespace Krampus
 	/// <summary>Opens the Animation Editor window (it edits the animation component of the selected actor or widget).</summary>
 	void OpenAnimationEditor();
 	void DrawAnimationEditor(EditorContext& _context);
+
+	/// <summary>Opens the Network window (host, join, players, messages).</summary>
+	void OpenNetworkWindow();
+	void DrawNetworkWindow(EditorContext& _context);
 }

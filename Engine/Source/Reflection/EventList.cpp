@@ -94,7 +94,7 @@ namespace
 			default: return _body;
 			}
 		}
-		catch (const std::exception&) { }
+		catch (const std::exception& _exception) { LOG_WARNING(std::string("EventList: unreadable value (") + _exception.what() + ")"); }
 		return std::string();
 	}
 
