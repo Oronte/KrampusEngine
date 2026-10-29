@@ -77,7 +77,9 @@ set_target_properties(EditorModule PROPERTIES
 # Editor.exe: thin host. It owns the window and the main loop, and loads EditorModule.dll.
 # It does not link the engine, so the module can be rebuilt and reloaded while it runs.
 # ---------------------------------------------------------------------------------------------------------------
-add_executable(Editor Source/Main.cpp)
+add_executable(Editor Source/Main.cpp Source/CrashReporter.h Source/CrashReporter.cpp)
+target_compile_options(Editor PRIVATE /utf-8)
+target_link_libraries(Editor PRIVATE dbghelp shell32)
 
 # Make sure a build of Editor also builds the module. Rebuilding only EditorModule triggers the hot reload.
 add_dependencies(Editor EditorModule)

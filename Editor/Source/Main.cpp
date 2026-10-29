@@ -13,6 +13,8 @@
 #include <thread>
 #include <vector>
 
+#include "CrashReporter.h"
+
 namespace fs = std::filesystem;
 
 class GameModule
@@ -170,8 +172,13 @@ static void EnterProjectRoot(const fs::path& _start)
 
 int main()
 {
+	// Started by the crash handler of a crashed editor: only shows the report dialog.
+	if (CrashReporter::RunReporterIfRequested())
+		return 0;
+
 	const fs::path _exeDir = ExecutableDirectory();
 	EnterProjectRoot(_exeDir);
+	CrashReporter::Install();
 
 	sf::RenderWindow _window(sf::VideoMode({ 1600u, 900u }), "Krampus Editor");
 	_window.setVerticalSyncEnabled(true);

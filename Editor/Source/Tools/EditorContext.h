@@ -103,4 +103,8 @@ namespace Krampus
 	void DrawHierarchyPanel(EditorContext& _context);
 	void DrawInspectorPanel(EditorContext& _context);
 	void DrawContentPanel(EditorContext& _context);
+
+	/// <summary>Opens the Animation Editor window (it edits the animation component of the selected actor or widget).</summary>
+	void OpenAnimationEditor();
+	void DrawAnimationEditor(EditorContext& _context);
 }

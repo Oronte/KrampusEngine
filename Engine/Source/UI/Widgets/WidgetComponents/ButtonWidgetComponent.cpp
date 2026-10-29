@@ -55,8 +55,8 @@ void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_screenPos)
     else
         _colliding = Physics::Contains(_mousePos, GetPosition(), shape->GetSizeData().size, GetRotation(), _info);
 
-    if (_colliding && !isHovered) onHover.Broadcast();
-    else if (!_colliding && isHovered) onUnhover.Broadcast();
+    if (_colliding && !isHovered) { onHover.Broadcast(); onHoverCalls.Invoke(this); }
+    else if (!_colliding && isHovered) { onUnhover.Broadcast(); onUnhoverCalls.Invoke(this); }
 
     isHovered = _colliding;
 }
@@ -64,13 +64,13 @@ void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_screenPos)
 void Krampus::ButtonWidgetComponent::OnClick()
 {
     if (isHovered) LOG(VerbosityType::Verbose, "Button: pressed on " + owner->GetName().StdString());
-    if (!isPressed && isHovered) onPress.Broadcast();
+    if (!isPressed && isHovered) { onPress.Broadcast(); onPressCalls.Invoke(this); }
     isPressed = isHovered;
 }
 
 void Krampus::ButtonWidgetComponent::OnRelease()
 {
-    if (isPressed) onRelease.Broadcast();
+    if (isPressed) { onRelease.Broadcast(); onReleaseCalls.Invoke(this); }
     isPressed = false;
 }
 

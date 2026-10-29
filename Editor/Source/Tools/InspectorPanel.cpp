@@ -1,7 +1,9 @@
 #include "EditorContext.h"
 #include "EditorThumbnails.h"
 #include "Reflection/Reflection.h"
+#include "Graphics/Ressources/Animation.h"
 #include "UI/Widgets/Widget.h"
+#include "Actors/Actor.h"
 #include <imgui.h>
 
 using namespace Krampus;
@@ -294,6 +296,215 @@ namespace
 		}, _value);
 	}
 
+	// ---- Event lists (like Unity events): which function of which object is called when something happens.
+
+	PropertyValue DefaultArgument(const PropertyType& _type)
+	{
+		switch (_type)
+		{
+		case PropertyType::Bool:	return false;
+		case PropertyType::Int:		return 0;
+		case PropertyType::Float:	return 0.f;
+		case PropertyType::Vector2:	return FVector2(0.f, 0.f);
+		case PropertyType::Color:	return Color(255, 255, 255, 255);
+		default:					return std::string();
+		}
+	}
+
+	std::string TargetLabel(const std::string& _target)
+	{
+		if (_target.empty()) return "Self";
+		if (_target == "Game") return "Game";
+		return (_target.starts_with("A:") ? "Actor: " : "Widget: ") + _target.substr(2);
+	}
+
+	// The argument of a function, edited with the widget of its type. Returns true when it changed.
+	bool DrawArgument(const FunctionInfo& _function, PropertyValue& _value)
+	{
+		const char* _label = "Argument";
+		bool _changed = false;
+		if (_function.argumentType == PropertyType::Scene)
+		{
+			std::string& _scene = std::get<std::string>(_value);
+			if (ImGui::BeginCombo(_label, _scene.empty() ? "(choose a scene)" : _scene.c_str()))
+			{
+				std::error_code _error;
+				for (const auto& _entry : std::filesystem::directory_iterator(SCENES_DIRECTORY, _error))
+					if (_entry.path().extension() == ".ka7" && ImGui::Selectable(_entry.path().stem().string().c_str(), _entry.path().stem().string() == _scene))
+					{
+						_scene = _entry.path().stem().string();
+						_changed = true;
+					}
+				ImGui::EndCombo();
+			}
+			return _changed;
+		}
+
+		if (std::holds_alternative<bool>(_value))
+			_changed = ImGui::Checkbox(_label, &std::get<bool>(_value));
+		else if (std::holds_alternative<int>(_value))
+			_changed = ImGui::DragInt(_label, &std::get<int>(_value));
+		else if (std::holds_alternative<float>(_value))
+			_changed = ImGui::DragFloat(_label, &std::get<float>(_value), 0.1f);
+		else if (std::holds_alternative<FVector2>(_value))
+		{
+			FVector2& _vector = std::get<FVector2>(_value);
+			float _values[2] = { _vector.x, _vector.y };
+			if (ImGui::DragFloat2(_label, _values, 0.1f))
+			{
+				_vector = FVector2(_values[0], _values[1]);
+				_changed = true;
+			}
+		}
+		else if (std::holds_alternative<Color>(_value))
+		{
+			Color& _color = std::get<Color>(_value);
+			float _values[4] = { _color.r / 255.f, _color.g / 255.f, _color.b / 255.f, _color.a / 255.f };
+			if (ImGui::ColorEdit4(_label, _values))
+			{
+				_color = Color(static_cast<std::uint8_t>(_values[0] * 255.f + 0.5f), static_cast<std::uint8_t>(_values[1] * 255.f + 0.5f),
+					static_cast<std::uint8_t>(_values[2] * 255.f + 0.5f), static_cast<std::uint8_t>(_values[3] * 255.f + 0.5f));
+				_changed = true;
+			}
+		}
+		else
+		{
+			char _buffer[256];
+			std::snprintf(_buffer, sizeof(_buffer), "%s", std::get<std::string>(_value).c_str());
+			if (ImGui::InputText(_label, _buffer, sizeof(_buffer)))
+			{
+				std::get<std::string>(_value) = _buffer;
+				_changed = true;
+			}
+		}
+		return _changed;
+	}
+
+	// One block per call: Target, Component, Function, Argument and a button to remove it. Returns true when the list changed.
+	bool DrawEventList(const PropertyInfo& _property, IGameObject& _owner, std::string& _text)
+	{
+		EventList _list = EventList::Decode(_text);
+		bool _changed = false;
+		Level* _level = g_historyContext ? g_historyContext->GetLevel() : nullptr;
+
+		if (ImGui::TreeNodeEx(_property.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen, "%s  (%d)", _property.name.c_str(), static_cast<int>(_list.calls.size())))
+		{
+			int _remove = -1;
+			for (int _i = 0; _i < static_cast<int>(_list.calls.size()); ++_i)
+			{
+				EventCall& _call = _list.calls[_i];
+				ImGui::PushID(_i);
+				ImGui::Separator();
+
+				// Target
+				if (ImGui::BeginCombo("Target", TargetLabel(_call.target).c_str()))
+				{
+					const auto _pick = [&](const std::string& _target)
+					{
+						if (!ImGui::Selectable(TargetLabel(_target).c_str(), _target == _call.target)) return;
+						_call.target = _target;
+						_call.component.clear();
+						_call.function.clear();
+						_changed = true;
+					};
+					_pick("");
+					_pick("Game");
+					if (_level)
+					{
+						for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+							_pick("A:" + _actor->GetName().StdString());
+						for (const std::unique_ptr<Widget>& _widget : _level->GetHUD().GetWidgets())
+							_pick("W:" + _widget->GetName().StdString());
+					}
+					ImGui::EndCombo();
+				}
+
+				// Component: the actor / widget itself, or one of its components.
+				if (_call.target != "Game")
+				{
+					EventCall _root = _call;
+					_root.component.clear();
+					IGameObject* _rootObject = EventList::Resolve(&_owner, _root);
+					if (ImGui::BeginCombo("Component", _call.component.empty() ? "(the object itself)" : _call.component.c_str()))
+					{
+						if (ImGui::Selectable("(the object itself)", _call.component.empty()))
+						{
+							_call.component.clear();
+							_call.function.clear();
+							_changed = true;
+						}
+						const auto _addComponents = [&](const auto& _components)
+						{
+							for (const auto& _component : _components)
+								if (ImGui::Selectable(ClassNameOf(*_component).c_str(), ClassNameOf(*_component) == _call.component))
+								{
+									_call.component = ClassNameOf(*_component);
+									_call.function.clear();
+									_changed = true;
+								}
+						};
+						if (Actor* _actor = dynamic_cast<Actor*>(_rootObject)) _addComponents(_actor->GetComponents());
+						else if (Widget* _widget = dynamic_cast<Widget*>(_rootObject)) _addComponents(_widget->GetComponents());
+						ImGui::EndCombo();
+					}
+				}
+
+				// Function
+				IGameObject* _object = EventList::Resolve(&_owner, _call);
+				if (!_object)
+					ImGui::TextColored(ImVec4(1.f, 0.45f, 0.3f, 1.f), "Target not found in this scene");
+				else
+				{
+					const ClassInfo* _class = ClassRegistry::Find(_call.target == "Game" ? std::string("Game") : ClassNameOf(*_object));
+					const std::vector<const FunctionInfo*> _functions = _class ? _class->GetFunctions() : std::vector<const FunctionInfo*>{ };
+					const FunctionInfo* _current = nullptr;
+					for (const FunctionInfo* _function : _functions)
+						if (_function->name == _call.function) _current = _function;
+
+					if (ImGui::BeginCombo("Function", _call.function.empty() ? "(choose a function)" : _call.function.c_str()))
+					{
+						for (const FunctionInfo* _function : _functions)
+							if (ImGui::Selectable(_function->name.c_str(), _function == _current))
+							{
+								_call.function = _function->name;
+								_call.argument = DefaultArgument(_function->argumentType);
+								_changed = true;
+							}
+						if (_functions.empty()) ImGui::TextDisabled("No function on this object (see KFUNCTION)");
+						ImGui::EndCombo();
+					}
+					if (!_call.function.empty() && !_current)
+						ImGui::TextColored(ImVec4(1.f, 0.45f, 0.3f, 1.f), "\"%s\" does not exist on this object", _call.function.c_str());
+					if (_current && _current->hasArgument)
+					{
+						if (_call.argument.index() != DefaultArgument(_current->argumentType).index())
+							_call.argument = DefaultArgument(_current->argumentType);
+						if (DrawArgument(*_current, _call.argument)) _changed = true;
+					}
+				}
+
+				if (ImGui::SmallButton("Remove")) _remove = _i;
+				ImGui::PopID();
+			}
+			if (_remove >= 0)
+			{
+				_list.calls.erase(_list.calls.begin() + _remove);
+				_changed = true;
+			}
+
+			if (!_list.calls.empty()) ImGui::Separator();
+			if (ImGui::Button("+ Add call"))
+			{
+				_list.calls.push_back(EventCall{ });
+				_changed = true;
+			}
+			ImGui::TreePop();
+		}
+
+		if (_changed) _text = _list.Encode();
+		return _changed;
+	}
+
 	// Draws the widget of one property and writes the new value back when it changes.
 	void DrawProperty(const PropertyInfo& _property, IGameObject& _object)
 	{
@@ -329,6 +540,9 @@ namespace
 			}
 			break;
 		}
+		case PropertyType::Events:
+			_changed = DrawEventList(_property, _object, std::get<std::string>(_value));
+			break;
 		case PropertyType::Enum:
 		{
 			int& _index = std::get<int>(_value);
@@ -473,6 +687,37 @@ namespace
 		}
 	}
 
+	// Animation components: the list of their animations is edited in the Animation Editor; here one is picked as the starting one.
+	void DrawStartAnimation(IGameObject& _component)
+	{
+		const ClassInfo* _class = ClassRegistry::Find(_component.ClassName());
+		if (!_class) return;
+		const PropertyInfo* _list = nullptr;
+		const PropertyInfo* _start = nullptr;
+		for (const PropertyInfo* _property : _class->GetProperties())
+		{
+			if (_property->name == "animations") _list = _property;
+			else if (_property->name == "startAnimation") _start = _property;
+		}
+		if (!_list || !_start) return;
+
+		const std::vector<AnimationClip> _clips = AnimationClips::Decode(std::get<std::string>(_list->get(&_component)));
+		const std::string _current = std::get<std::string>(_start->get(&_component));
+		const std::string _shown = _clips.empty() ? "(no animation)" : (_current.empty() ? _clips.front().name.StdString() + " (first)" : _current);
+
+		if (ImGui::BeginCombo("Start animation", _shown.c_str()))
+		{
+			for (const AnimationClip& _clip : _clips)
+			{
+				const std::string _name = _clip.name.StdString();
+				if (!ImGui::Selectable(_name.c_str(), _name == _current)) continue;
+				RecordEdit("Edit startAnimation", KeyOf(&_component, "startAnimation"));
+				_start->set(&_component, PropertyValue(_name));
+			}
+			ImGui::EndCombo();
+		}
+	}
+
 	// One collapsible header per component of an actor or a widget. Right click: Remove Component.
 	// Returns the component to remove (done by the caller once the list is no longer walked).
 	template <typename C>
@@ -499,6 +744,9 @@ namespace
 				if (ImGui::Checkbox("Active", &_componentActive))
 					_component->SetActive(Bool(_componentActive));
 				DrawProperties(*_component);
+				if (ClassNameOf(*_component).starts_with("Animation")) DrawStartAnimation(*_component);
+				if (ClassNameOf(*_component).starts_with("Animation") && ImGui::Button("Open Animation Editor", ImVec2(-1.f, 0.f)))
+					OpenAnimationEditor();
 			}
 
 			ImGui::PopID();

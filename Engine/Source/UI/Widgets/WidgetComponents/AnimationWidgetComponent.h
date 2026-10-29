@@ -11,18 +11,21 @@ namespace Krampus
     {
         Animation*														current		= nullptr;
         std::unordered_map<String, std::unique_ptr<Animation>>			animations;
-		String				appliedClip;	// name of the animation made from clip, so it can be replaced
+		std::vector<String>	appliedClips;	// names of the animations made from clips, so they can be replaced
 		bool				clipStarted	= false;
 
 	public:
-		/// <summary>Animation described by plain values (Inspector, scenes). Call ApplyClip after changing it.</summary>
-		AnimationClip		clip;
+		/// <summary>Animations described by plain values (Inspector, Animation Editor, scenes). Call ApplyClips after changing them.</summary>
+		std::vector<AnimationClip>	clips;
+
+		/// <summary>Name of the clip that is the current animation when the level starts (empty or unknown: the first clip).</summary>
+		String				startAnimation;
 
 		/// <summary>Starts the clip animation when the level starts.</summary>
 		Bool				playOnBeginPlay	= false;
 
-		/// <summary>(Re)creates the animation described by clip on the sprite of the owner and makes it the current one.</summary>
-		void ApplyClip();
+		/// <summary>(Re)creates the animations described by clips on the sprite of the owner and makes startAnimation the current one.</summary>
+		void ApplyClips();
 
 		virtual void Tick(const Float& _deltaTime) override;
 

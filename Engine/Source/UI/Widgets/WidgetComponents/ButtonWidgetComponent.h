@@ -1,5 +1,6 @@
 #pragma once
 #include "WidgetComponent.h"
+#include "Reflection/EventList.h"
 
 namespace Krampus
 {
@@ -29,6 +30,12 @@ namespace Krampus
         Event<>							onPerform;
         /// <summary>Broadcast when mouse click is released.</summary>
         Event<>							onRelease;
+
+        /// <summary>Functions called from the editor (event lists) at the same moments as onPress, onRelease, onHover and onUnhover.</summary>
+        EventList                       onPressCalls;
+        EventList                       onReleaseCalls;
+        EventList                       onHoverCalls;
+        EventList                       onUnhoverCalls;
 
         /// <summary>
         /// Constructs a ButtonWidgetComponent attached to a widget.

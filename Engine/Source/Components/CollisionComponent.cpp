@@ -8,6 +8,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const CollisionCh
 	: Component(_owner)
 {
 	name = NAME_OF(CollisionComponent);
+	InitEvents();
 	channel = _channel;
 	mask = _mask;
 
@@ -29,6 +30,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const Float& _rad
 	: Component(_owner)
 {
 	name = NAME_OF(CollisionComponent);
+	InitEvents();
 	channel = _channel;
 	mask = _mask;
 
@@ -42,6 +44,7 @@ Krampus::CollisionComponent::CollisionComponent(Actor* _owner, const FVector2& _
 	: Component(_owner)
 {
 	name = NAME_OF(CollisionComponent);
+	InitEvents();
 	channel = _channel;
 	mask = _mask;
 
@@ -315,4 +318,11 @@ void Krampus::CollisionComponent::SetShapeType(const ShapeType& _type)
 		sizeData.radius = FMath::MinVal(sizeData.size.x, sizeData.size.y) * 0.5f;
 	}
 	shapeType = _type;
+}
+
+void Krampus::CollisionComponent::InitEvents()
+{
+	// The functions chosen in the editor are called at the same moments as the events.
+	enterCallsHandle = onCollisionEnter.AddListener([this](CollisionInfo) { onEnterCalls.Invoke(this); });
+	exitCallsHandle = onCollisionExit.AddListener([this](CollisionComponent*) { onExitCalls.Invoke(this); });
 }

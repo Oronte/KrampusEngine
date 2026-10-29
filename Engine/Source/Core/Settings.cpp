@@ -68,6 +68,7 @@ namespace
 		case PropertyType::Texture:
 		case PropertyType::Font:
 		case PropertyType::Scene:
+		case PropertyType::Events:
 		case PropertyType::Sound:	return PropertyValue(_text);
 		case PropertyType::Vector2:
 		{

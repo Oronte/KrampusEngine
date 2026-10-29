@@ -13,6 +13,7 @@
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Core/Settings.h"
+#include "Scene/Scene.h"
 #include "UI/Widgets/ButtonWidget.h"
 #include "UI/Widgets/WidgetComponents/AnimationWidgetComponent.h"
 #include "UI/Widgets/WidgetComponents/ButtonWidgetComponent.h"
@@ -116,33 +117,30 @@ namespace
 		AddDrawableProperties<C>(_info);
 	}
 
-	// The three animation components describe one animation (a clip of a sprite sheet) with the same plain values.
+	// The three animation components hold a list of animations (clips of a sprite sheet) and the one they start with.
+	// The list is a single string property (hidden in the Inspector, edited in the Animation Editor), see AnimationClips.
 	template <typename C>
 	void AddAnimationProperties(ClassInfo& _info)
 	{
-		_info.AddAccessor<C, std::string>("animationName",
-			[](C& _c) { return _c.clip.name.StdString(); },
-			[](C& _c, const std::string& _v) { _c.clip.name = String(_v); _c.ApplyClip(); });
-		_info.AddAccessor<C, int>("frameCount",		// 0 = no animation
-			[](C& _c) { return static_cast<int>(_c.clip.frameCount); },
-			[](C& _c, const int& _v) { _c.clip.frameCount = Int(std::max(0, _v)); _c.ApplyClip(); });
-		_info.AddAccessor<C, float>("duration",		// seconds, whole animation
-			[](C& _c) { return static_cast<float>(_c.clip.duration); },
-			[](C& _c, const float& _v) { _c.clip.duration = Float(std::max(0.01f, _v)); _c.ApplyClip(); });
-		_info.AddAccessor<C, FVector2>("frameOrigin",	// top left corner of the first frame in the texture
-			[](C& _c) { return _c.clip.frameOrigin; },
-			[](C& _c, const FVector2& _v) { _c.clip.frameOrigin = _v; _c.ApplyClip(); });
-		_info.AddAccessor<C, FVector2>("frameSize",
-			[](C& _c) { return _c.clip.frameSize; },
-			[](C& _c, const FVector2& _v) { _c.clip.frameSize = FVector2(std::max(1.f, _v.x), std::max(1.f, _v.y)); _c.ApplyClip(); });
-		_info.AddAccessor<C, int>("direction",		// 0 row, 1 row reversed, 2 column, 3 column reversed
-			[](C& _c) { return static_cast<int>(_c.clip.direction); },
-			[](C& _c, const int& _v) { _c.clip.direction = Int(std::clamp(_v, 0, 3)); _c.ApplyClip(); }, 0.f, 3.f);
-		_info.SetLastPropertyType(PropertyType::Enum, { "Row", "Row reversed", "Column", "Column reversed" });
-		_info.AddAccessor<C, bool>("loop",
-			[](C& _c) { return static_cast<bool>(_c.clip.loop); },
-			[](C& _c, const bool& _v) { _c.clip.loop = Bool(_v); _c.ApplyClip(); });
+		_info.AddAccessor<C, std::string>("animations",
+			[](C& _c) { return AnimationClips::Encode(_c.clips); },
+			[](C& _c, const std::string& _v) { _c.clips = AnimationClips::Decode(_v); _c.ApplyClips(); });
+		_info.SetLastPropertyVisible<C>([](C&) { return false; });
+		_info.AddAccessor<C, std::string>("startAnimation",		// drawn as a list of the clips by the Inspector
+			[](C& _c) { return _c.startAnimation.StdString(); },
+			[](C& _c, const std::string& _v) { _c.startAnimation = String(_v); _c.ApplyClips(); });
+		_info.SetLastPropertyVisible<C>([](C&) { return false; });
 		_info.AddProperty<C, Bool>("playOnBeginPlay", &C::playOnBeginPlay);
+	}
+
+	// Start / Stop / Pause / Resume of the three animation components.
+	template <typename C>
+	void AddAnimationFunctions(ClassInfo& _info)
+	{
+		_info.AddFunction<C>("Start", [](C& _c) { _c.StartAnimation(); });
+		_info.AddFunction<C>("Stop", [](C& _c) { _c.StopAnimation(); });
+		_info.AddFunction<C>("Pause", [](C& _c) { _c.PauseAnimation(); });
+		_info.AddFunction<C>("Resume", [](C& _c) { _c.ResumeAnimation(); });
 	}
 
 	// LabelComponent and LabelWidgetComponent have the same text API.
@@ -282,6 +280,8 @@ void Krampus::RegisterEngineClasses()
 
 	{
 		ClassInfo& _info = Describe("CollisionComponent", "Component");
+		_info.AddProperty<CollisionComponent, EventList>("onCollisionEnter", &CollisionComponent::onEnterCalls);
+		_info.AddProperty<CollisionComponent, EventList>("onCollisionExit", &CollisionComponent::onExitCalls);
 		_info.componentFactory = [](Actor* _owner) -> Component*
 		{
 			// Without a sprite to copy the shape from, start with a box.
@@ -598,6 +598,10 @@ void Krampus::RegisterEngineClasses()
 
 	{
 		ClassInfo& _info = Describe("ButtonWidgetComponent", "WidgetComponent");
+		_info.AddProperty<ButtonWidgetComponent, EventList>("onPress", &ButtonWidgetComponent::onPressCalls);
+		_info.AddProperty<ButtonWidgetComponent, EventList>("onRelease", &ButtonWidgetComponent::onReleaseCalls);
+		_info.AddProperty<ButtonWidgetComponent, EventList>("onHover", &ButtonWidgetComponent::onHoverCalls);
+		_info.AddProperty<ButtonWidgetComponent, EventList>("onUnhover", &ButtonWidgetComponent::onUnhoverCalls);
 		_info.widgetComponentFactory = [](Widget* _owner) -> WidgetComponent*
 		{
 			if (!_owner->GetComponent<ImageWidgetComponent>())
@@ -607,5 +611,65 @@ void Krampus::RegisterEngineClasses()
 			}
 			return _owner->AddComponent<ButtonWidgetComponent>();
 		};
+	}
+
+	// ================= Functions the editor can call (event lists) =================
+	{
+		ClassInfo& _info = Describe("IGameObject", "");
+		_info.AddFunction<IGameObject, bool>("SetActive", [](IGameObject& _object, const bool& _active) { _object.SetActive(Bool(_active)); });
+	}
+
+	{
+		ClassInfo& _info = Describe("Actor", "IGameObject");
+		_info.AddFunction<Actor>("Destroy", [](Actor& _actor) { _actor.Destroy(); });
+		_info.AddFunction<Actor, FVector2>("SetPosition", [](Actor& _actor, const FVector2& _position) { _actor.SetPosition(_position); });
+		_info.AddFunction<Actor, float>("SetRotation", [](Actor& _actor, const float& _degrees) { _actor.SetRotation(Angle::FromDegrees(_degrees)); });
+		_info.AddFunction<Actor, FVector2>("SetScale", [](Actor& _actor, const FVector2& _scale) { _actor.SetScale(_scale); });
+	}
+
+	{
+		ClassInfo& _info = Describe("Widget", "IGameObject");
+		_info.AddFunction<Widget>("Destroy", [](Widget& _widget) { _widget.Destroy(); });
+		_info.AddFunction<Widget, FVector2>("SetPosition", [](Widget& _widget, const FVector2& _position) { _widget.SetPosition(_position); });
+		_info.AddFunction<Widget, float>("SetRotation", [](Widget& _widget, const float& _degrees) { _widget.SetRotation(Angle::FromDegrees(_degrees)); });
+		_info.AddFunction<Widget, FVector2>("SetScale", [](Widget& _widget, const FVector2& _scale) { _widget.SetScale(_scale); });
+	}
+
+	AddAnimationFunctions<AnimationComponent>(Describe("AnimationComponent", "Component"));
+	AddAnimationFunctions<AnimationComponentSM>(Describe("AnimationComponentSM", "Component"));
+	AddAnimationFunctions<AnimationWidgetComponent>(Describe("AnimationWidgetComponent", "WidgetComponent"));
+	Describe("AnimationComponent", "Component").AddFunction<AnimationComponent, std::string>("Play", [](AnimationComponent& _c, const std::string& _name) { _c.SetCurrentAnimation(String(_name)); _c.StartAnimation(); });
+	Describe("AnimationWidgetComponent", "WidgetComponent").AddFunction<AnimationWidgetComponent, std::string>("Play", [](AnimationWidgetComponent& _c, const std::string& _name) { _c.SetCurrentAnimation(String(_name)); _c.StartAnimation(); });
+
+	Describe("LabelComponent", "Component").AddFunction<LabelComponent, std::string>("SetText", [](LabelComponent& _c, const std::string& _text) { _c.SetString(String(_text)); });
+	Describe("LabelWidgetComponent", "WidgetComponent").AddFunction<LabelWidgetComponent, std::string>("SetText", [](LabelWidgetComponent& _c, const std::string& _text) { _c.SetString(String(_text)); });
+
+	{
+		ClassInfo& _info = Describe("SpatialSoundComponent", "Component");
+		_info.AddFunction<SpatialSoundComponent>("Play", [](SpatialSoundComponent& _c) { _c.Play(); });
+		_info.AddFunction<SpatialSoundComponent>("Pause", [](SpatialSoundComponent& _c) { _c.Pause(); });
+		_info.AddFunction<SpatialSoundComponent>("Stop", [](SpatialSoundComponent& _c) { _c.Stop(); });
+	}
+
+	Describe("CameraComponent", "Component").AddFunction<CameraComponent>("MakeCurrent", [](CameraComponent& _c) { _c.SetCurrent(); });
+
+	{
+		ClassInfo& _info = Describe("PhysicsComponent", "Component");
+		_info.AddFunction<PhysicsComponent, FVector2>("SetLinearVelocity", [](PhysicsComponent& _c, const FVector2& _velocity) { _c.SetLinearVelocity(_velocity); });
+		_info.AddFunction<PhysicsComponent, float>("SetAngularVelocity", [](PhysicsComponent& _c, const float& _velocity) { _c.SetAngularVelocity(Float(_velocity)); });
+	}
+
+	// "Game" is the target of the functions that are not about one object.
+	{
+		ClassInfo& _info = Describe("Game", "");
+		_info.AddFunction<IGameObject, std::string>("OpenScene", [](IGameObject&, const std::string& _scene)
+		{
+			if (Engine* _engine = Reflection::CurrentEngine()) Scene::Open(*_engine, _scene);
+		});
+		_info.SetLastFunctionArgumentType(PropertyType::Scene);
+		_info.AddFunction<IGameObject>("Quit", [](IGameObject&)
+		{
+			if (Engine* _engine = Reflection::CurrentEngine()) _engine->QuitGame();
+		});
 	}
 }

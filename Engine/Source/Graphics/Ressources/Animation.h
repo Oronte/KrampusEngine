@@ -41,7 +41,7 @@ namespace Krampus
         /// <param name="_canLoop">Whether playback should loop.</param>
         /// <param name="_direction">Direction to advance across spritesheet.</param>
         AnimationData(const Int& _count, const Float& _duration, const IRect& _spriteData,
-            const Bool& _canLoop = true, const ReadDirection& _direction = ReadDirection::RD_ROW);
+            const Bool& _canLoop = true, const ReadDirection& _direction = ReadDirection::RD_ROW, const Int& _wrap = 0);
 
         /// <summary>
         /// Constructs animation data from an explicit list of frame bounding rectangles.
@@ -65,13 +65,77 @@ namespace Krampus
         FVector2    frameOrigin = FVector2(0.0f, 0.0f);
         FVector2    frameSize   = FVector2(64.0f, 64.0f);
         Int         direction   = 0;            // ReadDirection: 0 row, 1 row reversed, 2 column, 3 column reversed
+        Int         wrap        = 0;            // frames per line before going to the next one (down for a row, right for a column); 0 = one single line
         Bool        loop        = true;
 
         AnimationData ToData() const
         {
             return AnimationData(frameCount, duration,
                 IRect(IVector2(CAST(int, frameOrigin.x), CAST(int, frameOrigin.y)), IVector2(CAST(int, frameSize.x), CAST(int, frameSize.y))),
-                loop, CAST(ReadDirection, CAST(int, direction)));
+                loop, CAST(ReadDirection, CAST(int, direction)), wrap);
+        }
+    };
+
+    /// <summary>
+    /// The list of clips of an animation component, written in one string so it can be saved in a scene:
+    /// clips are separated by ';', the values of a clip by '|' (name|frameCount|duration|originX|originY|width|height|direction|loop|wrap).
+    /// </summary>
+    struct AnimationClips
+    {
+        static std::string Encode(const std::vector<AnimationClip>& _clips)
+        {
+            std::string _text;
+            for (const AnimationClip& _clip : _clips)
+            {
+                std::string _name = _clip.name.StdString();
+                std::replace_if(_name.begin(), _name.end(), [](const char _c) { return _c == '|' || _c == ';'; }, '_');
+                if (!_text.empty()) _text += ';';
+                _text += std::format("{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", _name, static_cast<int>(_clip.frameCount), static_cast<float>(_clip.duration),
+                    _clip.frameOrigin.x, _clip.frameOrigin.y, _clip.frameSize.x, _clip.frameSize.y, static_cast<int>(_clip.direction), static_cast<bool>(_clip.loop) ? 1 : 0, static_cast<int>(_clip.wrap));
+            }
+            return _text;
+        }
+
+        static std::vector<AnimationClip> Decode(const std::string& _text)
+        {
+            std::vector<AnimationClip> _clips;
+            size_t _start = 0;
+            while (_start <= _text.size() && !_text.empty())
+            {
+                size_t _end = _text.find(';', _start);
+                if (_end == std::string::npos) _end = _text.size();
+
+                std::vector<std::string> _values;
+                size_t _from = _start;
+                for (size_t _bar = _text.find('|', _from); _bar != std::string::npos && _bar < _end; _bar = _text.find('|', _from))
+                {
+                    _values.push_back(_text.substr(_from, _bar - _from));
+                    _from = _bar + 1;
+                }
+                _values.push_back(_text.substr(_from, _end - _from));
+
+                if (_values.size() >= 9)
+                {
+                    try
+                    {
+                        AnimationClip _clip;
+                        _clip.name = String(_values[0]);
+                        _clip.frameCount = Int(std::max(0, std::stoi(_values[1])));
+                        _clip.duration = Float(std::max(0.01f, std::stof(_values[2])));
+                        _clip.frameOrigin = FVector2(std::stof(_values[3]), std::stof(_values[4]));
+                        _clip.frameSize = FVector2(std::max(1.f, std::stof(_values[5])), std::max(1.f, std::stof(_values[6])));
+                        _clip.direction = Int(std::clamp(std::stoi(_values[7]), 0, 3));
+                        _clip.loop = Bool(_values[8] != "0");
+                        if (_values.size() > 9) _clip.wrap = Int(std::max(0, std::stoi(_values[9])));
+                        _clips.push_back(_clip);
+                    }
+                    catch (const std::exception&) { }	// a damaged clip is skipped
+                }
+
+                if (_end >= _text.size()) break;
+                _start = _end + 1;
+            }
+            return _clips;
         }
     };
 

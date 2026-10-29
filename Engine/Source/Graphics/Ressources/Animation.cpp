@@ -5,7 +5,7 @@
 
 // AnimationData
 
-Krampus::AnimationData::AnimationData(const Int& _count, const Float& _duration, const IRect& _spriteData, const Bool& _canLoop, const ReadDirection& _direction)
+Krampus::AnimationData::AnimationData(const Int& _count, const Float& _duration, const IRect& _spriteData, const Bool& _canLoop, const ReadDirection& _direction, const Int& _wrap)
 {
     canLoop = _canLoop;
     count = _count;
@@ -55,6 +55,23 @@ Krampus::AnimationData::AnimationData(const Int& _count, const Float& _duration,
         sprites.push_back(
             IRect(_computeStart[CAST(int, _direction)](_index), _spriteData.GetSize()
             ));
+
+    // On several lines: _wrap frames along the direction, then the next line (down for a row, to the right for a column).
+    if (_wrap > 0)
+    {
+        const bool _byColumn = _direction == ReadDirection::RD_COLUMN || _direction == ReadDirection::RD_COLUMN_REVERSE;
+        const bool _reversed = _direction == ReadDirection::RD_ROW_REVERSE || _direction == ReadDirection::RD_COLUMN_REVERSE;
+        const IVector2 _origin = _spriteData.GetPosition();
+        const IVector2 _size = _spriteData.GetSize();
+        for (int _index = 0; _index < _count; _index++)
+        {
+            const int _along = (_index % _wrap) * (_reversed ? -1 : 1);
+            const int _line = _index / _wrap;
+            sprites[_index] = _byColumn
+                ? IRect(IVector2(_origin.x + _line * _size.x, _origin.y + _along * _size.y), _size)
+                : IRect(IVector2(_origin.x + _along * _size.x, _origin.y + _line * _size.y), _size);
+        }
+    }
 }
 
 Krampus::AnimationData::AnimationData(const Float& _duration, const std::vector<IRect>& _spritesData, const Bool& _canLoop)

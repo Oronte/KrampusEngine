@@ -1,2 +1,2 @@
 Content/Scenes/TestShip.ka7
-700.561 181.477 0.571753
+800 450 1

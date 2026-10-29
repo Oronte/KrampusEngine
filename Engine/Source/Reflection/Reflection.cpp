@@ -50,6 +50,27 @@ namespace
 	}
 }
 
+void ClassInfo::Build() const
+{
+	if (built) return;
+	built = true;
+	for (void(*_declare)(ClassInfo&) : declarers)
+		_declare(const_cast<ClassInfo&>(*this));
+}
+
+std::vector<const FunctionInfo*> ClassInfo::GetFunctions() const
+{
+	std::vector<const FunctionInfo*> _result;
+	if (!parentName.empty())
+		if (const ClassInfo* _parent = ClassRegistry::Find(parentName))
+			_result = _parent->GetFunctions();
+
+	Build();
+	for (const FunctionInfo& _function : functions)
+		_result.push_back(&_function);
+	return _result;
+}
+
 std::vector<const PropertyInfo*> ClassInfo::GetProperties() const
 {
 	std::vector<const PropertyInfo*> _result;
@@ -57,12 +78,7 @@ std::vector<const PropertyInfo*> ClassInfo::GetProperties() const
 		if (const ClassInfo* _parent = ClassRegistry::Find(parentName))
 			_result = _parent->GetProperties();
 
-	if (!built)
-	{
-		built = true;
-		for (void(*_declare)(ClassInfo&) : declarers)
-			_declare(const_cast<ClassInfo&>(*this));
-	}
+	Build();
 
 	for (const PropertyInfo& _property : properties)
 		_result.push_back(&_property);

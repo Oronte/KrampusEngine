@@ -1,4 +1,5 @@
 #pragma once
+#include "Reflection/EventList.h"
 #include "Utilities/Math/Physics.h"
 #include "Component.h"
 #include "Graphics/Shapes/ShapeObject.h"
@@ -20,6 +21,10 @@ namespace Krampus
 		std::unordered_set<CollisionComponent*> collidingComponents;
 
 		Event<CollisionInfo>::ListenerHandle	onCollisionHandle;
+		Event<CollisionInfo>::ListenerHandle	enterCallsHandle;
+		Event<CollisionComponent*>::ListenerHandle	exitCallsHandle;
+
+		void InitEvents();
 
 	public:
 		/// <summary>
@@ -36,6 +41,10 @@ namespace Krampus
 		/// Event triggered when contact with another collider ceases.
 		/// </summary>
 		Event<CollisionComponent*>				onCollisionExit;
+
+		/// <summary>Functions called from the editor (event lists) when a collision begins / ends.</summary>
+		EventList								onEnterCalls;
+		EventList								onExitCalls;
 
 		/// <summary>
 		/// Collision channel assigned to this collider.

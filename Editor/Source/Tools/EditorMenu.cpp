@@ -124,6 +124,13 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Tools"))
+		{
+			if (ImGui::MenuItem("Animation Editor"))
+				OpenAnimationEditor();
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Settings"))
 		{
 			const std::vector<SettingsSection*>& _sections = _context.engine->GetSettings().GetSections();

@@ -1,5 +1,6 @@
 #pragma once
 #include "GameFramework/Level.h"
+#include "Reflection/EventList.h"
 
 // Reflection for the editor and for scenes (.ka7). Usage, in the header of an Actor or Component:
 //
@@ -20,8 +21,6 @@
 namespace Krampus
 {
 
-	using PropertyValue = std::variant<bool, int, float, std::string, FVector2, Color>;
-
 	enum class PropertyType : std::uint8_t
 	{
 		Bool,
@@ -35,7 +34,8 @@ namespace Krampus
 		Texture,	// stored as a string ("Folder/Name.png", relative to Content/Textures), picked from a list of pictures
 		Font,		// stored as a string ("Folder/Name.ttf", relative to Content/Fonts), picked from a list
 		Sound,		// stored as a string ("Folder/Name.mp3", relative to Content/Audio, empty = none), picked from a list
-		Scene		// stored as a string (name of a scene of Content/Scenes, without .ka7), picked from a list
+		Scene,		// stored as a string (name of a scene of Content/Scenes, without .ka7), picked from a list
+		Events		// stored as a string (EventList::Encode), edited as a list of function calls
 	};
 
 	/// <summary>
@@ -55,10 +55,28 @@ namespace Krampus
 		std::function<bool(IGameObject*)>							visible;	// empty: always shown; else the Inspector hides the property when it returns false (the value is still saved)
 	};
 
+	/// <summary>
+	/// A function the editor can call (KFUNCTION, or described in EngineClasses.cpp): its name and, if it takes one, the type of its argument.
+	/// </summary>
+	struct FunctionInfo
+	{
+		std::string														name;
+		bool															hasArgument		= false;
+		PropertyType													argumentType	= PropertyType::Bool;
+		std::function<void(IGameObject*, const PropertyValue*)>			call;
+	};
+
 	namespace Reflection
 	{
 		template <typename T>
 		inline constexpr bool AlwaysFalse = false;
+
+		/// <summary>The engine the event lists work for while one is being invoked (target "Game": open scene, quit).</summary>
+		inline Engine*& CurrentEngine()
+		{
+			static Engine* _engine = nullptr;
+			return _engine;
+		}
 
 		template <typename T>
 		constexpr PropertyType TypeOf()
@@ -69,6 +87,7 @@ namespace Krampus
 			else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, String>)	return PropertyType::String;
 			else if constexpr (std::is_same_v<T, FVector2>)								return PropertyType::Vector2;
 			else if constexpr (std::is_same_v<T, Color>)								return PropertyType::Color;
+			else if constexpr (std::is_same_v<T, EventList>)							return PropertyType::Events;
 			else static_assert(AlwaysFalse<T>, "KPROPERTY: unsupported type");
 		}
 
@@ -79,6 +98,7 @@ namespace Krampus
 			else if constexpr (std::is_same_v<T, Int>)		return static_cast<int>(_value);
 			else if constexpr (std::is_same_v<T, Float>)	return static_cast<float>(_value);
 			else if constexpr (std::is_same_v<T, String>)	return _value.StdString();
+			else if constexpr (std::is_same_v<T, EventList>)	return _value.Encode();
 			else											return _value;
 		}
 
@@ -94,6 +114,7 @@ namespace Krampus
 			else if constexpr (std::is_same_v<T, std::string>)	return std::get<std::string>(_value);
 			else if constexpr (std::is_same_v<T, String>)		return String(std::get<std::string>(_value));
 			else if constexpr (std::is_same_v<T, FVector2>)		return std::get<FVector2>(_value);
+			else if constexpr (std::is_same_v<T, EventList>)	return EventList::Decode(std::get<std::string>(_value));
 			else												return std::get<Color>(_value);
 		}
 	}
@@ -105,6 +126,9 @@ namespace Krampus
 	{
 		mutable bool											built		= false;
 		mutable std::vector<PropertyInfo>						properties;
+		mutable std::vector<FunctionInfo>						functions;
+
+		void Build() const;
 		std::vector<void(*)(ClassInfo&)>						declarers;	// one per KPROPERTY, run on first use
 
 	public:
@@ -191,6 +215,49 @@ namespace Krampus
 		/// Reflected members of this class, parents' first.
 		/// </summary>
 		std::vector<const PropertyInfo*> GetProperties() const;
+
+		/// <summary>
+		/// Makes a function callable from the editor (event lists): no argument.
+		/// </summary>
+		template <typename Class>
+		void AddFunction(const char* _name, std::function<void(Class&)> _call)
+		{
+			FunctionInfo _function;
+			_function.name = _name;
+			_function.call = [_call](IGameObject* _object, const PropertyValue*)
+			{
+				_call(*static_cast<Class*>(_object));
+			};
+			functions.push_back(std::move(_function));
+		}
+
+		/// <summary>
+		/// Makes a function callable from the editor: one argument of type T (bool, int, float, std::string, FVector2 or Color).
+		/// </summary>
+		template <typename Class, typename T>
+		void AddFunction(const char* _name, std::function<void(Class&, const T&)> _call)
+		{
+			FunctionInfo _function;
+			_function.name = _name;
+			_function.hasArgument = true;
+			_function.argumentType = Reflection::TypeOf<T>();
+			_function.call = [_call](IGameObject* _object, const PropertyValue* _value)
+			{
+				if (_value) _call(*static_cast<Class*>(_object), Reflection::FromValue<T>(*_value));
+			};
+			functions.push_back(std::move(_function));
+		}
+
+		/// <summary>Changes how the argument of the last added function is edited (a string that is the name of a scene, for example).</summary>
+		void SetLastFunctionArgumentType(const PropertyType& _type)
+		{
+			functions.back().argumentType = _type;
+		}
+
+		/// <summary>
+		/// Functions of this class that event lists can call, parents' first.
+		/// </summary>
+		std::vector<const FunctionInfo*> GetFunctions() const;
 	};
 
 	class ClassRegistry
@@ -280,3 +347,18 @@ public: \
 #define KPROPERTY(Type, Name)						KPROPERTY_IMPL(Type, Name, 0.f, 0.f, false)
 #define KPROPERTY_RANGE(Type, Name, Min, Max)		KPROPERTY_IMPL(Type, Name, Min, Max, false)
 #define KPROPERTY_READONLY(Type, Name)				KPROPERTY_IMPL(Type, Name, 0.f, 0.f, true)
+
+// Makes a method callable from an event list in the editor (like a Unity event). Put it just before the method:
+//   KFUNCTION(Explode) void Explode();                      // no argument
+//   KFUNCTION_ARG(Float, TakeDamage) void TakeDamage(const Float& _amount);   // one argument: bool, int, float, std::string, FVector2, Color (or the engine types)
+#define KFUNCTION(Name) \
+private: \
+	static void _KDeclareFunction_##Name(::Krampus::ClassInfo& _info) { _info.AddFunction<ThisClass>(#Name, [](ThisClass& _object) { _object.Name(); }); } \
+	static inline ::Krampus::PropertyRegistrar _KFunctionRegistrar_##Name{ KClassName, &_KDeclareFunction_##Name }; \
+public:
+
+#define KFUNCTION_ARG(Type, Name) \
+private: \
+	static void _KDeclareFunction_##Name(::Krampus::ClassInfo& _info) { _info.AddFunction<ThisClass, Type>(#Name, [](ThisClass& _object, const Type& _value) { _object.Name(_value); }); } \
+	static inline ::Krampus::PropertyRegistrar _KFunctionRegistrar_##Name{ KClassName, &_KDeclareFunction_##Name }; \
+public:

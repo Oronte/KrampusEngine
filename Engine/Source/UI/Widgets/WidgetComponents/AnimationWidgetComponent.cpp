@@ -38,30 +38,45 @@ std::string Krampus::AnimationWidgetComponent::ToString() const
 }
 
 
-void Krampus::AnimationWidgetComponent::ApplyClip()
+void Krampus::AnimationWidgetComponent::ApplyClips()
 {
-    if (clip.frameCount <= 0 || !owner->GetComponent<ImageWidgetComponent>()) return;
+	if (!owner->GetComponent<ImageWidgetComponent>()) return;
 
-    if (const auto _old = animations.find(appliedClip); _old != animations.end())
-    {
-        if (current == _old->second.get())
-        {
-            current->Stop();
-            current = nullptr;
-        }
-        animations.erase(_old);
-    }
+	// Take away what the previous clips made.
+	for (const String& _old : appliedClips)
+	{
+		const auto _found = animations.find(_old);
+		if (_found == animations.end()) continue;
+		if (current == _found->second.get())
+		{
+			current->Stop();
+			current = nullptr;
+		}
+		animations.erase(_found);
+	}
+	appliedClips.clear();
 
-    if (animations.contains(clip.name))
-    {
-        LOG_WARNING("AnimationWidgetComponent: an animation named \"" + clip.name + "\" already exists, the clip was not applied");
-        return;
-    }
+	for (const AnimationClip& _clip : clips)
+	{
+		if (_clip.frameCount <= 0) continue;
+		if (animations.contains(_clip.name))
+		{
+			LOG_WARNING("AnimationWidgetComponent: an animation named \"" + _clip.name + "\" already exists, the clip was not applied");
+			continue;
+		}
+		AddAnimation(_clip.name, _clip.ToData());
+		appliedClips.push_back(_clip.name);
+	}
 
-    AddAnimation(clip.name, clip.ToData());
-    appliedClip = clip.name;
-    SetCurrentAnimation(clip.name);
-    clipStarted = false;
+	// The animation the level starts with: startAnimation, else the first clip.
+	const String& _first = appliedClips.empty() ? startAnimation : (std::find(appliedClips.begin(), appliedClips.end(), startAnimation) != appliedClips.end() ? startAnimation : appliedClips.front());
+	const auto _start = animations.find(_first);
+	if (_start != animations.end())
+	{
+		if (current && current != _start->second.get()) current->Stop();
+		current = _start->second.get();
+	}
+	clipStarted = false;
 }
 
 void Krampus::AnimationWidgetComponent::Tick(const Float& _deltaTime)
@@ -71,6 +86,6 @@ void Krampus::AnimationWidgetComponent::Tick(const Float& _deltaTime)
     if (clipStarted) return;
     clipStarted = true;
 
-    if (animations.empty()) ApplyClip();
+    if (animations.empty()) ApplyClips();
     if (playOnBeginPlay) StartAnimation();
 }

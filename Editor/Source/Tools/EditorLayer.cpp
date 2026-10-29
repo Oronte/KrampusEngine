@@ -138,6 +138,7 @@ void EditorLayer::OnRender(Window& _window)
 	DrawHierarchyPanel(context);
 	DrawInspectorPanel(context);
 	DrawContentPanel(context);
+	DrawAnimationEditor(context);
 
 	ImGui::SFML::Render(_renderWindow);
 
