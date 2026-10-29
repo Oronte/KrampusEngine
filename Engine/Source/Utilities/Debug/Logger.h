@@ -69,6 +69,8 @@ namespace Krampus
         static inline std::queue<std::string>   consoleQueue;
         static inline std::mutex                queueMutex;
         static inline std::condition_variable   cv;
+        static inline std::condition_variable   drainedCv;          // signaled when the queues are empty and written
+        static inline bool                      writing             = false;    // a message is out of the queue, not written yet
         static inline std::atomic<bool>         running             = false;
         static inline std::thread               logThread;
 
@@ -102,6 +104,10 @@ namespace Krampus
         static void Init();
         static void Shutdown();
         static void Reset();
+        /// <summary>
+        /// Waits (at most a couple of seconds) until every queued message is written. The Logger keeps running.
+        /// </summary>
+        static void Flush();
         template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<std::decay_t<T>, bool> >>
         static void PrintLog(const VerbosityType& _type, const T& _number, const std::string& _debug = "")
         {

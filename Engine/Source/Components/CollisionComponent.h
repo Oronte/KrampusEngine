@@ -145,14 +145,23 @@ namespace Krampus
 		void UpdateShapeValues(const SpriteComponent* _sprite);
 
 		/// <summary>
-		/// Sets the dimensions of the rectangular collision shape.
+		/// Forgets a collider that is going away: it must not stay in the list of overlaps (its address may be reused).
 		/// </summary>
-		/// <param name="_size">New box dimensions.</param>
+		/// <param name="_other">The collider being destroyed.</param>
+		inline void ForgetCollision(CollisionComponent* _other)
+		{
+			collidingComponents.erase(_other);
+		}
+
 		/// <summary>
 		/// Turns the collision shape into a circle or a rectangle of about the same size.
 		/// </summary>
 		void SetShapeType(const ShapeType& _type);
 
+		/// <summary>
+		/// Sets the dimensions of the rectangular collision shape.
+		/// </summary>
+		/// <param name="_size">New box dimensions.</param>
 		void SetSize(const FVector2& _size);
 
 		/// <summary>

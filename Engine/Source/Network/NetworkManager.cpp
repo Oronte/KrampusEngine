@@ -1,32 +1,47 @@
 #include "NetworkManager.h"
 #include "Core/Engine.h"
+#include <random>
 
 using namespace Krampus;
 
 namespace
 {
 	constexpr std::uint32_t Magic		= 0x4B52414D;	// "KRAM"
-	constexpr std::uint32_t Protocol	= 1;
+	constexpr std::uint32_t Protocol	= 2;
 
 	// First byte of every packet.
 	enum PacketType : std::uint8_t
 	{
 		PHello		= 1,	// client -> host (TCP): magic, protocol, name
-		PWelcome	= 2,	// host -> client (TCP): your id, host name, number of other players, their ids
+		PWelcome	= 2,	// host -> client (TCP): your id, host name, number of other players, then their id and name
 		PReject		= 3,	// host -> client (TCP): reason
 		PJoined		= 4,	// host -> clients (TCP): id, name
 		PLeft		= 5,	// host -> clients (TCP): id
 		PMessage	= 6,	// both ways, TCP or UDP: sender, target, name, values
-		PPing		= 7,	// client -> host (TCP): time
+		PPing		= 7,	// client -> host (TCP): time, the ping the client measured last
 		PPong		= 8,	// host -> client (TCP): the same time
 		PUdpHello	= 9,	// client -> host (UDP): magic, id
-		PUdpAck		= 10	// host -> client (UDP)
+		PUdpAck		= 10,	// host -> client (UDP)
+		PPlayers	= 11,	// host -> clients (TCP): count, then id, name, ping of every player
+		PRename		= 12,	// client -> host (TCP): new name
+		PKick		= 13,	// host -> client (TCP): reason
+		PLanAsk		= 20,	// anybody -> broadcast (UDP, discovery port): magic, protocol
+		PLanAnswer	= 21	// host -> asker (UDP): magic, protocol, game name, host name, port, players, max players, session
 	};
 
 	// Targets inside a packet: >= 0 a player, or one of these.
 	constexpr int ToAll		= -1;
 	constexpr int ToHost	= -2;
 	constexpr int ToOthers	= -3;
+
+	constexpr size_t MaxNameLength = 32;
+
+	std::string CleanName(std::string _name, const int _id)
+	{
+		if (_name.size() > MaxNameLength) _name.resize(MaxNameLength);
+		_name.erase(std::remove_if(_name.begin(), _name.end(), [](const unsigned char _c) { return _c < 32; }), _name.end());
+		return _name.empty() ? "Player " + std::to_string(_id) : _name;
+	}
 
 	void WriteValue(sf::Packet& _packet, const PropertyValue& _value)
 	{
@@ -105,10 +120,13 @@ NetworkManager::NetworkManager(Engine* _engine)
 
 NetworkManager::~NetworkManager()
 {
-	// Quiet: the engine is going away, nobody is listening anymore.
+	// Quiet: the engine is going away, nobody is listening anymore (and the level, with its actors, is already gone).
 	onDisconnected.Clear();
 	onClientLeft.Clear();
+	onPlayersChanged.Clear();
+	destroySpawnedOnDisconnect = false;
 	Reset();
+	discoverySearch.unbind();
 }
 
 // ---- Connection
@@ -121,10 +139,12 @@ bool NetworkManager::Host()
 bool NetworkManager::Host(const unsigned short _port)
 {
 	Disconnect();
+	disconnectReason.clear();
 
 	listener.setBlocking(false);
 	if (listener.listen(_port) != sf::Socket::Status::Done)
 	{
+		disconnectReason = "port " + std::to_string(_port) + " is already in use";
 		LOG_ERROR("Network: cannot host on port " + std::to_string(_port) + " (already in use?)");
 		return false;
 	}
@@ -132,12 +152,24 @@ bool NetworkManager::Host(const unsigned short _port)
 	if (udp.bind(_port) != sf::Socket::Status::Done)
 		LOG_WARNING("Network: UDP port " + std::to_string(_port) + " is not available: unreliable messages will use TCP");
 
+	if (lanVisible)
+	{
+		discoveryHost.setBlocking(false);
+		discoveryHostBound = discoveryHost.bind(discoveryPort) == sf::Socket::Status::Done;
+		if (!discoveryHostBound)
+			LOG_WARNING("Network: LAN discovery port " + std::to_string(discoveryPort) + " is busy (another host on this PC?): this game cannot be found by SearchLan, join it by address");
+	}
+
+	std::random_device _random;
+	session = _random();
 	role = NetRole::Host;
 	localId = 0;
 	nextClientId = 1;
+	playersTimer = 0.f;
 	clock.restart();
-	LOG_MSG("Network: hosting on port " + std::to_string(_port));
+	LOG_MSG("Network: hosting \"" + gameName + "\" on port " + std::to_string(_port) + " as " + playerName);
 	onHosted.Broadcast();
+	onPlayersChanged.Broadcast();
 	return true;
 }
 
@@ -161,14 +193,21 @@ void NetworkManager::Join(const std::string& _addressAndPort)
 	Join(_address, _port);
 }
 
+void NetworkManager::Join(const NetLanGame& _game)
+{
+	Join(_game.address, _game.port);
+}
+
 void NetworkManager::Join(const std::string& _address, const unsigned short _port)
 {
 	Disconnect();
+	disconnectReason.clear();
 
 	const std::optional<sf::IpAddress> _ip = sf::IpAddress::resolve(_address);
 	if (!_ip)
 	{
-		LOG_ERROR("Network: \"" + _address + "\" is not a valid address");
+		disconnectReason = "\"" + _address + "\" is not a valid address";
+		LOG_ERROR("Network: " + disconnectReason);
 		onConnectionFailed.Broadcast();
 		return;
 	}
@@ -182,7 +221,7 @@ void NetworkManager::Join(const std::string& _address, const unsigned short _por
 	serverPort = _port;
 	connectAge = 0.f;
 	clock.restart();
-	LOG_MSG("Network: joining " + _address + ":" + std::to_string(_port));
+	LOG_MSG("Network: joining " + _address + ":" + std::to_string(_port) + " as " + playerName);
 
 	// A connect that cannot reach anybody blocks for seconds: it runs on its own, Update picks the result up.
 	const sf::IpAddress _target = *_ip;
@@ -198,12 +237,46 @@ void NetworkManager::Join(const std::string& _address, const unsigned short _por
 void NetworkManager::Disconnect()
 {
 	const NetRole _was = role;
+	const bool _wasOnline = _was == NetRole::Host || _was == NetRole::Client;
+	if (_wasOnline)
+	{
+		disconnectReason = _was == NetRole::Host ? "you closed the game" : "you left the game";
+		DestroySpawnedActors();
+	}
 	Reset();
-	if (_was == NetRole::Host || _was == NetRole::Client)
+	if (_wasOnline)
 	{
 		LOG_MSG("Network: disconnected");
 		onDisconnected.Broadcast();
+		onPlayersChanged.Broadcast();
 	}
+}
+
+bool NetworkManager::Kick(const int _playerId, const std::string& _reason)
+{
+	if (role != NetRole::Host)
+	{
+		LOG_WARNING("Network: only the host can kick a player");
+		return false;
+	}
+	Peer* _peer = FindPeer(_playerId);
+	if (!_peer) return false;
+
+	sf::Packet _kick;
+	_kick << static_cast<std::uint8_t>(PKick) << _reason;
+	SendPacket(*_peer->socket, _kick);
+	DropPeer(*_peer, "kicked: " + _reason);
+	return true;
+}
+
+void NetworkManager::EndGame(const std::string& _reason, const bool _connectionFailed)
+{
+	disconnectReason = _reason;
+	if (IsOnline()) DestroySpawnedActors();
+	Reset();
+	if (_connectionFailed) onConnectionFailed.Broadcast();
+	else onDisconnected.Broadcast();
+	onPlayersChanged.Broadcast();
 }
 
 void NetworkManager::Reset()
@@ -219,10 +292,12 @@ void NetworkManager::Reset()
 	if (server) server->disconnect();
 	server.reset();
 	udp.unbind();
+	discoveryHost.unbind();
+	discoveryHostBound = false;
 
 	role = NetRole::Offline;
 	localId = 0;
-	otherClients.clear();
+	players.clear();
 	silence = 0.f;
 	pingMs = 0.f;
 	udpReady = false;
@@ -231,17 +306,66 @@ void NetworkManager::Reset()
 
 // ---- State
 
+std::vector<NetPlayer> NetworkManager::GetPlayers() const
+{
+	std::vector<NetPlayer> _players;
+	if (role == NetRole::Host)
+	{
+		_players.push_back(NetPlayer{ 0, playerName, 0.f, true, true });
+		for (const std::unique_ptr<Peer>& _peer : peers)
+			_players.push_back(NetPlayer{ _peer->id, _peer->name, _peer->pingMs, false, false });
+	}
+	else if (role == NetRole::Client)
+	{
+		_players = players;
+		bool _hasLocal = false;
+		for (NetPlayer& _player : _players)
+		{
+			_player.isLocal = _player.id == localId;
+			_player.isHost = _player.id == 0;
+			if (_player.isLocal)
+			{
+				_player.name = playerName;
+				_player.pingMs = pingMs;
+				_hasLocal = true;
+			}
+		}
+		if (!_hasLocal) _players.push_back(NetPlayer{ localId, playerName, pingMs, false, true });
+	}
+	else
+		_players.push_back(NetPlayer{ 0, playerName, 0.f, false, true });
+
+	std::sort(_players.begin(), _players.end(), [](const NetPlayer& _a, const NetPlayer& _b) { return _a.id < _b.id; });
+	return _players;
+}
+
+std::string NetworkManager::GetPlayerName(const int _playerId) const
+{
+	for (const NetPlayer& _player : GetPlayers())
+		if (_player.id == _playerId) return _player.name;
+	return "Player " + std::to_string(_playerId);
+}
+
+void NetworkManager::SetPlayerName(const std::string& _name)
+{
+	playerName = CleanName(_name, localId);
+	if (role == NetRole::Host)
+		BroadcastPlayers();
+	else if (role == NetRole::Client && server)
+	{
+		sf::Packet _rename;
+		_rename << static_cast<std::uint8_t>(PRename) << playerName;
+		SendPacket(*server, _rename);
+	}
+	onPlayersChanged.Broadcast();
+}
+
 std::vector<int> NetworkManager::GetOtherPlayers() const
 {
 	std::vector<int> _ids;
-	if (role == NetRole::Host)
-		for (const std::unique_ptr<Peer>& _peer : peers)
-			_ids.push_back(_peer->id);
-	else if (role == NetRole::Client)
-	{
-		_ids.push_back(0);
-		_ids.insert(_ids.end(), otherClients.begin(), otherClients.end());
-	}
+	if (!IsOnline()) return _ids;
+	for (const NetPlayer& _player : GetPlayers())
+		if (!_player.isLocal) _ids.push_back(_player.id);
 	return _ids;
 }
 
@@ -254,11 +378,38 @@ std::string NetworkManager::GetStatusText() const
 {
 	switch (role)
 	{
-	case NetRole::Host:			return "Hosting (" + std::to_string(peers.size()) + " client" + (peers.size() == 1 ? "" : "s") + ")";
+	case NetRole::Host:			return "Hosting \"" + gameName + "\" (" + std::to_string(peers.size()) + " client" + (peers.size() == 1 ? "" : "s") + ")";
 	case NetRole::Connecting:	return "Connecting...";
 	case NetRole::Client:		return "Connected as player " + std::to_string(localId) + " (" + std::to_string(static_cast<int>(pingMs)) + " ms)";
-	default:					return "Offline";
+	default:					return disconnectReason.empty() ? "Offline" : "Offline (" + disconnectReason + ")";
 	}
+}
+
+void NetworkManager::BroadcastPlayers()
+{
+	if (role != NetRole::Host) return;
+
+	sf::Packet _packet;
+	_packet << static_cast<std::uint8_t>(PPlayers) << static_cast<std::int32_t>(peers.size() + 1);
+	_packet << static_cast<std::int32_t>(0) << playerName << 0.f;
+	for (const std::unique_ptr<Peer>& _peer : peers)
+		_packet << static_cast<std::int32_t>(_peer->id) << _peer->name << _peer->pingMs;
+	for (std::unique_ptr<Peer>& _peer : peers)
+	{
+		sf::Packet _copy = _packet;
+		SendPacket(*_peer->socket, _copy);
+	}
+}
+
+void NetworkManager::SetPlayersFromHost(std::vector<NetPlayer> _players)
+{
+	for (NetPlayer& _player : _players)
+	{
+		_player.isHost = _player.id == 0;
+		_player.isLocal = _player.id == localId;
+	}
+	players = std::move(_players);
+	onPlayersChanged.Broadcast();
 }
 
 // ---- Messages
@@ -340,17 +491,40 @@ void NetworkManager::Route(const NetMessage& _message, const int _target, const 
 
 void NetworkManager::SendPacket(sf::TcpSocket& _socket, sf::Packet& _packet)
 {
+	stats.bytesSent += _packet.getDataSize() + 4;	// + the size SFML puts before a TCP packet
+	windowSent += _packet.getDataSize() + 4;
+	++stats.packetsSent;
+
 	// Sockets are not blocking: a full buffer gives Partial, the rest is sent by the next call (SFML keeps it).
 	sf::Socket::Status _status = _socket.send(_packet);
 	for (int _attempt = 0; _status == sf::Socket::Status::Partial && _attempt < 200; ++_attempt)
 		_status = _socket.send(_packet);
+
+	// Still not sent: the packet dies with this function, so leaving it half written would cut the TCP stream in the middle of a
+	// packet and garble everything after it. Finish it in blocking mode (rare: only when the other side reads too slowly).
+	if (_status == sf::Socket::Status::Partial)
+	{
+		_socket.setBlocking(true);
+		_status = _socket.send(_packet);
+		_socket.setBlocking(false);
+	}
 }
 
 void NetworkManager::SendUdp(const sf::Packet& _packet, const std::optional<sf::IpAddress>& _address, const unsigned short _port)
 {
 	if (!_address || _port == 0) return;
+	stats.bytesSent += _packet.getDataSize();
+	windowSent += _packet.getDataSize();
+	++stats.packetsSent;
 	sf::Packet _copy = _packet;
 	(void)udp.send(_copy, *_address, _port);
+}
+
+void NetworkManager::CountReceived(const sf::Packet& _packet)
+{
+	stats.bytesReceived += _packet.getDataSize();
+	windowReceived += _packet.getDataSize();
+	++stats.packetsReceived;
 }
 
 void NetworkManager::SendMessageTo(Peer& _peer, const NetMessage& _message, const NetChannel _channel)
@@ -382,17 +556,85 @@ NetworkManager::Peer* NetworkManager::FindPeer(const int _id)
 	return nullptr;
 }
 
+// ---- Shared values
+
+void NetworkManager::SetShared(const std::string& _key, const PropertyValue& _value)
+{
+	if (role == NetRole::Client)
+	{
+		Send("__setreq", { _key, _value }, NetTarget::Host);
+		return;
+	}
+	if (role == NetRole::Connecting)
+	{
+		LOG_WARNING("Network: SetShared(\"" + _key + "\") while joining: wait for onConnected");
+		return;
+	}
+
+	ApplyShared(_key, _value);
+	if (role == NetRole::Host) Send("__shared", { _key, _value }, NetTarget::Others);
+}
+
+void NetworkManager::AddShared(const std::string& _key, const float _amount)
+{
+	if (role == NetRole::Client)
+	{
+		Send("__addreq", { _key, _amount }, NetTarget::Host);
+		return;
+	}
+
+	// An int stays an int while whole numbers are added to it.
+	const bool _whole = std::floor(_amount) == _amount;
+	const PropertyValue _current = GetShared(_key, PropertyValue(0));
+	if (const int* _int = std::get_if<int>(&_current); _int && _whole)
+		SetShared(_key, *_int + static_cast<int>(_amount));
+	else if (_int)
+		SetShared(_key, static_cast<float>(*_int) + _amount);
+	else if (const float* _float = std::get_if<float>(&_current))
+		SetShared(_key, *_float + _amount);
+	else
+		SetShared(_key, _whole ? PropertyValue(static_cast<int>(_amount)) : PropertyValue(_amount));
+}
+
+PropertyValue NetworkManager::GetShared(const std::string& _key, const PropertyValue& _fallback) const
+{
+	const auto _found = shared.find(_key);
+	return _found == shared.end() ? _fallback : _found->second;
+}
+
+void NetworkManager::ApplyShared(const std::string& _key, const PropertyValue& _value)
+{
+	shared[_key] = _value;
+	const std::string _keyCopy = _key;		// a listener may change the map: the event gets its own copies
+	const PropertyValue _valueCopy = _value;
+	onSharedChanged.Broadcast(_keyCopy, _valueCopy);
+}
+
 // ---- Loop
 
 void NetworkManager::Update()
 {
-	if (role == NetRole::Offline) return;
-
 	const float _dt = std::min(clock.restart().asSeconds(), 0.25f);
 	uptime += _dt;
 
+	UpdateDiscovery(_dt);	// a search works offline
+	UpdateStats(_dt);
+	if (role == NetRole::Offline) return;
+
 	if (role == NetRole::Host) UpdateHost(_dt);
 	else UpdateClient(_dt);
+}
+
+void NetworkManager::UpdateStats(const float _dt)
+{
+	statsTimer += _dt;
+	if (statsTimer < 1.f) return;
+
+	stats.sentPerSecond = static_cast<float>(windowSent) / statsTimer;
+	stats.receivedPerSecond = static_cast<float>(windowReceived) / statsTimer;
+	windowSent = 0;
+	windowReceived = 0;
+	statsTimer = 0.f;
 }
 
 void NetworkManager::UpdateHost(const float _dt)
@@ -417,7 +659,9 @@ void NetworkManager::UpdateHost(const float _dt)
 		const sf::Socket::Status _status = _join.socket->receive(_packet);
 		if (_status == sf::Socket::Status::Done)
 		{
+			CountReceived(_packet);
 			HandleJoiningPacket(_join, _packet, _accepted);
+			if (role != NetRole::Host) return;	// a listener of onClientJoined disconnected: the lists are gone
 			_remove = true;
 		}
 		else if (_status == sf::Socket::Status::Disconnected || _status == sf::Socket::Status::Error)
@@ -427,18 +671,41 @@ void NetworkManager::UpdateHost(const float _dt)
 		else ++_i;
 	}
 
-	// Clients: read, and drop the ones that went silent.
-	std::vector<Peer*> _lost;
-	for (std::unique_ptr<Peer>& _peer : peers)
+	// Clients: read, and drop the ones that went silent. Handling a packet calls the game, which may drop players or disconnect:
+	// the peers are found again by id each time instead of walking the list (a dropped Peer is deleted).
+	std::vector<int> _ids;
+	for (const std::unique_ptr<Peer>& _peer : peers)
+		_ids.push_back(_peer->id);
+
+	std::vector<int> _lost;
+	for (const int _id : _ids)
 	{
+		Peer* _peer = FindPeer(_id);
+		if (!_peer) continue;
+
 		_peer->silence += _dt;
 		ReadHostSocket(*_peer);
-		if (_peer->silence > timeout) _lost.push_back(_peer.get());
+		if (role != NetRole::Host) return;
+
+		if (Peer* _still = FindPeer(_id); _still && _still->silence > timeout) _lost.push_back(_id);
 	}
-	for (Peer* _peer : _lost)
-		if (FindPeer(_peer->id)) DropPeer(*_peer, "timeout");
+	for (const int _id : _lost)
+	{
+		if (Peer* _peer = FindPeer(_id)) DropPeer(*_peer, "timeout");
+		if (role != NetRole::Host) return;
+	}
 
 	ReadUdp();
+	if (role != NetRole::Host) return;
+
+	// The list of players goes to everybody once a second: the pings change.
+	playersTimer += _dt;
+	if (playersTimer >= 1.f)
+	{
+		playersTimer = 0.f;
+		BroadcastPlayers();
+		onPlayersChanged.Broadcast();
+	}
 }
 
 void NetworkManager::HandleJoiningPacket(Joining& _join, sf::Packet& _packet, bool& _accepted)
@@ -455,46 +722,54 @@ void NetworkManager::HandleJoiningPacket(Joining& _join, sf::Packet& _packet, bo
 		SendPacket(*_join.socket, _answer);
 		LOG_WARNING("Network: a client was refused (" + _reason + ")");
 	};
-	if (_protocol != Protocol) { _reject("wrong network version"); return; }
+	if (_protocol != Protocol) { _reject("wrong network version (the host and the client are not the same build)"); return; }
 	if (static_cast<int>(peers.size()) >= maxClients) { _reject("the game is full"); return; }
 
 	std::unique_ptr<Peer> _peer = std::make_unique<Peer>();
 	_peer->id = nextClientId++;
 	_peer->socket = std::move(_join.socket);
-	_peer->name = _name;
+	_peer->name = CleanName(_name, _peer->id);
 
 	// Tell the newcomer who is here, and the others that somebody came.
 	sf::Packet _welcome;
 	_welcome << static_cast<std::uint8_t>(PWelcome) << static_cast<std::int32_t>(_peer->id) << playerName << static_cast<std::int32_t>(peers.size());
 	for (const std::unique_ptr<Peer>& _other : peers)
-		_welcome << static_cast<std::int32_t>(_other->id);
+		_welcome << static_cast<std::int32_t>(_other->id) << _other->name;
 	SendPacket(*_peer->socket, _welcome);
 
 	sf::Packet _joined;
 	_joined << static_cast<std::uint8_t>(PJoined) << static_cast<std::int32_t>(_peer->id) << _peer->name;
 	for (std::unique_ptr<Peer>& _other : peers)
-		SendPacket(*_other->socket, _joined);
+	{
+		sf::Packet _copy = _joined;
+		SendPacket(*_other->socket, _copy);
+	}
 
 	const int _id = _peer->id;
-	LOG_MSG("Network: player " + std::to_string(_id) + " (" + _name + ") joined");
+	LOG_MSG("Network: player " + std::to_string(_id) + " (" + _peer->name + ") joined");
 	peers.push_back(std::move(_peer));
 	_accepted = true;
+	BroadcastPlayers();
 	onClientJoined.Broadcast(_id);
+	if (role != NetRole::Host) return;
+	onPlayersChanged.Broadcast();
 	ReplicationPeerJoined(_id);
 }
 
 void NetworkManager::ReadHostSocket(Peer& _peer)
 {
 	// Up to a few packets per frame and per client, so a flood cannot freeze the game.
+	const int _id = _peer.id;	// _peer is deleted if it is dropped while a packet is handled: never read it after that
 	for (int _i = 0; _i < 64; ++_i)
 	{
 		sf::Packet _packet;
 		const sf::Socket::Status _status = _peer.socket->receive(_packet);
 		if (_status == sf::Socket::Status::Done)
 		{
+			CountReceived(_packet);
 			_peer.silence = 0.f;
 			HandleHostPacket(_peer, _packet);
-			if (!FindPeer(_peer.id)) return;	// dropped while handling
+			if (role != NetRole::Host || !FindPeer(_id)) return;	// dropped (or disconnected) while handling
 		}
 		else if (_status == sf::Socket::Status::Disconnected || _status == sf::Socket::Status::Error)
 		{
@@ -522,18 +797,29 @@ void NetworkManager::HandleHostPacket(Peer& _peer, sf::Packet& _packet)
 	}
 	else if (_type == PPing)
 	{
-		float _time = 0.f;
+		float _time = 0.f, _ping = 0.f;
 		if (!(_packet >> _time)) return;
+		if (_packet >> _ping) _peer.pingMs = std::max(0.f, _ping);
 		sf::Packet _pong;
 		_pong << static_cast<std::uint8_t>(PPong) << _time;
 		SendPacket(*_peer.socket, _pong);
 	}
+	else if (_type == PRename)
+	{
+		std::string _name;
+		if (!(_packet >> _name)) return;
+		const std::string _old = _peer.name;
+		_peer.name = CleanName(_name, _peer.id);
+		LOG_MSG("Network: player " + std::to_string(_peer.id) + " (" + _old + ") is now " + _peer.name);
+		BroadcastPlayers();
+		onPlayersChanged.Broadcast();
+	}
 }
 
-void NetworkManager::DropPeer(Peer& _peer, const char* _reason)
+void NetworkManager::DropPeer(Peer& _peer, const std::string& _reason)
 {
 	const int _id = _peer.id;
-	LOG_MSG("Network: player " + std::to_string(_id) + " left (" + _reason + ")");
+	LOG_MSG("Network: player " + std::to_string(_id) + " (" + _peer.name + ") left (" + _reason + ")");
 
 	_peer.socket->disconnect();
 	peers.erase(std::remove_if(peers.begin(), peers.end(), [&](const std::unique_ptr<Peer>& _p) { return _p->id == _id; }), peers.end());
@@ -541,9 +827,15 @@ void NetworkManager::DropPeer(Peer& _peer, const char* _reason)
 	sf::Packet _left;
 	_left << static_cast<std::uint8_t>(PLeft) << static_cast<std::int32_t>(_id);
 	for (std::unique_ptr<Peer>& _other : peers)
-		SendPacket(*_other->socket, _left);
+	{
+		sf::Packet _copy = _left;
+		SendPacket(*_other->socket, _copy);
+	}
+	BroadcastPlayers();
 
 	onClientLeft.Broadcast(_id);
+	if (role != NetRole::Host) return;
+	onPlayersChanged.Broadcast();
 	ReplicationPeerLeft(_id);
 }
 
@@ -555,6 +847,7 @@ void NetworkManager::ReadUdp()
 		std::optional<sf::IpAddress> _address;
 		unsigned short _port = 0;
 		if (udp.receive(_packet, _address, _port) != sf::Socket::Status::Done) return;
+		CountReceived(_packet);
 
 		std::uint8_t _type = 0;
 		if (!(_packet >> _type)) continue;
@@ -602,6 +895,8 @@ void NetworkManager::ReadUdp()
 				Deliver(_message);
 			}
 		}
+		else
+			return;		// a callback disconnected
 	}
 }
 
@@ -626,8 +921,7 @@ void NetworkManager::UpdateClient(const float _dt)
 			else
 			{
 				LOG_WARNING("Network: could not reach the host");
-				Reset();
-				onConnectionFailed.Broadcast();
+				EndGame("could not reach the host (wrong address, not hosting, or a firewall)", true);
 				return;
 			}
 		}
@@ -636,8 +930,7 @@ void NetworkManager::UpdateClient(const float _dt)
 		if (role == NetRole::Connecting && connectAge > 8.f)
 		{
 			LOG_WARNING("Network: the host did not answer");
-			Reset();
-			onConnectionFailed.Broadcast();
+			EndGame("the host did not answer", true);
 		}
 		return;
 	}
@@ -645,12 +938,13 @@ void NetworkManager::UpdateClient(const float _dt)
 	ReadServerSocket();
 	if (role != NetRole::Client) return;
 	ReadUdp();
+	if (role != NetRole::Client) return;
 
 	silence += _dt;
 	if (silence > timeout)
 	{
 		LOG_WARNING("Network: connection to the host lost (timeout)");
-		Disconnect();
+		EndGame("connection to the host lost (timeout)", false);
 		return;
 	}
 
@@ -659,7 +953,7 @@ void NetworkManager::UpdateClient(const float _dt)
 	{
 		pingTimer = 0.f;
 		sf::Packet _ping;
-		_ping << static_cast<std::uint8_t>(PPing) << uptime;
+		_ping << static_cast<std::uint8_t>(PPing) << uptime << pingMs;
 		SendPacket(*server, _ping);
 	}
 
@@ -682,18 +976,18 @@ void NetworkManager::ReadServerSocket()
 		const sf::Socket::Status _status = server->receive(_packet);
 		if (_status == sf::Socket::Status::Done)
 		{
+			CountReceived(_packet);
 			silence = 0.f;
 			HandleServerPacket(_packet);
 		}
 		else if (_status == sf::Socket::Status::Disconnected || _status == sf::Socket::Status::Error)
 		{
-			const bool _wasConnecting = role == NetRole::Connecting;
-			Reset();
-			if (_wasConnecting) onConnectionFailed.Broadcast();
+			if (role == NetRole::Connecting)
+				EndGame("the host closed the connection while joining", true);
 			else
 			{
 				LOG_WARNING("Network: the host closed the connection");
-				onDisconnected.Broadcast();
+				EndGame("the host closed the game", false);
 			}
 			return;
 		}
@@ -716,19 +1010,31 @@ void NetworkManager::HandleServerPacket(sf::Packet& _packet)
 		if (!(_packet >> _id >> _hostName >> _count)) return;
 
 		localId = _id;
-		otherClients.clear();
-		for (std::int32_t _i = 0; _i < _count; ++_i)
+		players.clear();
+		players.push_back(NetPlayer{ 0, _hostName, 0.f, true, false });
+		for (std::int32_t _i = 0; _i < _count; ++_i)	// the count comes from the network: stop at the end of the packet
 		{
 			std::int32_t _other = 0;
-			if (_packet >> _other) otherClients.push_back(_other);
+			std::string _name;
+			if (!(_packet >> _other >> _name)) break;
+			players.push_back(NetPlayer{ _other, _name, 0.f, false, false });
 		}
+		players.push_back(NetPlayer{ localId, playerName, 0.f, false, true });
 		role = NetRole::Client;
 		silence = 0.f;
+		shared.clear();		// the host sends its values right after
 		LOG_MSG("Network: connected to " + _hostName + " as player " + std::to_string(localId));
+
+		std::vector<int> _others;
+		for (const NetPlayer& _player : players)
+			if (_player.id != localId) _others.push_back(_player.id);
 		onConnected.Broadcast();
-		onClientJoined.Broadcast(0);
-		for (const int _other : std::vector<int>(otherClients))
+		for (const int _other : _others)
+		{
+			if (role != NetRole::Client) break;
 			onClientJoined.Broadcast(_other);
+		}
+		onPlayersChanged.Broadcast();
 		break;
 	}
 	case PReject:
@@ -736,8 +1042,15 @@ void NetworkManager::HandleServerPacket(sf::Packet& _packet)
 		std::string _reason;
 		_packet >> _reason;
 		LOG_WARNING("Network: the host refused the connection (" + _reason + ")");
-		Reset();
-		onConnectionFailed.Broadcast();
+		EndGame("refused by the host: " + _reason, true);
+		break;
+	}
+	case PKick:
+	{
+		std::string _reason;
+		_packet >> _reason;
+		LOG_WARNING("Network: kicked by the host (" + _reason + ")");
+		EndGame("kicked: " + _reason, false);
 		break;
 	}
 	case PJoined:
@@ -745,18 +1058,38 @@ void NetworkManager::HandleServerPacket(sf::Packet& _packet)
 		std::int32_t _id = 0;
 		std::string _name;
 		if (!(_packet >> _id >> _name)) return;
-		otherClients.push_back(_id);
+		if (std::none_of(players.begin(), players.end(), [&](const NetPlayer& _player) { return _player.id == _id; }))
+			players.push_back(NetPlayer{ _id, _name, 0.f, false, false });
 		LOG_MSG("Network: player " + std::to_string(_id) + " (" + _name + ") joined");
 		onClientJoined.Broadcast(_id);
+		onPlayersChanged.Broadcast();
 		break;
 	}
 	case PLeft:
 	{
 		std::int32_t _id = 0;
 		if (!(_packet >> _id)) return;
-		otherClients.erase(std::remove(otherClients.begin(), otherClients.end(), static_cast<int>(_id)), otherClients.end());
-		LOG_MSG("Network: player " + std::to_string(_id) + " left");
+		const std::string _name = GetPlayerName(_id);
+		players.erase(std::remove_if(players.begin(), players.end(), [&](const NetPlayer& _player) { return _player.id == _id; }), players.end());
+		LOG_MSG("Network: player " + std::to_string(_id) + " (" + _name + ") left");
 		onClientLeft.Broadcast(_id);
+		onPlayersChanged.Broadcast();
+		break;
+	}
+	case PPlayers:
+	{
+		std::int32_t _count = 0;
+		if (!(_packet >> _count)) return;
+		std::vector<NetPlayer> _list;
+		for (std::int32_t _i = 0; _i < _count; ++_i)
+		{
+			NetPlayer _player;
+			std::int32_t _id = 0;
+			if (!(_packet >> _id >> _player.name >> _player.pingMs)) break;
+			_player.id = _id;
+			_list.push_back(std::move(_player));
+		}
+		SetPlayersFromHost(std::move(_list));
 		break;
 	}
 	case PMessage:
@@ -776,5 +1109,116 @@ void NetworkManager::HandleServerPacket(sf::Packet& _packet)
 	}
 	default:
 		break;
+	}
+}
+
+// ---- LAN discovery
+
+void NetworkManager::SearchLan(const float _seconds)
+{
+	if (!discoverySearchBound)
+	{
+		discoverySearch.setBlocking(false);
+		discoverySearchBound = discoverySearch.bind(sf::Socket::AnyPort) == sf::Socket::Status::Done;
+		if (!discoverySearchBound)
+		{
+			LOG_WARNING("Network: no UDP socket for the LAN search");
+			return;
+		}
+	}
+	lanGames.clear();
+	searchTime = std::max(0.5f, _seconds);
+	searchResend = 0.f;
+	LOG_MSG("Network: searching the LAN for games (port " + std::to_string(discoveryPort) + ")...");
+}
+
+void NetworkManager::UpdateDiscovery(const float _dt)
+{
+	for (NetLanGame& _game : lanGames)
+		_game.age += _dt;
+
+	// Host: answer the players who search.
+	if (role == NetRole::Host && discoveryHostBound)
+	{
+		for (int _i = 0; _i < 32; ++_i)
+		{
+			sf::Packet _packet;
+			std::optional<sf::IpAddress> _address;
+			unsigned short _port = 0;
+			if (discoveryHost.receive(_packet, _address, _port) != sf::Socket::Status::Done || !_address) break;
+			CountReceived(_packet);
+
+			std::uint8_t _type = 0;
+			std::uint32_t _magic = 0, _protocol = 0;
+			if (!(_packet >> _type >> _magic >> _protocol) || _type != PLanAsk || _magic != Magic) continue;
+
+			sf::Packet _answer;
+			_answer << static_cast<std::uint8_t>(PLanAnswer) << Magic << Protocol << gameName << playerName
+				<< static_cast<std::uint16_t>(listener.getLocalPort()) << static_cast<std::int32_t>(GetPlayerCount())
+				<< static_cast<std::int32_t>(maxClients + 1) << session;
+			stats.bytesSent += _answer.getDataSize();
+			++stats.packetsSent;
+			(void)discoveryHost.send(_answer, *_address, _port);
+		}
+	}
+
+	if (searchTime <= 0.f) return;
+
+	// Searcher: ask twice a second (a broadcast for the LAN, and this PC itself for a test with two windows), read the answers.
+	searchTime -= _dt;
+	searchResend -= _dt;
+	if (searchResend <= 0.f)
+	{
+		searchResend = 0.5f;
+		sf::Packet _ask;
+		_ask << static_cast<std::uint8_t>(PLanAsk) << Magic << Protocol;
+		sf::Packet _askLocal = _ask;
+		(void)discoverySearch.send(_ask, sf::IpAddress::Broadcast, discoveryPort);
+		(void)discoverySearch.send(_askLocal, sf::IpAddress::LocalHost, discoveryPort);
+	}
+
+	for (int _i = 0; _i < 32; ++_i)
+	{
+		sf::Packet _packet;
+		std::optional<sf::IpAddress> _address;
+		unsigned short _port = 0;
+		if (discoverySearch.receive(_packet, _address, _port) != sf::Socket::Status::Done || !_address) break;
+		CountReceived(_packet);
+
+		std::uint8_t _type = 0;
+		std::uint32_t _magic = 0, _protocol = 0;
+		NetLanGame _game;
+		std::uint16_t _gamePort = 0;
+		std::int32_t _players = 0, _max = 0;
+		if (!(_packet >> _type >> _magic >> _protocol >> _game.gameName >> _game.hostName >> _gamePort >> _players >> _max >> _game.session)
+			|| _type != PLanAnswer || _magic != Magic)
+			continue;
+		if (_protocol != Protocol) continue;							// another build: it would refuse us anyway
+		if (role == NetRole::Host && _game.session == session) continue;	// this game itself
+
+		_game.address = _address->toString();
+		_game.port = _gamePort;
+		_game.players = _players;
+		_game.maxPlayers = _max;
+
+		const auto _known = std::find_if(lanGames.begin(), lanGames.end(), [&](const NetLanGame& _other) { return _other.session == _game.session; });
+		if (_known != lanGames.end())
+		{
+			const std::string _firstAddress = _known->address;	// the first answer gave the address: the same host also answers on another one
+			*_known = _game;
+			_known->address = _firstAddress;
+			continue;
+		}
+		lanGames.push_back(_game);
+		LOG_MSG("Network: found \"" + _game.gameName + "\" hosted by " + _game.hostName + " at " + _game.address + ":" + std::to_string(_game.port)
+			+ " (" + std::to_string(_game.players) + "/" + std::to_string(_game.maxPlayers) + ")");
+		const NetLanGame _copy = _game;
+		onLanGameFound.Broadcast(_copy);
+	}
+
+	if (searchTime <= 0.f)
+	{
+		searchTime = 0.f;
+		LOG_MSG("Network: LAN search done (" + std::to_string(lanGames.size()) + " game" + (lanGames.size() == 1 ? "" : "s") + " found)");
 	}
 }

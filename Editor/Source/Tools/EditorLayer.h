@@ -36,6 +36,9 @@ namespace Krampus
 		FVector2					gizmoStartPosition;
 
 		std::vector<Logger::Entry>	consoleLines;
+		ImGuiTextFilter				consoleSearch;					// "word", "a,b" (one of them), "-word" (not this one)
+		std::string					consoleCategory;				// empty: every category; else only the lines "Category: ..."
+		std::vector<int>			consoleVisible;					// indices in consoleLines that pass the filters (rebuilt each frame)
 		EditorSettings				editorSettings;		// preferences of the editor (Settings window)
 		bool						settingsDirty		= false;	// a setting was changed and not saved yet
 

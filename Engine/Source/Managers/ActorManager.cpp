@@ -4,26 +4,27 @@ void Krampus::ActorManager::BeginPlay()
 {
 	isPlaying = true;
 
-	for (const std::unique_ptr<Actor>& _actor : actors) 
-		_actor->BeginPlay();
+	// Actors spawned from a BeginPlay get theirs in CreateActor: they are not in the snapshot.
+	for (Actor* _actor : Snapshot())
+		if (!_actor->IsPendingDestroy()) _actor->BeginPlay();
 }
 
 void Krampus::ActorManager::Update(const Float& _deltaTime)
 {
-	for (const std::unique_ptr<Actor>& _actor : actors)
-		if (_actor->IsActive()) _actor->Tick(_deltaTime);
+	for (Actor* _actor : Snapshot())
+		if (_actor->IsActive() && !_actor->IsPendingDestroy()) _actor->Tick(_deltaTime);
 }
 
 void Krampus::ActorManager::Deconstruct()
 {
-	for (const std::unique_ptr<Actor>& _actor : actors)
-		_actor->Deconstruct();
+	for (Actor* _actor : Snapshot())
+		if (!_actor->IsPendingDestroy()) _actor->Deconstruct();
 }
 
 void Krampus::ActorManager::BeginDestroy()
 {
 	isPlaying = false;
 
-	for (const std::unique_ptr<Actor>& _actor : actors)
+	for (Actor* _actor : Snapshot())
 		_actor->BeginDestroy();
 }

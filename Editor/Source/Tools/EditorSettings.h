@@ -23,6 +23,14 @@ namespace Krampus
 		KPROPERTY_RANGE(Int, consoleMaxLines, 100, 20000) = 2000;	// lines kept by the Console
 		KPROPERTY(Bool, autoScrollConsole) = true;
 
+		// Console filters (the check boxes at the top of the Console), kept from one session to the next.
+		KPROPERTY(Bool, consoleShowVerbose) = true;		// Verbose and VeryVerbose
+		KPROPERTY(Bool, consoleShowLog) = true;
+		KPROPERTY(Bool, consoleShowMessages) = true;	// Display
+		KPROPERTY(Bool, consoleShowWarnings) = true;
+		KPROPERTY(Bool, consoleShowErrors) = true;		// Error and Fatal
+		KPROPERTY(Bool, consoleShowSource) = false;		// the "(File : ... | Func : ... | Line : ...)" end of each line
+
 		void ResetToDefaults() override
 		{
 			uiScale = 1.0f;
@@ -30,6 +38,12 @@ namespace Krampus
 			gizmoSize = 70.f;
 			consoleMaxLines = 2000;
 			autoScrollConsole = true;
+			consoleShowVerbose = true;
+			consoleShowLog = true;
+			consoleShowMessages = true;
+			consoleShowWarnings = true;
+			consoleShowErrors = true;
+			consoleShowSource = false;
 		}
 
 		static std::filesystem::path GetPath()

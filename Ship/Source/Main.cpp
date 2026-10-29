@@ -79,5 +79,10 @@ int main(int argc, char** argv)
 		ReportError(_exception.What());
 		return 1;
 	}
+	catch (const std::exception& _exception)	// the standard library and SFML throw their own (no memory, a file system error...)
+	{
+		ReportError(std::string("Unexpected error: ") + _exception.what());
+		return 1;
+	}
 	return 0;
 }

@@ -79,7 +79,11 @@ namespace Krampus
 				LOG(VerbosityType::Error, "You try to add to window an invalide sprite");
 				return;
 			}
-			actors[_drawable->GetZOrder()].push_back(_drawable);
+			// Construct runs twice for the components created in an actor's constructor (CreateComponent, then the actor's Construct):
+			// a second entry would draw the sprite twice.
+			std::vector<IDrawable*>& _layer = actors[_drawable->GetZOrder()];
+			if (std::find(_layer.begin(), _layer.end(), _drawable) == _layer.end())
+				_layer.push_back(_drawable);
 		}
 
 		/// <summary>
@@ -93,7 +97,9 @@ namespace Krampus
 				LOG(VerbosityType::Error, "You try to add to window an invalide sprite");
 				return;
 			}
-			widgets[_drawable->GetZOrder()].push_back(_drawable);
+			std::vector<IDrawable*>& _layer = widgets[_drawable->GetZOrder()];
+			if (std::find(_layer.begin(), _layer.end(), _drawable) == _layer.end())
+				_layer.push_back(_drawable);
 		}
 
 		/// <summary>

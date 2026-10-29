@@ -343,9 +343,12 @@ void NetworkSettings::Apply()
 {
 	if (!engine) return;
 	NetworkManager* _net = engine->GetNetwork();
-	_net->playerName = playerName;
+	if (_net->playerName != playerName) _net->SetPlayerName(playerName);	// during a game, the others see the new name
 	_net->maxClients = maxClients;
 	_net->timeout = timeout;
+	_net->discoveryPort = static_cast<unsigned short>(std::clamp(discoveryPort, 1, 65535));
+	_net->lanVisible = lanVisible;
+	_net->gameName = engine->GetSettings().ship.gameName;	// what the LAN search shows
 }
 
 void NetworkSettings::ResetToDefaults()

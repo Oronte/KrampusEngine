@@ -23,6 +23,10 @@ namespace Krampus
 		EventList	onDisconnected;
 		EventList	onPlayerJoined;
 		EventList	onPlayerLeft;
+		/// <summary>A shared value changed (NetworkManager::SetShared / AddShared).</summary>
+		EventList	onSharedChanged;
+		/// <summary>SearchLan found a game.</summary>
+		EventList	onLanGameFound;
 
 		/// <summary>Messages (by name) that call functions when they arrive. Call ApplyMessages after changing the list.</summary>
 		std::vector<InputComponent::Binding>	messages;

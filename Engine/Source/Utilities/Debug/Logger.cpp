@@ -45,10 +45,11 @@ void Krampus::Logger::LoggingThread()
     std::filesystem::create_directories(logsDir);
     std::ofstream _file(logsPath, std::ios_base::app);
 
-    while (running || !logQueue.empty())
+    // The queues are only read with the lock held; it is released while a message is written.
+    std::unique_lock _lock(queueMutex);
+    while (true)
     {
-        std::unique_lock _lock(queueMutex);
-        cv.wait(_lock, [] { return 
+        cv.wait(_lock, [] { return
             !logQueue.empty() ||
             !consoleQueue.empty() ||
             !running; });
@@ -57,23 +58,30 @@ void Krampus::Logger::LoggingThread()
         {
             if (!consoleQueue.empty())
             {
-                std::string _consoleText = consoleQueue.front();
+                std::string _consoleText = std::move(consoleQueue.front());
                 consoleQueue.pop();
+                writing = true;
                 _lock.unlock();
                 std::cout << _consoleText << std::endl;
                 _lock.lock();
+                writing = false;
             }
 
             if (!logQueue.empty())
             {
-                std::string _logText = logQueue.front();
+                std::string _logText = std::move(logQueue.front());
                 logQueue.pop();
+                writing = true;
                 _lock.unlock();
                 _file << _logText << std::endl;
                 _file.flush();
                 _lock.lock();
+                writing = false;
             }
         }
+        drainedCv.notify_all();
+
+        if (!running) break;    // everything queued before the shutdown is written
     }
 }
 
@@ -114,6 +122,8 @@ bool Krampus::Logger::CanPrintInConsole(const VerbosityType& _type)
 void Logger::Init()
 {
 #ifdef DEBUG
+    if (logThread.joinable()) return;   // already running: a second std::thread on top of a joinable one would terminate the program
+
     Reset();
     running = true;
     logThread = std::thread(LoggingThread);
@@ -133,7 +143,11 @@ void Logger::Init()
 void Krampus::Logger::Shutdown()
 {
 #ifdef DEBUG
-    running = false;
+    {
+        // Under the lock: otherwise the thread can test 'running' just before it changes and then wait forever.
+        std::lock_guard _lock(queueMutex);
+        running = false;
+    }
     cv.notify_all();
     if (logThread.joinable())
         logThread.join();
@@ -143,6 +157,19 @@ void Krampus::Logger::Shutdown()
     warningNotif = Sound();
     errorNotif = Sound();
     fatalNotif = Sound();
+#endif
+}
+
+void Krampus::Logger::Flush()
+{
+#ifdef DEBUG
+    if (!logThread.joinable() || std::this_thread::get_id() == logThread.get_id()) return;
+
+    std::unique_lock _lock(queueMutex);
+    drainedCv.wait_for(_lock, std::chrono::seconds(2), []
+    {
+        return !running || (logQueue.empty() && consoleQueue.empty() && !writing);
+    });
 #endif
 }
 

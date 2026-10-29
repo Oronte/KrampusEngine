@@ -24,8 +24,9 @@ namespace Krampus
 		template <typename Type, typename ...Args>
 		inline Type* PushLayer(Args&&... _args)
 		{
-			Type* _layer = new Type(std::forward<Args>(_args)...);
-			layers.emplace(layers.begin() + overlayStart, _layer);
+			std::unique_ptr<Type> _owned = std::make_unique<Type>(std::forward<Args>(_args)...);
+			Type* _layer = _owned.get();
+			layers.emplace(layers.begin() + overlayStart, std::move(_owned));
 			++overlayStart;
 			_layer->OnAttach();
 			LOG(VerbosityType::Log, "LayerStack: attached " + std::string(typeid(Type).name()));
@@ -39,8 +40,9 @@ namespace Krampus
 		template <typename Type, typename ...Args>
 		inline Type* PushOverlay(Args&&... _args)
 		{
-			Type* _layer = new Type(std::forward<Args>(_args)...);
-			layers.emplace_back(_layer);
+			std::unique_ptr<Type> _owned = std::make_unique<Type>(std::forward<Args>(_args)...);
+			Type* _layer = _owned.get();
+			layers.push_back(std::move(_owned));
 			_layer->OnAttach();
 			LOG(VerbosityType::Log, "LayerStack: attached " + std::string(typeid(Type).name()));
 			return _layer;

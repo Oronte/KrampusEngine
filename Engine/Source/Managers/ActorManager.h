@@ -109,15 +109,34 @@ namespace Krampus
 		/// </summary>
 		inline void DestroyPendingDeleteActors()
 		{
-			for (const std::unique_ptr<Actor>& _actor : pendingDeleteActors)
-				_actor->BeginDestroy();
-			pendingDeleteActors.clear();
+			// BeginDestroy may destroy other actors: they are handled by the next turn of the loop.
+			while (!pendingDeleteActors.empty())
+			{
+				std::vector<std::unique_ptr<Actor>> _dying = std::move(pendingDeleteActors);
+				pendingDeleteActors.clear();
+				for (const std::unique_ptr<Actor>& _actor : _dying)
+					_actor->BeginDestroy();
+			}
 		}
 
 		/// <summary>
 		/// Default constructor for ActorManager.
 		/// </summary>
 		ActorManager() = default;
+
+	private:
+		/// <summary>
+		/// The actors as they are now. A callback may spawn or destroy actors while the list is walked: the copy keeps the walk valid
+		/// (a destroyed actor stays alive until the end of the frame, in pendingDeleteActors).
+		/// </summary>
+		inline std::vector<Actor*> Snapshot() const
+		{
+			std::vector<Actor*> _snapshot;
+			_snapshot.reserve(actors.size());
+			for (const std::unique_ptr<Actor>& _actor : actors)
+				_snapshot.push_back(_actor.get());
+			return _snapshot;
+		}
 
 	public:
 		/// <summary>

@@ -14,6 +14,8 @@ namespace Krampus
 	/// - An actor created with NetworkManager::Spawn (or the Game function "Spawn") belongs to the player who asked for it. Only that
 	///   player moves it; the others see it follow.
 	/// Test IsLocalOwner() before reading the keyboard in a script: only the owner should control the actor.
+	/// - CallRPC("Explode") calls the KFUNCTION Explode of this actor (or of one of its components) on every machine; the editor can do
+	///   the same from an event list (NetworkSyncComponent > RpcAll / RpcOthers / RpcHost).
 	/// </summary>
 	class NetworkSyncComponent : public Component
 	{
@@ -65,6 +67,18 @@ namespace Krampus
 
 		/// <returns>True on the machine that controls this actor (the one that sends its state).</returns>
 		bool IsLocalOwner();
+
+		/// <returns>The player that owns this actor (0 = the host).</returns>
+		int GetOwnerId() const { return ownerId; }
+
+		/// <summary>
+		/// Calls a KFUNCTION of this actor (or of one of its components) by name on the machines of _target.
+		/// _args: nothing, or the one argument of the function (NetworkManager::Args(12.5f)).
+		/// </summary>
+		void CallRPC(const std::string& _function, NetTarget _target = NetTarget::All, const std::vector<PropertyValue>& _args = { });
+
+		/// <summary>Gives the actor its network identity (called by the NetworkManager for a spawned actor).</summary>
+		void AssignNetworkId(int _networkId, int _ownerId);
 
 		/// <summary>Applies a state received from the owner (called by the NetworkManager).</summary>
 		void ReceiveState(const NetMessage& _message);

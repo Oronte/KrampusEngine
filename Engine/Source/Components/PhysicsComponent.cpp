@@ -42,12 +42,22 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const FVector2& _size
 void Krampus::PhysicsComponent::Deconstruct()
 {
 	Super::Deconstruct();
-	b2DestroyBody(bodyId);
+
+	// The body is gone after this: nothing may reach it anymore (the physics step of this frame still broadcasts, and the actor
+	// can still move until it is deleted at the end of the frame).
+	collisionResolveHandle.Disconnect();
+	moveHandle.Disconnect();
+	rotateHandle.Disconnect();
+
+	if (b2Body_IsValid(bodyId))
+		b2DestroyBody(bodyId);
+	bodyId = b2_nullBodyId;
+	shapeId = b2_nullShapeId;
 }
 
 void Krampus::PhysicsComponent::OnCollisionResolve()
 {
-    if (b2Body_GetType(bodyId) != b2_dynamicBody)
+    if (!b2Body_IsValid(bodyId) || b2Body_GetType(bodyId) != b2_dynamicBody)
         return;
 
     b2Vec2 _pos = b2Body_GetPosition(bodyId);

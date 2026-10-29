@@ -29,9 +29,24 @@ bool Krampus::NetworkSyncComponent::IsLocalOwner()
 
 void Krampus::NetworkSyncComponent::Register()
 {
+	if (registered) GetWorld()->GetNetwork()->Unregister(resolvedId, this);
 	resolvedId = GetNetworkId();
 	GetWorld()->GetNetwork()->Register(resolvedId, this);
 	registered = true;
+}
+
+void Krampus::NetworkSyncComponent::AssignNetworkId(const int _networkId, const int _ownerId)
+{
+	networkId = Int(_networkId);
+	ownerId = _ownerId;
+	spawnedByNetwork = true;
+	Register();		// now, not at the first Tick: a function call (RPC) may arrive for it in the same frame
+}
+
+void Krampus::NetworkSyncComponent::CallRPC(const std::string& _function, const NetTarget _target, const std::vector<PropertyValue>& _args)
+{
+	if (!registered) Register();
+	GetWorld()->GetNetwork()->CallRPC(resolvedId, _function, _target, _args);
 }
 
 void Krampus::NetworkSyncComponent::Deconstruct()

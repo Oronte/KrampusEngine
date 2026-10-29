@@ -111,6 +111,16 @@ bool AssetPack::Mount(const std::filesystem::path& _exe)
 		_p += 16;
 	}
 	g_dataStart = static_cast<std::size_t>(_p - g_data.data());
+
+	// Every file must be inside the data region: a damaged pak must not make Find hand out pointers past the end of g_data.
+	const std::uint64_t _dataSize = g_data.size() - g_dataStart;
+	for (const auto& [_path, _item] : g_items)
+		if (_item.offset > _dataSize || _item.size > _dataSize - _item.offset)
+		{
+			g_items.clear();
+			g_data.clear();
+			return false;
+		}
 	return true;
 }
 

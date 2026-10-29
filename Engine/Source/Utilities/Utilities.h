@@ -18,10 +18,13 @@ namespace Krampus
     /// <summary>
 	/// Checks if an object is an instance of a specific type.
     /// </summary>
-    /// <param name="_object"> -> The item that will be checked</param>
+    /// <param name="_object"> -> The item that will be checked (a pointer is checked at runtime, on its real type)</param>
     template<typename T, typename K>
     Bool InstanceOf(K _object)
     {
-        return Bool(std::is_same<T, decltype(_object)>::value);
+        if constexpr (std::is_pointer_v<K> && std::is_polymorphic_v<std::remove_cv_t<std::remove_pointer_t<K>>>)
+            return Bool(_object != nullptr && dynamic_cast<const T*>(_object) != nullptr);
+        else
+            return Bool(std::is_same_v<T, std::remove_cvref_t<K>>);
     }
 }

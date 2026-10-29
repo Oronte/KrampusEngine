@@ -37,11 +37,10 @@ Timer* Krampus::TimerManager::CreateTimer(const std::function<void()> _callback,
 
 void Krampus::TimerManager::DestroyTimer(Timer* _toDelete)
 {
-    std::erase_if(timers,
-        [_toDelete](const std::unique_ptr<Timer>& _timer)
-        {
-            return _timer.get() == _toDelete;
-		});
+	// Only marked: UpdateTimers removes it. Erasing here would delete a timer that may be running its own callback right now.
+	for (const std::unique_ptr<Timer>& _timer : timers)
+		if (_timer.get() == _toDelete)
+			_timer->Stop();
 }
 
 Float Krampus::TimerManager::Update()

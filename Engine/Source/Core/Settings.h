@@ -143,9 +143,11 @@ namespace Krampus
 		std::string	playerName		= "Player";
 		int			maxClients		= 8;
 		float		timeout			= 10.f;				// seconds of silence before a player is dropped
+		int			discoveryPort	= 7778;				// UDP port of the LAN search (SearchLan)
+		bool		lanVisible		= true;				// a host answers the LAN searches (else: join by address only)
 
 		const char* Title() const override { return "Network"; }
-		const char* Description() const override { return "Hosting and joining a network game (see NetworkManager). Port, the host address to join, player name."; }
+		const char* Description() const override { return "Hosting and joining a network game (see NetworkManager). Port, the host address to join, player name, LAN search."; }
 		void Apply() override;
 		void ResetToDefaults() override;
 	};

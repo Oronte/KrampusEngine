@@ -13,7 +13,8 @@ namespace Krampus
 	{
 		std::vector<Actor*>							children;
 		Transform									transform;
-	
+		Bool										pendingDestroy	= false;
+
 	public:
 		/// <summary>
 		/// Event broadcast when the actor's position changes.
@@ -208,12 +209,18 @@ namespace Krampus
 		template<typename Type = Level, IS_BASE_OF(Level, Type)>
 		inline Type* GetLevel()
 		{
-			if (InstanceOf<Type>(level))
-			{
+			if constexpr (std::is_same_v<Type, Level>)
 				return level;
-			}
+			else
+				return Cast<Type>(level);
+		}
 
-			return Cast<Type>(level);
+		/// <summary>
+		/// True once Destroy() was called: the actor is waiting to be deleted at the end of the frame.
+		/// </summary>
+		inline Bool IsPendingDestroy() const
+		{
+			return pendingDestroy;
 		}
 
 		/// <summary>

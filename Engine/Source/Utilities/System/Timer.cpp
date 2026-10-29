@@ -24,9 +24,13 @@ void Timer::Update(const Float& _deltaTime)
 
 	if (currentTime >= duration)
 	{
-		callback();
+		if (callback) callback();
+		if (isToDelete) return;	// the callback stopped the timer
 
-		isLoop ? Reset() : Stop();
+		if (isLoop)
+			currentTime = duration > 0.0f ? currentTime - duration : Float(0.0f);	// keep the overshoot: a loop does not drift
+		else
+			Stop();
 	}
 }
 

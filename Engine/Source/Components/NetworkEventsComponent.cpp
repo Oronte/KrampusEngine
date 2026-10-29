@@ -13,6 +13,8 @@ Krampus::NetworkEventsComponent::NetworkEventsComponent(Actor* _owner)
 	handles.push_back(_net->onDisconnected.AddListener([this]() { onDisconnected.Invoke(this); }));
 	handles.push_back(_net->onClientJoined.AddListener([this](int) { onPlayerJoined.Invoke(this); }));
 	handles.push_back(_net->onClientLeft.AddListener([this](int) { onPlayerLeft.Invoke(this); }));
+	handles.push_back(_net->onSharedChanged.AddListener([this](const std::string&, const PropertyValue&) { onSharedChanged.Invoke(this); }));
+	handles.push_back(_net->onLanGameFound.AddListener([this](const NetLanGame&) { onLanGameFound.Invoke(this); }));
 }
 
 void Krampus::NetworkEventsComponent::ApplyMessages()

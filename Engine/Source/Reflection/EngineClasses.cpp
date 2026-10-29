@@ -688,6 +688,8 @@ void Krampus::RegisterEngineClasses()
 		AddLive(_info, "playerName", &NetworkSettings::playerName);
 		AddLive(_info, "maxClients", &NetworkSettings::maxClients, 1.f, 64.f);
 		AddLive(_info, "timeout", &NetworkSettings::timeout, 1.f, 120.f);
+		AddLive(_info, "discoveryPort", &NetworkSettings::discoveryPort, 1.f, 65535.f);
+		AddLive(_info, "lanVisible", &NetworkSettings::lanVisible);
 	}
 
 	{
@@ -701,6 +703,12 @@ void Krampus::RegisterEngineClasses()
 		_info.AddProperty<NetworkSyncComponent, Bool>("smoothing", &NetworkSyncComponent::smoothing);
 		_info.AddProperty<NetworkSyncComponent, Bool>("reliable", &NetworkSyncComponent::reliable);
 		_info.AddProperty<NetworkSyncComponent, String>("properties", &NetworkSyncComponent::properties);
+
+		// Calls a KFUNCTION of this actor (or of one of its components) on other machines: the argument is the function's name.
+		_info.AddFunction<NetworkSyncComponent, std::string>("RpcAll", [](NetworkSyncComponent& _c, const std::string& _function) { _c.CallRPC(_function, NetTarget::All); });
+		_info.AddFunction<NetworkSyncComponent, std::string>("RpcOthers", [](NetworkSyncComponent& _c, const std::string& _function) { _c.CallRPC(_function, NetTarget::Others); });
+		_info.AddFunction<NetworkSyncComponent, std::string>("RpcHost", [](NetworkSyncComponent& _c, const std::string& _function) { _c.CallRPC(_function, NetTarget::Host); });
+		_info.AddFunction<NetworkSyncComponent>("Despawn", [](NetworkSyncComponent& _c) { _c.GetWorld()->GetNetwork()->Despawn(_c.GetNetworkId()); });
 	}
 
 	{
@@ -712,6 +720,8 @@ void Krampus::RegisterEngineClasses()
 		_info.AddProperty<NetworkEventsComponent, EventList>("onDisconnected", &NetworkEventsComponent::onDisconnected);
 		_info.AddProperty<NetworkEventsComponent, EventList>("onPlayerJoined", &NetworkEventsComponent::onPlayerJoined);
 		_info.AddProperty<NetworkEventsComponent, EventList>("onPlayerLeft", &NetworkEventsComponent::onPlayerLeft);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onSharedChanged", &NetworkEventsComponent::onSharedChanged);
+		_info.AddProperty<NetworkEventsComponent, EventList>("onLanGameFound", &NetworkEventsComponent::onLanGameFound);
 		_info.AddAccessor<NetworkEventsComponent, std::string>("messages",
 			[](NetworkEventsComponent& _c) { return InputComponent::EncodeBindings(_c.messages); },
 			[](NetworkEventsComponent& _c, const std::string& _v) { _c.messages = InputComponent::DecodeBindings(_v); _c.ApplyMessages(); });
@@ -728,5 +738,13 @@ void Krampus::RegisterEngineClasses()
 		_info.AddFunction<IGameObject>("Disconnect", [_net](IGameObject&) { _net()->Disconnect(); });
 		_info.AddFunction<IGameObject, std::string>("SendMessage", [_net](IGameObject&, const std::string& _name) { _net()->Send(_name); });
 		_info.AddFunction<IGameObject, std::string>("SpawnNetworked", [_net](IGameObject&, const std::string& _className) { _net()->Spawn(_className); });
+		_info.AddFunction<IGameObject>("SearchLan", [_net](IGameObject&) { _net()->SearchLan(); });
+		_info.AddFunction<IGameObject>("JoinFirstLanGame", [_net](IGameObject&)
+		{
+			if (_net()->GetLanGames().empty()) LOG_WARNING("Network: no LAN game found yet (call SearchLan first)");
+			else _net()->Join(_net()->GetLanGames().front());
+		});
+		_info.AddFunction<IGameObject, std::string>("SetPlayerName", [_net](IGameObject&, const std::string& _name) { _net()->SetPlayerName(_name); });
+		_info.AddFunction<IGameObject, std::string>("AddSharedOne", [_net](IGameObject&, const std::string& _key) { _net()->AddShared(_key, 1.f); });
 	}
 }

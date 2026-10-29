@@ -76,6 +76,8 @@ void Krampus::Widget::BeginDestroy()
 
 void Krampus::Widget::Destroy()
 {
+	if (pendingDestroy) return;	// a second Destroy would deconstruct the components twice
+	pendingDestroy = true;
 	Deconstruct();
 	level->GetHUD().MarkForDeleteWidget(this);
 }

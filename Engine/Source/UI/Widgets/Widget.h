@@ -10,6 +10,7 @@ namespace Krampus
 	{
 		std::vector<Widget*>						children;
 		Transform									transform;
+		Bool										pendingDestroy	= false;
 
 	public:
 		/// <summary>Broadcast when widget position changes.</summary>
@@ -157,12 +158,16 @@ namespace Krampus
 		template<typename Type = Level, IS_BASE_OF(Level, Type)>
 		inline Type* GetLevel()
 		{
-			if (InstanceOf<Type>(level))
-			{
+			if constexpr (std::is_same_v<Type, Level>)
 				return level;
-			}
+			else
+				return Cast<Type>(level);
+		}
 
-			return Cast<Type>(level);
+		/// <summary>True once Destroy() was called: the widget is waiting to be deleted at the end of the frame.</summary>
+		inline Bool IsPendingDestroy() const
+		{
+			return pendingDestroy;
 		}
 
 		/// <summary>Sets whether this widget is active.</summary>

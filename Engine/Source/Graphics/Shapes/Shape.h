@@ -58,6 +58,14 @@ namespace Krampus
         }
 
 		/// <summary>
+		/// Removes the texture: the shape is drawn with its fill color only.
+		/// </summary>
+        inline void ClearTexture()
+        {
+            if (shape) shape->setTexture(nullptr);
+        }
+
+		/// <summary>
 		/// Gets the sub-rectangle of the texture mapped onto the shape.
 		/// </summary>
 		/// <returns>Texture rectangle (a copy: SFML gives it by value).</returns>

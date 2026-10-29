@@ -30,6 +30,8 @@ namespace Krampus
 		template<typename LevelType = Level>
 		inline LevelType* GetCurrentLevel() const
 		{
+			if (!currentLevel) return nullptr;	// no level yet (start, or between two levels): not an error
+
 			LevelType* _level = Cast<LevelType>(currentLevel.get());
 			if (!_level)
 			{

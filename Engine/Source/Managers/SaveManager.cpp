@@ -333,7 +333,7 @@ namespace
                     v.push_back(std::make_shared<SaveNode>(ReadNode()));
                 return v;
             }
-            THROW_EXCEPTION("Ka7::SaveManager: type inconnu dans le fichier .ka7");
+            THROW_EXCEPTION("Ka7::SaveManager: unknown value type in the .ka7 file");
         }
 
     private:
@@ -342,8 +342,9 @@ namespace
 
         void CheckBounds(const Int& n) const 
         {
-            if ((pos + n) > Int(buf.size()))
-                THROW_EXCEPTION("Ka7::SaveManager: donnÃ©es tronquÃ©es");
+            // A length read from the file can be anything: a negative one would pass the test below and read backwards.
+            if (n < Int(0) || (pos + n) > Int(buf.size()))
+                THROW_EXCEPTION("Ka7::SaveManager: truncated or corrupted data");
         }
     };
 
@@ -559,22 +560,39 @@ SaveResult SaveManager::SaveToFile(const std::filesystem::path& path, const Save
         BinaryWriter hdrWriter;
         WriteHeader(hdrWriter, CURRENT_VERSION, flags, timestamp, checksum, dataSize);
 
-        std::ofstream file(path, std::ios::binary | std::ios::trunc);
-        if (!file) 
+        // Written next to the target, then renamed over it: a crash or a full disk in the middle leaves the previous save intact.
+        std::filesystem::path tempPath = path;
+        tempPath += ".tmp";
         {
-            if (onSave) onSave(name, SaveResult::ErrorIO);
-            return SaveResult::ErrorIO;
+            std::ofstream file(tempPath, std::ios::binary | std::ios::trunc);
+            if (!file)
+            {
+                if (onSave) onSave(name, SaveResult::ErrorIO);
+                return SaveResult::ErrorIO;
+            }
+
+            const auto rawHdr = ByteVecToRaw(hdrWriter.buffer);
+            const auto rawData = ByteVecToRaw(data);
+            file.write(reinterpret_cast<const char*>(rawHdr.data()),
+                static_cast<std::streamsize>(rawHdr.size()));
+            file.write(reinterpret_cast<const char*>(rawData.data()),
+                static_cast<std::streamsize>(rawData.size()));
+            file.close();
+
+            if (file.fail())
+            {
+                std::error_code removeError;
+                std::filesystem::remove(tempPath, removeError);
+                if (onSave) onSave(name, SaveResult::ErrorIO);
+                return SaveResult::ErrorIO;
+            }
         }
 
-        const auto rawHdr = ByteVecToRaw(hdrWriter.buffer);
-        const auto rawData = ByteVecToRaw(data);
-        file.write(reinterpret_cast<const char*>(rawHdr.data()),
-            static_cast<std::streamsize>(rawHdr.size()));
-        file.write(reinterpret_cast<const char*>(rawData.data()),
-            static_cast<std::streamsize>(rawData.size()));
-
-        if (file.fail()) 
+        std::error_code renameError;
+        std::filesystem::rename(tempPath, path, renameError);
+        if (renameError)
         {
+            std::filesystem::remove(tempPath, renameError);
             if (onSave) onSave(name, SaveResult::ErrorIO);
             return SaveResult::ErrorIO;
         }
@@ -678,7 +696,7 @@ SaveNode SaveManager::LoadOrThrow(const String& name)
     const auto result = Load(name, root);
     if (result != SaveResult::Success)
         THROW_EXCEPTION(
-            String("Ka7::SaveManager::LoadOrThrow â€” '")
+            String("Ka7::SaveManager::LoadOrThrow - '")
             .StdString() + name.StdString() + "': " + ToString(result));
     return root;
 }

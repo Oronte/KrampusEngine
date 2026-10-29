@@ -88,7 +88,14 @@ namespace Krampus
 		/// </summary>
 		inline void DestroyPendingDeleteWidgets()
 		{
-			pendingDeleteWidgets.clear();
+			// Same order as the actors: BeginDestroy, then delete. A widget destroyed from a BeginDestroy is handled by the next turn.
+			while (!pendingDeleteWidgets.empty())
+			{
+				std::vector<std::unique_ptr<Widget>> _dying = std::move(pendingDeleteWidgets);
+				pendingDeleteWidgets.clear();
+				for (const std::unique_ptr<Widget>& _widget : _dying)
+					_widget->BeginDestroy();
+			}
 		}
 
 		/// <summary>

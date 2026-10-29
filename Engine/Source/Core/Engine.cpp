@@ -60,6 +60,10 @@ Engine::~Engine()
 	network.reset();
 	inputManager.reset();
 	mouse.reset();
+
+	// Stop() already did it on a normal exit; after an exception the engine is destroyed without Stop(), and a log thread
+	// still running at the end of the program would terminate it.
+	Logger::Shutdown();
 }
 
 void Engine::Start()

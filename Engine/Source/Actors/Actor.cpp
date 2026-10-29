@@ -76,6 +76,8 @@ void Krampus::Actor::BeginDestroy()
 
 void Krampus::Actor::Destroy()
 {
+	if (pendingDestroy) return;	// a second Destroy would deconstruct the components twice
+	pendingDestroy = true;
 	Deconstruct();
 	level->GetActorManager().MarkForDeleteActor(this);
 }

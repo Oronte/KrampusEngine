@@ -62,6 +62,9 @@ namespace Krampus
 				{
 					return _component == _toDelete;
 				});
+
+			for (CollisionComponent* _component : collisions)
+				_component->ForgetCollision(_toDelete);
 		}
 
 		/// <summary>
