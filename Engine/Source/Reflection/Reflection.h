@@ -35,7 +35,8 @@ namespace Krampus
 		Font,		// stored as a string ("Folder/Name.ttf", relative to Content/Fonts), picked from a list
 		Sound,		// stored as a string ("Folder/Name.mp3", relative to Content/Audio, empty = none), picked from a list
 		Scene,		// stored as a string (name of a scene of Content/Scenes, without .ka7), picked from a list
-		Events		// stored as a string (EventList::Encode), edited as a list of function calls
+		Events,		// stored as a string (EventList::Encode), edited as a list of function calls
+		InputBindings	// stored as a string (InputComponent::EncodeBindings): input events and their function calls
 	};
 
 	/// <summary>

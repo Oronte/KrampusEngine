@@ -4,6 +4,8 @@
 #include "Graphics/Ressources/Animation.h"
 #include "UI/Widgets/Widget.h"
 #include "Actors/Actor.h"
+#include "Components/InputComponent.h"
+#include "Managers/InputManager.h"
 #include <imgui.h>
 
 using namespace Krampus;
@@ -505,6 +507,71 @@ namespace
 		return _changed;
 	}
 
+	// Input events of an InputComponent ("A.Press", "MouseWheelScroll"...), each with its own list of function calls.
+	bool DrawInputBindings(const PropertyInfo& _property, IGameObject& _owner, std::string& _text)
+	{
+		std::vector<InputComponent::Binding> _bindings = InputComponent::DecodeBindings(_text);
+		bool _changed = false;
+
+		if (ImGui::TreeNodeEx(_property.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen, "%s  (%d)", _property.name.c_str(), static_cast<int>(_bindings.size())))
+		{
+			int _remove = -1;
+			for (int _i = 0; _i < static_cast<int>(_bindings.size()); ++_i)
+			{
+				ImGui::PushID(_i);
+				ImGui::Separator();
+
+				PropertyInfo _list;
+				_list.name = _bindings[_i].source;
+				std::string _calls = _bindings[_i].calls.Encode();
+				if (DrawEventList(_list, _owner, _calls))
+				{
+					_bindings[_i].calls = EventList::Decode(_calls);
+					_changed = true;
+				}
+				if (ImGui::SmallButton("Remove input")) _remove = _i;
+				ImGui::PopID();
+			}
+			if (_remove >= 0)
+			{
+				_bindings.erase(_bindings.begin() + _remove);
+				_changed = true;
+			}
+
+			if (!_bindings.empty()) ImGui::Separator();
+			if (ImGui::Button("+ Add input"))
+				ImGui::OpenPopup("AddInput");
+			if (ImGui::BeginPopup("AddInput"))
+			{
+				static char _filter[64] = "";
+				ImGui::SetNextItemWidth(220.f);
+				ImGui::InputTextWithHint("##filter", "Filter (A, Mouse, Press...)", _filter, sizeof(_filter));
+				ImGui::BeginChild("InputList", ImVec2(260.f, 300.f), ImGuiChildFlags_Borders);
+
+				const std::string _search = Lower(_filter);
+				if (g_historyContext)
+					for (const std::string& _name : g_historyContext->engine->GetInputManager()->GetEventNames())
+					{
+						if (!_search.empty() && Lower(_name).find(_search) == std::string::npos) continue;
+
+						const bool _used = std::any_of(_bindings.begin(), _bindings.end(), [&](const InputComponent::Binding& _binding) { return _binding.source == _name; });
+						if (ImGui::Selectable(_name.c_str(), false, _used ? ImGuiSelectableFlags_Disabled : 0))
+						{
+							_bindings.push_back(InputComponent::Binding{ _name, EventList() });
+							_changed = true;
+							ImGui::CloseCurrentPopup();
+						}
+					}
+				ImGui::EndChild();
+				ImGui::EndPopup();
+			}
+			ImGui::TreePop();
+		}
+
+		if (_changed) _text = InputComponent::EncodeBindings(_bindings);
+		return _changed;
+	}
+
 	// Draws the widget of one property and writes the new value back when it changes.
 	void DrawProperty(const PropertyInfo& _property, IGameObject& _object)
 	{
@@ -540,6 +607,9 @@ namespace
 			}
 			break;
 		}
+		case PropertyType::InputBindings:
+			_changed = DrawInputBindings(_property, _object, std::get<std::string>(_value));
+			break;
 		case PropertyType::Events:
 			_changed = DrawEventList(_property, _object, std::get<std::string>(_value));
 			break;

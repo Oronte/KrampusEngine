@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "Reflection/EventList.h"
 
 namespace Krampus
 {
@@ -13,6 +14,7 @@ namespace Krampus
 		std::vector<Event<Float>::ListenerHandle>		handlesFloat;
 		std::vector<Event<FVector2>::ListenerHandle>	handlesFVector2;
 		std::vector<Event<IVector2>::ListenerHandle>	handlesIVector2;
+		std::vector<Event<>::ListenerHandle>			bindingHandles;	// the events of bindings
 
 	public:
 		/// <summary>
@@ -25,6 +27,27 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_owner">Pointer to owning Actor.</param>
 		InputComponent(Actor* _owner);
+		/// <summary>
+		/// One input event ("A.Press", "MouseWheelScroll"...) and the functions to call when it happens (chosen in the Inspector).
+		/// </summary>
+		struct Binding
+		{
+			std::string		source;
+			EventList		calls;
+		};
+
+		/// <summary>
+		/// The input events this component reacts to. Call ApplyBindings after changing the list.
+		/// </summary>
+		std::vector<Binding>	bindings;
+
+		/// <summary>(Re)subscribes to the input events of bindings. The functions are called only while enabled is true.</summary>
+		void ApplyBindings();
+
+		/// <summary>The bindings written as one string (saved in scenes) and back.</summary>
+		static std::string EncodeBindings(const std::vector<Binding>& _bindings);
+		static std::vector<Binding> DecodeBindings(const std::string& _text);
+
 
 		/// <summary>
 		/// Binds a parameterless callback function to an Event.

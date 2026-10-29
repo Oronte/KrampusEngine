@@ -14,6 +14,7 @@ namespace
 			if (_c == '%') _result += "%25";
 			else if (_c == '|') _result += "%7C";
 			else if (_c == ';') _result += "%3B";
+			else if (_c == 0x0A) _result += "%0A";
 			else _result += _c;
 		}
 		return _result;
@@ -30,6 +31,7 @@ namespace
 				if (_code == "25") { _result += '%'; _i += 2; continue; }
 				if (_code == "7C") { _result += '|'; _i += 2; continue; }
 				if (_code == "3B") { _result += ';'; _i += 2; continue; }
+				if (_code == "0A") { _result += static_cast<char>(0x0A); _i += 2; continue; }
 			}
 			_result += _text[_i];
 		}

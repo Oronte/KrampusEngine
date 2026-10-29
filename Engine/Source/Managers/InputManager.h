@@ -178,6 +178,17 @@ namespace Krampus
 		Event<> WindowClose;
 
 		/// <summary>
+		/// Names of every event ("A.Press", "A.Hold", "A.Release", "MouseWheelScroll", "FocusGain"...), for the editor.
+		/// </summary>
+		const std::vector<std::string>& GetEventNames();
+
+		/// <summary>The event with this name, or nullptr if there is none of this kind (the kind depends on the name: see FindFloatEvent...).</summary>
+		Event<>* FindEvent(const std::string& _name);
+		Event<Float>* FindFloatEvent(const std::string& _name);
+		Event<FVector2>* FindVectorEvent(const std::string& _name);
+		Event<IVector2>* FindPointEvent(const std::string& _name);
+
+		/// <summary>
 		/// Constructs the InputManager associated with the engine world.
 		/// </summary>
 		/// <param name="_engine">Pointer to Engine world.</param>
@@ -185,6 +196,13 @@ namespace Krampus
 			: KrampusObject(_engine) { }
 
 	private:
+		std::vector<std::string>						eventNames;
+		std::unordered_map<std::string, Event<>*>		voidEvents;
+		std::unordered_map<std::string, Event<Float>*>	floatEvents;
+		std::unordered_map<std::string, Event<FVector2>*>	vectorEvents;
+		std::unordered_map<std::string, Event<IVector2>*>	pointEvents;
+
+		void BuildEventTable();
 		void Update(const std::optional<sf::Event>& _event);
 		void UpdateOnPerform();
 		void UpdateSystemEvent(const std::optional<sf::Event>& _event);

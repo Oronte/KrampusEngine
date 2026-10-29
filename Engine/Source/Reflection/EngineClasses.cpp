@@ -499,6 +499,10 @@ void Krampus::RegisterEngineClasses()
 		ClassInfo& _info = Describe("InputComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<InputComponent>(); };
 		_info.AddProperty<InputComponent, Bool>("enabled", &InputComponent::enabled);
+		_info.AddAccessor<InputComponent, std::string>("bindings",
+			[](InputComponent& _c) { return InputComponent::EncodeBindings(_c.bindings); },
+			[](InputComponent& _c, const std::string& _v) { _c.bindings = InputComponent::DecodeBindings(_v); _c.ApplyBindings(); });
+		_info.SetLastPropertyType(PropertyType::InputBindings);
 	}
 
 	// ================= Settings (the Settings window of the editor) =================
