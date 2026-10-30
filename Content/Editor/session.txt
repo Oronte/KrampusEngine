@@ -1,2 +1,0 @@
-Content/Scenes/SceneTest.ka7
-800 450 1

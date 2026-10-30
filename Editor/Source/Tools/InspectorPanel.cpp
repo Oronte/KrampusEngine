@@ -145,6 +145,12 @@ namespace
 						const bool _hovered = ImGui::IsItemHovered();
 						const ImVec2 _max(_min.x + _tile, _min.y + _tile + _labelHeight);
 						ImDrawList* _draw = ImGui::GetWindowDrawList();
+						if (!ImGui::IsItemVisible())	// scrolled out: no drawing, no thumbnail to load (draw lists have a vertex limit)
+						{
+							ImGui::PopID();
+							if (_picked) { _path = _file; _changed = true; ImGui::CloseCurrentPopup(); }
+							continue;
+						}
 
 						if (_file == _path)		_draw->AddRectFilled(_min, _max, IM_COL32(70, 120, 220, 110), 5.f);
 						else if (_hovered)		_draw->AddRectFilled(_min, _max, IM_COL32(255, 255, 255, 30), 5.f);

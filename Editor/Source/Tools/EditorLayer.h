@@ -20,11 +20,12 @@ namespace Krampus
 		EditorContext				context;
 		sf::Clock					clock;
 		sf::Texture					viewportTexture;
-		std::string					iniPath				= "Content/Editor/imgui.ini";
+		std::string					iniPath				= (EDITOR_DATA_DIRECTORY / "imgui.ini").generic_string();
 		bool						initialized			= false;
 		bool						viewportHovered		= false;
 		bool						cameraDragging		= false;	// right or middle mouse held: the editor camera is being moved
 		bool						layoutChecked		= false;
+		float						appliedUiScale		= 0.f;		// interface scale the font and sizes were made for
 
 		int							gizmoAxis			= -1;		// handle being dragged: 0 X arrow, 1 Y arrow, 2 center, 3 rotation ring, 4 X box, 5 Y box, 6 grey box, -1 none
 		int							gizmoMode			= 0;		// 0 all tools, 1 move, 2 rotate, 3 scale
@@ -63,6 +64,8 @@ namespace Krampus
 		void BuildDefaultLayout(unsigned int _dockspace);
 		void DrawViewport();
 		void DrawGizmo(const ImVec2& _min, const ImVec2& _max);
+		void DrawViewportOverlay(const ImVec2& _min, const ImVec2& _max);
+		void PickInViewport(const ImVec2& _min, const ImVec2& _max);
 		void MoveCamera(const ImVec2& _min, const ImVec2& _max);
 		void DrawSettingsWindow();
 		void HandleShortcuts();

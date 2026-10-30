@@ -3,6 +3,8 @@
 #include "Shortcuts.h"
 #include "Scene/Scene.h"
 #include "Graphics/Shapes/ShapeAssets.h"
+#include "ScriptCreator.h"
+#include "FileDrop.h"
 #include <imgui.h>
 
 #define NOMINMAX
@@ -14,66 +16,10 @@ using namespace Krampus;
 
 namespace
 {
-	enum class ScriptKind { Actor, Component };
-
 	bool IsIdentifier(const std::string& _name)
 	{
 		if (_name.empty() || std::isdigit(static_cast<unsigned char>(_name[0]))) return false;
 		return std::all_of(_name.begin(), _name.end(), [](char _c) { return std::isalnum(static_cast<unsigned char>(_c)) || _c == '_'; });
-	}
-
-	bool WriteText(const std::filesystem::path& _path, const std::string& _text)
-	{
-		std::ofstream _file(_path, std::ios::trunc);
-		_file << _text;
-		return _file.good();
-	}
-
-	// Creates Content/Scripts/<name>.h and .cpp with a reflected class ready to edit.
-	std::string CreateScript(const std::string& _name, const ScriptKind& _kind)
-	{
-		const std::filesystem::path _header = SCRIPTS_DIRECTORY / (_name + ".h");
-		const std::filesystem::path _source = SCRIPTS_DIRECTORY / (_name + ".cpp");
-		if (std::filesystem::exists(_header) || std::filesystem::exists(_source))
-			return "A script named " + _name + " already exists";
-
-		std::error_code _error;
-		std::filesystem::create_directories(SCRIPTS_DIRECTORY, _error);
-
-		std::string _h, _c;
-		if (_kind == ScriptKind::Actor)
-		{
-			_h = "#pragma once\n#include \"Reflection/Reflection.h\"\n\nnamespace Krampus\n{\n\n"
-				"\tclass " + _name + " : public Actor\n\t{\n\t\tKACTOR(" + _name + ", Actor)\n\n\tpublic:\n"
-				"\t\t" + _name + "(Level* _level);\n\n"
-				"\t\t// Shown in the Inspector and saved in scenes.\n"
-				"\t\tKPROPERTY(Float, speed) = 100.f;\n\n"
-				"\t\tvoid BeginPlay() override;\n\t\tvoid Tick(const Float& _deltaTime) override;\n\t};\n\n}\n";
-			_c = "#include \"" + _name + ".h\"\n\nnamespace Krampus\n{\n\n"
-				+ _name + "::" + _name + "(Level* _level)\n\t: Actor(_level)\n{\n\tname = NAME_OF(" + _name + ");\n}\n\n"
-				"void " + _name + "::BeginPlay()\n{\n\tActor::BeginPlay();\n}\n\n"
-				"void " + _name + "::Tick(const Float& _deltaTime)\n{\n\tActor::Tick(_deltaTime);\n}\n\n}\n";
-		}
-		else
-		{
-			_h = "#pragma once\n#include \"Reflection/Reflection.h\"\n\nnamespace Krampus\n{\n\n"
-				"\t// Add it from the Inspector (Add Component) or from an actor constructor with CreateComponent<" + _name + ">().\n"
-				"\tclass " + _name + " : public Component\n\t{\n\t\tKCOMPONENT(" + _name + ", Component)\n\n\tpublic:\n"
-				"\t\t" + _name + "(Actor* _owner);\n\n"
-				"\t\t// Shown in the Inspector and saved in scenes.\n"
-				"\t\tKPROPERTY(Float, value) = 1.f;\n\n"
-				"\t\tvoid Tick(const Float& _deltaTime) override;\n\t};\n\n}\n";
-			_c = "#include \"" + _name + ".h\"\n\nnamespace Krampus\n{\n\n"
-				+ _name + "::" + _name + "(Actor* _owner)\n\t: Component(_owner)\n{\n\tname = NAME_OF(" + _name + ");\n}\n\n"
-				"void " + _name + "::Tick(const Float& _deltaTime)\n{\n\tComponent::Tick(_deltaTime);\n}\n\n}\n";
-		}
-
-		if (!WriteText(_header, _h) || !WriteText(_source, _c))
-			return "Cannot write the script files";
-
-		RefreshSolution();	// so that the new class shows up in Visual Studio
-		LOG_MSG("Script created: " + _header.string() + ". Double-click it to open Visual Studio, then build EditorModule to load it.");
-		return "";
 	}
 
 
@@ -258,7 +204,7 @@ namespace
 	{
 		std::error_code _error;
 		for (const auto& _entry : std::filesystem::directory_iterator(_path, _error))
-			if (_entry.is_directory(_error)) return true;
+			if (_entry.is_directory(_error) && !IsInternalPath(_entry.path().filename())) return true;
 		return false;
 	}
 
@@ -358,6 +304,11 @@ namespace
 		if (_isScript)
 		{
 			if (!IsIdentifier(_newName)) return "A script name must be a valid C++ identifier";
+			// The class takes the new name too: it must not be the name of something that exists (a case change of itself is fine).
+			const bool _sameClass = std::equal(_oldStem.begin(), _oldStem.end(), _newName.begin(), _newName.end(),
+				[](const char _a, const char _b) { return std::tolower(static_cast<unsigned char>(_a)) == std::tolower(static_cast<unsigned char>(_b)); });
+			if (!_sameClass)
+				if (const std::string _problem = CheckNewClassName(_newName); !_problem.empty()) return _problem;
 		}
 		else if (!ValidFileName(_newName))
 		{
@@ -451,6 +402,72 @@ namespace
 		return "";
 	}
 
+	// Name of a path for the Console, whatever its characters (string() fails on the ones the Windows code page has not).
+	std::string PrintablePath(const std::filesystem::path& _path)
+	{
+		const std::u8string _text = _path.generic_u8string();
+		return std::string(_text.begin(), _text.end());
+	}
+
+	// _name in _folder, or "name (2).ext", "name (3).ext"... when it is taken.
+	std::filesystem::path FreeNameIn(const std::filesystem::path& _folder, const std::filesystem::path& _name)
+	{
+		std::error_code _error;
+		std::filesystem::path _target = _folder / _name;
+		for (int _n = 2; std::filesystem::exists(_target, _error); ++_n)
+			_target = _folder / (_name.stem().wstring() + L" (" + std::to_wstring(_n) + L")" + _name.extension().wstring());
+		return _target;
+	}
+
+	// Copies files and folders dropped from the Explorer into _folder (the originals stay where they are). Returns the copies.
+	std::vector<std::filesystem::path> ImportDropped(const std::vector<std::filesystem::path>& _paths, const std::filesystem::path& _folder)
+	{
+		std::vector<std::filesystem::path> _imported;
+		bool _scripts = false;
+		std::error_code _error;
+		const std::filesystem::path _target = std::filesystem::weakly_canonical(_folder, _error);
+
+		for (const std::filesystem::path& _source : _paths)
+		{
+			_error.clear();
+			if (!std::filesystem::exists(_source, _error)) continue;
+			const bool _isFolder = std::filesystem::is_directory(_source, _error);
+
+			// A folder dropped into itself (or one of its own folders) would copy forever.
+			if (_isFolder)
+			{
+				const std::filesystem::path _from = std::filesystem::weakly_canonical(_source, _error);
+				bool _inside = false;
+				for (std::filesystem::path _walk = _target; !_walk.empty(); _walk = _walk.parent_path())
+				{
+					if (_walk == _from) { _inside = true; break; }
+					if (_walk == _walk.parent_path()) break;
+				}
+				if (_inside)
+				{
+					LOG_WARNING("Content: " + PrintablePath(_source) + " cannot be copied into itself");
+					continue;
+				}
+			}
+
+			const std::filesystem::path _copy = FreeNameIn(_folder, _source.filename());
+			if (_isFolder) std::filesystem::copy(_source, _copy, std::filesystem::copy_options::recursive, _error);
+			else std::filesystem::copy_file(_source, _copy, _error);
+			if (_error)
+			{
+				LOG_WARNING("Content: cannot import " + PrintablePath(_source) + ": " + _error.message());
+				continue;
+			}
+			_imported.push_back(_copy);
+			if (_isFolder || IsScriptFile(_copy)) _scripts = true;
+		}
+
+		// Scripts dropped into Content/Scripts join the Visual Studio project, so that Compile builds them.
+		const std::string _scriptsFolder = SCRIPTS_DIRECTORY.generic_string();
+		if (_scripts && _folder.generic_string().rfind(_scriptsFolder, 0) == 0) RefreshSolution(true);
+		return _imported;
+	}
+
 	// Folder tree on the left.
 	void DrawFolderTree(const std::filesystem::path& _path, std::filesystem::path& _current, const bool& _isRoot)
 	{
@@ -479,7 +496,7 @@ namespace
 			std::vector<std::filesystem::path> _folders;
 			std::error_code _error;
 			for (const auto& _entry : std::filesystem::directory_iterator(_path, _error))
-				if (_entry.is_directory(_error)) _folders.push_back(_entry.path());
+				if (_entry.is_directory(_error) && !IsInternalPath(_entry.path().filename())) _folders.push_back(_entry.path());	// _internal: engine and editor files
 			std::sort(_folders.begin(), _folders.end());
 
 			for (const std::filesystem::path& _folder : _folders)
@@ -496,7 +513,8 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 	static char						_filter[64]		= "";
 	static float					_tileSize		= 86.f;
 	static char						_scriptName[64]	= "";
-	static int						_scriptKind		= 0;
+	static std::string				_scriptParent	= "Actor";
+	static char						_parentFilter[64] = "";
 	static std::string				_scriptError;
 	static std::vector<std::filesystem::path>	_pendingDelete;
 	static bool						_askDelete	= false;
@@ -505,9 +523,14 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 	static std::string				_renameError;
 	static bool						_askRename	= false;
 
+	// Files dropped from the Explorer (anywhere on the editor): copied into the folder shown, or into the folder tile they are dropped on.
+	FileDrop::Drop					_drop;
+	const bool						_dropped	= FileDrop::Take(_drop);
+	std::filesystem::path			_dropFolder;
+
 	if (ImGui::Begin("Content"))
 	{
-		if (!std::filesystem::exists(_current)) _current = CONTENT_DIRECTORY;
+		if (!std::filesystem::exists(_current) || IsInternalPath(_current)) _current = CONTENT_DIRECTORY;	// never inside an _internal folder
 
 		// ---- Top bar: up, breadcrumb, search, tile size, new script.
 		ImGui::BeginDisabled(_current == CONTENT_DIRECTORY);
@@ -548,28 +571,65 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 		if (ImGui::Button("+ New Script"))
 		{
 			_scriptError.clear();
+			RefreshClassNames();	// scripts may have been added or renamed since the last time
 			ImGui::OpenPopup("NewScript");
 		}
 		if (ImGui::BeginPopup("NewScript"))
 		{
+			ImGui::SetNextItemWidth(260.f);
 			ImGui::InputText("Class name", _scriptName, sizeof(_scriptName));
-			ImGui::RadioButton("Actor", &_scriptKind, 0);
-			ImGui::SameLine();
-			ImGui::RadioButton("Component", &_scriptKind, 1);
-			ImGui::TextDisabled("Created in Content/Scripts");
 
+			// The parent: every class of the engine and of the game that can have children, grouped by what they are.
+			const std::vector<ScriptParent> _parents = ScriptParents();
+			const auto _chosen = std::find_if(_parents.begin(), _parents.end(), [&](const ScriptParent& _p) { return _p.name == _scriptParent; });
+			ImGui::SetNextItemWidth(260.f);
+			if (ImGui::BeginCombo("Parent class", _scriptParent.c_str(), ImGuiComboFlags_HeightLarge))
+			{
+				ImGui::SetNextItemWidth(-FLT_MIN);
+				ImGui::InputTextWithHint("##parentFilter", "Search...", _parentFilter, sizeof(_parentFilter));
+				std::string _search = _parentFilter;
+				std::transform(_search.begin(), _search.end(), _search.begin(), [](unsigned char _c) { return static_cast<char>(std::tolower(_c)); });
+				for (const ScriptBase _base : { ScriptBase::Actor, ScriptBase::Component, ScriptBase::Widget, ScriptBase::WidgetComponent })
+				{
+					ImGui::SeparatorText(NameOfBase(_base));
+					for (const ScriptParent& _parent : _parents)
+					{
+						if (_parent.base != _base) continue;
+						std::string _lower = _parent.name;
+						std::transform(_lower.begin(), _lower.end(), _lower.begin(), [](unsigned char _c) { return static_cast<char>(std::tolower(_c)); });
+						if (!_search.empty() && _lower.find(_search) == std::string::npos) continue;
+						const std::string _label = _parent.name + (_parent.isScript ? "  (script)" : "") + (_parent.isDiegetic ? "  (diegetic)" : "");
+						if (ImGui::Selectable(_label.c_str(), _parent.name == _scriptParent)) _scriptParent = _parent.name;
+					}
+				}
+				ImGui::EndCombo();
+			}
+
+			// Where: the folder shown when it is in Content/Scripts, else Content/Scripts.
+			const std::string _currentText = _current.generic_string();
+			const bool _inScripts = _currentText.starts_with(SCRIPTS_DIRECTORY.generic_string());
+			const std::filesystem::path _folder = _inScripts ? _current : SCRIPTS_DIRECTORY;
+			ImGui::TextDisabled("Created in %s", _folder.generic_string().c_str());
+
+			// The name is checked as it is typed: an existing class, a C++ word, a file that is already there...
+			const std::string _name = _scriptName;
+			const std::string _problem = _name.empty() ? std::string() : CheckNewClassName(_name);
+			if (!_problem.empty())
+				ImGui::TextColored(ImVec4(1.f, 0.6f, 0.3f, 1.f), "%s", _problem.c_str());
+
+			ImGui::BeginDisabled(_name.empty() || !_problem.empty() || _chosen == _parents.end());
 			if (ImGui::Button("Create"))
 			{
-				const std::string _name = _scriptName;
-				_scriptError = IsIdentifier(_name)
-					? CreateScript(_name, _scriptKind == 0 ? ScriptKind::Actor : ScriptKind::Component)
-					: "The name must be a valid C++ identifier";
+				_scriptError = CreateScript(_name, *_chosen, _folder);
 				if (_scriptError.empty())
 				{
 					_scriptName[0] = '\0';
 					ImGui::CloseCurrentPopup();
 				}
 			}
+			ImGui::EndDisabled();
+			if (_chosen == _parents.end())
+				ImGui::TextDisabled("Pick a parent class");
 			if (!_scriptError.empty())
 				ImGui::TextColored(ImVec4(1.f, 0.4f, 0.4f, 1.f), "%s", _scriptError.c_str());
 			ImGui::EndPopup();
@@ -592,6 +652,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 
 			for (const auto& _entry : std::filesystem::directory_iterator(_current, _error))
 			{
+				if (IsInternalPath(_entry.path().filename())) continue;	// the engine and editor files are not shown
 				std::string _name = _entry.path().filename().string();
 				std::transform(_name.begin(), _name.end(), _name.begin(), [](unsigned char _c) { return static_cast<char>(std::tolower(_c)); });
 				if (!_lowerFilter.empty() && _name.find(_lowerFilter) == std::string::npos) continue;
@@ -626,7 +687,10 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 				const ImVec2 _min = ImGui::GetCursorScreenPos();
 				ImGui::InvisibleButton("##tile", ImVec2(_tileSize, _tileSize + _labelHeight));
 				const bool _hovered = ImGui::IsItemHovered();
+				const bool _visible = ImGui::IsItemVisible();	// a tile scrolled out of the panel draws nothing (draw lists have a vertex limit)
 				const ImVec2 _max(_min.x + _tileSize, _min.y + _tileSize + _labelHeight);
+				if (_dropped && _kind == Kind::Folder && _drop.position.x >= _min.x && _drop.position.x <= _max.x && _drop.position.y >= _min.y && _drop.position.y <= _max.y)
+					_dropFolder = _entry.path();
 
 				// Drag a tile onto a folder (tile or tree) to move it.
 				if (CanDelete(_entry.path()) && ImGui::BeginDragDropSource())
@@ -652,12 +716,14 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 				{
 					LOG(VerbosityType::Log, "Content: open " + _entry.path().generic_string());
 					if (_kind == Kind::Folder)		_openFolder = _entry.path();
-					else if (_kind == Kind::Scene)	OpenScene(_context, _entry.path());
+					else if (_kind == Kind::Scene)	RequestOpenScene(_context, _entry.path());
 					else if (_kind == Kind::Script)	OpenSolution(_entry.path());
-					else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
+						else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
 					else							OpenWithSystem(_entry.path());
 				}
 
+				if (_visible)
+				{
 				ImDrawList* _draw = ImGui::GetWindowDrawList();
 				if (_isSelected)		_draw->AddRectFilled(_min, _max, IM_COL32(70, 120, 220, 90), 6.f);
 				else if (_hovered)		_draw->AddRectFilled(_min, _max, IM_COL32(255, 255, 255, 22), 6.f);
@@ -676,6 +742,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 				_draw->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(_textMin.x + std::max(0.f, (_tileSize - 6.f - _textSize.x) * 0.5f), _textMin.y),
 					IM_COL32(230, 230, 235, 255), _shown.c_str(), nullptr, _tileSize - 6.f);
 				_draw->PopClipRect();
+				}
 
 				if (_hovered)
 				{
@@ -690,9 +757,9 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 					if (ImGui::MenuItem(_kind == Kind::Folder ? "Open Folder" : "Open"))
 					{
 						if (_kind == Kind::Folder)		_openFolder = _entry.path();
-						else if (_kind == Kind::Scene)	OpenScene(_context, _entry.path());
+						else if (_kind == Kind::Scene)	RequestOpenScene(_context, _entry.path());
 						else if (_kind == Kind::Script)	OpenSolution(_entry.path());
-					else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
+						else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
 						else							OpenWithSystem(_entry.path());
 					}
 					if (ImGui::MenuItem("Show in Explorer")) ShowInExplorer(_entry.path());
@@ -704,6 +771,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 						std::snprintf(_renameBuffer, sizeof(_renameBuffer), "%s", (std::filesystem::is_directory(_renameTarget) ? _renameTarget.filename() : _renameTarget.stem()).string().c_str());
 						_renameError.clear();
 						_askRename = true;
+						RefreshClassNames();
 					}
 					if (ImGui::MenuItem("Delete", Shortcuts::Text("Delete File").c_str(), false, CanDelete(_entry.path())))
 					{
@@ -725,6 +793,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 				std::snprintf(_renameBuffer, sizeof(_renameBuffer), "%s", (std::filesystem::is_directory(_renameTarget) ? _renameTarget.filename() : _renameTarget.stem()).string().c_str());
 				_renameError.clear();
 				_askRename = true;
+				RefreshClassNames();
 			}
 
 			// Delete key on the selected tile.
@@ -861,4 +930,19 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 		}
 	}
 	ImGui::End();
+
+	if (_dropped)
+	{
+		if (!std::filesystem::exists(_current) || IsInternalPath(_current)) _current = CONTENT_DIRECTORY;
+		const std::filesystem::path _folder = _dropFolder.empty() ? _current : _dropFolder;
+		const std::vector<std::filesystem::path> _imported = ImportDropped(_drop.paths, _folder);
+		if (!_imported.empty())
+		{
+			LOG_MSG("Content: " + std::to_string(_imported.size()) + " item(s) imported into " + PrintablePath(_folder));
+			_current = _folder;
+			_selected = _imported.front();
+			ClearThumbnails();
+			ImGui::SetWindowFocus("Content");	// show where they went
+		}
+	}
 }

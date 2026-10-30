@@ -186,7 +186,7 @@ namespace
 	{
 		std::error_code _error;
 		fs::path _newest;
-		for (const fs::directory_entry& _entry : fs::directory_iterator(projectRoot / "Content" / "Editor" / "_undo", _error))
+		for (const fs::directory_entry& _entry : fs::directory_iterator(projectRoot / "Content" / "_internal" / "Editor" / "_undo", _error))
 			if (_entry.path().extension() == ".ka7" && (_newest.empty() || _entry.path().filename() > _newest.filename()))
 				_newest = _entry.path();
 		if (!_newest.empty())

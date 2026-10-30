@@ -5,7 +5,7 @@ using namespace Krampus;
 
 namespace
 {
-	const std::filesystem::path FILE_PATH = "Content/Editor/Shortcuts.cfg";
+	const std::filesystem::path FILE_PATH = EDITOR_DATA_DIRECTORY / "Shortcuts.cfg";
 
 	std::string Lower(std::string _text)
 	{

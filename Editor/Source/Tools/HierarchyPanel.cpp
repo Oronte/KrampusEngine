@@ -42,6 +42,13 @@ namespace
 		Actor*											dropTarget	= nullptr;	// null with dragged set = make root
 	};
 
+	/// <returns>True when _text has _needle in it, whatever the case (an empty needle is in everything).</returns>
+	bool ContainsNoCase(const std::string& _text, const std::string& _needle)
+	{
+		return std::search(_text.begin(), _text.end(), _needle.begin(), _needle.end(),
+			[](const char _a, const char _b) { return std::tolower(static_cast<unsigned char>(_a)) == std::tolower(static_cast<unsigned char>(_b)); }) != _text.end();
+	}
+
 	bool IsDescendantOf(const HierarchyState& _state, Actor* _actor, Actor* _ancestor)
 	{
 		for (Actor* _current = _actor; _current; )
@@ -214,11 +221,40 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				}
 				ImGui::EndPopup();
 			}
+
+			// Search: the actors whose name has the text, in a flat list (their parents may not match).
+			static char _search[64] = "";
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::InputTextWithHint("##actorSearch", "Search actors...", _search, sizeof(_search));
 			ImGui::Separator();
 
-			for (Actor* _actor : _actors)
-				if (!_state.parentOf.contains(_actor))
-					DrawActorNode(_state, _actor);
+			if (_search[0] != '\0')
+			{
+				int _shown = 0;
+				for (Actor* _actor : _actors)
+				{
+					const std::string _name = _actor->GetName().StdString();
+					if (!ContainsNoCase(_name, _search)) continue;
+					++_shown;
+					ImGui::PushID(_actor);
+					if (ImGui::Selectable(_name.c_str(), _context.selected == _actor))
+					{
+						_context.selected = _actor;
+						_context.selectedWidget = nullptr;
+					}
+					ImGui::PopID();
+				}
+				if (_shown == 0) ImGui::TextDisabled("No actor named like \"%s\"", _search);
+			}
+			else
+			{
+				for (Actor* _actor : _actors)
+					if (!_state.parentOf.contains(_actor))
+						DrawActorNode(_state, _actor);
+				if (_actors.empty())
+					ImGui::TextDisabled("The scene is empty: + Add Actor");
+			}
 
 			// HUD: the screen widgets of the level (drawn in the HUD view, not in the world).
 			ImGui::Separator();

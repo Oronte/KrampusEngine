@@ -6,7 +6,7 @@
 using namespace Krampus;
 
 // Tools > Shape Editor: makes the complex shapes of Content/Shapes (any points, concave included). A shape is used by name by the
-// "polygon" property of SpriteComponent, ImageWidgetComponent, CollisionComponent and PhysicsComponent (shape = Polygon), and every
+// "polygon" property of SpriteComponent, ImageWidgetComponent and PhysicsComponent (shape = Polygon), and every
 // component that uses it changes as soon as it is saved.
 //
 //   Drag a point to move it        Click a "+" (middle of an edge) to add a point there        Double click: a point on the nearest edge
@@ -687,6 +687,13 @@ namespace
 
 namespace Krampus
 {
+	void SaveShapeEditorChanges()
+	{
+		if (!g_dirty || g_current.empty()) return;
+		if (Save()) LOG_MSG("Shape Editor: unsaved changes of \"" + g_current + "\" saved before the reload");
+		else LOG_WARNING("Shape Editor: the changes of \"" + g_current + "\" could not be saved (the shape is not valid)");
+	}
+
 	void OpenShapeEditor(const std::string& _shape)
 	{
 		g_open = true;
@@ -734,7 +741,7 @@ namespace Krampus
 		if (g_current.empty())
 		{
 			ImGui::TextDisabled("Pick a shape on the left, or create one.");
-			ImGui::TextDisabled("A shape is used by SpriteComponent, ImageWidgetComponent, CollisionComponent and PhysicsComponent:");
+			ImGui::TextDisabled("A shape is used by SpriteComponent, ImageWidgetComponent and PhysicsComponent:");
 			ImGui::TextDisabled("set their \"shape\" to Polygon, then choose it in \"polygon\".");
 		}
 		else

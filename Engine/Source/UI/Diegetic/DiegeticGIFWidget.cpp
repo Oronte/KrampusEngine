@@ -3,14 +3,14 @@
 Krampus::DiegeticGIFWidget::DiegeticGIFWidget(Level* _level, const CircleShapeData& _shapeData, const AnimationData& _animationData)
 	: DiegeticImageWidget(_level, _shapeData)
 {
-	name = NAME_OF(GIFWidget);
+	name = NAME_OF(DiegeticGIFWidget);
 	Init(_animationData);
 }
 
 Krampus::DiegeticGIFWidget::DiegeticGIFWidget(Level* _level, const RectangleShapeData& _shapeData, const AnimationData& _animationData)
 	: DiegeticImageWidget(_level, _shapeData)
 {
-	name = NAME_OF(GIFWidget);
+	name = NAME_OF(DiegeticGIFWidget);
 	Init(_animationData);
 }
 

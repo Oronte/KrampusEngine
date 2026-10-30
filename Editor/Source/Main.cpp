@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -86,6 +87,15 @@ public:
 		return _stamp != fs::file_time_type{ } && _stamp != loadedStamp;
 	}
 
+	/// <returns>False while another program (the linker) still has EditorModule.dll open: loading it now would load half a file.</returns>
+	bool IsFileReady() const
+	{
+		const HANDLE _file = CreateFileW(source.c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+		if (_file == INVALID_HANDLE_VALUE) return false;
+		CloseHandle(_file);
+		return true;
+	}
+
 	/// <summary>
 	/// Loads a fresh copy of EditorModule.dll and starts the game in the host window.
 	/// A failed copy or load (the linker may still be writing) is retried later; a failed GameInit is not, until the next build.
@@ -156,6 +166,28 @@ static fs::path ExecutableDirectory()
 	return fs::path(std::wstring(_buffer, _length)).parent_path();
 }
 
+// A build started from the editor writes the id of its cmake process in this file (Editor/Source/Tools/Compile.cpp) and removes it
+// when it ends. The module is not reloaded while it runs: MSBuild still works after the DLL is written, and a module loaded in the
+// middle would believe no build is running (a second Compile would then start two builds on the same files).
+static bool BuildRunning()
+{
+	std::ifstream _file("Build/vs2026/KrampusBuild.lock");
+	DWORD _processId = 0;
+	if (!_file || !(_file >> _processId) || _processId == 0) return false;
+
+	bool _running = false;
+	if (HANDLE _process = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, _processId))
+	{
+		wchar_t _image[MAX_PATH];
+		DWORD _length = MAX_PATH;
+		const bool _isCmake = QueryFullProcessImageNameW(_process, 0, _image, &_length)
+			&& fs::path(std::wstring(_image, _length)).filename() == L"cmake.exe";
+		_running = _isCmake && WaitForSingleObject(_process, 0) == WAIT_TIMEOUT;
+		CloseHandle(_process);
+	}
+	return _running;
+}
+
 // The engine loads "Content/..." relative to the working directory: go up until the project root is found.
 static void EnterProjectRoot(const fs::path& _start)
 {
@@ -184,11 +216,17 @@ int main()
 	_window.setVerticalSyncEnabled(true);
 
 	GameModule _game(_exeDir / "EditorModule.dll");
-	_game.Load(_window);
+	const auto _setTitle = [&_window](const std::string& _state)
+	{
+		_window.setTitle(_state.empty() ? "Krampus Editor" : "Krampus Editor - " + _state);
+	};
+	if (!_game.Load(_window))
+		_setTitle("the editor module could not start: fix the build (see the console), then build again or press F5");
 
 	sf::Clock			_pollClock;
 	fs::file_time_type	_lastSeen { };
 	bool				_f5Held		= false;
+	bool				_waitingForBuild = false;
 
 	while (_window.isOpen())
 	{
@@ -210,6 +248,17 @@ int main()
 			}
 		}
 
+		// Never in the middle of a build, never a DLL the linker is still writing: the reload waits.
+		if (_reload && (BuildRunning() || !_game.IsFileReady()))
+		{
+			if (!_waitingForBuild) std::cout << "[Editor] A build is running: the reload waits for its end" << std::endl;
+			_waitingForBuild = true;
+			_reload = false;
+			_lastSeen = { };	// once it ends, the new stamp must be seen stable again
+		}
+		else if (_reload)
+			_waitingForBuild = false;
+
 		if (_reload)
 		{
 			std::cout << "[Editor] Reloading EditorModule.dll..." << std::endl;
@@ -217,8 +266,9 @@ int main()
 			SetEnvironmentVariableW(L"KRAMPUS_HOT_RELOAD", L"1");
 			_game.Unload();
 			GameModule::CleanOldPdbs(_exeDir, 3);
-			_game.Load(_window);
+			const bool _loaded = _game.Load(_window);
 			SetEnvironmentVariableW(L"KRAMPUS_HOT_RELOAD", nullptr);
+			_setTitle(_loaded ? "" : "the editor module could not start: fix the build (see the console), then build again or press F5");
 		}
 
 		if (_game.IsLoaded())

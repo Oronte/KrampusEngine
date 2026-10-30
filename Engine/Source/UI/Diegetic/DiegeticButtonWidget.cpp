@@ -3,6 +3,11 @@
 #include "Managers/InputManager.h"
 #include "Utilities/Math/Physics.h"
 
+Krampus::DiegeticButtonWidget::DiegeticButtonWidget(Level* _level)
+	: DiegeticButtonWidget(_level, RectangleShapeData(FVector2(200.f, 80.f)))
+{
+}
+
 Krampus::DiegeticButtonWidget::DiegeticButtonWidget(Level* _level, const CircleShapeData& _data)
 	: DiegeticImageWidget(_level, _data)
 {
@@ -35,6 +40,9 @@ void Krampus::DiegeticButtonWidget::Init()
 
 void Krampus::DiegeticButtonWidget::OnMouseMoved(const IVector2& _mousePos)
 {
+	// A hidden or dying button, or a level frozen by the editor (outside Play), does not react.
+	if (!IsActive() || IsPendingDestroy() || GetWorld()->IsLevelPaused()) return;
+
 	CollisionInfo _info;
 	Bool _colliding = false;
 	ShapeObject* _object = sprite->GetShapeObject();
@@ -46,21 +54,22 @@ void Krampus::DiegeticButtonWidget::OnMouseMoved(const IVector2& _mousePos)
 	else
 		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().size, localRotation, _info);
 
-	if (_colliding && !isHovered) onHover.Broadcast();
-	else if (!_colliding && isHovered) onUnhover.Broadcast();
+	if (_colliding && !isHovered) { onHover.Broadcast(); onHoverCalls.Invoke(this); }
+	else if (!_colliding && isHovered) { onUnhover.Broadcast(); onUnhoverCalls.Invoke(this); }
 
 	isHovered = _colliding;
 }
 
 void Krampus::DiegeticButtonWidget::OnClick()
 {
-	if (!isPressed && isHovered) onPress.Broadcast();
+	if (!IsActive() || IsPendingDestroy() || GetWorld()->IsLevelPaused()) return;
+	if (!isPressed && isHovered) { onPress.Broadcast(); onPressCalls.Invoke(this); }
 	isPressed = isHovered;
 }
 
 void Krampus::DiegeticButtonWidget::OnRelease()
 {
-	if (isPressed) onRelease.Broadcast();
+	if (isPressed) { onRelease.Broadcast(); onReleaseCalls.Invoke(this); }
 	isPressed = false;
 }
 

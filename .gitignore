@@ -406,7 +406,6 @@ Saves/
 Build/
 .idea/
 Docs/
-Content/
 graphify-out/
 
 CLAUDE.md
@@ -415,8 +414,8 @@ CLAUDE.md
 *.vcxproj
 *.vcxproj.filters
 # KrampusEngine: files the editor rewrites at every session, logs, tool output
-Content/Editor/_play_snapshot.ka7
-Content/Editor/_reload_backup.ka7
-Content/Editor/_undo/
-Content/Editor/session.txt
+Content/_internal/Editor/_play_snapshot.ka7
+Content/_internal/Editor/_reload_backup.ka7
+Content/_internal/Editor/_undo/
+Content/_internal/Editor/session.txt
 Content/Logs/

@@ -114,9 +114,12 @@ Bool Engine::Tick()
 		else if (_event->is<sf::Event::Closed>())
 			LOG_MSG("Window: close requested");
 
-		if (!layerStack.DispatchEvent(*_event) && !layerStack.BlocksInput())
+		const Bool _consumed = layerStack.DispatchEvent(*_event);
+		if (!_consumed && !layerStack.BlocksInput())
 			inputManager->Update(_event);
-		inputManager->UpdateSystemEvent(_event);
+		// The system events always go through (focus, resize...), except a close a layer took: it asks the user first (the editor).
+		if (!_consumed || !_event->is<sf::Event::Closed>())
+			inputManager->UpdateSystemEvent(_event);
 	}
 	if (!layerStack.BlocksInput())
 		inputManager->UpdateOnPerform();

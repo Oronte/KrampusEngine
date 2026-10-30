@@ -24,6 +24,16 @@ namespace Krampus
 		std::filesystem::path		scenePath;	// scene being edited, empty until it is saved once
 		EditHistory					history;	// Undo / Redo
 
+		// Unsaved changes: every recorded edit (and undo / redo) counts; saving remembers the count.
+		int							sceneChanges	= 0;
+		int							savedChanges	= 0;
+		bool SceneDirty() const { return sceneChanges != savedChanges; }
+
+		// A scene to open, or the editor to close, once the user answered about the unsaved changes (EditorMenu.cpp).
+		std::filesystem::path		pendingScene;
+		bool						askUnsaved		= false;	// show the question for pendingScene
+		bool						askQuit			= false;	// show the question before closing
+
 		// The editor's own camera, used to look at the scene when it is not playing (right mouse to move, wheel to zoom).
 		// It is not an actor of the scene: it is never saved and the game does not see it.
 		bool						cameraReady	= false;	// false until it has been put at the center of the window once
@@ -40,14 +50,31 @@ namespace Krampus
 	inline const std::filesystem::path		CONTENT_DIRECTORY	= "Content";
 	inline const std::filesystem::path		SCENES_DIRECTORY	= "Content/Scenes";
 	inline const std::filesystem::path		SCRIPTS_DIRECTORY	= "Content/Scripts";
-	inline const std::filesystem::path		PLAY_SNAPSHOT_PATH	= "Content/Editor/_play_snapshot.ka7";	// scene saved at Play, restored at Stop
-	inline const std::filesystem::path		RELOAD_BACKUP_PATH	= "Content/Editor/_reload_backup.ka7";	// scene being edited, saved before the game is reloaded
-	inline const std::filesystem::path		SESSION_FILE		= "Content/Editor/session.txt";				// path of that scene
+	// Every file of the editor itself (preferences, layout, undo steps, session) is in Content/_internal/Editor: the Content panel
+	// never shows the _internal folders. Files of an older version in Content/Editor are moved there at start (MoveOldEditorFiles).
+	inline const std::filesystem::path		EDITOR_DATA_DIRECTORY	= "Content/_internal/Editor";
+	inline const std::filesystem::path		OLD_EDITOR_DATA_DIRECTORY	= "Content/Editor";
+	inline const std::filesystem::path		PLAY_SNAPSHOT_PATH	= EDITOR_DATA_DIRECTORY / "_play_snapshot.ka7";	// scene saved at Play, restored at Stop
+	inline const std::filesystem::path		RELOAD_BACKUP_PATH	= EDITOR_DATA_DIRECTORY / "_reload_backup.ka7";	// scene being edited, saved before the game is reloaded
+	inline const std::filesystem::path		SESSION_FILE		= EDITOR_DATA_DIRECTORY / "session.txt";			// path of that scene
+
+	/// <returns>True for a path that has an _internal folder in it (engine and editor files, hidden from the Content panel).</returns>
+	inline bool IsInternalPath(const std::filesystem::path& _path)
+	{
+		for (const std::filesystem::path& _part : _path)
+			if (_part == "_internal") return true;
+		return false;
+	}
+
+	/// <summary>Moves the files of Content/Editor (older versions) to Content/_internal/Editor. Called once when the editor starts.</summary>
+	void MoveOldEditorFiles();
 
 	// Scene commands (EditorMenu.cpp)
 	void NewScene(EditorContext& _context);
 	void OpenScene(EditorContext& _context, const std::filesystem::path& _path);
 	bool SaveScene(EditorContext& _context, const std::filesystem::path& _path);
+	/// <summary>Opens a scene (empty path: a new one), after asking what to do with the unsaved changes of the current one.</summary>
+	void RequestOpenScene(EditorContext& _context, const std::filesystem::path& _path);
 
 	// Play mode (PlayMode.cpp): Play runs the level, Stop freezes it and brings back the scene as it was before Play.
 	void Play(EditorContext& _context);
@@ -100,6 +127,8 @@ namespace Krampus
 
 	// Panels and menu, drawn every frame between ImGui::NewFrame and Render.
 	void DrawMainMenuBar(EditorContext& _context);
+	/// <summary>The bar at the bottom of the window: scene and its unsaved changes, mode, selection, build, frame rate.</summary>
+	void DrawStatusBar(EditorContext& _context);
 	void DrawHierarchyPanel(EditorContext& _context);
 	void DrawInspectorPanel(EditorContext& _context);
 	void DrawContentPanel(EditorContext& _context);
@@ -115,4 +144,6 @@ namespace Krampus
 	/// <summary>Opens the Shape Editor (the polygons of Content/Shapes), on _shape when it is given.</summary>
 	void OpenShapeEditor(const std::string& _shape = "");
 	void DrawShapeEditor(EditorContext& _context);
+	/// <summary>Saves the shape being edited if it has changes (before a hot reload, which would lose them).</summary>
+	void SaveShapeEditorChanges();
 }

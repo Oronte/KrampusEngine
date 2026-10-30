@@ -1,5 +1,6 @@
 #pragma once
 #include "DiegeticImageWidget.h"
+#include "Reflection/EventList.h"
 
 namespace Krampus
 {
@@ -29,9 +30,18 @@ namespace Krampus
 		/// <summary>Broadcast when button click is released.</summary>
 		Event<>							onRelease;
 
+		// The same moments, as function calls chosen in the editor (Inspector).
+		EventList						onPressCalls;
+		EventList						onReleaseCalls;
+		EventList						onHoverCalls;
+		EventList						onUnhoverCalls;
+
 		/// <summary>Constructs a circular diegetic button.</summary>
 		/// <param name="_level">Owning Level.</param>
 		/// <param name="_data">Circle parameters.</param>
+		/// <summary>A 200 x 80 rectangle button: what the editor spawns.</summary>
+		explicit DiegeticButtonWidget(Level* _level);
+
 		DiegeticButtonWidget(Level* _level, const CircleShapeData& _data);
 
 		/// <summary>Constructs a rectangular diegetic button.</summary>

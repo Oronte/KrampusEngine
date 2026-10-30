@@ -6,7 +6,7 @@ namespace Krampus
 {
 
 	/// <summary>
-	/// Preferences of the editor itself (not of the game). Stored in Content/Editor/EditorSettings.cfg and edited in the Settings window,
+	/// Preferences of the editor itself (not of the game). Stored in Content/_internal/Editor/EditorSettings.cfg and edited in the Settings window,
 	/// the same way as the engine settings.
 	/// </summary>
 	class EditorSettings : public SettingsSection
@@ -48,7 +48,7 @@ namespace Krampus
 
 		static std::filesystem::path GetPath()
 		{
-			return std::filesystem::path("Content/Editor/EditorSettings.cfg");
+			return EDITOR_DATA_DIRECTORY / "EditorSettings.cfg";
 		}
 	};
 }

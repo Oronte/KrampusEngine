@@ -18,30 +18,36 @@ namespace Krampus
         Event<>::ListenerHandle collisionResolveHandle;
         Event<FVector2>::ListenerHandle moveHandle;
         Event<Angle>::ListenerHandle rotateHandle;
+        Event<FVector2>::ListenerHandle scaleHandle;
 
     public:
 		/// <summary>
-		/// Constructs a PhysicsComponent using the geometry of the owner's SpriteComponent.
-		/// Note: Requires an existing SpriteComponent on the owner actor.
+		/// Constructs a PhysicsComponent that always has the shape of the owner's SpriteComponent (see SetMatchSprite).
+		/// Without a sprite it is a box of 100 x 100 until one is added.
 		/// </summary>
 		/// <param name="_owner">Pointer to owning Actor.</param>
         PhysicsComponent(Actor* _owner);
 
 		/// <summary>
-		/// Constructs a PhysicsComponent with a circular Box2D body of the specified radius.
+		/// Constructs a PhysicsComponent with a circular Box2D body of the specified radius (a custom shape: it does not follow the sprite).
 		/// </summary>
 		/// <param name="_owner">Pointer to owning Actor.</param>
 		/// <param name="_radius">Radius of the physics circle.</param>
         PhysicsComponent(Actor* _owner, const Float& _radius);
 
 		/// <summary>
-		/// Constructs a PhysicsComponent with a box Box2D body of the specified dimensions.
+		/// Constructs a PhysicsComponent with a box Box2D body of the specified dimensions (a custom shape: it does not follow the sprite).
 		/// </summary>
 		/// <param name="_owner">Pointer to owning Actor.</param>
 		/// <param name="_size">Width and height of the physics box.</param>
         PhysicsComponent(Actor* _owner, const FVector2& _size);
 
 		virtual void Construct() override;
+
+		/// <summary>
+		/// Follows the sprite: its shape is changed when the sprite's one is (checked every frame).
+		/// </summary>
+		virtual void Tick(const Float& _deltaTime) override;
 
 		/// <summary>
 		/// Lifecycle callback invoked when the component is deconstructed, destroying the Box2D body.
@@ -247,19 +253,31 @@ namespace Krampus
 		void GetFilter(CollisionChannel& _category, CollisionChannel& _mask, int32_t& _groupIndex) const;
 
 		// ---- Shape of the body (the body keeps its velocity and settings when its shape changes)
+		// Sizes are given without the scale of the actor: the body is always scaled like the actor (and its sprite).
 
-		/// <summary>A box of this size, centered on the actor.</summary>
+		/// <summary>
+		/// True (the default): the shape is always the one of the owner's SpriteComponent (type, size, radius, polygon).
+		/// False: a custom shape, set with the functions below. Setting a shape turns it off.
+		/// </summary>
+		void SetMatchSprite(const bool& _match);
+		bool IsMatchingSprite() const { return matchSprite; }
+
+		/// <summary>Takes the shape of the sprite at once if it changed (done every frame by Tick when the shape matches the sprite).</summary>
+		void SyncWithSprite();
+
+		/// <summary>A box of this size, centered on the actor (a custom shape).</summary>
 		void SetShapeBox(const FVector2& _size);
 
-		/// <summary>A circle of this radius, centered on the actor.</summary>
+		/// <summary>A circle of this radius, centered on the actor (a custom shape).</summary>
 		void SetShapeCircle(const Float& _radius);
 
 		/// <summary>
 		/// The polygon of a shape of Content/Shapes (concave included: box2d gets it as several convex pieces of at most 8 points).
+		/// A custom shape.
 		/// </summary>
 		void SetShapePolygon(const std::string& _shapeName);
 
-		/// <summary>Turns the shape into a box, a circle or a polygon of about the same size.</summary>
+		/// <summary>Turns the shape into a box, a circle or a polygon of about the same size (a custom shape).</summary>
 		void SetShapeType(const ShapeType& _type);
 
 		ShapeType GetShapeType() const { return shapeType; }
@@ -267,14 +285,22 @@ namespace Krampus
 		Float GetCircleRadius() const { return debugRadius; }
 		const std::string& GetPolygonName() const { return polygonName; }
 
+		/// <summary>Whether a world position (pixels) is inside the box2d shape of the body (every piece of a concave polygon).</summary>
+		bool ContainsPoint(const FVector2& _worldPosition) const;
+
+		/// <summary>Center of mass of the body, in world pixels (drawn as a yellow cross by the debug outline).</summary>
+		FVector2 GetWorldCenterOfMass() const;
+
     private:
         void DrawDebug() override;	// outline of the box2d shape, where the body is
 
         ShapeType   shapeType   = ShapeType::Rectangle;	// what the box2d shapes are, to outline them and rebuild them
-        Float       debugRadius = 0.f;
-        FVector2    debugSize;
+        Float       debugRadius = 0.f;						// without the scale
+        FVector2    debugSize;								// without the scale
         std::string polygonName = ShapeAssets::DEFAULT_NAME;
-        std::vector<std::vector<FVector2>>	polygonParts;	// the convex pieces given to box2d (pixels, around the actor)
+        bool        matchSprite = true;
+        FVector2    builtScale  = FVector2(1.f, 1.f);		// scale of the actor when the box2d shapes were made
+        std::vector<std::vector<FVector2>>	polygonParts;	// the convex pieces given to box2d (pixels, around the actor, scaled)
         std::vector<b2ShapeId>				shapeIds;		// every box2d shape of the body (shapeId is the first)
         b2Filter    filter      = b2DefaultFilter();		// kept: a new shape gets it too
         ListenerHandle shapeSavedHandle;
@@ -283,6 +309,7 @@ namespace Krampus
         void MakeCircle(const Float& _radius);
         void MakeRectangle(const FVector2& _size);
         void MakePolygon(const std::string& _shapeName);
+        void Rebuild();	// the same shape again, at the scale of the actor
         void DestroyShapes();
         void AddShape(b2ShapeId _shape);
     };

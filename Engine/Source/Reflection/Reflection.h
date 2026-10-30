@@ -313,8 +313,19 @@ namespace Krampus
 	{
 		ComponentRegistrar(const char* _className, Component*(*_add)(Actor*));
 	};
+
+	struct WidgetRegistrar
+	{
+		WidgetRegistrar(const char* _className, Widget*(*_spawn)(Level*));
+	};
+
+	struct WidgetComponentRegistrar
+	{
+		WidgetComponentRegistrar(const char* _className, WidgetComponent*(*_add)(Widget*));
+	};
 }
 
+// The checks run in a member function: the class is complete there, so that is_base_of can see its bases.
 #define KCLASS(Class, Parent) \
 public: \
 	using ThisClass = Class; \
@@ -322,6 +333,11 @@ public: \
 	const char* ClassName() const override { return KClassName; } \
 private: \
 	static inline ::Krampus::ClassRegistrar _KClassRegistrar{ #Class, #Parent }; \
+	static void _KCheckParent() \
+	{ \
+		static_assert(!std::is_same_v<Class, Parent>, "KCLASS/KACTOR/KCOMPONENT: a class cannot be its own parent (give it another name)"); \
+		static_assert(std::is_base_of_v<Parent, Class>, "KCLASS/KACTOR/KCOMPONENT: the parent given must be a base class of this class"); \
+	} \
 public:
 
 // For actors: also lets the editor and scenes create the class by name. Needs a public constructor Class(Level*).
@@ -338,6 +354,22 @@ public:
 private: \
 	static ::Krampus::Component* _KAddComponent(::Krampus::Actor* _owner) { return _owner->AddComponent<Class>(); } \
 	static inline ::Krampus::ComponentRegistrar _KComponentRegistrar{ #Class, &_KAddComponent }; \
+public:
+
+// For HUD widgets: also lets scenes and the editor ("Add Widget") create the class by name. Needs a public constructor Class(Level*).
+#define KWIDGET(Class, Parent) \
+	KCLASS(Class, Parent) \
+private: \
+	static ::Krampus::Widget* _KSpawnWidget(::Krampus::Level* _level) { return _level->SpawnWidget<Class>(); } \
+	static inline ::Krampus::WidgetRegistrar _KWidgetRegistrar{ #Class, &_KSpawnWidget }; \
+public:
+
+// For widget components: also lets scenes and the editor add the class by name. Needs a public constructor Class(Widget*).
+#define KWIDGETCOMPONENT(Class, Parent) \
+	KCLASS(Class, Parent) \
+private: \
+	static ::Krampus::WidgetComponent* _KAddWidgetComponent(::Krampus::Widget* _owner) { return _owner->AddComponent<Class>(); } \
+	static inline ::Krampus::WidgetComponentRegistrar _KWidgetComponentRegistrar{ #Class, &_KAddWidgetComponent }; \
 public:
 
 #define KPROPERTY_IMPL(Type, Name, Min, Max, ReadOnly) \

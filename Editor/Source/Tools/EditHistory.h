@@ -8,7 +8,7 @@ namespace Krampus
 
 	/// <summary>
 	/// Undo / Redo of what is done to the scene in the editor.
-	/// Before each change the scene is saved to a small file (Content/Editor/_undo/); undoing swaps that file back in place of the level.
+	/// Before each change the scene is saved to a small file (Content/_internal/Editor/_undo/); undoing swaps that file back in place of the level.
 	/// Edits that follow each other on the same value (dragging a slider, typing a name) count as one step.
 	/// </summary>
 	class EditHistory

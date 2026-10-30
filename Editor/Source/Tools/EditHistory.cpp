@@ -9,7 +9,7 @@ using namespace Krampus;
 
 std::filesystem::path EditHistory::Directory()
 {
-	return std::filesystem::path("Content/Editor/_undo");
+	return EDITOR_DATA_DIRECTORY / "_undo";
 }
 
 void EditHistory::Forget(std::vector<Entry>& _stack)
@@ -94,6 +94,7 @@ void EditHistory::Record(EditorContext& _context, const std::string& _label, con
 	_entry.selection = SelectionOf(_context);
 
 	undoStack.push_back(_entry);
+	++_context.sceneChanges;	// unsaved changes now
 	Forget(redoStack);	// a new change ends the redo line
 
 	if (undoStack.size() > MAX_STEPS)
@@ -134,6 +135,7 @@ bool EditHistory::Undo(EditorContext& _context)
 	_now.label = _target.label;
 	_now.selection = SelectionOf(_context);
 	if (!_now.file.empty()) redoStack.push_back(_now);
+	++_context.sceneChanges;
 
 	LOG_MSG("Undo: " + _target.label);
 	Restore(_context, _target);
@@ -152,6 +154,7 @@ bool EditHistory::Redo(EditorContext& _context)
 	_now.label = _target.label;
 	_now.selection = SelectionOf(_context);
 	if (!_now.file.empty()) undoStack.push_back(_now);
+	++_context.sceneChanges;
 
 	LOG_MSG("Redo: " + _target.label);
 	Restore(_context, _target);

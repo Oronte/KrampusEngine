@@ -203,28 +203,42 @@ namespace
 
 		_draw->PushClipRect(_min, _max, true);
 
-		// The picture, on a checkerboard so transparent parts can be seen.
+		// The picture, on a checkerboard so transparent parts can be seen. Only what is inside the panel is drawn: one draw list
+		// holds at most 65536 vertices (16-bit indices), a big picture zoomed in, or a clip of many frames, would go past it.
 		const ImVec2 _p0 = _toScreen(0.f, 0.f);
 		const ImVec2 _p1 = _toScreen(_textureSize.x, _textureSize.y);
-		const float _cell = 16.f;
-		for (float _y = _p0.y, _row = 0.f; _y < _p1.y; _y += _cell, _row += 1.f)
-			for (float _x = _p0.x, _col = 0.f; _x < _p1.x; _x += _cell, _col += 1.f)
-				_draw->AddRectFilled(ImVec2(_x, _y), ImVec2(std::min(_x + _cell, _p1.x), std::min(_y + _cell, _p1.y)), (static_cast<int>(_row + _col) % 2) ? Color(70, 70, 74) : Color(52, 52, 56));
+		const ImVec2 _visible0(std::max(_p0.x, _min.x), std::max(_p0.y, _min.y));
+		const ImVec2 _visible1(std::min(_p1.x, _max.x), std::min(_p1.y, _max.y));
+		if (_visible0.x < _visible1.x && _visible0.y < _visible1.y)
+		{
+			// Cells keep their place on the picture (aligned on _p0), about 16 pixels on screen, never more than ~2000 of them.
+			float _cell = 16.f;
+			while (((_visible1.x - _visible0.x) / _cell) * ((_visible1.y - _visible0.y) / _cell) > 2000.f) _cell *= 2.f;
+			const float _firstCol = std::floor((_visible0.x - _p0.x) / _cell);
+			const float _firstRow = std::floor((_visible0.y - _p0.y) / _cell);
+			for (float _row = _firstRow, _y = _p0.y + _firstRow * _cell; _y < _visible1.y; _y += _cell, _row += 1.f)
+				for (float _col = _firstCol, _x = _p0.x + _firstCol * _cell; _x < _visible1.x; _x += _cell, _col += 1.f)
+					_draw->AddRectFilled(ImVec2(std::max(_x, _visible0.x), std::max(_y, _visible0.y)), ImVec2(std::min(_x + _cell, _visible1.x), std::min(_y + _cell, _visible1.y)),
+						(static_cast<int>(_row + _col) % 2) ? Color(70, 70, 74) : Color(52, 52, 56));
+		}
 		_draw->AddImage(TextureId(*_texture), _p0, _p1);
 		_draw->AddRect(_p0, _p1, Color(120, 120, 130));
 
-		// Frames.
+		// Frames: the ones on screen only, and their number only while there is room for it.
 		const int _count = static_cast<int>(_target.clip->frameCount);
+		int _labels = 0;
 		for (int _i = 0; _i < _count; ++_i)
 		{
 			const Frame _frame = FrameOf(*_target.clip, _i);
 			const ImVec2 _a = _toScreen(_frame.x, _frame.y);
 			const ImVec2 _b = _toScreen(_frame.x + _frame.w, _frame.y + _frame.h);
+			if (_b.x < _min.x || _b.y < _min.y || _a.x > _max.x || _a.y > _max.y) continue;
 			const bool _current = _i == g_frame;
 			if (_current) _draw->AddRectFilled(_a, _b, Color(255, 200, 40, 50));
 			_draw->AddRect(_a, _b, _i == 0 ? Color(80, 220, 120) : (_current ? Color(255, 200, 40) : Color(255, 140, 40)), 0.f, 0, _current ? 2.f : 1.f);
-			if (_b.x - _a.x > 18.f)
+			if (_b.x - _a.x > 18.f && _labels < 400)
 			{
+				++_labels;
 				const std::string _label = std::to_string(_i);
 				_draw->AddText(ImVec2(_a.x + 3.f, _a.y + 1.f), _i == 0 ? Color(80, 220, 120) : Color(255, 220, 120), _label.c_str());
 			}
@@ -570,7 +584,7 @@ namespace
 				_clip.frameSize = FVector2(std::floor(static_cast<float>(_texture->getSize().x) / static_cast<float>(g_gridColumns)), std::floor(static_cast<float>(_texture->getSize().y) / static_cast<float>(g_gridRows)));
 				_clip.direction = Int(0);
 				_clip.wrap = Int(_wholeGrid && g_gridRows > 1 ? g_gridColumns : 0);
-				_clip.frameCount = Int(_wholeGrid ? g_gridColumns * g_gridRows : g_gridColumns);
+				_clip.frameCount = Int(std::clamp(_wholeGrid ? g_gridColumns * g_gridRows : g_gridColumns, 1, 4096));	// the same limit as the frame count field
 				_target.apply();
 				g_frame = 0;
 			};
@@ -609,6 +623,8 @@ namespace
 			const float _width = _frame.h > 0.f ? std::max(16.f, _height * _frame.w / _frame.h) : _height;
 			const ImVec2 _min = ImGui::GetCursorScreenPos();
 
+			// A frame scrolled out of the strip takes its room but draws nothing (the draw list has a vertex limit).
+			const bool _onScreen = ImGui::IsRectVisible(ImVec2(_width, _height));
 			ImGui::PushID(_i);
 			if (ImGui::InvisibleButton("frame", ImVec2(_width, _height)))
 			{
@@ -616,6 +632,11 @@ namespace
 				g_playing = false;
 			}
 			ImGui::PopID();
+			if (!_onScreen)
+			{
+				ImGui::SameLine();
+				continue;
+			}
 			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Frame %d  (%d, %d  %dx%d)", _i, static_cast<int>(_frame.x), static_cast<int>(_frame.y), static_cast<int>(_frame.w), static_cast<int>(_frame.h));
 
 			const ImVec2 _max = ImVec2(_min.x + _width, _min.y + _height);

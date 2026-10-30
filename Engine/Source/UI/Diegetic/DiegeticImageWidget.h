@@ -17,6 +17,9 @@ namespace Krampus
 		/// <summary>Constructs a circular diegetic image.</summary>
 		/// <param name="_level">Owning Level.</param>
 		/// <param name="_data">Circle shape parameters.</param>
+		/// <summary>A 200 x 80 rectangle: what the editor spawns (change its SpriteComponent in the Inspector).</summary>
+		explicit DiegeticImageWidget(Level* _level);
+
 		DiegeticImageWidget(Level* _level, const CircleShapeData& _data);
 
 		/// <summary>Constructs a rectangular diegetic image.</summary>

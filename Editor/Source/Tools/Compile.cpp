@@ -87,16 +87,76 @@ namespace
 	}
 }
 
+// ---- Build lock
+// A build outlives the module that started it: the module is reloaded when the DLL is written, while MSBuild still finishes its work.
+// Build/vs2026/KrampusBuild.lock holds the id of the running build process, so that the reloaded module (and the editor host,
+// Editor/Source/Main.cpp, which waits for it before reloading) know a build is still going and do not start a second one.
+
+namespace
+{
+	const std::filesystem::path BUILD_LOCK = "Build/vs2026/KrampusBuild.lock";
+
+	void WriteBuildLock(const DWORD _processId)
+	{
+		std::ofstream _file(BUILD_LOCK, std::ios::trunc);
+		_file << _processId;
+	}
+
+	void RemoveBuildLock()
+	{
+		std::error_code _error;
+		std::filesystem::remove(BUILD_LOCK, _error);
+	}
+
+	/// <returns>True when the lock names a cmake process that is still running (a stale lock is removed).</returns>
+	bool LockedBuildRunning()
+	{
+		std::ifstream _file(BUILD_LOCK);
+		DWORD _processId = 0;
+		if (!_file || !(_file >> _processId) || _processId == 0) return false;
+		_file.close();
+
+		bool _running = false;
+		if (HANDLE _process = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, _processId))
+		{
+			wchar_t _image[MAX_PATH];
+			DWORD _length = MAX_PATH;
+			const bool _isCmake = QueryFullProcessImageNameW(_process, 0, _image, &_length)
+				&& std::filesystem::path(std::wstring(_image, _length)).filename() == L"cmake.exe";	// the id may belong to another program by now
+			_running = _isCmake && WaitForSingleObject(_process, 0) == WAIT_TIMEOUT;
+			CloseHandle(_process);
+		}
+		if (!_running) RemoveBuildLock();
+		return _running;
+	}
+}
+
 bool Krampus::IsCompiling()
 {
-	return g_compile.process != nullptr;
+	if (g_compile.process != nullptr) return true;
+
+	// A build started by the module before a hot reload: checked twice a second, not at each of the calls of a frame.
+	static sf::Clock _clock;
+	static bool _external = false;
+	static bool _checked = false;
+	if (!_checked || _clock.getElapsedTime().asSeconds() > 0.5f)
+	{
+		_external = LockedBuildRunning();
+		_checked = true;
+		_clock.restart();
+	}
+	return _external;
 }
 
 namespace
 {
 	void StartBuild(const bool& _shipping)
 	{
-	if (IsCompiling()) return;
+	if (IsCompiling() || LockedBuildRunning())
+	{
+		LOG_WARNING("A build is already running: wait until it ends (the Console says when)");
+		return;
+	}
 
 	PrepareSolutionForBuild();
 
@@ -143,6 +203,7 @@ namespace
 	}
 
 	CloseHandle(_process.hThread);
+	WriteBuildLock(_process.dwProcessId);
 	g_compile = CompileState { };
 	g_compile.process = _process.hProcess;
 	g_compile.pipe = _read;
@@ -186,6 +247,7 @@ void Krampus::PumpCompile()
 	GetExitCodeProcess(g_compile.process, &_exitCode);
 	CloseHandle(g_compile.process);
 	CloseHandle(g_compile.pipe);
+	RemoveBuildLock();
 
 	const int _errors = g_compile.errors;
 	const int _warnings = g_compile.warnings;

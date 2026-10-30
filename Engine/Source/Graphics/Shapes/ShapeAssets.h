@@ -7,7 +7,7 @@ namespace Krampus
 
 	/// <summary>
 	/// The complex shapes of the game: Content/Shapes/Name.kshape (made in the editor: Tools > Shape Editor), used by name by the
-	/// components that have a shape (SpriteComponent, ImageWidgetComponent, CollisionComponent, PhysicsComponent: "shape" = Polygon).
+	/// components that have a shape (SpriteComponent, ImageWidgetComponent, PhysicsComponent: "shape" = Polygon).
 	/// A name may have folders: "Enemies/Bat". Files are read once and kept; Save() updates every component that uses the shape.
 	///
 	///   File: one line "points = x, y; x, y; ..." (pixels around the actor's position), lines starting with # are comments.

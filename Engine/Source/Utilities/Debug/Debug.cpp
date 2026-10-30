@@ -15,7 +15,7 @@ void Krampus::Debug::DrawDebugCircle(Level* _level, const FVector2& _position, c
 
 	FVector2 _initialPoint = _position + FVector2(0.f, _radius);
 
-	const float& _rotateRad = FMath::pi * 2.0f / _pointCount;
+	const float _rotateRad = FMath::pi * 2.0f / static_cast<float>(static_cast<int>(_pointCount));	// a float: pi / Int would be an Int (0)
 	const int& _pointCountPlusOne = _pointCount + 1;
 	for (int _index = 0; _index < _pointCountPlusOne; _index++)
 	{
@@ -38,7 +38,7 @@ void Krampus::Debug::DrawFillCircle(Level* _level, const FVector2& _position, co
 
 	FVector2 _initialPoint = _position + FVector2(0.f, _radius);
 
-	const float& _rotateRad = FMath::pi * 2.0f / _pointCount;
+	const float _rotateRad = FMath::pi * 2.0f / static_cast<float>(static_cast<int>(_pointCount));	// a float: pi / Int would be an Int (0)
 	const int& _pointCountPlusOne = _pointCount + 1;
 	for (int _index = 0; _index < _pointCountPlusOne; _index++)
 	{
@@ -62,7 +62,7 @@ void Krampus::Debug::DrawPointCircle(Level* _level, const FVector2& _position, c
 
 	FVector2 _initialPoint = _position + FVector2(0.f, _radius);
 
-	const float& _rotateRad = FMath::pi * 2.0f / _pointCount;
+	const float _rotateRad = FMath::pi * 2.0f / static_cast<float>(static_cast<int>(_pointCount));	// a float: pi / Int would be an Int (0)
 	const int& _pointCountPlusOne = _pointCount + 1;
 	for (int _index = 0; _index < _pointCountPlusOne; _index++)
 	{

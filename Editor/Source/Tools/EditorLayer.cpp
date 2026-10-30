@@ -3,11 +3,15 @@
 #include "EditorThumbnails.h"
 #include "Shortcuts.h"
 #include "EditorTheme.h"
+#include "FileDrop.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui-SFML.h>
 #include "GameFramework/Level.h"
 #include "Components/CameraComponent.h"
+#include "Components/PhysicsComponent.h"
+#include "Components/SpriteComponent.h"
+#include "Utilities/Math/Polygon2D.h"
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
 #include "Graphics/Shapes/ShapeAssets.h"
@@ -77,6 +81,7 @@ namespace
 void EditorLayer::OnAttach()
 {
 	LOG_MSG("Editor: starting");
+	MoveOldEditorFiles();	// first: everything below reads its file in Content/_internal/Editor
 	Shortcuts::Initialize();
 	context.history.Clear();	// files of a previous session
 	EngineSettings::LoadSections(EditorSettings::GetPath(), { &editorSettings });
@@ -91,6 +96,8 @@ void EditorLayer::OnAttach()
 		return;
 	}
 
+	FileDrop::Install(reinterpret_cast<void*>(window.GetRenderWindow().getNativeHandle()));	// files dropped from the Explorer go to Content
+
 	ImGuiIO& _io = ImGui::GetIO();
 	_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	_io.IniFilename = iniPath.c_str();
@@ -103,7 +110,9 @@ void EditorLayer::OnAttach()
 void EditorLayer::OnDetach()
 {
 	LOG_MSG(std::string("Editor: stopping") + (IsHotReloading() ? " (hot reload)" : ""));
+	FileDrop::Uninstall();	// first: Windows must not call into this module once it is unloaded
 	if (IsHotReloading()) SaveSettings();	// the settings changed and not saved yet survive a rebuild
+	if (IsHotReloading()) SaveShapeEditorChanges();
 	if (IsHotReloading()) SaveSession(context);
 	ClearThumbnails();
 	if (Level* _level = context.GetLevel()) _level->GetCameraManager().ClearViewOverride();
@@ -136,6 +145,13 @@ void EditorLayer::OnUpdate(const Float& _deltaTime)
 Bool EditorLayer::OnEvent(const sf::Event& _event)
 {
 	if (!initialized) return false;
+
+	// Closing with unsaved changes: the editor asks first (EditorMenu.cpp). The event is kept from the engine, which would quit.
+	if (_event.is<sf::Event::Closed>() && context.SceneDirty())
+	{
+		context.askQuit = true;
+		return true;
+	}
 
 	ImGui::SFML::ProcessEvent(window.GetRenderWindow(), _event);
 
@@ -170,12 +186,19 @@ void EditorLayer::OnRender(Window& _window)
 		_renderWindow.clear(sf::Color(static_cast<std::uint8_t>(_background.x * 255.f), static_cast<std::uint8_t>(_background.y * 255.f), static_cast<std::uint8_t>(_background.z * 255.f)));
 	}
 
-	ImGui::GetIO().FontGlobalScale = editorSettings.uiScale;
+	// Font and sizes made again for a new interface scale (once the slider is let go: making the font takes a moment).
+	if (appliedUiScale != editorSettings.uiScale && (appliedUiScale == 0.f || !ImGui::IsMouseDown(ImGuiMouseButton_Left)))
+	{
+		appliedUiScale = editorSettings.uiScale;
+		EditorTheme::LoadFonts(appliedUiScale);
+		EditorTheme::ApplyStyle(appliedUiScale);
+	}
 	ImGui::SFML::Update(_renderWindow, clock.restart());
 	context.history.Update(context);	// finishes an undo that swapped the scene
 	HandleShortcuts();
 
 	DrawMainMenuBar(context);
+	DrawStatusBar(context);	// before the dock space: it takes the bottom of the window
 	DrawSettingsWindow();
 	const ImGuiID _dockspace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 	BuildDefaultLayout(_dockspace);
@@ -253,10 +276,96 @@ void EditorLayer::DrawViewport()
 			viewportHovered = ImGui::IsItemHovered();
 			MoveCamera(_min, _max);
 			DrawGizmo(_min, _max);
+			PickInViewport(_min, _max);	// after the gizmo: a click on one of its handles is not a pick
+			DrawViewportOverlay(_min, _max);
 		}
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
+}
+
+// A left click on the picture (not on the gizmo) selects the actor under the mouse: inside the box2d shape of its PhysicsComponent
+// or the outline of its SpriteComponent. The one in front wins; clicking again at the same place goes to the next one behind.
+// A click on nothing clears the selection.
+void EditorLayer::PickInViewport(const ImVec2& _min, const ImVec2& _max)
+{
+	if (context.playing || cameraDragging || gizmoAxis >= 0) return;
+	if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left) || !ImGui::IsWindowHovered() || ImGui::IsAnyItemHovered()) return;
+	const ImVec2 _mouse = ImGui::GetIO().MousePos;
+	if (_mouse.x < _min.x || _mouse.y < _min.y || _mouse.x > _max.x || _mouse.y > _max.y) return;
+	Level* _level = context.GetLevel();
+	if (!_level) return;
+
+	// The picture fills the window size once scaled: back to a window pixel, then to the world through the editor camera.
+	const sf::Vector2f _windowSize(window.GetRenderWindow().getSize());
+	const sf::Vector2i _pixel(static_cast<int>((_mouse.x - _min.x) * _windowSize.x / (_max.x - _min.x)), static_cast<int>((_mouse.y - _min.y) * _windowSize.y / (_max.y - _min.y)));
+	const sf::Vector2f _world = window.GetRenderWindow().mapPixelToCoords(_pixel, context.GetCameraView(_windowSize));
+	const FVector2 _point(_world.x, _world.y);
+
+	struct Hit { Actor* actor; int zOrder; };
+	std::vector<Hit> _hits;
+	for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+	{
+		if (!_actor->IsActive()) continue;
+		bool _hit = false;
+		int _zOrder = -1;
+		if (PhysicsComponent* _physics = _actor->GetComponent<PhysicsComponent>())
+			_hit = _physics->ContainsPoint(_point);
+		if (SpriteComponent* _sprite = _actor->GetComponent<SpriteComponent>())
+		{
+			_zOrder = _sprite->GetZOrder();
+			if (!_hit)
+				_hit = Polygon2D(Polygon2D::Transform(_sprite->GetShapeObject()->GetOutline().points, _sprite->GetPosition(), _sprite->GetRotation(), _sprite->GetScale())).Contains(_point);
+		}
+		if (_hit) _hits.push_back({ _actor.get(), _zOrder });
+	}
+
+	if (_hits.empty())
+	{
+		context.selected = nullptr;
+		context.selectedWidget = nullptr;
+		return;
+	}
+
+	// In front first: the highest draw order, then the actor made last (drawn last).
+	std::reverse(_hits.begin(), _hits.end());
+	std::stable_sort(_hits.begin(), _hits.end(), [](const Hit& _a, const Hit& _b) { return _a.zOrder > _b.zOrder; });
+	size_t _next = 0;
+	for (size_t _i = 0; _i < _hits.size(); ++_i)
+		if (_hits[_i].actor == context.selected) { _next = (_i + 1) % _hits.size(); break; }
+
+	context.selected = _hits[_next].actor;
+	context.selectedWidget = nullptr;
+	LOG(VerbosityType::Verbose, "Viewport: selected actor " + context.selected->GetName().StdString());
+}
+
+// Play: a colored frame around the picture, so it is clear the game runs. Edit: how to move the camera, in a corner.
+void EditorLayer::DrawViewportOverlay(const ImVec2& _min, const ImVec2& _max)
+{
+	ImDrawList* _draw = ImGui::GetWindowDrawList();
+	const float _scale = editorSettings.uiScale;
+
+	if (context.playing)
+	{
+		const ImU32 _play = EditorTheme::GetU32(EditorTheme::Custom::PlayMode);
+		_draw->AddRect(_min, _max, _play, 0.f, 0, 3.f * _scale);
+
+		const std::string _text = "PLAYING  -  " + Shortcuts::Text("Play / Stop") + " or Stop to go back to the scene";
+		const char* _label = _text.c_str();
+		const ImVec2 _size = ImGui::CalcTextSize(_label);
+		const ImVec2 _at(_min.x + (_max.x - _min.x - _size.x) * 0.5f, _min.y + 8.f * _scale);
+		_draw->AddRectFilled(ImVec2(_at.x - 10.f * _scale, _at.y - 4.f * _scale), ImVec2(_at.x + _size.x + 10.f * _scale, _at.y + _size.y + 4.f * _scale), _play, 4.f * _scale);
+		_draw->AddText(_at, IM_COL32(20, 20, 20, 255), _label);
+		return;
+	}
+
+	const std::string _text = "Right mouse: move   Wheel: zoom   " + Shortcuts::Text("Focus Selection") + ": focus      Zoom "
+		+ std::to_string(static_cast<int>(std::round(context.cameraZoom * 100.f))) + "%";
+	const char* _hint = _text.c_str();
+	const ImVec2 _size = ImGui::CalcTextSize(_hint);
+	const ImVec2 _at(_min.x + 10.f * _scale, _max.y - _size.y - 10.f * _scale);
+	_draw->AddRectFilled(ImVec2(_at.x - 6.f * _scale, _at.y - 3.f * _scale), ImVec2(_at.x + _size.x + 6.f * _scale, _at.y + _size.y + 3.f * _scale), IM_COL32(0, 0, 0, viewportHovered ? 150 : 90), 4.f * _scale);
+	_draw->AddText(_at, viewportHovered ? IM_COL32(230, 232, 235, 255) : IM_COL32(230, 232, 235, 140), _hint);
 }
 
 // The editor camera, like Unreal's: hold the right mouse button (or the middle one) and move the mouse to slide the view, 

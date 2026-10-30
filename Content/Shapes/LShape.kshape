@@ -1,0 +1,3 @@
+# KrampusEngine shape, made in the Shape Editor (Tools > Shape Editor).
+# Points in pixels around the actor's position (0, 0), in order around the shape. It may be concave; its edges must not cross.
+points = -50, -60; -10, -60; -10, 20; 50, 20; 50, 60; -50, 60

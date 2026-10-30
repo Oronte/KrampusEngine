@@ -27,7 +27,7 @@ namespace Krampus
 
 	/// <summary>
 	/// Keyboard shortcuts of the editor: a list of named actions, each with a key that the user can change in
-	/// Settings > Shortcuts. The bindings are stored in Content/Editor/Shortcuts.cfg.
+	/// Settings > Shortcuts. The bindings are stored in Content/_internal/Editor/Shortcuts.cfg.
 	/// Code asks "is this action pressed now?" with the name of the action, never with a key.
 	/// </summary>
 	class Shortcuts

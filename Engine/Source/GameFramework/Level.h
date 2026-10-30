@@ -140,6 +140,17 @@ namespace Krampus
 		}
 
 		/// <summary>
+		/// Spawns a diegetic widget kept at _screenPosition (window pixels): SpawnDiegeticWidget&lt;DiegeticLabelWidget&gt;(FVector2(40, 40), TextData("Score")).
+		/// </summary>
+		template <typename Type, typename ...Args, IS_BASE_OF(DiegeticWidget, Type)>
+		inline Type* SpawnDiegeticWidget(const FVector2& _screenPosition, Args&&... _args)
+		{
+			Type* _widget = actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
+			_widget->SetScreenPosition(_screenPosition);
+			return _widget;
+		}
+
+		/// <summary>
 		/// Spawns a HUD widget of the specified type.
 		/// </summary>
 		/// <typeparam name="Type">Widget class derived from Widget.</typeparam>

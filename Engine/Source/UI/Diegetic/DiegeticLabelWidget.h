@@ -238,6 +238,9 @@ namespace Krampus
         /// <summary>Constructs a DiegeticLabelWidget with initial text data configuration.</summary>
         /// <param name="_level">Owning Level.</param>
         /// <param name="_data">Text data settings.</param>
+		/// <summary>A text "Label": what the editor spawns (change its LabelComponent in the Inspector).</summary>
+		explicit DiegeticLabelWidget(Level* _level);
+
 		DiegeticLabelWidget(Level* _level, const TextData& _data);
 
         /// <summary>Returns a string representation of the diegetic label.</summary>

@@ -20,6 +20,9 @@
 #include "UI/Widgets/WidgetComponents/ButtonWidgetComponent.h"
 #include "UI/Widgets/WidgetComponents/ImageWidgetComponent.h"
 #include "UI/Widgets/WidgetComponents/LabelWidgetComponent.h"
+#include "UI/Diegetic/DiegeticImageWidget.h"
+#include "UI/Diegetic/DiegeticLabelWidget.h"
+#include "UI/Diegetic/DiegeticButtonWidget.h"
 
 // Everything the Inspector shows for the classes of the engine. The classes themselves stay untouched: values are read
 // and written through their public members and Get/Set methods. Classes of the game use KACTOR / KCOMPONENT / KPROPERTY.
@@ -293,6 +296,27 @@ void Krampus::RegisterEngineClasses()
 	// ================= Actors =================
 	// CameraActor and EmptyActor describe themselves with KACTOR.
 
+	// Diegetic widgets: actors of the world kept at a place of the screen. The base cannot be spawned (a class can derive from it).
+	{
+		ClassInfo& _info = Describe("DiegeticWidget", "Actor");
+		_info.AddAccessor<DiegeticWidget, FVector2>("screenPosition",	// window pixels
+			[](DiegeticWidget& _w) { return _w.GetScreenPosition(); },
+			[](DiegeticWidget& _w, const FVector2& _v) { _w.SetScreenPosition(_v); });
+		_info.AddAccessor<DiegeticWidget, float>("screenRotation",		// degrees
+			[](DiegeticWidget& _w) { return static_cast<float>(_w.GetLocalRotation().ToDegrees()); },
+			[](DiegeticWidget& _w, const float& _v) { _w.SetLocalRotation(Angle::FromDegrees(_v)); });
+	}
+	Describe("DiegeticImageWidget", "DiegeticWidget").factory = [](Level* _level) -> Actor* { return _level->SpawnActor<DiegeticImageWidget>(); };
+	Describe("DiegeticLabelWidget", "DiegeticWidget").factory = [](Level* _level) -> Actor* { return _level->SpawnActor<DiegeticLabelWidget>(); };
+	{
+		ClassInfo& _info = Describe("DiegeticButtonWidget", "DiegeticImageWidget");
+		_info.factory = [](Level* _level) -> Actor* { return _level->SpawnActor<DiegeticButtonWidget>(); };
+		_info.AddProperty<DiegeticButtonWidget, EventList>("onPress", &DiegeticButtonWidget::onPressCalls);
+		_info.AddProperty<DiegeticButtonWidget, EventList>("onRelease", &DiegeticButtonWidget::onReleaseCalls);
+		_info.AddProperty<DiegeticButtonWidget, EventList>("onHover", &DiegeticButtonWidget::onHoverCalls);
+		_info.AddProperty<DiegeticButtonWidget, EventList>("onUnhover", &DiegeticButtonWidget::onUnhoverCalls);
+	}
+
 	// ================= Actor components =================
 	{
 		ClassInfo& _info = Describe("SpriteComponent", "Component");
@@ -304,36 +328,36 @@ void Krampus::RegisterEngineClasses()
 		ClassInfo& _info = Describe("PhysicsComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component*
 		{
-			// The box2d shape is built from the sprite when there is one.
-			if (SpriteComponent* _sprite = _owner->GetComponent<SpriteComponent>())
-			{
-				if (_sprite->GetShapeType() == ShapeType::Circle)
-					return _owner->AddComponent<PhysicsComponent>(Float(_sprite->GetRadius()));
-				if (_sprite->GetShapeType() == ShapeType::Polygon)
-					return _owner->AddComponent<PhysicsComponent>();	// takes the sprite's polygon
-				return _owner->AddComponent<PhysicsComponent>(FVector2(_sprite->GetSize()));
-			}
+			// The body takes the shape of the sprite (and keeps it) when there is one.
+			if (_owner->GetComponent<SpriteComponent>())
+				return _owner->AddComponent<PhysicsComponent>();
 			return _owner->AddComponent<PhysicsComponent>(FVector2(100.f, 100.f));
 		};
 
 		// The shape of the body first: changing it computes the mass again from the shape (the mass properties below come after).
+		// matchSprite before the shape: while it is on, the saved shape is the sprite's and is not set again (it would turn it off).
+		_info.AddAccessor<PhysicsComponent, bool>("matchSprite",	// the shape is always the sprite's (scale included); off: a custom shape
+			[](PhysicsComponent& _c) { return _c.IsMatchingSprite(); },
+			[](PhysicsComponent& _c, const bool& _v) { if (_v != _c.IsMatchingSprite()) _c.SetMatchSprite(_v); });
+		const auto _customShape = [](PhysicsComponent& _c) { return !_c.IsMatchingSprite() || !_c.GetOwner()->GetComponent<SpriteComponent>(); };
 		_info.AddAccessor<PhysicsComponent, int>("shape",	// 0 box, 1 circle, 2 polygon
 			[](PhysicsComponent& _c) { return ShapeToInt(_c.GetShapeType()); },
-			[](PhysicsComponent& _c, const int& _v) { _c.SetShapeType(IntToShape(_v)); }, 0.f, 2.f);
+			[](PhysicsComponent& _c, const int& _v) { if (!_c.IsMatchingSprite()) _c.SetShapeType(IntToShape(_v)); }, 0.f, 2.f);
 		_info.SetLastPropertyType(PropertyType::Enum, ShapeNames());
+		_info.SetLastPropertyVisible<PhysicsComponent>(_customShape);
 		_info.AddAccessor<PhysicsComponent, std::string>("polygon",
 			[](PhysicsComponent& _c) { return _c.GetPolygonName(); },
-			[](PhysicsComponent& _c, const std::string& _v) { if (_c.GetShapeType() == ShapeType::Polygon && _v != _c.GetPolygonName()) _c.SetShapePolygon(_v); });
+			[](PhysicsComponent& _c, const std::string& _v) { if (!_c.IsMatchingSprite() && _c.GetShapeType() == ShapeType::Polygon && _v != _c.GetPolygonName()) _c.SetShapePolygon(_v); });
 		_info.SetLastPropertyType(PropertyType::Shape);
-		_info.SetLastPropertyVisible<PhysicsComponent>([](PhysicsComponent& _c) { return _c.GetShapeType() == ShapeType::Polygon; });
-		_info.AddAccessor<PhysicsComponent, FVector2>("size",
+		_info.SetLastPropertyVisible<PhysicsComponent>([_customShape](PhysicsComponent& _c) { return _customShape(_c) && _c.GetShapeType() == ShapeType::Polygon; });
+		_info.AddAccessor<PhysicsComponent, FVector2>("size",	// without the scale of the actor
 			[](PhysicsComponent& _c) { return _c.GetBoxSize(); },
-			[](PhysicsComponent& _c, const FVector2& _v) { if (_c.GetShapeType() == ShapeType::Rectangle && _v != _c.GetBoxSize()) _c.SetShapeBox(FVector2(std::max(1.f, _v.x), std::max(1.f, _v.y))); });
-		_info.SetLastPropertyVisible<PhysicsComponent>([](PhysicsComponent& _c) { return _c.GetShapeType() == ShapeType::Rectangle; });
-		_info.AddAccessor<PhysicsComponent, float>("radius",
+			[](PhysicsComponent& _c, const FVector2& _v) { if (!_c.IsMatchingSprite() && _c.GetShapeType() == ShapeType::Rectangle && _v != _c.GetBoxSize()) _c.SetShapeBox(FVector2(std::max(1.f, _v.x), std::max(1.f, _v.y))); });
+		_info.SetLastPropertyVisible<PhysicsComponent>([_customShape](PhysicsComponent& _c) { return _customShape(_c) && _c.GetShapeType() == ShapeType::Rectangle; });
+		_info.AddAccessor<PhysicsComponent, float>("radius",	// without the scale of the actor
 			[](PhysicsComponent& _c) { return static_cast<float>(_c.GetCircleRadius()); },
-			[](PhysicsComponent& _c, const float& _v) { if (_c.GetShapeType() == ShapeType::Circle && _v != static_cast<float>(_c.GetCircleRadius())) _c.SetShapeCircle(std::max(1.f, _v)); });
-		_info.SetLastPropertyVisible<PhysicsComponent>([](PhysicsComponent& _c) { return _c.GetShapeType() == ShapeType::Circle; });
+			[](PhysicsComponent& _c, const float& _v) { if (!_c.IsMatchingSprite() && _c.GetShapeType() == ShapeType::Circle && _v != static_cast<float>(_c.GetCircleRadius())) _c.SetShapeCircle(std::max(1.f, _v)); });
+		_info.SetLastPropertyVisible<PhysicsComponent>([_customShape](PhysicsComponent& _c) { return _customShape(_c) && _c.GetShapeType() == ShapeType::Circle; });
 		_info.AddAccessor<PhysicsComponent, int>("bodyType",	// 0 static, 1 kinematic, 2 dynamic
 			[](PhysicsComponent& _c) { return _c.GetBodyType(); },
 			[](PhysicsComponent& _c, const int& _v) { _c.SetBodyType(std::clamp(_v, 0, 2)); }, 0.f, 2.f);
