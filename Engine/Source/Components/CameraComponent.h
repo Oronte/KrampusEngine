@@ -154,6 +154,8 @@ namespace Krampus
 		/// </summary>
 		void SetCurrent();
 
+		virtual void Construct() override;
+
 	private:
 		virtual void BeginDestroy() override;
 		void DrawDebug() override;	// outline of the area the camera shows

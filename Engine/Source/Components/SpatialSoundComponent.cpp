@@ -63,6 +63,13 @@ void Krampus::SpatialSoundComponent::Construct()
 	Component::Construct();
 
 	previousPosition = GetPosition();
+	Set3DPosition(FVector3(previousPosition.x, 0.0f, previousPosition.y));
+	FVector2 _dir;
+	if (isTopDown)
+		_dir = GetUpVector();
+	else
+		_dir = GetRightVector();
+	SetDirection(FVector3(_dir.x, 0.0f, _dir.y));
 	ApplySpatialSettings();
 }
 

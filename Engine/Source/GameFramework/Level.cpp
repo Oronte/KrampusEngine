@@ -38,15 +38,25 @@ void Level::Load()
 	}
 	isLoaded = true;
 
+	// In the editor the level is paused: BeginPlay waits for Play (see StartPlay).
+	if (!GetWorld()->IsLevelPaused()) StartPlay();
+	LOG(GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Level: loaded " + std::string(typeid(*this).name()) + " (" + std::to_string(actorManager.GetActors().size()) + " actors, " + std::to_string(hud.GetWidgets().size()) + " widgets)");
+}
+
+void Level::StartPlay()
+{
+	if (!isLoaded || hasBegunPlay) return;
+	hasBegunPlay = true;
+
 	actorManager.BeginPlay();
 	hud.BeginPlay();
-	LOG(GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Level: loaded " + std::string(typeid(*this).name()) + " (" + std::to_string(actorManager.GetActors().size()) + " actors, " + std::to_string(hud.GetWidgets().size()) + " widgets)");
 }
 
 void Krampus::Level::Unload()
 {
 	if (!isLoaded) return;
 	isLoaded = false;
+	hasBegunPlay = false;
 	LOG(GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Level: unloading " + std::string(typeid(*this).name()));
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
 	actorManager.Deconstruct();

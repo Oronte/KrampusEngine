@@ -119,6 +119,16 @@ namespace Krampus
             return text.GetOutlineColor();
         }
 
+		void SetOrigin(const FVector2& _origin)
+		{
+			text.SetOrigin(_origin);
+		}
+
+		FVector2 GetOrigin() const
+		{
+			return text.GetOrigin();
+		}
+
 		/// <summary>
 		/// Sets the outline thickness in pixels.
 		/// </summary>
@@ -189,98 +199,6 @@ namespace Krampus
         inline Float GetLineSpacing() const
         {
             return text.GetLineSpacing();
-        }
-
-		/// <summary>
-		/// Sets the position of the label in 2D space.
-		/// </summary>
-		/// <param name="_position">New position coordinates.</param>
-        inline void SetPosition(const FVector2& _position)
-        {
-            text.SetPosition(_position);
-        }
-
-		/// <summary>
-		/// Gets the position of the label in 2D space.
-		/// </summary>
-		/// <returns>Position coordinates.</returns>
-        inline FVector2 GetPosition() const
-        {
-            return text.GetPosition();
-        }
-
-		/// <summary>
-		/// Sets the local origin point of the label (pivot point for transformations).
-		/// </summary>
-		/// <param name="_origin">Origin coordinates.</param>
-        inline void SetOrigin(const FVector2& _origin)
-        {
-            text.SetOrigin(_origin);
-        }
-
-		/// <summary>
-		/// Gets the local origin point of the label.
-		/// </summary>
-		/// <returns>Origin coordinates.</returns>
-        inline FVector2 GetOrigin() const
-        {
-            return text.GetOrigin();
-        }
-
-		/// <summary>
-		/// Sets the 2D scale factor of the label.
-		/// </summary>
-		/// <param name="_factors">Scale multipliers.</param>
-        inline void SetScale(const FVector2& _factors)
-        {
-            text.SetScale(_factors);
-        }
-
-		/// <summary>
-		/// Gets the 2D scale factor of the label.
-		/// </summary>
-		/// <returns>Scale multipliers.</returns>
-        inline FVector2 GetScale() const
-        {
-            return text.GetScale();
-        }
-
-		/// <summary>
-		/// Sets the rotation angle of the label.
-		/// </summary>
-		/// <param name="_angle">Rotation angle.</param>
-        inline void SetRotation(const Angle& _angle)
-        {
-            text.SetRotation(_angle);
-        }
-
-		/// <summary>
-		/// Gets the rotation angle of the label.
-		/// </summary>
-		/// <returns>Rotation angle.</returns>
-        inline Angle GetRotation() const
-        {
-            return Angle(text.GetRotation());
-        }
-
-		/// <summary>
-		/// Sets the combined transform (position, rotation, scale) of the label.
-		/// </summary>
-		/// <param name="_transform">Transform parameters.</param>
-        inline void SetTransform(const Transform& _transform)
-        {
-            SetPosition(_transform.position);
-            SetRotation(_transform.rotation);
-            SetScale(_transform.scale);
-        }
-
-		/// <summary>
-		/// Gets the combined transform of the label.
-		/// </summary>
-		/// <returns>Transform structure.</returns>
-        inline Transform GetTransform() const
-        {
-            return Transform(GetPosition(), GetRotation(), GetScale());
         }
 
 		/// <summary>

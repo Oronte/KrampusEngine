@@ -17,10 +17,6 @@ namespace Krampus
 		std::vector<Event<>::ListenerHandle>			bindingHandles;	// the events of bindings
 
 	public:
-		/// <summary>
-		/// When false, none of the callbacks bound through this component is called (set in the Inspector or by code).
-		/// </summary>
-		Bool		enabled	= true;
 
 		/// <summary>
 		/// Constructs an InputComponent attached to the specified actor.

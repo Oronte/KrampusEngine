@@ -41,6 +41,8 @@ namespace Krampus
 		/// <param name="_size">Width and height of the physics box.</param>
         PhysicsComponent(Actor* _owner, const FVector2& _size);
 
+		virtual void Construct() override;
+
 		/// <summary>
 		/// Lifecycle callback invoked when the component is deconstructed, destroying the Box2D body.
 		/// </summary>

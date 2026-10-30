@@ -50,6 +50,7 @@ void Krampus::ImageWidgetComponent::Construct()
 {
     WidgetComponent::Construct();
 
+	SetTransform(Transform(GetPosition(), GetRotation(), GetScale()));
     GetLevel()->GetCameraManager().AddToScreen(this);
 }
 

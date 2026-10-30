@@ -41,6 +41,14 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const FVector2& _size
     MakeRectangle(_size);
 }
 
+void Krampus::PhysicsComponent::Construct()
+{
+    Super::Construct();
+
+    FVector2 _meterPos = GetPosition() / PX_TO_M;
+    b2Body_SetTransform(bodyId, b2Vec2(_meterPos.x, _meterPos.y), b2MakeRot(GetRotation()));
+}
+
 void Krampus::PhysicsComponent::Deconstruct()
 {
 	Super::Deconstruct();

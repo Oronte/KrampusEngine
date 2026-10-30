@@ -515,22 +515,26 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 			_current = _current.parent_path();
 		ImGui::EndDisabled();
 
+		// One button per folder of the path. Walk a copy and change the folder after the loop: assigning _current while
+		// iterating over it invalidates the iterators (that was the crash when clicking "Content").
+		const std::filesystem::path _shown = _current;
 		std::filesystem::path _walk;
-		for (const std::filesystem::path& _part : _current)
+		std::filesystem::path _clicked;
+		for (const std::filesystem::path& _part : _shown)
 		{
 			_walk = _walk.empty() ? _part : _walk / _part;
 			ImGui::SameLine(0.f, 4.f);
-			// one button per folder of the path
-			{
-				if (ImGui::SmallButton(_part.string().c_str()))
-					_current = _walk;
-			}
-			if (_walk != _current)
+			ImGui::PushID(_walk.string().c_str());
+			if (ImGui::SmallButton(_part.string().c_str()))
+				_clicked = _walk;
+			ImGui::PopID();
+			if (_walk != _shown)
 			{
 				ImGui::SameLine(0.f, 4.f);
 				ImGui::TextDisabled(">");
 			}
 		}
+		if (!_clicked.empty()) _current = _clicked;
 
 		const float _right = ImGui::GetContentRegionAvail().x;
 		ImGui::SameLine(std::max(ImGui::GetCursorPosX() + 20.f, ImGui::GetCursorPosX() + _right - 380.f));

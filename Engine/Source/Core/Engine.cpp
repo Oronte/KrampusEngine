@@ -92,6 +92,7 @@ Bool Engine::Tick()
 	levelManager->ChangeLevel();
 	Level* _currentLevel = levelManager->GetCurrentLevel();
 	if (!_currentLevel) return false;
+	if (!levelPaused) _currentLevel->StartPlay();	// the first frame of Play: the actors get their BeginPlay
 
 	mouse->Update();
 	layerStack.Update(_currentLevel->UpdateTime());

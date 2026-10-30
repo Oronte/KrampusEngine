@@ -27,6 +27,7 @@ namespace Krampus
 		/// <summary>(Re)creates the animations described by clips on the sprite of the owner and makes startAnimation the current one.</summary>
 		void ApplyClips();
 
+		virtual void BeginPlay() override;
 		virtual void Tick(const Float& _deltaTime) override;
 
 

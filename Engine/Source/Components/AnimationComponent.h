@@ -42,6 +42,7 @@ namespace Krampus
 
 			if (current) current->Stop();
 			current = animations[_name].get();
+			current->Update();
 		}
 
 		/// <summary>

@@ -62,7 +62,11 @@ Krampus::AnimationSM* Krampus::AnimationComponentSM::AddAnimation(const String& 
 	animations[_name] = std::make_unique<AnimationSM>(GetWorld(), this, _name, _sprite->GetShapeObject(), _data);
 
 	AnimationSM* _anim = animations[_name].get();
-	if (!current) current = _anim;
+	if (!current) 
+	{
+		current = _anim;
+		current->Update();
+	}
 	return _anim;
 }
 

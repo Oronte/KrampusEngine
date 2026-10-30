@@ -18,7 +18,7 @@ void Krampus::InputComponent::Bind(Event<>* _event, std::function<void()> _callb
 		return;
 	}
 
-	handlesVoid.push_back(_event->AddListener([this, _callback]() { if (enabled) _callback(); }, ListenerOptions{.once = _once}));
+	handlesVoid.push_back(_event->AddListener([this, _callback]() { if (IsActive()) _callback(); }, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::Bind(Event<Float>* _event, std::function<void(Float)> _callback, const Bool& _once)
@@ -29,7 +29,7 @@ void Krampus::InputComponent::Bind(Event<Float>* _event, std::function<void(Floa
 		return;
 	}
 
-	handlesFloat.push_back(_event->AddListener([this, _callback](Float _value) { if (enabled) _callback(_value); }, ListenerOptions{.once = _once}));
+	handlesFloat.push_back(_event->AddListener([this, _callback](Float _value) { if (IsActive()) _callback(_value); }, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::Bind(Event<FVector2>* _event, std::function<void(FVector2)> _callback, const Bool& _once)
@@ -40,7 +40,7 @@ void Krampus::InputComponent::Bind(Event<FVector2>* _event, std::function<void(F
 		return;
 	}
 
-	handlesFVector2.push_back(_event->AddListener([this, _callback](FVector2 _value) { if (enabled) _callback(_value); }, ListenerOptions{.once = _once}));
+	handlesFVector2.push_back(_event->AddListener([this, _callback](FVector2 _value) { if (IsActive()) _callback(_value); }, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::Bind(Event<IVector2>* _event, std::function<void(IVector2)> _callback, const Bool& _once)
@@ -51,7 +51,7 @@ void Krampus::InputComponent::Bind(Event<IVector2>* _event, std::function<void(I
 		return;
 	}
 
-	handlesIVector2.push_back(_event->AddListener([this, _callback](IVector2 _value) { if (enabled) _callback(_value); }, ListenerOptions{.once = _once}));
+	handlesIVector2.push_back(_event->AddListener([this, _callback](IVector2 _value) { if (IsActive()) _callback(_value); }, ListenerOptions{.once = _once}));
 }
 
 void Krampus::InputComponent::ApplyBindings()
@@ -62,7 +62,7 @@ void Krampus::InputComponent::ApplyBindings()
 	for (const Binding& _binding : bindings)
 	{
 		// Copy of the list: the lambda must not depend on the vector, which can change.
-		const auto _call = [this, _calls = _binding.calls]() { if (enabled) _calls.Invoke(this); };
+		const auto _call = [this, _calls = _binding.calls]() { if (IsActive()) _calls.Invoke(this); };
 
 		if (Event<>* _event = _input->FindEvent(_binding.source))
 			bindingHandles.push_back(_event->AddListener(_call));

@@ -44,7 +44,8 @@ void Krampus::LabelWidgetComponent::Construct()
 {
     WidgetComponent::Construct();
 
-	GetLevel()->GetCameraManager().AddToScreen(this);
+	SetTransform(Transform(GetPosition(), GetRotation(), GetScale()));
+    GetLevel()->GetCameraManager().AddToScreen(this);
 }
 
 void Krampus::LabelWidgetComponent::Deconstruct()

@@ -255,12 +255,12 @@ namespace Krampus
         /// </summary>
         ~Animation();
 
-    protected:
         /// <summary>
         /// Advances to the next frame and triggers notifications.
         /// </summary>
         void Update();
 
+    protected:
         /// <summary>
         /// Reschedules the frame timer for the next frame.
         /// </summary>

@@ -1,5 +1,5 @@
 #pragma once
-#pragma warning (disable : 4275) // non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+// #pragma warning (disable : 4275) // non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
 
 // STL
 #include <iostream>

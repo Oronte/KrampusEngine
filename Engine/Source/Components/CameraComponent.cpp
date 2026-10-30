@@ -44,6 +44,17 @@ void Krampus::CameraComponent::SetCurrent()
 	GetLevel()->GetCameraManager().SetCurrent(this);
 }
 
+void Krampus::CameraComponent::Construct()
+{
+	Component::Construct();
+	if (attachedToOwner && !freezePostition)
+		SetCenter(GetPosition());
+
+	if (attachedToOwner && !freezeRotation)
+		SetRotation(GetRotation());
+
+}
+
 void Krampus::CameraComponent::BeginDestroy()
 {
 	Component::BeginDestroy();

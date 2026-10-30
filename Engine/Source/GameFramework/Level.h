@@ -27,6 +27,7 @@ namespace Krampus
 		HUD					hud;
 		Color				backgroundColor			= Color::Black();
 		Bool				isLoaded				= false;
+		Bool				hasBegunPlay			= false;
 
 	protected:
 		/// <summary>
@@ -154,6 +155,12 @@ namespace Krampus
 		/// Loads the level, initializing physics, cameras, actors, and UI.
 		/// </summary>
 		virtual void Load();
+
+		/// <summary>
+		/// Starts the game in this level: BeginPlay of every actor and widget, once. Called when the level loads and the game runs;
+		/// in the editor (level paused) it waits for Play, so placing or spawning an actor only runs its constructor and Construct.
+		/// </summary>
+		void StartPlay();
 
 		/// <summary>
 		/// Unloads the level, clearing actors, UI widgets, and releasing resources.

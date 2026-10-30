@@ -49,6 +49,13 @@ void Krampus::AnimationWidgetComponent::ApplyClips()
 	clipStarted = false;
 }
 
+void Krampus::AnimationWidgetComponent::BeginPlay()
+{
+	WidgetComponent::BeginPlay();
+    if (playOnBeginPlay) 
+        StartAnimation();
+}
+
 void Krampus::AnimationWidgetComponent::Tick(const Float& _deltaTime)
 {
     WidgetComponent::Tick(_deltaTime);
@@ -57,5 +64,4 @@ void Krampus::AnimationWidgetComponent::Tick(const Float& _deltaTime)
     clipStarted = true;
 
     if (animations.empty()) ApplyClips();
-    if (playOnBeginPlay) StartAnimation();
 }

@@ -50,6 +50,9 @@ void Krampus::SpriteComponent::Construct()
 {
 	Component::Construct();
 
+	shape->GetShape()->SetPosition(GetPosition());
+	shape->GetShape()->SetRotation(GetRotation());
+	shape->GetShape()->SetScale(GetScale());
 	GetLevel()->GetCameraManager().AddToWorld(this);
 }
 
