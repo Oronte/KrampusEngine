@@ -137,6 +137,10 @@ namespace Krampus
 	void OpenAnimationEditor();
 	void DrawAnimationEditor(EditorContext& _context);
 
+	/// <summary>Opens the Animation Graph (the state machine of the selected AnimationComponentSM: transitions and their conditions).</summary>
+	void OpenAnimationGraph();
+	void DrawAnimationGraph(EditorContext& _context);
+
 	/// <summary>Opens the Network window (host, join, players, messages).</summary>
 	void OpenNetworkWindow();
 	void DrawNetworkWindow(EditorContext& _context);

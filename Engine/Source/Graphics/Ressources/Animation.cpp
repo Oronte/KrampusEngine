@@ -110,6 +110,7 @@ void Krampus::Animation::Update()
 {
     if (!IsValidIndex())
     {
+        ++completedCycles;
         if (!data.canLoop)
         {
             Stop();
@@ -147,6 +148,7 @@ void Krampus::Animation::Reset()
 void Krampus::Animation::Start()
 {
     LOG(VerbosityType::Verbose, "Animation: start \"" + name.StdString() + "\" (" + std::to_string(static_cast<int>(data.count)) + " frames)");
+    completedCycles = 0;
     Update();
     if (timer) timer->Play();
     state = State::Playing;

@@ -906,6 +906,8 @@ namespace
 				if (ClassNameOf(*_component).starts_with("Animation")) DrawStartAnimation(*_component);
 				if (ClassNameOf(*_component).starts_with("Animation") && ImGui::Button("Open Animation Editor", ImVec2(-1.f, 0.f)))
 					OpenAnimationEditor();
+				if (ClassNameOf(*_component) == "AnimationComponentSM" && ImGui::Button("Open Animation Graph (transitions)", ImVec2(-1.f, 0.f)))
+					OpenAnimationGraph();
 			}
 
 			ImGui::PopID();

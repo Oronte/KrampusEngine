@@ -631,6 +631,25 @@ void Krampus::RegisterEngineClasses()
 		ClassInfo& _info = Describe("AnimationComponentSM", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<AnimationComponentSM>(); };
 		AddAnimationProperties<AnimationComponentSM>(_info);
+		_info.AddAccessor<AnimationComponentSM, std::string>("graph",		// edited in the Animation Graph window
+			[](AnimationComponentSM& _c) { return AnimationGraph::Encode(_c.graph); },
+			[](AnimationComponentSM& _c, const std::string& _v) { _c.graph = AnimationGraph::Decode(_v); _c.ResetParameters(); });
+		_info.SetLastPropertyVisible<AnimationComponentSM>([](AnimationComponentSM&) { return false; });
+		_info.AddFunction<AnimationComponentSM, std::string>("SetTrigger", [](AnimationComponentSM& _c, const std::string& _name) { _c.SetTrigger(_name); });
+		_info.AddFunction<AnimationComponentSM, std::string>("PlayAnimation", [](AnimationComponentSM& _c, const std::string& _name) { _c.PlayAnimation(String(_name)); });
+		// "name=value" (jump=1, speed=2.5): one argument only for the event lists.
+		_info.AddFunction<AnimationComponentSM, std::string>("SetParameter", [](AnimationComponentSM& _c, const std::string& _text)
+		{
+			const size_t _equal = _text.find('=');
+			if (_equal == std::string::npos) { LOG_WARNING("SetParameter: write name=value, e.g. jump=1"); return; }
+			const std::string _name = _text.substr(0, _equal);
+			const float _value = std::strtof(_text.c_str() + _equal + 1, nullptr);
+			const AnimationParameter* _parameter = _c.graph.FindParameter(_name);
+			if (_parameter && _parameter->type == static_cast<int>(AnimationParameterType::Int)) _c.SetInt(_name, static_cast<int>(std::round(_value)));
+			else if (_parameter && _parameter->type == static_cast<int>(AnimationParameterType::Bool)) _c.SetBool(_name, _value != 0.f);
+			else if (_parameter && _parameter->type == static_cast<int>(AnimationParameterType::Trigger)) { if (_value != 0.f) _c.SetTrigger(_name); else _c.ResetTrigger(_name); }
+			else _c.SetFloat(_name, _value);
+		});
 	}
 
 	{

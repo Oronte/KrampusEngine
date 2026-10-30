@@ -161,6 +161,7 @@ namespace Krampus
         ShapeObject*    shape;
         Timer*          timer = nullptr;
         State           state;
+        Int             completedCycles = 0;     // times the last frame was passed since Start (loops count each time)
 
     public:
         /// <summary>
@@ -170,6 +171,12 @@ namespace Krampus
         State GetState()
         {
             return state;
+        }
+
+        /// <summary>How many times the animation reached its end since it was started (0: still in its first pass).</summary>
+        Int GetCompletedCycles() const
+        {
+            return completedCycles;
         }
 
         /// <summary>

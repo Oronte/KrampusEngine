@@ -214,6 +214,7 @@ void EditorLayer::OnRender(Window& _window)
 	DrawInspectorPanel(context);
 	DrawContentPanel(context);
 	DrawAnimationEditor(context);
+	DrawAnimationGraph(context);
 	DrawNetworkWindow(context);
 	DrawShapeEditor(context);
 
