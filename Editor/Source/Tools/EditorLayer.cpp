@@ -11,6 +11,10 @@
 #include "Components/CameraComponent.h"
 #include "Components/PhysicsComponent.h"
 #include "Components/SpriteComponent.h"
+#include "Components/BillboardComponent.h"
+#include "Managers/TextureManager.h"
+#include "Utilities/Debug/Debug.h"
+#include <unordered_set>
 #include "Utilities/Math/Polygon2D.h"
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
@@ -111,6 +115,7 @@ void EditorLayer::OnDetach()
 {
 	LOG_MSG(std::string("Editor: stopping") + (IsHotReloading() ? " (hot reload)" : ""));
 	FileDrop::Uninstall();	// first: Windows must not call into this module once it is unloaded
+	Debug::displayScale = 1.f;
 	if (IsHotReloading()) SaveSettings();	// the settings changed and not saved yet survive a rebuild
 	if (IsHotReloading()) SaveShapeEditorChanges();
 	if (IsHotReloading()) SaveSession(context);
@@ -260,6 +265,8 @@ void EditorLayer::DrawViewport()
 		{
 			const float _scale = std::min(_avail.x / _texSize.x, _avail.y / _texSize.y);
 			const sf::Vector2f _drawSize(_texSize.x * _scale, _texSize.y * _scale);
+			Debug::displayScale = _scale > 0.f ? 1.f / _scale : 1.f;	// debug lines stay as thick on the screen (used from the next frame)
+			viewportTexture.setSmooth(_scale < 1.f);	// made smaller: blended pixels instead of whole rows skipped
 
 			// Center the picture in the panel.
 			ImGui::SetCursorPos(ImVec2(
@@ -275,6 +282,7 @@ void EditorLayer::DrawViewport()
 			window.SetMouseViewport(sf::FloatRect({ _min.x, _min.y }, { _max.x - _min.x, _max.y - _min.y }));
 			viewportHovered = ImGui::IsItemHovered();
 			MoveCamera(_min, _max);
+			DrawBillboards(_min, _max);	// under the gizmo
 			DrawGizmo(_min, _max);
 			PickInViewport(_min, _max);	// after the gizmo: a click on one of its handles is not a pick
 			DrawViewportOverlay(_min, _max);
@@ -320,23 +328,113 @@ void EditorLayer::PickInViewport(const ImVec2& _min, const ImVec2& _max)
 		if (_hit) _hits.push_back({ _actor.get(), _zOrder });
 	}
 
-	if (_hits.empty())
+	// In front first: the highest draw order, then the actor made last (drawn last).
+	std::reverse(_hits.begin(), _hits.end());
+	std::stable_sort(_hits.begin(), _hits.end(), [](const Hit& _a, const Hit& _b) { return _a.zOrder > _b.zOrder; });
+
+	// Billboard icons before shapes: they are drawn over the scene, and are the way to reach actors nothing shows.
+	std::vector<Actor*> _order;
+	for (auto _icon = billboardRects.rbegin(); _icon != billboardRects.rend(); ++_icon)
+		if (_mouse.x >= _icon->second.x && _mouse.y >= _icon->second.y && _mouse.x <= _icon->second.z && _mouse.y <= _icon->second.w)
+			_order.push_back(_icon->first);
+	for (const Hit& _hit : _hits)
+		if (std::find(_order.begin(), _order.end(), _hit.actor) == _order.end()) _order.push_back(_hit.actor);
+
+	if (_order.empty())
 	{
 		context.selected = nullptr;
 		context.selectedWidget = nullptr;
 		return;
 	}
 
-	// In front first: the highest draw order, then the actor made last (drawn last).
-	std::reverse(_hits.begin(), _hits.end());
-	std::stable_sort(_hits.begin(), _hits.end(), [](const Hit& _a, const Hit& _b) { return _a.zOrder > _b.zOrder; });
 	size_t _next = 0;
-	for (size_t _i = 0; _i < _hits.size(); ++_i)
-		if (_hits[_i].actor == context.selected) { _next = (_i + 1) % _hits.size(); break; }
+	for (size_t _i = 0; _i < _order.size(); ++_i)
+		if (_order[_i] == context.selected) { _next = (_i + 1) % _order.size(); break; }
 
-	context.selected = _hits[_next].actor;
+	context.selected = _order[_next];
 	context.selectedWidget = nullptr;
 	LOG(VerbosityType::Verbose, "Viewport: selected actor " + context.selected->GetName().StdString());
+}
+
+// The icons of the BillboardComponents, where their actor is, at the same size on the screen whatever the zoom. Only while
+// editing: the game never draws them. Their rectangles are kept for PickInViewport (an icon is clicked before any shape).
+void EditorLayer::DrawBillboards(const ImVec2& _min, const ImVec2& _max)
+{
+	billboardRects.clear();
+	if (context.playing || !editorSettings.showBillboards) return;
+	Level* _level = context.GetLevel();
+	if (!_level) return;
+
+	const sf::Vector2f _windowSize(window.GetRenderWindow().getSize());
+	const ImVec2 _rectSize(_max.x - _min.x, _max.y - _min.y);
+	if (_windowSize.x < 1.f || _windowSize.y < 1.f || _rectSize.x < 1.f || _rectSize.y < 1.f) return;
+	const sf::View _view = context.GetCameraView(_windowSize);
+
+	// The drawn symbols, from Segoe UI Symbol (a letter when the font has none).
+	static const char* GLYPHS[8][2] = {
+		{ "\xE2\x97\x8F", "A" },	// actor: a dot
+		{ "\xE2\x97\x89", "C" },	// camera
+		{ "\xE2\x99\xAA", "S" },	// sound: a note
+		{ "\xE2\x98\x80", "L" },	// light: a sun
+		{ "\xE2\x98\x84", "E" },	// effect: a comet
+		{ "\xE2\x9A\x91", "P" },	// spawn: a flag
+		{ "\xE2\x9A\x99", "G" },	// logic: a gear
+		{ "\xE2\x98\x85", "*" } };	// star
+	static std::unordered_set<std::string> missingTextures;	// asked once: a missing file is not looked for every frame
+
+	ImDrawList* _draw = ImGui::GetWindowDrawList();
+	_draw->PushClipRect(_min, _max, true);
+	const ImVec2 _mouse = ImGui::GetIO().MousePos;
+	const bool _windowHovered = ImGui::IsWindowHovered();
+	const ImU32 _accent = EditorTheme::GetU32(EditorTheme::Custom::Selection);
+
+	for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+	{
+		BillboardComponent* _billboard = _actor->GetComponent<BillboardComponent>();
+		if (!_billboard || !_billboard->IsActive()) continue;
+
+		const FVector2 _position = _actor->GetPosition();
+		const sf::Vector2i _pixel = window.GetRenderWindow().mapCoordsToPixel(sf::Vector2f(_position.x, _position.y), _view);
+		const ImVec2 _center(_min.x + _pixel.x * _rectSize.x / _windowSize.x, _min.y + _pixel.y * _rectSize.y / _windowSize.y);
+		const float _half = std::clamp(_billboard->size, 8.f, 256.f) * 0.5f * editorSettings.uiScale;
+		if (_center.x + _half < _min.x || _center.x - _half > _max.x || _center.y + _half < _min.y || _center.y - _half > _max.y) continue;
+
+		const ImVec2 _a(_center.x - _half, _center.y - _half), _b(_center.x + _half, _center.y + _half);
+		billboardRects.push_back({ _actor.get(), ImVec4(_a.x, _a.y, _b.x, _b.y) });
+
+		const bool _selected = context.selected == _actor.get();
+		const bool _hovered = _windowHovered && _mouse.x >= _a.x && _mouse.y >= _a.y && _mouse.x <= _b.x && _mouse.y <= _b.y;
+		const float _fade = _actor->IsActive() ? 1.f : 0.4f;	// an inactive actor: a faded icon
+		const Color& _tint = _billboard->tint;
+		const ImU32 _color = IM_COL32(_tint.r, _tint.g, _tint.b, static_cast<int>(_tint.a * _fade));
+
+		// A picture of Content/Textures, or a drawn icon.
+		std::shared_ptr<sf::Texture> _texture;
+		if (!_billboard->texture.empty() && !missingTextures.contains(_billboard->texture))
+		{
+			_texture = M_TEXTURE.GetSharedTexture(String(_billboard->texture));
+			if (!_texture) missingTextures.insert(_billboard->texture);
+		}
+
+		if (_texture)
+		{
+			_draw->AddImage(reinterpret_cast<ImTextureID>(static_cast<std::intptr_t>(_texture->getNativeHandle())), _a, _b, ImVec2(0.f, 0.f), ImVec2(1.f, 1.f), _color);
+			if (_selected || _hovered) _draw->AddRect(_a, _b, _selected ? _accent : IM_COL32(255, 255, 255, 140), 4.f, 0, _selected ? 2.f : 1.f);
+		}
+		else
+		{
+			_draw->AddCircleFilled(_center, _half, IM_COL32(18, 19, 22, static_cast<int>((_hovered ? 230 : 190) * _fade)), 24);
+			_draw->AddCircle(_center, _half - 1.f, _selected ? _accent : _color, 24, _selected ? 2.5f : 1.5f);
+			const int _icon = std::clamp(_billboard->icon, 0, 7);
+			const char* _glyph = EditorTheme::Symbol(GLYPHS[_icon][0], GLYPHS[_icon][1]);
+			const float _fontSize = _half * 1.15f;
+			const ImVec2 _textSize = ImGui::GetFont()->CalcTextSizeA(_fontSize, FLT_MAX, 0.f, _glyph);
+			_draw->AddText(ImGui::GetFont(), _fontSize, ImVec2(_center.x - _textSize.x * 0.5f, _center.y - _textSize.y * 0.5f), _color, _glyph);
+		}
+
+		if (_hovered) ImGui::SetTooltip("%s", _actor->GetName().StdString().c_str());
+	}
+	_draw->PopClipRect();
 }
 
 // Play: a colored frame around the picture, so it is clear the game runs. Edit: how to move the camera, in a corner.

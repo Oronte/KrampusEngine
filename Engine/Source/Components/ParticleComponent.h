@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "Graphics/Particles/ParticleEmitter.h"
+#include "StainComponent.h"
 #include "Utilities/System/Debuggable.h"
 #include "Utilities/System/Drawable.h"
 #include "Utilities/System/Event.h"
@@ -26,6 +27,8 @@ namespace Krampus
 		sf::Clock								previewClock;		// time in the editor, where the level does not tick
 		bool									previewStarted		= false;
 		float									previewWait			= 0.f;		// seconds since a one-shot effect ended, in the editor
+		std::vector<StainComponent::Candidate>	stainTargets;		// the actors particles may mark this frame (reused)
+		std::uint32_t							stainRandom			= 0x2545F491u;
 
 	public:
 		bool									previewInEditor		= true;		// plays in the Viewport while editing
@@ -75,6 +78,8 @@ namespace Krampus
 
 	private:
 		void Simulate(const float& _deltaTime);
+		void LeaveStains();	// marks of this frame on the StainComponents (not in the editor preview)
+		bool StainRoll();	// true for the part of the particles given by stainChance
 		void DrawDebug() override;	// the shape particles are born in
 	};
 }

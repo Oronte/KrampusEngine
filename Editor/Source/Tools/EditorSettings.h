@@ -20,6 +20,7 @@ namespace Krampus
 		KPROPERTY_RANGE(Float, uiScale, 0.7f, 2.0f) = 1.0f;			// size of the interface
 		KPROPERTY(Bool, showGizmo) = true;							// move arrows on the selection
 		KPROPERTY_RANGE(Float, gizmoSize, 40.f, 140.f) = 70.f;		// length of the arrows in pixels
+		KPROPERTY(Bool, showBillboards) = true;						// icons of the BillboardComponents in the Viewport
 		KPROPERTY_RANGE(Int, consoleMaxLines, 100, 20000) = 2000;	// lines kept by the Console
 		KPROPERTY(Bool, autoScrollConsole) = true;
 
@@ -36,6 +37,7 @@ namespace Krampus
 			uiScale = 1.0f;
 			showGizmo = true;
 			gizmoSize = 70.f;
+			showBillboards = true;
 			consoleMaxLines = 2000;
 			autoScrollConsole = true;
 			consoleShowVerbose = true;

@@ -12,6 +12,8 @@
 #include "Network/NetworkManager.h"
 #include "Components/PhysicsComponent.h"
 #include "Components/ParticleComponent.h"
+#include "Components/StainComponent.h"
+#include "Components/BillboardComponent.h"
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Core/Settings.h"
@@ -465,14 +467,26 @@ void Krampus::RegisterEngineClasses()
 	}
 
 	{
+		ClassInfo& _info = Describe("BillboardComponent", "Component");	// an icon to click in the editor, never shown in the game
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<BillboardComponent>(); };
+		_info.AddProperty<BillboardComponent, int>("icon", &BillboardComponent::icon, 0.f, 7.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Actor", "Camera", "Sound", "Light", "Effect", "Spawn", "Logic", "Star" });
+		_info.SetLastPropertyVisible<BillboardComponent>([](BillboardComponent& _c) { return _c.texture.empty(); });
+		_info.AddProperty<BillboardComponent, std::string>("texture", &BillboardComponent::texture);
+		_info.SetLastPropertyType(PropertyType::Texture, { "(icon)" });
+		_info.AddProperty<BillboardComponent, float>("size", &BillboardComponent::size, 8.f, 256.f);	// pixels on the screen
+		_info.AddProperty<BillboardComponent, Color>("tint", &BillboardComponent::tint);
+	}
+
+	{
 		ClassInfo& _info = Describe("ParticleComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<ParticleComponent>(); };
 
 		// The preset first: loading a scene applies it, then the saved values that were changed after it.
 		_info.AddAccessor<ParticleComponent, int>("preset",
 			[](ParticleComponent& _c) { return static_cast<int>(_c.GetPreset()); },
-			[](ParticleComponent& _c, const int& _v) { if (_v != static_cast<int>(_c.GetPreset())) _c.ApplyPreset(static_cast<ParticlePreset>(std::clamp(_v, 0, 7))); }, 0.f, 7.f);
-		_info.SetLastPropertyType(PropertyType::Enum, { "Custom", "Fire", "Smoke", "Sparks", "Explosion", "Snow", "Rain", "Magic" });
+			[](ParticleComponent& _c, const int& _v) { if (_v != static_cast<int>(_c.GetPreset())) _c.ApplyPreset(static_cast<ParticlePreset>(std::clamp(_v, 0, 8))); }, 0.f, 8.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Custom", "Fire", "Smoke", "Sparks", "Explosion", "Snow", "Rain", "Magic", "Blood" });
 
 		// Emission
 		AddParticleProperty(_info, "playOnStart", &ParticleSettings::playOnStart);
@@ -520,6 +534,20 @@ void Krampus::RegisterEngineClasses()
 		AddParticleProperty(_info, "drag", &ParticleSettings::drag, 0.f, 20.f);
 		AddParticleProperty(_info, "stretch", &ParticleSettings::stretch, 0.f, 1.f);			// streaks along the speed
 
+		// Marks on the actors that have a StainComponent
+		const auto _stains = [](ParticleComponent& _c) { return _c.Settings().stainMode != static_cast<int>(ParticleStainMode::None); };
+		AddParticleProperty(_info, "stainMode", &ParticleSettings::stainMode, 0.f, 2.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "None", "On death", "On hit (stops there)" });
+		AddParticleProperty(_info, "stainColor", &ParticleSettings::stainColor);
+		_info.SetLastPropertyVisible<ParticleComponent>(_stains);
+		AddParticleProperty(_info, "stainSize", &ParticleSettings::stainSize, 0.5f, 500.f);		// radius in pixels
+		_info.SetLastPropertyVisible<ParticleComponent>(_stains);
+		AddParticleProperty(_info, "stainStyle", &ParticleSettings::stainStyle, 0.f, 2.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Soft", "Splat", "Scorch" });
+		_info.SetLastPropertyVisible<ParticleComponent>(_stains);
+		AddParticleProperty(_info, "stainChance", &ParticleSettings::stainChance, 0.f, 1.f);
+		_info.SetLastPropertyVisible<ParticleComponent>(_stains);
+
 		// Look
 		AddParticleProperty(_info, "texture", &ParticleSettings::texture);
 		_info.SetLastPropertyType(PropertyType::Texture, { "(soft dot)" });					// the name of the empty choice
@@ -531,6 +559,15 @@ void Krampus::RegisterEngineClasses()
 		_info.AddFunction<ParticleComponent>("Stop", [](ParticleComponent& _c) { _c.Stop(); });
 		_info.AddFunction<ParticleComponent>("Restart", [](ParticleComponent& _c) { _c.Restart(); });
 		_info.AddFunction<ParticleComponent, int>("Burst", [](ParticleComponent& _c, const int& _count) { _c.Burst(_count); });
+	}
+
+	{
+		ClassInfo& _info = Describe("StainComponent", "Component");	// lets particles and code mark the actor's sprite
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<StainComponent>(); };
+		_info.AddProperty<StainComponent, float>("resolution", &StainComponent::resolution, 0.05f, 4.f);
+		_info.AddProperty<StainComponent, float>("fadeSpeed", &StainComponent::fadeSpeed, 0.f, 5.f);	// 0: marks stay
+		_info.AddProperty<StainComponent, float>("strength", &StainComponent::strength, 0.f, 1.f);
+		_info.AddFunction<StainComponent>("Clear", [](StainComponent& _c) { _c.Clear(); });
 	}
 
 	{

@@ -500,7 +500,7 @@ void Krampus::PhysicsComponent::DrawDebug()
 	// Center of mass: a yellow cross in a circle (it moves with SetMassData, and is off the middle for an uneven polygon).
 	const FVector2 _mass = GetWorldCenterOfMass();
 	Debug::DrawDebugCircle(GetLevel(), _mass, 6.f, 16, Color::Yellow());
-	Debug::DrawFillRect(GetLevel(), _mass, FVector2(18.f, 1.5f), Angle(), Color::Yellow());
-	Debug::DrawFillRect(GetLevel(), _mass, FVector2(1.5f, 18.f), Angle(), Color::Yellow());
+	Debug::DrawDebugSegment(GetLevel(), _mass - FVector2(9.f, 0.f), _mass + FVector2(9.f, 0.f), Color::Yellow());
+	Debug::DrawDebugSegment(GetLevel(), _mass - FVector2(0.f, 9.f), _mass + FVector2(0.f, 9.f), Color::Yellow());
 #endif
 }

@@ -18,6 +18,7 @@ namespace Krampus
 		std::map<uint8_t, std::vector<IDrawable*>>	widgets;
 		std::vector<std::shared_ptr<Vertices>>		debugs;			// outlines drawn in the world, through the camera
 		std::vector<std::shared_ptr<Vertices>>		screenDebugs;	// outlines of HUD widgets, drawn in the HUD view
+		std::vector<sf::Vertex>						debugTriangles;	// lines and points made thick, drawn at once (reused)
 		bool										drawingScreenDebug	= false;
 
 	public:
@@ -188,6 +189,7 @@ namespace Krampus
 	private:
 		void RenderActors(Window& _window, const Bool& splitScreen);
 		void RenderDebugs(Window& _window, const Bool& splitScreen);
+		void DrawDebugList(Window& _window, const std::vector<std::shared_ptr<Vertices>>& _list);
 		void RenderWidgets(Window& _window, const Bool& splitScreen);
 
 		friend class Debug;

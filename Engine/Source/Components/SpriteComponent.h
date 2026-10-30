@@ -7,6 +7,7 @@
 namespace Krampus
 {
 	class Window;
+	class StainComponent;
 
 	/// <summary>
 	/// Component that renders 2D shapes (rectangles, circles) with textures and colors attached to an actor.
@@ -18,8 +19,13 @@ namespace Krampus
 		Event<FVector2>::ListenerHandle onOwnerMoveHandle;
 		Event<Angle>::ListenerHandle onOwnerRotateHandle;
 		Event<FVector2>::ListenerHandle onOwnerScaleHandle;
+		StainComponent*					stainLayer	= nullptr;	// marks drawn over the sprite (StainComponent)
 
 	public:
+		/// <summary>The StainComponent whose marks are drawn right after the sprite (it sets itself).</summary>
+		void SetStainLayer(StainComponent* _stains) { stainLayer = _stains; }
+		StainComponent* GetStainLayer() const { return stainLayer; }
+
 		/// <summary>
 		/// Gets a pointer to the internal ShapeObject managing rendering primitives.
 		/// </summary>

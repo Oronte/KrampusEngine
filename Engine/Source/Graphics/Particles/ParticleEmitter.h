@@ -35,7 +35,16 @@ namespace Krampus
 		Explosion,
 		Snow,
 		Rain,
-		Magic
+		Magic,
+		Blood
+	};
+
+	/// <summary>When particles leave a mark on the actors that have a StainComponent (saved as an int).</summary>
+	enum class ParticleStainMode
+	{
+		None,
+		OnDeath,	// where each particle ends its life (an explosion burns what is around)
+		OnHit		// the particle stops on the first marked actor it touches and leaves its mark there (blood, paint)
 	};
 
 	/// <summary>
@@ -81,6 +90,13 @@ namespace Krampus
 		FVector2	gravity			= FVector2(0.f, -60.f);	// pixels per second per second
 		float		drag			= 0.5f;		// speed lost per second (0: none, 3: stops quickly)
 		float		stretch			= 0.f;		// stretched along the speed (rain, sparks): extra length = speed * stretch
+
+		// ---- Marks on other actors (those with a StainComponent)
+		int			stainMode		= static_cast<int>(ParticleStainMode::None);
+		Color		stainColor		= Color(30, 22, 18, 160);
+		float		stainSize		= 12.f;		// radius of a mark, in pixels
+		int			stainStyle		= 0;		// StainStyle: 0 soft, 1 splat, 2 scorch
+		float		stainChance		= 1.f;		// part of the particles that leave a mark (fewer marks, less work)
 
 		// ---- Look
 		std::string	texture;					// "Folder/Name.png" in Content/Textures; empty: a soft round dot
@@ -141,6 +157,29 @@ namespace Krampus
 		/// <returns>Particles alive in every emitter (the editor status bar shows it).</returns>
 		static int GetTotalAlive();
 
+		/// <summary>When true, Update keeps where particles died this frame in GetDeaths() (for marks).</summary>
+		bool collectDeaths = false;
+		const std::vector<sf::Vector2f>& GetDeaths() const { return deaths; }
+
+		/// <summary>
+		/// Removes the particles for which _remove(position, age) says true (positions in the emitter's space). One pass, no memory.
+		/// </summary>
+		template <typename F>
+		void RemoveIf(F&& _remove)
+		{
+			std::size_t _i = 0;
+			while (_i < alive)
+			{
+				if (_remove(particles[_i].position, particles[_i].age))
+				{
+					particles[_i] = particles[--alive];
+					RemovedOne();
+					continue;
+				}
+				++_i;
+			}
+		}
+
 	private:
 		struct Particle
 		{
@@ -154,6 +193,7 @@ namespace Krampus
 		};
 
 		std::vector<Particle>	particles;
+		std::vector<sf::Vector2f>	deaths;			// reused each frame
 		std::size_t				alive			= 0;
 		bool					playing			= false;
 		bool					wasAlive		= false;	// had particles or was playing: "finished" is said once
@@ -171,6 +211,7 @@ namespace Krampus
 		float Random01();
 		float Range(const float& _min, const float& _max);
 		void ResizePool();
+		static void RemovedOne();
 		void Spawn(const FVector2& _position, const float& _rotation, const FVector2& _scale);
 	};
 }

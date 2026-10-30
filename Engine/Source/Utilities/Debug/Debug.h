@@ -39,6 +39,16 @@ namespace Krampus
 		static void DrawPointRect(Level* _level, const FVector2& _position, const FVector2& _size, const Angle& _rotation = Angle(), const Color& _color = Color::Magenta());
 	
 
+		// Outlines (lines and points) are drawn this many pixels thick on the screen, whatever the zoom: a 1 pixel line of the
+		// GPU disappears when the picture is shown smaller (the editor Viewport) or seen between two pixels.
+		inline static float lineThickness = 1.5f;
+
+		// Window pixels per pixel seen: the editor shows the game picture smaller in its Viewport and sets it every frame (1: full size).
+		inline static float displayScale = 1.f;
+
+		// Segment: a line from _start to _end, as thick as lineThickness on the screen.
+		static void DrawDebugSegment(Level* _level, const FVector2& _start, const FVector2& _end, const Color& _color = Color::Magenta());
+
 		// Polygon: the outline through _points (world positions), closed.
 		static void DrawDebugPolygon(Level* _level, const std::vector<FVector2>& _points, const Color& _color = Color::Magenta());
 

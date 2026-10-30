@@ -65,6 +65,8 @@ void ParticleSettings::ApplyPreset(const ParticlePreset& _preset)
 		sizeStart = 30.f;		sizeEnd = 4.f;			sizeRandom = 0.5f;
 		colorStart = Color(255, 220, 120, 255);			colorEnd = Color(200, 40, 10, 0);
 		gravity = FVector2(0.f, 0.f);					drag = 2.5f;
+		stainMode = static_cast<int>(ParticleStainMode::OnDeath);	// burns what is around
+		stainColor = Color(28, 20, 16, 150);			stainSize = 20.f;	stainStyle = 2;		stainChance = 0.6f;
 		break;
 
 	case ParticlePreset::Snow:
@@ -100,6 +102,19 @@ void ParticleSettings::ApplyPreset(const ParticlePreset& _preset)
 		gravity = FVector2(0.f, -30.f);					drag = 0.f;
 		break;
 
+	case ParticlePreset::Blood:
+		looping = false;		duration = 0.1f;		rate = 0.f;			burst = 50;
+		shape = static_cast<int>(ParticleShape::Point);
+		lifetimeMin = 0.8f;		lifetimeMax = 1.4f;
+		speedMin = 150.f;		speedMax = 380.f;		spread = 100.f;
+		sizeStart = 7.f;		sizeEnd = 5.f;			sizeRandom = 0.5f;	stretch = 0.02f;
+		colorStart = Color(150, 0, 0, 255);				colorEnd = Color(110, 0, 0, 230);
+		gravity = FVector2(0.f, 900.f);					drag = 0.4f;
+		blend = static_cast<int>(ParticleBlend::Alpha);
+		stainMode = static_cast<int>(ParticleStainMode::OnHit);	// drops splash on what they touch
+		stainColor = Color(120, 0, 0, 220);				stainSize = 9.f;	stainStyle = 1;
+		break;
+
 	default:
 		break;
 	}
@@ -118,6 +133,11 @@ ParticleEmitter::~ParticleEmitter()
 int ParticleEmitter::GetTotalAlive()
 {
 	return totalAlive;
+}
+
+void ParticleEmitter::RemovedOne()
+{
+	--totalAlive;
 }
 
 float ParticleEmitter::Random01()
@@ -256,6 +276,7 @@ void ParticleEmitter::Spawn(const FVector2& _position, const float& _rotation, c
 bool ParticleEmitter::Update(float _deltaTime, const FVector2& _position, const float& _rotation, const FVector2& _scale)
 {
 	ResizePool();
+	deaths.clear();
 	if (!hasLast) { lastPosition = _position; lastRotation = _rotation; lastScale = _scale; hasLast = true; }
 	_deltaTime = std::min(_deltaTime, MAX_STEP);
 	if (_deltaTime <= 0.f)
@@ -314,6 +335,7 @@ bool ParticleEmitter::Update(float _deltaTime, const FVector2& _position, const 
 		_p.age += _deltaTime;
 		if (_p.age * _p.inverseLife >= 1.f)
 		{
+			if (collectDeaths) deaths.push_back(_p.position);
 			_p = particles[--alive];
 			--totalAlive;
 			continue;

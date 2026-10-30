@@ -3,6 +3,7 @@
 #include "Actors/Actor.h"
 #include "GameFramework/Level.h"
 #include "Managers/CameraManager.h"
+#include "StainComponent.h"
 
 Krampus::SpriteComponent::SpriteComponent(Actor* _owner, const CircleShapeData& _data)
 	: Component(_owner)
@@ -68,6 +69,7 @@ void Krampus::SpriteComponent::Draw(Window& _window)
 {
 	if (!isActive) return;
 	_window.Draw(*shape);
+	if (stainLayer) stainLayer->DrawOver(_window, *shape->GetShape()->Get());	// right after: the next sprites cover the marks too
 }
 
 void Krampus::SpriteComponent::DrawDebug()

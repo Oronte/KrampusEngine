@@ -119,6 +119,12 @@ namespace Krampus
             return vertices[_index];
         }
 
+		/// <summary>The SFML array itself, without a copy.</summary>
+        inline const sf::VertexArray& Get() const noexcept
+        {
+            return vertices;
+        }
+
 		/// <summary>
 		/// Implicit conversion operator to SFML sf::VertexArray.
 		/// </summary>

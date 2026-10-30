@@ -6,6 +6,11 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "Source/*.cpp")
 
 add_library(Engine STATIC ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
+# Every engine class and property is described in one file: its lambdas pass the default section limit of MSVC object files.
+if(MSVC)
+	set_source_files_properties(Source/Reflection/EngineClasses.cpp PROPERTIES COMPILE_OPTIONS "/bigobj")
+endif()
+
 target_precompile_headers(Engine PRIVATE Source/Utilities/Macro.h)
 
 target_include_directories(Engine PUBLIC

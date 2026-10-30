@@ -76,11 +76,62 @@ void ParticleComponent::Tick(const Float& _deltaTime)
 
 void ParticleComponent::Simulate(const float& _deltaTime)
 {
+	const bool _running = !GetWorld()->IsLevelPaused();
+	emitter.collectDeaths = _running && static_cast<ParticleStainMode>(Settings().stainMode) == ParticleStainMode::OnDeath;
 	const bool _finished = emitter.Update(_deltaTime, GetPosition(), static_cast<float>(GetRotation().ToDegrees()), GetScale());
+	if (_running) LeaveStains();
 	if (!_finished) return;
 
 	onFinished.Broadcast();
 	if (destroyOwnerWhenDone && !GetWorld()->IsLevelPaused()) GetOwner()->Destroy();
+}
+
+bool ParticleComponent::StainRoll()
+{
+	const float _chance = Settings().stainChance;
+	if (_chance >= 1.f) return true;
+	stainRandom ^= stainRandom << 13;
+	stainRandom ^= stainRandom >> 17;
+	stainRandom ^= stainRandom << 5;
+	return static_cast<float>(stainRandom >> 8) * (1.f / 16777216.f) < _chance;
+}
+
+void ParticleComponent::LeaveStains()
+{
+	const ParticleSettings& _s = Settings();
+	const ParticleStainMode _mode = static_cast<ParticleStainMode>(_s.stainMode);
+	if (_mode == ParticleStainMode::None) return;
+
+	const sf::Vector2f _offset = _s.worldSpace ? sf::Vector2f() : sf::Vector2f(GetPosition().x, GetPosition().y);
+	const StainStyle _style = static_cast<StainStyle>(std::clamp(_s.stainStyle, 0, 2));
+	Level* _level = GetLevel();
+
+	if (_mode == ParticleStainMode::OnDeath)
+	{
+		for (const sf::Vector2f& _death : emitter.GetDeaths())
+			if (StainRoll())
+				StainComponent::StainAt(_level, FVector2(_death.x + _offset.x, _death.y + _offset.y), _s.stainSize, _s.stainColor, _style, GetOwner());
+		return;
+	}
+
+	// On hit: each particle is tested against the rectangles of the markable actors first (cheap), their exact shape only when inside.
+	StainComponent::GatherCandidates(_level, GetOwner(), stainTargets);
+	if (stainTargets.empty()) return;
+	constexpr float GRACE = 0.05f;	// a newborn particle may start inside something: it is not stopped at once
+	emitter.RemoveIf([&](const sf::Vector2f& _position, const float& _age)
+	{
+		if (_age < GRACE) return false;
+		const sf::Vector2f _world = _position + _offset;
+		for (const StainComponent::Candidate& _target : stainTargets)
+		{
+			if (!_target.bounds.contains(_world)) continue;
+			const FVector2 _point(_world.x, _world.y);
+			if (!_target.stain->Contains(_point)) continue;
+			if (StainRoll()) _target.stain->Stain(_point, _s.stainSize, _s.stainColor, _style);
+			return true;	// the drop ends on what it touched
+		}
+		return false;
+	});
 }
 
 void ParticleComponent::ApplyPreset(const ParticlePreset& _preset)
