@@ -39,6 +39,9 @@ namespace Krampus
 		static void DrawPointRect(Level* _level, const FVector2& _position, const FVector2& _size, const Angle& _rotation = Angle(), const Color& _color = Color::Magenta());
 	
 
+		// Polygon: the outline through _points (world positions), closed.
+		static void DrawDebugPolygon(Level* _level, const std::vector<FVector2>& _points, const Color& _color = Color::Magenta());
+
 		// Point
 		static void DrawDebugPoint(Actor* _context, const FVector2& _position, const Float& _thickness = 5.0f, const Color& _color = Color::Magenta());
 		static void DrawDebugPoint(Level* _level, const FVector2& _position, const Float& _thickness = 5.0f, const Color& _color = Color::Magenta());

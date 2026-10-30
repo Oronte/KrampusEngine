@@ -6,13 +6,11 @@
 #include "Components/InputComponent.h"
 #include "Components/AudioListenerComponent.h"
 #include "Components/CameraComponent.h"
-#include "Components/CollisionComponent.h"
 #include "Components/LabelComponent.h"
 #include "Components/NetworkEventsComponent.h"
 #include "Components/NetworkSyncComponent.h"
 #include "Network/NetworkManager.h"
 #include "Components/PhysicsComponent.h"
-#include "Components/RigidbodyComponent.h"
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Core/Settings.h"
@@ -58,15 +56,36 @@ namespace
 		AddDebugProperty<C>(_info);
 	}
 
+	// The "shape" property of the components that have one: 0 rectangle, 1 circle, 2 polygon (saved in scenes: never reorder).
+	int ShapeToInt(const ShapeType& _type)
+	{
+		return _type == ShapeType::Circle ? 1 : (_type == ShapeType::Polygon ? 2 : 0);
+	}
+
+	ShapeType IntToShape(const int& _value)
+	{
+		return _value == 1 ? ShapeType::Circle : (_value == 2 ? ShapeType::Polygon : ShapeType::Rectangle);
+	}
+
+	std::vector<std::string> ShapeNames()
+	{
+		return { "Rectangle", "Circle", "Polygon" };
+	}
+
 	// Sprite and ImageWidgetComponent have the same shape API.
 	template <typename C>
 	void AddShapeProperties(ClassInfo& _info)
 	{
 		// First: size and radius only make sense once the shape type is right when a scene is loaded.
-		_info.AddAccessor<C, int>("shape",		// 0 rectangle, 1 circle
-			[](C& _c) { return _c.GetShapeType() == ShapeType::Circle ? 1 : 0; },
-			[](C& _c, const int& _v) { _c.GetShapeObject()->SetShapeType(_v == 1 ? ShapeType::Circle : ShapeType::Rectangle); }, 0.f, 1.f);
-		_info.SetLastPropertyType(PropertyType::Enum, { "Rectangle", "Circle" });
+		_info.AddAccessor<C, int>("shape",		// 0 rectangle, 1 circle, 2 polygon
+			[](C& _c) { return ShapeToInt(_c.GetShapeType()); },
+			[](C& _c, const int& _v) { _c.GetShapeObject()->SetShapeType(IntToShape(_v)); }, 0.f, 2.f);
+		_info.SetLastPropertyType(PropertyType::Enum, ShapeNames());
+		_info.AddAccessor<C, std::string>("polygon",
+			[](C& _c) { return _c.GetShapeObject()->GetPolygonName(); },
+			[](C& _c, const std::string& _v) { if (_c.GetShapeType() == ShapeType::Polygon) _c.GetShapeObject()->SetPolygon(_v); });
+		_info.SetLastPropertyType(PropertyType::Shape);
+		_info.SetLastPropertyVisible<C>([](C& _c) { return _c.GetShapeType() == ShapeType::Polygon; });	// polygon
 		_info.AddAccessor<C, FVector2>("size",
 			[](C& _c) { return _c.GetShapeType() == ShapeType::Rectangle ? _c.GetSize() : FVector2(); },
 			[](C& _c, const FVector2& _v) { if (_c.GetShapeType() == ShapeType::Rectangle) _c.SetSize(_v); });
@@ -282,40 +301,6 @@ void Krampus::RegisterEngineClasses()
 	}
 
 	{
-		ClassInfo& _info = Describe("CollisionComponent", "Component");
-		_info.AddProperty<CollisionComponent, EventList>("onCollisionEnter", &CollisionComponent::onEnterCalls);
-		_info.AddProperty<CollisionComponent, EventList>("onCollisionExit", &CollisionComponent::onExitCalls);
-		_info.componentFactory = [](Actor* _owner) -> Component*
-		{
-			// Without a sprite to copy the shape from, start with a box.
-			if (_owner->GetComponent<SpriteComponent>())
-				return _owner->AddComponent<CollisionComponent>();
-			return _owner->AddComponent<CollisionComponent>(FVector2(100.f, 100.f));
-		};
-		_info.AddAccessor<CollisionComponent, int>("shape",	// 0 rectangle, 1 circle
-			[](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Circle ? 1 : 0; },
-			[](CollisionComponent& _c, const int& _v) { _c.SetShapeType(_v == 1 ? ShapeType::Circle : ShapeType::Rectangle); }, 0.f, 1.f);
-		_info.SetLastPropertyType(PropertyType::Enum, { "Rectangle", "Circle" });
-		_info.AddAccessor<CollisionComponent, FVector2>("size",
-			[](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Rectangle ? _c.GetSize() : FVector2(); },
-			[](CollisionComponent& _c, const FVector2& _v) { if (_c.GetShapeType() == ShapeType::Rectangle) _c.SetSize(_v); });
-		_info.SetLastPropertyVisible<CollisionComponent>([](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Rectangle; });	// size
-		_info.AddAccessor<CollisionComponent, float>("radius",
-			[](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Circle ? static_cast<float>(_c.GetRadius()) : 0.f; },
-			[](CollisionComponent& _c, const float& _v) { if (_c.GetShapeType() == ShapeType::Circle) _c.SetRadius(_v); });
-		_info.SetLastPropertyVisible<CollisionComponent>([](CollisionComponent& _c) { return _c.GetShapeType() == ShapeType::Circle; });	// radius
-		_info.AddAccessor<CollisionComponent, int>("channel",
-			[](CollisionComponent& _c) { return ChannelToInt(_c.channel); },
-			[](CollisionComponent& _c, const int& _v) { _c.channel = IntToChannel(_v); });
-		_info.SetLastPropertyType(PropertyType::Flags, ChannelNames());
-		_info.AddAccessor<CollisionComponent, int>("mask",
-			[](CollisionComponent& _c) { return ChannelToInt(_c.mask); },
-			[](CollisionComponent& _c, const int& _v) { _c.mask = IntToChannel(_v); });
-		_info.SetLastPropertyType(PropertyType::Flags, ChannelNames());
-		AddDebugProperty<CollisionComponent>(_info);	// the red outline of the collision shape
-	}
-
-	{
 		ClassInfo& _info = Describe("PhysicsComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component*
 		{
@@ -324,10 +309,31 @@ void Krampus::RegisterEngineClasses()
 			{
 				if (_sprite->GetShapeType() == ShapeType::Circle)
 					return _owner->AddComponent<PhysicsComponent>(Float(_sprite->GetRadius()));
+				if (_sprite->GetShapeType() == ShapeType::Polygon)
+					return _owner->AddComponent<PhysicsComponent>();	// takes the sprite's polygon
 				return _owner->AddComponent<PhysicsComponent>(FVector2(_sprite->GetSize()));
 			}
 			return _owner->AddComponent<PhysicsComponent>(FVector2(100.f, 100.f));
 		};
+
+		// The shape of the body first: changing it computes the mass again from the shape (the mass properties below come after).
+		_info.AddAccessor<PhysicsComponent, int>("shape",	// 0 box, 1 circle, 2 polygon
+			[](PhysicsComponent& _c) { return ShapeToInt(_c.GetShapeType()); },
+			[](PhysicsComponent& _c, const int& _v) { _c.SetShapeType(IntToShape(_v)); }, 0.f, 2.f);
+		_info.SetLastPropertyType(PropertyType::Enum, ShapeNames());
+		_info.AddAccessor<PhysicsComponent, std::string>("polygon",
+			[](PhysicsComponent& _c) { return _c.GetPolygonName(); },
+			[](PhysicsComponent& _c, const std::string& _v) { if (_c.GetShapeType() == ShapeType::Polygon && _v != _c.GetPolygonName()) _c.SetShapePolygon(_v); });
+		_info.SetLastPropertyType(PropertyType::Shape);
+		_info.SetLastPropertyVisible<PhysicsComponent>([](PhysicsComponent& _c) { return _c.GetShapeType() == ShapeType::Polygon; });
+		_info.AddAccessor<PhysicsComponent, FVector2>("size",
+			[](PhysicsComponent& _c) { return _c.GetBoxSize(); },
+			[](PhysicsComponent& _c, const FVector2& _v) { if (_c.GetShapeType() == ShapeType::Rectangle && _v != _c.GetBoxSize()) _c.SetShapeBox(FVector2(std::max(1.f, _v.x), std::max(1.f, _v.y))); });
+		_info.SetLastPropertyVisible<PhysicsComponent>([](PhysicsComponent& _c) { return _c.GetShapeType() == ShapeType::Rectangle; });
+		_info.AddAccessor<PhysicsComponent, float>("radius",
+			[](PhysicsComponent& _c) { return static_cast<float>(_c.GetCircleRadius()); },
+			[](PhysicsComponent& _c, const float& _v) { if (_c.GetShapeType() == ShapeType::Circle && _v != static_cast<float>(_c.GetCircleRadius())) _c.SetShapeCircle(std::max(1.f, _v)); });
+		_info.SetLastPropertyVisible<PhysicsComponent>([](PhysicsComponent& _c) { return _c.GetShapeType() == ShapeType::Circle; });
 		_info.AddAccessor<PhysicsComponent, int>("bodyType",	// 0 static, 1 kinematic, 2 dynamic
 			[](PhysicsComponent& _c) { return _c.GetBodyType(); },
 			[](PhysicsComponent& _c, const int& _v) { _c.SetBodyType(std::clamp(_v, 0, 2)); }, 0.f, 2.f);
@@ -396,26 +402,7 @@ void Krampus::RegisterEngineClasses()
 		AddDebugProperty<PhysicsComponent>(_info);	// cyan outline of the box2d shape
 	}
 
-	{
-		ClassInfo& _info = Describe("RigidbodyComponent", "Component");
-		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<RigidbodyComponent>(); };
-		_info.AddAccessor<RigidbodyComponent, float>("mass",
-			[](RigidbodyComponent& _c) { return static_cast<float>(_c.GetMass()); },
-			[](RigidbodyComponent& _c, const float& _v) { _c.SetMass(_v); });
-		_info.AddProperty<RigidbodyComponent, Bool>("useGravity", &RigidbodyComponent::useGravity);
-		_info.AddProperty<RigidbodyComponent, Bool>("isKinematic", &RigidbodyComponent::isKinematic);
-		_info.AddProperty<RigidbodyComponent, Float>("gravity", &RigidbodyComponent::gravity);
-		_info.AddProperty<RigidbodyComponent, Bool>("freezeRotation", &RigidbodyComponent::freezeRotation);
-		_info.AddProperty<RigidbodyComponent, Bool>("freezeMovementX", &RigidbodyComponent::freezeMovementX);
-		_info.AddProperty<RigidbodyComponent, Bool>("freezeMovementY", &RigidbodyComponent::freezeMovementY);
-		_info.AddProperty<RigidbodyComponent, Float>("linearDamping", &RigidbodyComponent::linearDamping);
-		_info.AddProperty<RigidbodyComponent, Float>("angularDamping", &RigidbodyComponent::angularDamping);
-		_info.AddProperty<RigidbodyComponent, Float>("restitution", &RigidbodyComponent::restitution, 0.f, 1.f);
-		_info.AddProperty<RigidbodyComponent, Float>("staticFriction", &RigidbodyComponent::staticFriction);
-		_info.AddProperty<RigidbodyComponent, Float>("dynamicFriction", &RigidbodyComponent::dynamicFriction);
-		_info.AddProperty<RigidbodyComponent, Float>("maxLinearVelocity", &RigidbodyComponent::maxLinearVelocity);
-		_info.AddProperty<RigidbodyComponent, Float>("maxAngularVelocity", &RigidbodyComponent::maxAngularVelocity);
-	}
+
 
 	{
 		ClassInfo& _info = Describe("CameraComponent", "Component");

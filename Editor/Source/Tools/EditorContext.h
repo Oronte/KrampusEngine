@@ -111,4 +111,8 @@ namespace Krampus
 	/// <summary>Opens the Network window (host, join, players, messages).</summary>
 	void OpenNetworkWindow();
 	void DrawNetworkWindow(EditorContext& _context);
+
+	/// <summary>Opens the Shape Editor (the polygons of Content/Shapes), on _shape when it is given.</summary>
+	void OpenShapeEditor(const std::string& _shape = "");
+	void DrawShapeEditor(EditorContext& _context);
 }

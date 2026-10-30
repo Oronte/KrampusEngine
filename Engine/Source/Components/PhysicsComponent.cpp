@@ -21,6 +21,8 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner)
         MakeCircle(_sprite->GetRadius());
     else if (_sprite->GetShapeType() == ShapeType::Rectangle)
         MakeRectangle(_sprite->GetSize());
+    else
+        MakePolygon(_sprite->GetShapeObject()->GetPolygonName());
 }
 
 Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const Float& _radius)
@@ -49,10 +51,13 @@ void Krampus::PhysicsComponent::Deconstruct()
 	moveHandle.Disconnect();
 	rotateHandle.Disconnect();
 
+	shapeSavedHandle.Disconnect();
+
 	if (b2Body_IsValid(bodyId))
 		b2DestroyBody(bodyId);
 	bodyId = b2_nullBodyId;
 	shapeId = b2_nullShapeId;
+	shapeIds.clear();
 }
 
 void Krampus::PhysicsComponent::OnCollisionResolve()
@@ -213,7 +218,9 @@ void Krampus::PhysicsComponent::SetBullet(const bool& _bullet)
 
 void Krampus::PhysicsComponent::SetFilter(const CollisionChannel& _category, const CollisionChannel& _mask, int32_t groupIndex)
 {
-    b2Shape_SetFilter(shapeId, MakeFilter(_category, _mask, groupIndex));
+    filter = MakeFilter(_category, _mask, groupIndex);
+    for (const b2ShapeId _shape : shapeIds)		// every piece of a concave polygon
+        if (b2Shape_IsValid(_shape)) b2Shape_SetFilter(_shape, filter);
 }
 
 void Krampus::PhysicsComponent::Init()
@@ -243,27 +250,111 @@ void Krampus::PhysicsComponent::Init()
          FVector2 _meterPos = GetPosition() / PX_TO_M;
          b2Body_SetTransform(bodyId, b2Vec2(_meterPos.x, _meterPos.y), b2MakeRot(_rot));
      });
+
+     // A shape saved in the Shape Editor is rebuilt at once.
+     shapeSavedHandle = ShapeAssets::OnChanged().AddListener([this](const std::string& _name)
+     {
+         if (shapeType == ShapeType::Polygon && _name == polygonName) MakePolygon(polygonName);
+     });
+}
+
+void Krampus::PhysicsComponent::DestroyShapes()
+{
+    for (const b2ShapeId _shape : shapeIds)
+        if (b2Shape_IsValid(_shape)) b2DestroyShape(_shape, false);
+    shapeIds.clear();
+    shapeId = b2_nullShapeId;
+    polygonParts.clear();
+}
+
+void Krampus::PhysicsComponent::AddShape(const b2ShapeId _shape)
+{
+    if (!b2Shape_IsValid(_shape)) return;
+    b2Shape_SetFilter(_shape, filter);
+    if (shapeIds.empty()) shapeId = _shape;
+    shapeIds.push_back(_shape);
 }
 
 void Krampus::PhysicsComponent::MakeCircle(const Float& _radius)
 {
-    isCircle = true;
+    if (!b2Body_IsValid(bodyId)) return;
+    DestroyShapes();
+    shapeType = ShapeType::Circle;
     debugRadius = _radius;
     b2Circle _circle = {0};
     _circle.radius = _radius / PX_TO_M;
     b2ShapeDef _shape = b2DefaultShapeDef();
     _shape.density = 1.0f;
-    shapeId = b2CreateCircleShape(bodyId, &_shape, &_circle);
+    AddShape(b2CreateCircleShape(bodyId, &_shape, &_circle));
+    b2Body_ApplyMassFromShapes(bodyId);
 }
 
 void Krampus::PhysicsComponent::MakeRectangle(const FVector2& _size)
 {
-    isCircle = false;
+    if (!b2Body_IsValid(bodyId)) return;
+    DestroyShapes();
+    shapeType = ShapeType::Rectangle;
     debugSize = _size;
     b2Polygon _polygon = b2MakeBox(_size.x / PX_TO_M / 2.0f, _size.y / PX_TO_M / 2.0f);
     b2ShapeDef _shape = b2DefaultShapeDef();
     _shape.density = 1.0f;
-    shapeId = b2CreatePolygonShape(bodyId, &_shape, &_polygon);
+    AddShape(b2CreatePolygonShape(bodyId, &_shape, &_polygon));
+    b2Body_ApplyMassFromShapes(bodyId);
+}
+
+void Krampus::PhysicsComponent::MakePolygon(const std::string& _shapeName)
+{
+    if (!b2Body_IsValid(bodyId)) return;
+    DestroyShapes();
+    shapeType = ShapeType::Polygon;
+    polygonName = _shapeName.empty() ? std::string(ShapeAssets::DEFAULT_NAME) : _shapeName;
+
+    // box2d takes convex polygons of at most B2_MAX_POLYGON_VERTICES points: a concave shape becomes several of them on the body.
+    const Polygon2D& _polygon = ShapeAssets::Get(polygonName);
+    debugSize = _polygon.Bounds().GetSize();
+    b2ShapeDef _shape = b2DefaultShapeDef();
+    _shape.density = 1.0f;
+    for (const std::vector<FVector2>& _part : _polygon.ConvexParts(B2_MAX_POLYGON_VERTICES))
+    {
+        std::vector<b2Vec2> _points;
+        for (const FVector2& _point : _part) _points.push_back(b2Vec2(_point.x / PX_TO_M, _point.y / PX_TO_M));
+        const b2Hull _hull = b2ComputeHull(_points.data(), static_cast<int>(_points.size()));
+        if (_hull.count < 3) continue;	// a sliver too thin for box2d
+        const b2Polygon _box2dPolygon = b2MakePolygon(&_hull, 0.f);
+        AddShape(b2CreatePolygonShape(bodyId, &_shape, &_box2dPolygon));
+        polygonParts.push_back(_part);
+    }
+    if (shapeIds.empty())
+    {
+        LOG_WARNING("PhysicsComponent: the shape \"" + polygonName + "\" gave box2d nothing it can use (too small or flat?): a box is used");
+        MakeRectangle(FVector2(std::max(1.f, static_cast<float>(debugSize.x)), std::max(1.f, static_cast<float>(debugSize.y))));
+        return;
+    }
+    b2Body_ApplyMassFromShapes(bodyId);
+}
+
+void Krampus::PhysicsComponent::SetShapeBox(const FVector2& _size)
+{
+    MakeRectangle(_size);
+}
+
+void Krampus::PhysicsComponent::SetShapeCircle(const Float& _radius)
+{
+    MakeCircle(_radius);
+}
+
+void Krampus::PhysicsComponent::SetShapePolygon(const std::string& _shapeName)
+{
+    MakePolygon(_shapeName);
+}
+
+void Krampus::PhysicsComponent::SetShapeType(const ShapeType& _type)
+{
+    if (_type == shapeType) return;
+    const FVector2 _oldSize = shapeType == ShapeType::Circle ? FVector2(debugRadius * 2.f, debugRadius * 2.f) : debugSize;
+    if (_type == ShapeType::Rectangle) MakeRectangle(FVector2(std::max(1.f, _oldSize.x), std::max(1.f, _oldSize.y)));
+    else if (_type == ShapeType::Circle) MakeCircle(std::max(1.f, std::min(_oldSize.x, _oldSize.y) * 0.5f));
+    else MakePolygon(polygonName);
 }
 
 
@@ -299,10 +390,9 @@ bool Krampus::PhysicsComponent::IsBullet() const
 
 void Krampus::PhysicsComponent::GetFilter(CollisionChannel& _category, CollisionChannel& _mask, int32_t& _groupIndex) const
 {
-	const b2Filter _filter = b2Shape_GetFilter(shapeId);
-	_category = static_cast<CollisionChannel>(_filter.categoryBits);
-	_mask = static_cast<CollisionChannel>(_filter.maskBits);
-	_groupIndex = _filter.groupIndex;
+	_category = static_cast<CollisionChannel>(filter.categoryBits);
+	_mask = static_cast<CollisionChannel>(filter.maskBits);
+	_groupIndex = filter.groupIndex;
 }
 
 void Krampus::PhysicsComponent::DrawDebug()
@@ -315,9 +405,12 @@ void Krampus::PhysicsComponent::DrawDebug()
 	const FVector2 _center = FVector2(_position.x, _position.y) * PX_TO_M;
 	const Angle _rotation = Angle(b2Rot_GetAngle(b2Body_GetRotation(bodyId)));
 
-	if (isCircle)
+	if (shapeType == ShapeType::Circle)
 		Debug::DrawDebugCircle(GetLevel(), _center, debugRadius, 20, Color::Cyan());
-	else
+	else if (shapeType == ShapeType::Rectangle)
 		Debug::DrawDebugRect(GetLevel(), _center, debugSize, _rotation, Color::Cyan());
+	else
+		for (const std::vector<FVector2>& _part : polygonParts)	// the convex pieces box2d has
+			Debug::DrawDebugPolygon(GetLevel(), Polygon2D::Transform(_part, _center, _rotation), Color::Cyan());
 #endif
 }

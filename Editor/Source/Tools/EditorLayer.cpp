@@ -10,6 +10,7 @@
 #include "Components/CameraComponent.h"
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
+#include "Graphics/Shapes/ShapeAssets.h"
 
 using namespace Krampus;
 
@@ -80,6 +81,7 @@ void EditorLayer::OnAttach()
 	context.history.Clear();	// files of a previous session
 	EngineSettings::LoadSections(EditorSettings::GetPath(), { &editorSettings });
 	std::filesystem::create_directories(std::filesystem::path(iniPath).parent_path());
+	ShapeAssets::CreateStarterShapes();	// a first project gets a few shapes for the "polygon" properties
 
 	initialized = ImGui::SFML::Init(window.GetRenderWindow());
 	if (!initialized)
@@ -185,6 +187,7 @@ void EditorLayer::OnRender(Window& _window)
 	DrawContentPanel(context);
 	DrawAnimationEditor(context);
 	DrawNetworkWindow(context);
+	DrawShapeEditor(context);
 
 	ImGui::SFML::Render(_renderWindow);
 

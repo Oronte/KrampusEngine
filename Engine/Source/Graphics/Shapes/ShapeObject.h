@@ -1,5 +1,6 @@
 #pragma once
 #include "Shape.h"
+#include "ShapeAssets.h"
 #include "Graphics/Ressources/Shader.h"
 
 namespace Krampus
@@ -52,12 +53,28 @@ namespace Krampus
 	};
 
 	/// <summary>
-	/// Supported 2D shape geometry types.
+	/// Configuration data for initializing a shape made of points (a shape of Content/Shapes, see ShapeAssets).
+	/// </summary>
+	struct PolygonShapeData
+	{
+		String					shape			= ShapeAssets::DEFAULT_NAME;
+		String					texturePath		= "_internal/Default";
+		TextureExtensionType	textureType		= TextureExtensionType::PNG;
+		IRect					textureRect;
+
+		/// <param name="_shape">Name of the shape in Content/Shapes (without .kshape).</param>
+		PolygonShapeData(const String& _shape = ShapeAssets::DEFAULT_NAME, const String& _texturePath = "_internal/Default", TextureExtensionType _textureType = TextureExtensionType::PNG, const IRect& _textureRect = IRect())
+			: shape(_shape), texturePath(_texturePath), textureType(_textureType), textureRect(_textureRect) { }
+	};
+
+	/// <summary>
+	/// Supported 2D shape geometry types. The values are saved in scenes: add new ones at the end.
 	/// </summary>
 	enum class ShapeType
 	{
 		Circle,
-		Rectangle
+		Rectangle,
+		Polygon			// any points, concave included, from a shape of Content/Shapes
 	};
 
 	/// <summary>
@@ -85,6 +102,10 @@ namespace Krampus
 		ShapeSizeData			sizeData;
 		String					texturePath;
 		TextureExtensionType	textureType	= TextureExtensionType::PNG;
+		std::string				polygonName	= ShapeAssets::DEFAULT_NAME;	// kept when the shape is a circle or a rectangle, for when it turns back
+		ListenerHandle			shapeSavedHandle;							// the polygon follows the Shape Editor's saves
+
+		void ListenToShapeSaves();
 
 	public:
 		/// <summary>
@@ -134,6 +155,25 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_data">Rectangle parameters.</param>
 		ShapeObject(const RectangleShapeData& _data);
+
+		/// <summary>
+		/// Constructs a ShapeObject made of the points of a shape of Content/Shapes.
+		/// </summary>
+		ShapeObject(const PolygonShapeData& _data);
+
+		/// <summary>
+		/// Turns the shape into the polygon of a shape of Content/Shapes (by name, see ShapeAssets).
+		/// </summary>
+		void SetPolygon(const std::string& _shapeName);
+
+		/// <returns>The name of the shape of Content/Shapes the polygon comes from (also kept while it is a circle or a rectangle).</returns>
+		inline const std::string& GetPolygonName() const
+		{
+			return polygonName;
+		}
+
+		/// <returns>The points drawn (the polygon of the shape for a polygon, its outline for a circle or a rectangle).</returns>
+		Polygon2D GetOutline() const;
 
 		/// <summary>
 		/// Sets the dimensions of the rectangular shape.
@@ -186,8 +226,9 @@ namespace Krampus
 		}
 
 		/// <summary>
-		/// Turns the shape into a circle or a rectangle, keeping its transform, color and texture.
-		/// The new shape is as big as the old one (a circle of radius r becomes a square of side 2r).
+		/// Turns the shape into a circle, a rectangle or a polygon, keeping its transform, color and texture.
+		/// The new shape is as big as the old one (a circle of radius r becomes a square of side 2r); a polygon is the shape named
+		/// by GetPolygonName().
 		/// </summary>
 		void SetShapeType(const ShapeType& _type);
 

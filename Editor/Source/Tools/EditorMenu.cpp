@@ -130,6 +130,8 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 				OpenNetworkWindow();
 			if (ImGui::MenuItem("Animation Editor"))
 				OpenAnimationEditor();
+			if (ImGui::MenuItem("Shape Editor"))
+				OpenShapeEditor();
 			ImGui::EndMenu();
 		}
 

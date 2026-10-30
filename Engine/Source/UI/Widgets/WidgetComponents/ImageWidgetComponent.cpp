@@ -80,6 +80,10 @@ void Krampus::ImageWidgetComponent::DrawDebug()
         case ShapeType::Rectangle:
             Debug::DrawDebugRect(GetLevel(), GetPosition(), FVector2(shape->GetSizeData().size.x * GetScale().x, shape->GetSizeData().size.y * GetScale().y), GetRotation(), Color::Green());
             break;
+
+        case ShapeType::Polygon:
+            Debug::DrawDebugPolygon(GetLevel(), Polygon2D::Transform(shape->GetOutline().points, GetPosition(), GetRotation(), GetScale()), Color::Green());
+            break;
     };
 #endif
 }
@@ -100,5 +104,6 @@ void Krampus::ImageWidgetComponent::SetZOrder(const ZOrder &_zOrder)
 
 std::string Krampus::ImageWidgetComponent::ToString() const
 {
+	if (GetShapeType() == ShapeType::Polygon) return name + " -> Polygon = " + shape->GetPolygonName();
 	return name + " -> Size/Radius = " + (GetShapeType() == ShapeType::Rectangle ? GetSize().ToString() : GetRadius().ToString());
 }

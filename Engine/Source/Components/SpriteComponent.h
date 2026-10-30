@@ -29,6 +29,11 @@ namespace Krampus
 			return shape.get();
 		}
 
+		inline const ShapeObject* GetShapeObject() const
+		{
+			return shape.get();
+		}
+
 		/// <summary>
 		/// Gets a reference to the shape size dimension data.
 		/// </summary>

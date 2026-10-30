@@ -6,6 +6,7 @@
 #include "Actors/Actor.h"
 #include "Components/InputComponent.h"
 #include "Managers/InputManager.h"
+#include "Graphics/Shapes/ShapeAssets.h"
 #include <imgui.h>
 
 using namespace Krampus;
@@ -210,6 +211,65 @@ namespace
 		}
 		std::sort(_names.begin(), _names.end());
 		return _names;
+	}
+
+	// The outline of a shape of Content/Shapes, fitted in a square of the window.
+	void DrawShapePreview(ImDrawList* _draw, const ImVec2& _min, const float _size, const std::string& _shape)
+	{
+		_draw->AddRectFilled(_min, ImVec2(_min.x + _size, _min.y + _size), IM_COL32(38, 38, 44, 255), 3.f);
+		const Polygon2D& _polygon = ShapeAssets::Get(_shape);
+		const FRect _bounds = _polygon.Bounds();
+		const float _scale = (_size - 6.f) / std::max(1.f, std::max(_bounds.GetSize().x, _bounds.GetSize().y));
+		const ImVec2 _center(_min.x + _size * 0.5f, _min.y + _size * 0.5f);
+		const FVector2 _middle(_bounds.GetPosition().x + _bounds.GetSize().x * 0.5f, _bounds.GetPosition().y + _bounds.GetSize().y * 0.5f);
+		std::vector<ImVec2> _points;
+		for (const FVector2& _point : _polygon.points)
+			_points.emplace_back(_center.x + (_point.x - _middle.x) * _scale, _center.y + (_point.y - _middle.y) * _scale);
+		for (const std::array<int, 3>& _triangle : _polygon.Triangulate())
+			_draw->AddTriangleFilled(_points[_triangle[0]], _points[_triangle[1]], _points[_triangle[2]], IM_COL32(90, 150, 255, 110));
+		_draw->AddPolyline(_points.data(), static_cast<int>(_points.size()), IM_COL32(140, 200, 255, 255), ImDrawFlags_Closed, 1.f);
+	}
+
+	// A drop-down list of the shapes of Content/Shapes with their outline, and a button to edit the chosen one in the Shape Editor.
+	bool DrawShapePicker(const char* _label, std::string& _shape)
+	{
+		bool _changed = false;
+		const float _frame = ImGui::GetFrameHeight();
+		ImGui::PushID(_label);
+
+		const ImVec2 _previewAt = ImGui::GetCursorScreenPos();
+		ImGui::Dummy(ImVec2(_frame, _frame));
+		DrawShapePreview(ImGui::GetWindowDrawList(), _previewAt, _frame, _shape);
+		ImGui::SameLine();
+
+		ImGui::SetNextItemWidth(ImGui::CalcItemWidth() - _frame - ImGui::GetStyle().ItemSpacing.x - 46.f);
+		if (ImGui::BeginCombo("##shape", _shape.empty() ? "(none)" : _shape.c_str(), ImGuiComboFlags_HeightLarge))
+		{
+			for (const std::string& _name : ShapeAssets::List())
+			{
+				const ImVec2 _at = ImGui::GetCursorScreenPos();
+				if (ImGui::Selectable(("##" + _name).c_str(), _name == _shape, 0, ImVec2(0.f, 28.f)))
+				{
+					_shape = _name;
+					_changed = true;
+				}
+				DrawShapePreview(ImGui::GetWindowDrawList(), _at, 28.f, _name);
+				ImGui::SameLine(40.f);
+				ImGui::TextUnformatted(_name.c_str());
+			}
+			if (ShapeAssets::List().empty()) ImGui::TextDisabled("No shape: Tools > Shape Editor");
+			ImGui::EndCombo();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Edit", ImVec2(42.f, 0.f))) OpenShapeEditor(_shape);
+		ImGui::SetItemTooltip("Opens this shape in the Shape Editor (Tools > Shape Editor)");
+		ImGui::SameLine();
+		ImGui::TextUnformatted(_label);
+
+		if (!_shape.empty() && !ShapeAssets::Exists(_shape))
+			ImGui::TextColored(ImVec4(1.f, 0.45f, 0.3f, 1.f), "No shape \"%s\" in Content/Shapes: a hexagon is used", _shape.c_str());
+		ImGui::PopID();
+		return _changed;
 	}
 
 	// A drop-down list of the scenes. A name that matches no file is shown in red: the game would start on an empty level.
@@ -665,6 +725,9 @@ namespace
 			break;
 		case PropertyType::Sound:
 			_changed = DrawAssetPicker(_property.name.c_str(), std::get<std::string>(_value), AssetKind::Sound);
+			break;
+		case PropertyType::Shape:
+			_changed = DrawShapePicker(_property.name.c_str(), std::get<std::string>(_value));
 			break;
 		case PropertyType::Vector2:
 		{

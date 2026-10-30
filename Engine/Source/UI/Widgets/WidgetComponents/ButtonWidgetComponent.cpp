@@ -52,6 +52,9 @@ void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_screenPos)
     Bool _colliding = false;
     if (shape->GetShapeType() == ShapeType::Circle)
         _colliding = Physics::Contains(_mousePos, GetPosition(), shape->GetSizeData().radius, _info);
+    else if (shape->GetShapeType() == ShapeType::Polygon)
+        _colliding = Polygon2D(Polygon2D::Transform(shape->GetOutline().points, GetPosition(), GetRotation(), GetScale()))
+            .Contains(FVector2(static_cast<float>(_mousePos.x), static_cast<float>(_mousePos.y)));
     else
         _colliding = Physics::Contains(_mousePos, GetPosition(), shape->GetSizeData().size, GetRotation(), _info);
 

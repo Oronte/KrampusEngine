@@ -72,6 +72,7 @@ namespace
 		case PropertyType::Events:
 		case PropertyType::InputBindings:
 		case PropertyType::MessageBindings:
+		case PropertyType::Shape:
 		case PropertyType::Sound:	return PropertyValue(_text);
 		case PropertyType::Vector2:
 		{

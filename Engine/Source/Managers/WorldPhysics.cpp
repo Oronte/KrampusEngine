@@ -17,32 +17,12 @@ Krampus::WorldPhysics::~WorldPhysics()
 	b2DestroyWorld(physicsWorldID);
 }
 
-void Krampus::WorldPhysics::Register(CollisionComponent* _component)
-{
-	collisions.push_back(_component);
-}
-
 void Krampus::WorldPhysics::Update()
 {
 	{
 		Level* _level = GetWorld()->GetLevelManager()->GetCurrentLevel();
 		if (!_level) return;
 		b2World_Step(physicsWorldID, _level->GetTimerManager().GetDeltaTime(), subStepsCount);
-	}
-
-	// Colliders created during the checks wait for the next frame. One removed by a collision callback shortens the list:
-	// the size is checked again at each step instead of trusting the count taken before.
-	const size_t _collisionCount = collisions.size();
-	for (size_t _index = 0; _index < _collisionCount && _index < collisions.size(); _index++)
-	{
-		CollisionComponent* _currentComponent = collisions[_index];
-		if (!_currentComponent->IsActive()) continue;
-		for (size_t _i = _index + 1; _i < _collisionCount && _i < collisions.size(); _i++)
-		{
-			CollisionComponent* _otherComponent = collisions[_i];
-			if (!_otherComponent->IsActive()) continue;
-			_currentComponent->ComputeCollision(_otherComponent);
-		}
 	}
 
 	onResolveCollision.Broadcast();

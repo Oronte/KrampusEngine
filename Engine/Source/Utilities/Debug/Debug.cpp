@@ -101,6 +101,18 @@ void Krampus::Debug::DrawDebugRect(Level* _level, const FVector2& _position, con
 #endif
 }
 
+void Krampus::Debug::DrawDebugPolygon(Level* _level, const std::vector<FVector2>& _points, const Color& _color)
+{
+#ifdef DEBUG
+	if (_points.size() < 2) return;
+	std::shared_ptr<Vertices> _vert = std::make_shared<Vertices>(PrimitiveType::LineStrip);
+	for (const FVector2& _point : _points)
+		_vert->Append(_point, _color);
+	_vert->Append(_points.front(), _color);
+	_level->GetCameraManager().PushDebug(_vert);
+#endif
+}
+
 void Krampus::Debug::DrawDebugRect(Level* _level, const FRect& _rect, const Angle& _rotation, const Color& _color)
 {
 	DrawDebugRect(_level, _rect.GetPosition(), _rect.GetSize(), _rotation, _color);

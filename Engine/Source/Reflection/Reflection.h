@@ -37,7 +37,8 @@ namespace Krampus
 		Scene,		// stored as a string (name of a scene of Content/Scenes, without .ka7), picked from a list
 		Events,		// stored as a string (EventList::Encode), edited as a list of function calls
 		InputBindings,	// stored as a string (InputComponent::EncodeBindings): input events and their function calls
-		MessageBindings	// the same, but the names are network messages typed by the user
+		MessageBindings,	// the same, but the names are network messages typed by the user
+		Shape			// stored as a string (name of a shape of Content/Shapes, without .kshape), picked from a list, edited in the Shape Editor
 	};
 
 	/// <summary>

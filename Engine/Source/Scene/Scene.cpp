@@ -47,6 +47,7 @@ namespace
 		case PropertyType::Events:
 		case PropertyType::InputBindings:
 		case PropertyType::MessageBindings:
+		case PropertyType::Shape:
 		case PropertyType::Sound:
 		case PropertyType::String:
 			if (auto _v = _node.TryGet<String>(_key)) return PropertyValue(_v->StdString());

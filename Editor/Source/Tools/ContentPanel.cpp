@@ -2,6 +2,7 @@
 #include "EditorThumbnails.h"
 #include "Shortcuts.h"
 #include "Scene/Scene.h"
+#include "Graphics/Shapes/ShapeAssets.h"
 #include <imgui.h>
 
 #define NOMINMAX
@@ -87,13 +88,23 @@ namespace
 		ShellExecuteW(nullptr, L"open", L"explorer.exe", _arguments.c_str(), nullptr, SW_SHOWNORMAL);
 	}
 
-	enum class Kind { Folder, Scene, Script, Texture, Audio, Font, Other };
+	enum class Kind { Folder, Scene, Script, Texture, Audio, Font, Shape, Other };
 
 	std::string LowerExtension(const std::filesystem::path& _path)
 	{
 		std::string _extension = _path.extension().string();
 		std::transform(_extension.begin(), _extension.end(), _extension.begin(), [](unsigned char _c) { return static_cast<char>(std::tolower(_c)); });
 		return _extension;
+	}
+
+	// "Enemies/Bat" for Content/Shapes/Enemies/Bat.kshape: the name the Shape Editor and the "polygon" properties use.
+	std::string ShapeNameOf(const std::filesystem::path& _file)
+	{
+		std::error_code _error;
+		std::filesystem::path _relative = std::filesystem::relative(_file, CONTENT_DIRECTORY / "Shapes", _error);
+		if (_error || _relative.empty()) _relative = _file.filename();
+		_relative.replace_extension();
+		return _relative.generic_string();
 	}
 
 	Kind KindOf(const std::filesystem::directory_entry& _entry)
@@ -107,6 +118,7 @@ namespace
 			|| _extension == ".tga" || _extension == ".gif")											return Kind::Texture;
 		if (_extension == ".wav" || _extension == ".mp3" || _extension == ".ogg" || _extension == ".flac") return Kind::Audio;
 		if (_extension == ".ttf" || _extension == ".otf")												return Kind::Font;
+		if (_extension == ShapeAssets::EXTENSION)															return Kind::Shape;
 		return Kind::Other;
 	}
 
@@ -120,6 +132,7 @@ namespace
 		case Kind::Texture:	return "Texture";
 		case Kind::Audio:	return "Audio";
 		case Kind::Font:	return "Font";
+		case Kind::Shape:	return "Shape";
 		default:			return "File";
 		}
 	}
@@ -213,6 +226,7 @@ namespace
 		case Kind::Texture:	DrawTextureIcon(_draw, _min, _max, _entry.path()); break;
 		case Kind::Audio:	DrawAudioIcon(_draw, _min, _max); break;
 		case Kind::Font:	DrawBadge(_draw, _min, _max, IM_COL32(235, 140, 70, 255), IM_COL32(150, 70, 30, 255), "Aa"); break;
+		case Kind::Shape:	DrawBadge(_draw, _min, _max, IM_COL32(90, 150, 255, 255), IM_COL32(40, 80, 170, 255), "SHP"); break;
 		default:			DrawFileIcon(_draw, _min, _max, LowerExtension(_entry.path())); break;
 		}
 	}
@@ -636,6 +650,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 					if (_kind == Kind::Folder)		_openFolder = _entry.path();
 					else if (_kind == Kind::Scene)	OpenScene(_context, _entry.path());
 					else if (_kind == Kind::Script)	OpenSolution(_entry.path());
+					else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
 					else							OpenWithSystem(_entry.path());
 				}
 
@@ -673,6 +688,7 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 						if (_kind == Kind::Folder)		_openFolder = _entry.path();
 						else if (_kind == Kind::Scene)	OpenScene(_context, _entry.path());
 						else if (_kind == Kind::Script)	OpenSolution(_entry.path());
+					else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
 						else							OpenWithSystem(_entry.path());
 					}
 					if (ImGui::MenuItem("Show in Explorer")) ShowInExplorer(_entry.path());

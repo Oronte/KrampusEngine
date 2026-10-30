@@ -2,6 +2,7 @@
 #include "Component.h"
 #include "Utilities/System/Debuggable.h"
 #include "Utilities/System/CollisionChannel.h"
+#include "Graphics/Shapes/ShapeObject.h"
 #include "box2d/box2d.h"
 
 namespace Krampus
@@ -243,15 +244,44 @@ namespace Krampus
 		/// <summary>Gets the collision filter set by SetFilter.</summary>
 		void GetFilter(CollisionChannel& _category, CollisionChannel& _mask, int32_t& _groupIndex) const;
 
+		// ---- Shape of the body (the body keeps its velocity and settings when its shape changes)
+
+		/// <summary>A box of this size, centered on the actor.</summary>
+		void SetShapeBox(const FVector2& _size);
+
+		/// <summary>A circle of this radius, centered on the actor.</summary>
+		void SetShapeCircle(const Float& _radius);
+
+		/// <summary>
+		/// The polygon of a shape of Content/Shapes (concave included: box2d gets it as several convex pieces of at most 8 points).
+		/// </summary>
+		void SetShapePolygon(const std::string& _shapeName);
+
+		/// <summary>Turns the shape into a box, a circle or a polygon of about the same size.</summary>
+		void SetShapeType(const ShapeType& _type);
+
+		ShapeType GetShapeType() const { return shapeType; }
+		FVector2 GetBoxSize() const { return debugSize; }
+		Float GetCircleRadius() const { return debugRadius; }
+		const std::string& GetPolygonName() const { return polygonName; }
+
     private:
         void DrawDebug() override;	// outline of the box2d shape, where the body is
 
-        bool        isCircle    = false;			// what MakeCircle / MakeRectangle built, to outline it
+        ShapeType   shapeType   = ShapeType::Rectangle;	// what the box2d shapes are, to outline them and rebuild them
         Float       debugRadius = 0.f;
         FVector2    debugSize;
+        std::string polygonName = ShapeAssets::DEFAULT_NAME;
+        std::vector<std::vector<FVector2>>	polygonParts;	// the convex pieces given to box2d (pixels, around the actor)
+        std::vector<b2ShapeId>				shapeIds;		// every box2d shape of the body (shapeId is the first)
+        b2Filter    filter      = b2DefaultFilter();		// kept: a new shape gets it too
+        ListenerHandle shapeSavedHandle;
 
         void Init();
         void MakeCircle(const Float& _radius);
         void MakeRectangle(const FVector2& _size);
+        void MakePolygon(const std::string& _shapeName);
+        void DestroyShapes();
+        void AddShape(b2ShapeId _shape);
     };
 }

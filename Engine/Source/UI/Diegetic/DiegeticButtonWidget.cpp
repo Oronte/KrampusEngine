@@ -40,6 +40,9 @@ void Krampus::DiegeticButtonWidget::OnMouseMoved(const IVector2& _mousePos)
 	ShapeObject* _object = sprite->GetShapeObject();
 	if (_object->GetShapeType() == ShapeType::Circle)
 		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().radius, _info);
+	else if (_object->GetShapeType() == ShapeType::Polygon)
+		_colliding = Polygon2D(Polygon2D::Transform(_object->GetOutline().points, screenPosition, localRotation))
+			.Contains(FVector2(static_cast<float>(_mousePos.x), static_cast<float>(_mousePos.y)));
 	else
 		_colliding = Physics::Contains(_mousePos, screenPosition, _object->GetSizeData().size, localRotation, _info);
 

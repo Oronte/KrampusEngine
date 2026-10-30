@@ -1,6 +1,6 @@
 #pragma once
-#include "Components/CollisionComponent.h"
 #include "Core/KrampusObject.h"
+#include "Utilities/Math/Physics.h"
 #include "box2d/box2d.h"
 
 namespace Krampus
@@ -12,7 +12,6 @@ namespace Krampus
 	class WorldPhysics : public KrampusObject
 	{
 		b2WorldId							physicsWorldID;
-		std::vector<CollisionComponent*>	collisions;
 		int									subStepsCount = 8;
 
 	public:
@@ -33,12 +32,6 @@ namespace Krampus
 		~WorldPhysics();
 
 		/// <summary>
-		/// Registers a CollisionComponent to participate in collision checks.
-		/// </summary>
-		/// <param name="_component">Pointer to CollisionComponent.</param>
-		void Register(CollisionComponent* _component);
-
-		/// <summary>
 		/// Executes multi-step collision detection and resolution across all registered colliders.
 		/// </summary>
 		void Update();
@@ -50,21 +43,6 @@ namespace Krampus
 		inline b2WorldId GetPhysicsWorldID()
 		{
 			return physicsWorldID;
-		}
-
-		/// <summary>
-		/// Unregisters a CollisionComponent from collision processing.
-		/// </summary>
-		/// <param name="_toDelete">Pointer to CollisionComponent to remove.</param>
-		inline void RemoveComponent(CollisionComponent* _toDelete)
-		{
-			std::erase_if(collisions, [&](const CollisionComponent* _component)
-				{
-					return _component == _toDelete;
-				});
-
-			for (CollisionComponent* _component : collisions)
-				_component->ForgetCollision(_toDelete);
 		}
 
 		/// <summary>
