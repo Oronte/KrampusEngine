@@ -1,0 +1,8 @@
+KBP 1
+N|1|Event.BeginPlay|0|0|
+N|2|Event.Tick|0|160|
+N|4|Game.Print|241|-3|Text	BeginPlay
+N|5|Game.Print|235|156|Text	Tick
+L|1|Then|4|In
+L|2|Then|5|In
+L|2|Delta Seconds|5|Text

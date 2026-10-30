@@ -14,6 +14,7 @@
 #include "Components/ParticleComponent.h"
 #include "Components/StainComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Components/BlueprintComponent.h"
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Core/Settings.h"
@@ -464,6 +465,14 @@ void Krampus::RegisterEngineClasses()
 		ClassInfo& _info = Describe("LabelComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<LabelComponent>(TextData()); };
 		AddLabelProperties<LabelComponent>(_info);
+	}
+
+	{
+		ClassInfo& _info = Describe("BlueprintComponent", "Component");	// runs a blueprint of Content/Blueprints
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<BlueprintComponent>(); };
+		_info.AddProperty<BlueprintComponent, std::string>("blueprint", &BlueprintComponent::blueprint);
+		_info.SetLastPropertyVisible<BlueprintComponent>([](BlueprintComponent&) { return false; });	// a list in the Inspector
+		_info.AddFunction<BlueprintComponent, std::string>("CallEvent", [](BlueprintComponent& _c, const std::string& _name) { _c.CallEvent(_name); });
 	}
 
 	{

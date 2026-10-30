@@ -162,6 +162,8 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 				OpenAnimationEditor();
 			if (ImGui::MenuItem("Animation Graph"))
 				OpenAnimationGraph();
+			if (ImGui::MenuItem("Blueprint Editor"))
+				OpenBlueprintEditor();
 			if (ImGui::MenuItem("Shape Editor"))
 				OpenShapeEditor();
 			ImGui::EndMenu();

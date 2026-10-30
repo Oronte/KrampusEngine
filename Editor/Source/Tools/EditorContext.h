@@ -137,6 +137,14 @@ namespace Krampus
 	void OpenAnimationEditor();
 	void DrawAnimationEditor(EditorContext& _context);
 
+	/// <summary>Opens the Blueprint Editor, on the blueprint _name (Content/Blueprints) when it is given.</summary>
+	void OpenBlueprintEditor(const std::string& _name = "");
+	void DrawBlueprintEditor(EditorContext& _context);
+	/// <summary>Writes a new blueprint (a free name made from _name) with its first events. Returns its name, empty if it failed.</summary>
+	std::string CreateBlueprintAsset(const std::string& _name);
+	/// <summary>Saves the blueprint being edited if it has changes (before Play and before a hot reload).</summary>
+	void SaveBlueprintEditorChanges();
+
 	/// <summary>Opens the Animation Graph (the state machine of the selected AnimationComponentSM: transitions and their conditions).</summary>
 	void OpenAnimationGraph();
 	void DrawAnimationGraph(EditorContext& _context);
