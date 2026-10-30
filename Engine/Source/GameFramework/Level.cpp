@@ -2,6 +2,8 @@
 #include "Managers/LevelManager.h"
 #include "Managers/WorldPhysics.h"
 #include "Actors/CameraActor.h"
+#include "Actors/EmptyActor.h"
+#include "Components/ParticleComponent.h"
 
 using namespace Krampus;
 
@@ -94,4 +96,15 @@ CameraComponent* Level::GetDefaultCamera() const
 		if (CameraComponent* _camera = _actor->GetComponent<CameraComponent>())
 			return _camera;
 	return nullptr;
+}
+
+Krampus::ParticleComponent* Krampus::Level::SpawnParticles(const ParticlePreset& _preset, const FVector2& _position)
+{
+	EmptyActor* _actor = SpawnActor<EmptyActor>();
+	_actor->SetName("Particles");
+	_actor->SetPosition(_position);
+	ParticleComponent* _particles = _actor->AddComponent<ParticleComponent>(_preset);
+	_particles->destroyOwnerWhenDone = !_particles->Settings().looping;
+	_particles->Restart();	// from where the actor is now
+	return _particles;
 }

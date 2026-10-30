@@ -11,6 +11,7 @@
 #include "Components/NetworkSyncComponent.h"
 #include "Network/NetworkManager.h"
 #include "Components/PhysicsComponent.h"
+#include "Components/ParticleComponent.h"
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Core/Settings.h"
@@ -281,6 +282,23 @@ namespace
 	}
 }
 
+namespace
+{
+	// A value of ParticleSettings shown in the Inspector (the settings are a struct of the component, not members of it).
+	template <typename T>
+	void AddParticleProperty(ClassInfo& _info, const char* _name, T ParticleSettings::* _member, const float _min = 0.f, const float _max = 0.f)
+	{
+		_info.AddAccessor<ParticleComponent, T>(_name,
+			[_member](ParticleComponent& _c) { return _c.Settings().*_member; },
+			[_member](ParticleComponent& _c, const T& _v) { _c.Settings().*_member = _v; }, _min, _max);
+	}
+
+	ParticleShape ParticleShapeOf(ParticleComponent& _c)
+	{
+		return static_cast<ParticleShape>(_c.Settings().shape);
+	}
+}
+
 void Krampus::RegisterEngineClasses()
 {
 	// ================= Bases =================
@@ -444,6 +462,75 @@ void Krampus::RegisterEngineClasses()
 		ClassInfo& _info = Describe("LabelComponent", "Component");
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<LabelComponent>(TextData()); };
 		AddLabelProperties<LabelComponent>(_info);
+	}
+
+	{
+		ClassInfo& _info = Describe("ParticleComponent", "Component");
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<ParticleComponent>(); };
+
+		// The preset first: loading a scene applies it, then the saved values that were changed after it.
+		_info.AddAccessor<ParticleComponent, int>("preset",
+			[](ParticleComponent& _c) { return static_cast<int>(_c.GetPreset()); },
+			[](ParticleComponent& _c, const int& _v) { if (_v != static_cast<int>(_c.GetPreset())) _c.ApplyPreset(static_cast<ParticlePreset>(std::clamp(_v, 0, 7))); }, 0.f, 7.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Custom", "Fire", "Smoke", "Sparks", "Explosion", "Snow", "Rain", "Magic" });
+
+		// Emission
+		AddParticleProperty(_info, "playOnStart", &ParticleSettings::playOnStart);
+		AddParticleProperty(_info, "looping", &ParticleSettings::looping);
+		AddParticleProperty(_info, "duration", &ParticleSettings::duration, 0.01f, 60.f);		// seconds of one cycle
+		AddParticleProperty(_info, "rate", &ParticleSettings::rate, 0.f, 5000.f);				// particles per second
+		AddParticleProperty(_info, "burst", &ParticleSettings::burst, 0.f, 10000.f);			// at the start of each cycle
+		AddParticleProperty(_info, "maxParticles", &ParticleSettings::maxParticles, 1.f, 50000.f);
+		AddParticleProperty(_info, "worldSpace", &ParticleSettings::worldSpace);
+		_info.AddProperty<ParticleComponent, bool>("previewInEditor", &ParticleComponent::previewInEditor);
+		_info.AddProperty<ParticleComponent, bool>("destroyOwnerWhenDone", &ParticleComponent::destroyOwnerWhenDone);
+
+		// Shape of the emitter
+		AddParticleProperty(_info, "shape", &ParticleSettings::shape, 0.f, 3.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Point", "Circle", "Rectangle", "Line" });
+		AddParticleProperty(_info, "shapeRadius", &ParticleSettings::shapeRadius, 0.f, 5000.f);
+		_info.SetLastPropertyVisible<ParticleComponent>([](ParticleComponent& _c) { return ParticleShapeOf(_c) == ParticleShape::Circle; });
+		AddParticleProperty(_info, "shapeSize", &ParticleSettings::shapeSize);
+		_info.SetLastPropertyVisible<ParticleComponent>([](ParticleComponent& _c) { return ParticleShapeOf(_c) == ParticleShape::Rectangle || ParticleShapeOf(_c) == ParticleShape::Line; });
+		AddParticleProperty(_info, "fromEdge", &ParticleSettings::fromEdge);
+		_info.SetLastPropertyVisible<ParticleComponent>([](ParticleComponent& _c) { return ParticleShapeOf(_c) == ParticleShape::Circle || ParticleShapeOf(_c) == ParticleShape::Rectangle; });
+		AddParticleProperty(_info, "radial", &ParticleSettings::radial);					// thrown away from the center
+
+		// At birth
+		AddParticleProperty(_info, "lifetimeMin", &ParticleSettings::lifetimeMin, 0.01f, 60.f);
+		AddParticleProperty(_info, "lifetimeMax", &ParticleSettings::lifetimeMax, 0.01f, 60.f);
+		AddParticleProperty(_info, "speedMin", &ParticleSettings::speedMin);
+		AddParticleProperty(_info, "speedMax", &ParticleSettings::speedMax);
+		AddParticleProperty(_info, "direction", &ParticleSettings::direction, -360.f, 360.f);	// degrees, -90 = up
+		_info.SetLastPropertyVisible<ParticleComponent>([](ParticleComponent& _c) { return !_c.Settings().radial; });
+		AddParticleProperty(_info, "spread", &ParticleSettings::spread, 0.f, 360.f);			// degrees of the cone
+		_info.SetLastPropertyVisible<ParticleComponent>([](ParticleComponent& _c) { return !_c.Settings().radial; });
+		AddParticleProperty(_info, "sizeStart", &ParticleSettings::sizeStart, 0.f, 2000.f);
+		AddParticleProperty(_info, "sizeEnd", &ParticleSettings::sizeEnd, 0.f, 2000.f);
+		AddParticleProperty(_info, "sizeRandom", &ParticleSettings::sizeRandom, 0.f, 1.f);
+		AddParticleProperty(_info, "rotationMin", &ParticleSettings::rotationMin, -360.f, 360.f);
+		AddParticleProperty(_info, "rotationMax", &ParticleSettings::rotationMax, -360.f, 360.f);
+		AddParticleProperty(_info, "spinMin", &ParticleSettings::spinMin);						// degrees per second
+		AddParticleProperty(_info, "spinMax", &ParticleSettings::spinMax);
+		AddParticleProperty(_info, "colorStart", &ParticleSettings::colorStart);
+		AddParticleProperty(_info, "colorEnd", &ParticleSettings::colorEnd);					// alpha 0: fades out
+
+		// During their life
+		AddParticleProperty(_info, "gravity", &ParticleSettings::gravity);
+		AddParticleProperty(_info, "drag", &ParticleSettings::drag, 0.f, 20.f);
+		AddParticleProperty(_info, "stretch", &ParticleSettings::stretch, 0.f, 1.f);			// streaks along the speed
+
+		// Look
+		AddParticleProperty(_info, "texture", &ParticleSettings::texture);
+		_info.SetLastPropertyType(PropertyType::Texture, { "(soft dot)" });					// the name of the empty choice
+		AddParticleProperty(_info, "blend", &ParticleSettings::blend, 0.f, 1.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Alpha", "Add (glow)" });
+		AddDrawableProperties<ParticleComponent>(_info);
+
+		_info.AddFunction<ParticleComponent>("Play", [](ParticleComponent& _c) { _c.Play(); });
+		_info.AddFunction<ParticleComponent>("Stop", [](ParticleComponent& _c) { _c.Stop(); });
+		_info.AddFunction<ParticleComponent>("Restart", [](ParticleComponent& _c) { _c.Restart(); });
+		_info.AddFunction<ParticleComponent, int>("Burst", [](ParticleComponent& _c, const int& _count) { _c.Burst(_count); });
 	}
 
 	{

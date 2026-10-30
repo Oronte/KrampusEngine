@@ -36,6 +36,11 @@ namespace Krampus
 
 	public:
 		/// <summary>
+		/// The texture of a file of Content/Textures ("Folder/Name.png"), loaded once and shared. Null if it cannot be loaded.
+		/// </summary>
+		std::shared_ptr<sf::Texture> GetSharedTexture(const String& _relativePath) { return LoadOrGetSharedTexture(_relativePath); }
+
+		/// <summary>
 		/// Loads a texture from Content/Textures/ and assigns it to a ShapeObject.
 		/// </summary>
 		/// <param name="_shapeObject">Target ShapeObject.</param>

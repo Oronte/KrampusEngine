@@ -6,6 +6,7 @@
 #include "GameFramework/Level.h"
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
+#include "Graphics/Particles/ParticleEmitter.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -369,6 +370,8 @@ void Krampus::DrawStatusBar(EditorContext& _context)
 		{
 			_separator();
 			ImGui::TextDisabled("%d actor(s)", static_cast<int>(_level->GetActorManager().GetActors().size()));
+			_separator();
+			ImGui::TextDisabled("%d particle(s)", ParticleEmitter::GetTotalAlive());
 		}
 
 		// Right side: build, then frame rate

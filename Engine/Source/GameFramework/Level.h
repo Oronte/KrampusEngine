@@ -8,6 +8,8 @@
 
 namespace Krampus
 {
+	class ParticleComponent;
+	enum class ParticlePreset;
 
 	class CameraActor;
 	class CameraComponent;
@@ -138,6 +140,12 @@ namespace Krampus
 		{
 			return actorManager.CreateActorAt<Type>(_transform, this, std::forward<Args>(_args)...);
 		}
+
+		/// <summary>
+		/// A particle effect at a place of the world, in an actor of its own: SpawnParticles(ParticlePreset::Explosion, _hitPosition).
+		/// A one-shot effect (not looping) removes its actor once its last particle is gone.
+		/// </summary>
+		ParticleComponent* SpawnParticles(const ParticlePreset& _preset, const FVector2& _position);
 
 		/// <summary>
 		/// Spawns a diegetic widget kept at _screenPosition (window pixels): SpawnDiegeticWidget&lt;DiegeticLabelWidget&gt;(FVector2(40, 40), TextData("Score")).

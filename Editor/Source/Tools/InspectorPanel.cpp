@@ -73,7 +73,7 @@ namespace
 
 	// A button showing the current file (with its picture for a texture). A click opens a searchable list of the files of
 	// Content/Textures, Content/Fonts or Content/Audio: pictures for textures, names for fonts and sounds.
-	bool DrawAssetPicker(const char* _label, std::string& _path, const AssetKind& _kind)
+	bool DrawAssetPicker(const char* _label, std::string& _path, const AssetKind& _kind, const char* _emptyChoice = nullptr)
 	{
 		static char _filter[64] = "";
 		bool _changed = false;
@@ -98,7 +98,7 @@ namespace
 			}
 		}
 
-		const char* _none = _kind == AssetKind::Sound ? "(silent)" : "(none)";
+		const char* _none = _emptyChoice ? _emptyChoice : (_kind == AssetKind::Sound ? "(silent)" : "(none)");
 		if (ImGui::Button(_path.empty() ? _none : _path.c_str(), ImVec2(-FLT_MIN, 0.f)))
 		{
 			AssetList(_kind, true);
@@ -119,7 +119,7 @@ namespace
 
 			if (ImGui::BeginChild("##list", _listSize, ImGuiChildFlags_Borders))
 			{
-				if (_kind == AssetKind::Sound && ImGui::Selectable("(silent)", _path.empty()))
+				if ((_kind == AssetKind::Sound || _emptyChoice) && ImGui::Selectable(_none, _path.empty()))
 				{
 					_path.clear();
 					_changed = true;
@@ -724,7 +724,8 @@ namespace
 			_changed = DrawFlags(_property, std::get<int>(_value));
 			break;
 		case PropertyType::Texture:
-			_changed = DrawAssetPicker(_property.name.c_str(), std::get<std::string>(_value), AssetKind::Texture);
+			// A name in flagNames: the property may be empty, shown with that name (a particle without texture is a soft dot).
+			_changed = DrawAssetPicker(_property.name.c_str(), std::get<std::string>(_value), AssetKind::Texture, _property.flagNames.empty() ? nullptr : _property.flagNames[0].c_str());
 			break;
 		case PropertyType::Font:
 			_changed = DrawAssetPicker(_property.name.c_str(), std::get<std::string>(_value), AssetKind::Font);
