@@ -101,6 +101,7 @@ void Shortcuts::Initialize()
 	_add("Gizmo: Rotate",		"Viewport",	{ ImGuiKey_E, false, false, false });
 	_add("Gizmo: Scale",		"Viewport",	{ ImGuiKey_R, false, false, false });
 	_add("Focus Selection",		"Viewport",	{ ImGuiKey_F, false, false, false });
+	_add("Show Navigation",		"Viewport",	{ ImGuiKey_P, false, false, false });
 	_add("Delete Selection",	"Scene",	{ ImGuiKey_Delete, false, false, false });
 	_add("Rename File",			"Content",	{ ImGuiKey_F2, false, false, false });
 	_add("Delete File",			"Content",	{ ImGuiKey_Delete, false, false, false });

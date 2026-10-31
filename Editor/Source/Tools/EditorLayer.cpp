@@ -12,6 +12,7 @@
 #include "Components/PhysicsComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Navigation/NavigationSystem.h"
 #include "Managers/TextureManager.h"
 #include "Utilities/Debug/Debug.h"
 #include <unordered_set>
@@ -1003,6 +1004,20 @@ void EditorLayer::HandleShortcuts()
 		StartShip();
 
 	// Delete in the Viewport (the Hierarchy checks its own focus).
+	// Show Navigation: the P key, the Tools menu (it changes NavigationSystem::showNavigation) and the Settings window agree.
+	if (NavigationSystem::showNavigation != appliedNavigation)
+	{
+		editorSettings.showNavigation = NavigationSystem::showNavigation;
+		settingsDirty = true;
+	}
+	if (viewportHovered && !ImGui::GetIO().WantTextInput && Shortcuts::Pressed("Show Navigation"))
+	{
+		editorSettings.showNavigation = !editorSettings.showNavigation;
+		settingsDirty = true;
+	}
+	NavigationSystem::showNavigation = editorSettings.showNavigation;
+	appliedNavigation = editorSettings.showNavigation;
+
 	if (viewportHovered && Shortcuts::Pressed("Delete Selection"))
 		DeleteSelection(context);
 }

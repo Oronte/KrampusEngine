@@ -7,6 +7,7 @@
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
 #include "Graphics/Particles/ParticleEmitter.h"
+#include "Navigation/NavigationSystem.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -164,6 +165,8 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 				OpenAnimationGraph();
 			if (ImGui::MenuItem("Shape Editor"))
 				OpenShapeEditor();
+			ImGui::Separator();
+			ImGui::MenuItem("Show Navigation", Shortcuts::Text("Show Navigation").c_str(), &NavigationSystem::showNavigation);
 			ImGui::EndMenu();
 		}
 

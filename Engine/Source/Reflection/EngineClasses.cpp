@@ -14,6 +14,7 @@
 #include "Components/ParticleComponent.h"
 #include "Components/StainComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Navigation/NavigationComponents.h"
 #include "Components/SpatialSoundComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Core/Settings.h"
@@ -465,6 +466,93 @@ void Krampus::RegisterEngineClasses()
 		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<LabelComponent>(TextData()); };
 		AddLabelProperties<LabelComponent>(_info);
 	}
+
+	// ---- Navigation
+	{
+		ClassInfo& _info = Describe("NavMeshBoundsComponent", "Component");	// where a navigation mesh is built
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NavMeshBoundsComponent>(); };
+		_info.AddProperty<NavMeshBoundsComponent, FVector2>("size", &NavMeshBoundsComponent::size);
+		_info.AddProperty<NavMeshBoundsComponent, float>("cellSize", &NavMeshBoundsComponent::cellSize, 2.f, 128.f);
+		_info.AddProperty<NavMeshBoundsComponent, float>("agentRadius", &NavMeshBoundsComponent::agentRadius, 0.f, 512.f);
+		_info.AddProperty<NavMeshBoundsComponent, int>("tileSize", &NavMeshBoundsComponent::tileSize, 8.f, 128.f);
+		_info.AddProperty<NavMeshBoundsComponent, bool>("erodeEdges", &NavMeshBoundsComponent::erodeEdges);
+		_info.AddFunction<NavMeshBoundsComponent>("Rebuild", [](NavMeshBoundsComponent& _c) { _c.Rebuild(); });
+	}
+	{
+		ClassInfo& _info = Describe("NavModifierComponent", "Component");	// blocks the navigation, or makes it cost more or less
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NavModifierComponent>(); };
+		_info.AddProperty<NavModifierComponent, int>("area", &NavModifierComponent::area, 0.f, 1.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Blocked", "Cost" });
+		_info.AddProperty<NavModifierComponent, float>("cost", &NavModifierComponent::cost, 0.05f, 100.f);
+		_info.SetLastPropertyVisible<NavModifierComponent>([](NavModifierComponent& _c) { return _c.area == static_cast<int>(NavArea::Cost); });
+		_info.AddProperty<NavModifierComponent, bool>("useOwnerShape", &NavModifierComponent::useOwnerShape);
+		_info.AddProperty<NavModifierComponent, int>("shape", &NavModifierComponent::shape, 0.f, 1.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Box", "Circle" });
+		_info.SetLastPropertyVisible<NavModifierComponent>([](NavModifierComponent& _c) { return !_c.useOwnerShape; });
+		_info.AddProperty<NavModifierComponent, FVector2>("size", &NavModifierComponent::size);
+		_info.SetLastPropertyVisible<NavModifierComponent>([](NavModifierComponent& _c) { return !_c.useOwnerShape && _c.shape == 0; });
+		_info.AddProperty<NavModifierComponent, float>("radius", &NavModifierComponent::radius, 1.f, 5000.f);
+		_info.SetLastPropertyVisible<NavModifierComponent>([](NavModifierComponent& _c) { return !_c.useOwnerShape && _c.shape == 1; });
+	}
+	{
+		ClassInfo& _info = Describe("NavLinkComponent", "Component");	// a jump, a ladder, a teleporter
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NavLinkComponent>(); };
+		_info.AddProperty<NavLinkComponent, FVector2>("startOffset", &NavLinkComponent::startOffset);
+		_info.AddProperty<NavLinkComponent, FVector2>("endOffset", &NavLinkComponent::endOffset);
+		_info.AddProperty<NavLinkComponent, bool>("bidirectional", &NavLinkComponent::bidirectional);
+		_info.AddProperty<NavLinkComponent, float>("cost", &NavLinkComponent::cost, 0.05f, 100.f);
+	}
+	{
+		ClassInfo& _info = Describe("NavAgentComponent", "Component");	// moves its actor along paths
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NavAgentComponent>(); };
+		_info.AddProperty<NavAgentComponent, float>("speed", &NavAgentComponent::speed, 0.f, 5000.f);
+		_info.AddProperty<NavAgentComponent, float>("acceleration", &NavAgentComponent::acceleration, 0.f, 50000.f);
+		_info.AddProperty<NavAgentComponent, float>("stoppingDistance", &NavAgentComponent::stoppingDistance, 0.f, 1000.f);
+		_info.AddProperty<NavAgentComponent, float>("radius", &NavAgentComponent::radius, 0.f, 512.f);
+		_info.AddProperty<NavAgentComponent, bool>("rotateToMovement", &NavAgentComponent::rotateToMovement);
+		_info.AddProperty<NavAgentComponent, float>("rotationSpeed", &NavAgentComponent::rotationSpeed, 0.f, 5000.f);
+		_info.SetLastPropertyVisible<NavAgentComponent>([](NavAgentComponent& _c) { return _c.rotateToMovement; });
+		_info.AddProperty<NavAgentComponent, bool>("avoidance", &NavAgentComponent::avoidance);
+		_info.AddProperty<NavAgentComponent, float>("repathInterval", &NavAgentComponent::repathInterval, 0.05f, 10.f);
+		_info.AddProperty<NavAgentComponent, int>("linkMode", &NavAgentComponent::linkMode, 0.f, 1.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Move along", "Teleport" });
+		_info.AddProperty<NavAgentComponent, EventList>("onArrived", &NavAgentComponent::onArrivedCalls);
+		_info.AddProperty<NavAgentComponent, EventList>("onFailed", &NavAgentComponent::onFailedCalls);
+		_info.AddFunction<NavAgentComponent, FVector2>("MoveTo", [](NavAgentComponent& _c, const FVector2& _goal) { _c.MoveTo(_goal); });
+		_info.AddFunction<NavAgentComponent, std::string>("MoveToActor", [](NavAgentComponent& _c, const std::string& _name)
+		{
+			for (const std::unique_ptr<Actor>& _actor : _c.GetLevel()->GetActorManager().GetActors())
+				if (_actor->GetName().StdString() == _name && !_actor->IsPendingDestroy()) { _c.MoveToActor(_actor.get()); return; }
+			LOG_WARNING("NavAgentComponent: MoveToActor: no actor named \"" + _name + "\"");
+		});
+		_info.AddFunction<NavAgentComponent, float>("Wander", [](NavAgentComponent& _c, const float& _radius) { _c.Wander(_radius); });
+		_info.AddFunction<NavAgentComponent>("Stop", [](NavAgentComponent& _c) { _c.Stop(); });
+	}
+	{
+		ClassInfo& _info = Describe("NavTestComponent", "Component");	// shows a path in the editor
+		_info.componentFactory = [](Actor* _owner) -> Component* { return _owner->AddComponent<NavTestComponent>(); };
+		_info.AddProperty<NavTestComponent, FVector2>("goalOffset", &NavTestComponent::goalOffset);
+		_info.AddProperty<NavTestComponent, float>("agentRadius", &NavTestComponent::agentRadius, 0.f, 512.f);
+		_info.AddAccessor<NavTestComponent, float>("pathLength", [](NavTestComponent& _c) { return _c.Compute().length; }, [](NavTestComponent&, const float&) {}, 0.f, 0.f, true);
+		_info.AddAccessor<NavTestComponent, bool>("reachable", [](NavTestComponent& _c) { const NavPath _p = _c.Compute(); return _p.found && !_p.partial; }, [](NavTestComponent&, const bool&) {}, 0.f, 0.f, true);
+	}
+	// Ready-made actors for the Add Actor list (saved as EmptyActors with these components).
+	Describe("NavMeshBoundsVolume", "Actor").factory = [](Level* _level) -> Actor*
+	{
+		EmptyActor* _actor = _level->SpawnActor<EmptyActor>();
+		_actor->SetName("NavMeshBoundsVolume");
+		_actor->AddComponent<NavMeshBoundsComponent>();
+		_actor->AddComponent<BillboardComponent>(BillboardIcon::Logic);
+		return _actor;
+	};
+	Describe("NavigationTestActor", "Actor").factory = [](Level* _level) -> Actor*
+	{
+		EmptyActor* _actor = _level->SpawnActor<EmptyActor>();
+		_actor->SetName("NavigationTestActor");
+		_actor->AddComponent<NavTestComponent>();
+		_actor->AddComponent<BillboardComponent>(BillboardIcon::Spawn);
+		return _actor;
+	};
 
 	{
 		ClassInfo& _info = Describe("BillboardComponent", "Component");	// an icon to click in the editor, never shown in the game

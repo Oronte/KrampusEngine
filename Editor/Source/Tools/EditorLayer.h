@@ -26,6 +26,7 @@ namespace Krampus
 		bool						cameraDragging		= false;	// right or middle mouse held: the editor camera is being moved
 		bool						layoutChecked		= false;
 		float						appliedUiScale		= 0.f;		// interface scale the font and sizes were made for
+		bool						appliedNavigation	= false;	// NavigationSystem::showNavigation as set last frame
 		std::vector<std::pair<class Actor*, ImVec4>>	billboardRects;	// icons drawn this frame (min x, min y, max x, max y), for clicks
 
 		int							gizmoAxis			= -1;		// handle being dragged: 0 X arrow, 1 Y arrow, 2 center, 3 rotation ring, 4 X box, 5 Y box, 6 grey box, -1 none

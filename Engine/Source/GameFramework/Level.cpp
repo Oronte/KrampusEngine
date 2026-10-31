@@ -4,6 +4,7 @@
 #include "Actors/CameraActor.h"
 #include "Actors/EmptyActor.h"
 #include "Components/ParticleComponent.h"
+#include "Navigation/NavigationSystem.h"
 
 using namespace Krampus;
 
@@ -107,4 +108,12 @@ Krampus::ParticleComponent* Krampus::Level::SpawnParticles(const ParticlePreset&
 	_particles->destroyOwnerWhenDone = !_particles->Settings().looping;
 	_particles->Restart();	// from where the actor is now
 	return _particles;
+}
+
+Krampus::Level::~Level() = default;	// here: NavigationSystem is complete
+
+Krampus::NavigationSystem& Krampus::Level::GetNavigation()
+{
+	if (!navigation) navigation = std::make_unique<NavigationSystem>(this);
+	return *navigation;
 }
