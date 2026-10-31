@@ -10,7 +10,6 @@ void Krampus::Play(EditorContext& _context)
 	if (_context.playing) return;
 
 	LOG_MSG("Editor: Play");
-	SaveBlueprintEditorChanges();	// the game runs the blueprints as they are in their files
 
 	// Whatever the game does while it runs, Stop gets the scene back as it is now.
 	_context.hasSnapshot = false;

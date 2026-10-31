@@ -118,7 +118,6 @@ void EditorLayer::OnDetach()
 	Debug::displayScale = 1.f;
 	if (IsHotReloading()) SaveSettings();	// the settings changed and not saved yet survive a rebuild
 	if (IsHotReloading()) SaveShapeEditorChanges();
-	if (IsHotReloading()) SaveBlueprintEditorChanges();
 	if (IsHotReloading()) SaveSession(context);
 	ClearThumbnails();
 	if (Level* _level = context.GetLevel()) _level->GetCameraManager().ClearViewOverride();
@@ -216,7 +215,6 @@ void EditorLayer::OnRender(Window& _window)
 	DrawContentPanel(context);
 	DrawAnimationEditor(context);
 	DrawAnimationGraph(context);
-	DrawBlueprintEditor(context);
 	DrawNetworkWindow(context);
 	DrawShapeEditor(context);
 

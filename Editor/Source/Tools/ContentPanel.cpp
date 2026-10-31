@@ -5,7 +5,6 @@
 #include "Graphics/Shapes/ShapeAssets.h"
 #include "ScriptCreator.h"
 #include "FileDrop.h"
-#include "Blueprint/Blueprint.h"
 #include <imgui.h>
 
 #define NOMINMAX
@@ -35,7 +34,7 @@ namespace
 		ShellExecuteW(nullptr, L"open", L"explorer.exe", _arguments.c_str(), nullptr, SW_SHOWNORMAL);
 	}
 
-	enum class Kind { Folder, Scene, Script, Texture, Audio, Font, Shape, Blueprint, Other };
+	enum class Kind { Folder, Scene, Script, Texture, Audio, Font, Shape, Other };
 
 	std::string LowerExtension(const std::filesystem::path& _path)
 	{
@@ -45,16 +44,6 @@ namespace
 	}
 
 	// "Enemies/Bat" for Content/Shapes/Enemies/Bat.kshape: the name the Shape Editor and the "polygon" properties use.
-	// "Content/Blueprints/Enemies/Bat.kbp" -> "Enemies/Bat".
-	std::string BlueprintNameOf(const std::filesystem::path& _file)
-	{
-		std::error_code _error;
-		std::filesystem::path _relative = std::filesystem::relative(_file, BlueprintAsset::Folder(), _error);
-		if (_error || _relative.empty() || _relative.begin()->string() == "..") _relative = _file.filename();
-		_relative.replace_extension();
-		return _relative.generic_string();
-	}
-
 	std::string ShapeNameOf(const std::filesystem::path& _file)
 	{
 		std::error_code _error;
@@ -76,7 +65,6 @@ namespace
 		if (_extension == ".wav" || _extension == ".mp3" || _extension == ".ogg" || _extension == ".flac") return Kind::Audio;
 		if (_extension == ".ttf" || _extension == ".otf")												return Kind::Font;
 		if (_extension == ShapeAssets::EXTENSION)															return Kind::Shape;
-		if (_extension == BlueprintAsset::EXTENSION)														return Kind::Blueprint;
 		return Kind::Other;
 	}
 
@@ -91,7 +79,6 @@ namespace
 		case Kind::Audio:	return "Audio";
 		case Kind::Font:	return "Font";
 		case Kind::Shape:	return "Shape";
-		case Kind::Blueprint:	return "Blueprint";
 		default:			return "File";
 		}
 	}
@@ -186,7 +173,6 @@ namespace
 		case Kind::Audio:	DrawAudioIcon(_draw, _min, _max); break;
 		case Kind::Font:	DrawBadge(_draw, _min, _max, IM_COL32(235, 140, 70, 255), IM_COL32(150, 70, 30, 255), "Aa"); break;
 		case Kind::Shape:	DrawBadge(_draw, _min, _max, IM_COL32(90, 150, 255, 255), IM_COL32(40, 80, 170, 255), "SHP"); break;
-		case Kind::Blueprint:	DrawBadge(_draw, _min, _max, IM_COL32(60, 130, 230, 255), IM_COL32(25, 60, 140, 255), "BP"); break;
 		default:			DrawFileIcon(_draw, _min, _max, LowerExtension(_entry.path())); break;
 		}
 	}
@@ -582,18 +568,6 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 		ImGui::SliderFloat("##size", &_tileSize, 56.f, 160.f, "");
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Icon size");
 		ImGui::SameLine();
-		if (ImGui::Button("+ Blueprint"))
-		{
-			const std::string _created = CreateBlueprintAsset("NewBlueprint");
-			if (!_created.empty())
-			{
-				_current = BlueprintAsset::Folder();
-				_selected = BlueprintAsset::PathOf(_created);
-				OpenBlueprintEditor(_created);
-			}
-		}
-		if (ImGui::IsItemHovered()) ImGui::SetTooltip("A new visual script in Content/Blueprints (opens the Blueprint Editor)");
-		ImGui::SameLine();
 		if (ImGui::Button("+ New Script"))
 		{
 			_scriptError.clear();
@@ -745,7 +719,6 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 					else if (_kind == Kind::Scene)	RequestOpenScene(_context, _entry.path());
 					else if (_kind == Kind::Script)	OpenSolution(_entry.path());
 						else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
-						else if (_kind == Kind::Blueprint)	OpenBlueprintEditor(BlueprintNameOf(_entry.path()));
 					else							OpenWithSystem(_entry.path());
 				}
 
@@ -787,7 +760,6 @@ void Krampus::DrawContentPanel(EditorContext& _context)
 						else if (_kind == Kind::Scene)	RequestOpenScene(_context, _entry.path());
 						else if (_kind == Kind::Script)	OpenSolution(_entry.path());
 						else if (_kind == Kind::Shape)	OpenShapeEditor(ShapeNameOf(_entry.path()));
-						else if (_kind == Kind::Blueprint)	OpenBlueprintEditor(BlueprintNameOf(_entry.path()));
 						else							OpenWithSystem(_entry.path());
 					}
 					if (ImGui::MenuItem("Show in Explorer")) ShowInExplorer(_entry.path());

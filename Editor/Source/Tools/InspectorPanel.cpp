@@ -7,8 +7,6 @@
 #include "Components/InputComponent.h"
 #include "Managers/InputManager.h"
 #include "Graphics/Shapes/ShapeAssets.h"
-#include "Components/BlueprintComponent.h"
-#include "EditorTheme.h"
 #include <imgui.h>
 
 using namespace Krampus;
@@ -848,46 +846,6 @@ namespace
 		}
 	}
 
-	// BlueprintComponent: which blueprint it runs (a list of Content/Blueprints), a new one, and the editor.
-	void DrawBlueprintPicker(EditorContext& _context, BlueprintComponent& _component)
-	{
-		const std::string _shown = _component.blueprint.empty() ? std::string("(none)") : _component.blueprint;
-		ImGui::SetNextItemWidth(-1.f);
-		if (ImGui::BeginCombo("##blueprint", _shown.c_str()))
-		{
-			if (ImGui::Selectable("(none)", _component.blueprint.empty()))
-			{
-				_context.history.Record(_context, "Set blueprint");
-				_component.blueprint.clear();
-			}
-			for (const std::string& _name : BlueprintAsset::List())
-				if (ImGui::Selectable(_name.c_str(), _name == _component.blueprint))
-				{
-					_context.history.Record(_context, "Set blueprint");
-					_component.blueprint = _name;
-				}
-			ImGui::EndCombo();
-		}
-		if (!_component.blueprint.empty() && !BlueprintAsset::Exists(_component.blueprint))
-			ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::ConsoleWarning), "No file %s", BlueprintAsset::PathOf(_component.blueprint).generic_string().c_str());
-
-		const float _half = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
-		ImGui::BeginDisabled(_component.blueprint.empty());
-		if (ImGui::Button("Open in Blueprint Editor", ImVec2(_half, 0.f))) OpenBlueprintEditor(_component.blueprint);
-		ImGui::EndDisabled();
-		ImGui::SameLine();
-		if (ImGui::Button("+ New Blueprint", ImVec2(-1.f, 0.f)))
-		{
-			const std::string _created = CreateBlueprintAsset(_context.selected ? _context.selected->GetName().StdString() : "NewBlueprint");
-			if (!_created.empty())
-			{
-				_context.history.Record(_context, "Set blueprint");
-				_component.blueprint = _created;
-				OpenBlueprintEditor(_created);
-			}
-		}
-	}
-
 	// Animation components: the list of their animations is edited in the Animation Editor; here one is picked as the starting one.
 	void DrawStartAnimation(IGameObject& _component)
 	{
@@ -946,7 +904,6 @@ namespace
 					_component->SetActive(Bool(_componentActive));
 				DrawProperties(*_component);
 				if (ClassNameOf(*_component).starts_with("Animation")) DrawStartAnimation(*_component);
-				if (BlueprintComponent* _blueprint = dynamic_cast<BlueprintComponent*>(_component.get()); _blueprint && g_historyContext) DrawBlueprintPicker(*g_historyContext, *_blueprint);
 				if (ClassNameOf(*_component).starts_with("Animation") && ImGui::Button("Open Animation Editor", ImVec2(-1.f, 0.f)))
 					OpenAnimationEditor();
 				if (ClassNameOf(*_component) == "AnimationComponentSM" && ImGui::Button("Open Animation Graph (transitions)", ImVec2(-1.f, 0.f)))
