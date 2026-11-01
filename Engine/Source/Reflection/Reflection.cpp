@@ -1,4 +1,6 @@
 #include "Reflection.h"
+#include <charconv>
+#include <typeindex>
 
 using namespace Krampus;
 
@@ -205,4 +207,100 @@ WidgetComponentRegistrar::WidgetComponentRegistrar(const char* _className, Widge
 	ClassInfo& _info = ClassRegistry::FindOrAdd(_className);
 	NoteTwice(static_cast<bool>(_info.widgetComponentFactory), _className);
 	_info.widgetComponentFactory = _add;
+}
+
+// ---- References to actors and components (KPROPERTY(Actor*, ...))
+
+std::string Reflection::TypeName(const std::type_info& _type)
+{
+	return StripNamespace(_type.name());
+}
+
+std::string Reflection::EncodeReference(IGameObject* _target)
+{
+	if (const Actor* _actor = dynamic_cast<const Actor*>(_target))
+		return std::format("{:016x}", _actor->GetId());
+	if (const Component* _component = dynamic_cast<const Component*>(_target); _component && _component->GetOwner())
+		return std::format("{:016x}/{}", _component->GetOwner()->GetId(), ClassNameOf(*_component));
+	return "";
+}
+
+namespace
+{
+	Level* LevelOf(IGameObject* _object)
+	{
+		if (Actor* _actor = dynamic_cast<Actor*>(_object))							return _actor->GetLevel();
+		if (Component* _component = dynamic_cast<Component*>(_object))				return _component->GetLevel();
+		if (Widget* _widget = dynamic_cast<Widget*>(_object))						return _widget->GetLevel();
+		if (WidgetComponent* _component = dynamic_cast<WidgetComponent*>(_object))	return _component->GetOwner() ? _component->GetOwner()->GetLevel() : nullptr;
+		return nullptr;
+	}
+
+	// The reference properties of the class of _object (cached by C++ type: this runs each time an actor is destroyed).
+	const std::vector<const PropertyInfo*>& ReferencesOf(const IGameObject& _object)
+	{
+		static std::unordered_map<std::type_index, std::vector<const PropertyInfo*>> _cache;
+		const auto _found = _cache.find(std::type_index(typeid(_object)));
+		if (_found != _cache.end()) return _found->second;
+
+		std::vector<const PropertyInfo*> _references;
+		if (const ClassInfo* _class = ClassRegistry::Find(_object.ClassName()))
+			for (const PropertyInfo* _property : _class->GetProperties())
+				if (_property->IsReference() && _property->getObject && _property->setObject)
+					_references.push_back(_property);
+		return _cache.emplace(std::type_index(typeid(_object)), std::move(_references)).first->second;
+	}
+
+	void Forget(IGameObject& _holder, IGameObject* _object, const Actor* _actor)
+	{
+		for (const PropertyInfo* _property : ReferencesOf(_holder))
+		{
+			IGameObject* _target = _property->getObject(&_holder);
+			if (!_target) continue;
+			const Component* _component = _actor ? dynamic_cast<const Component*>(_target) : nullptr;
+			if (_target == _object || (_component && _component->GetOwner() == _actor))
+				_property->setObject(&_holder, nullptr);
+		}
+	}
+}
+
+IGameObject* Reflection::ResolveReference(IGameObject* _context, const std::string& _text)
+{
+	if (_text.empty()) return nullptr;
+	Level* _level = LevelOf(_context);
+	if (!_level) return nullptr;
+
+	const size_t _slash = _text.find('/');
+	std::uint64_t _id = 0;
+	const std::string _idText = _text.substr(0, _slash);
+	if (std::from_chars(_idText.data(), _idText.data() + _idText.size(), _id, 16).ec != std::errc()) return nullptr;
+
+	for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+	{
+		if (_actor->GetId() != _id) continue;
+		if (_slash == std::string::npos) return _actor.get();
+		const std::string _className = _text.substr(_slash + 1);
+		for (const std::unique_ptr<Component>& _component : _actor->GetComponents())
+			if (ClassNameOf(*_component) == _className) return _component.get();
+		return nullptr;
+	}
+	return nullptr;
+}
+
+void Krampus::ForgetReferencesTo(Level* _level, IGameObject* _object)
+{
+	if (!_level || !_object) return;
+	const Actor* _actor = dynamic_cast<const Actor*>(_object);	// its components go with it
+	for (const std::unique_ptr<Actor>& _holder : _level->GetActorManager().GetActors())
+	{
+		Forget(*_holder, _object, _actor);
+		for (const std::unique_ptr<Component>& _component : _holder->GetComponents())
+			Forget(*_component, _object, _actor);
+	}
+	for (const std::unique_ptr<Widget>& _widget : _level->GetHUD().GetWidgets())
+	{
+		Forget(*_widget, _object, _actor);
+		for (const std::unique_ptr<WidgetComponent>& _component : _widget->GetComponents())
+			Forget(*_component, _object, _actor);
+	}
 }

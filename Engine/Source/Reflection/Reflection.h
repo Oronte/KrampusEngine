@@ -12,9 +12,13 @@
 //       KPROPERTY(Float, speed) = 90.f;                  // shown in the Inspector, saved in scenes
 //       KPROPERTY_RANGE(Float, health, 0.f, 100.f) = 100.f;
 //       KPROPERTY_READONLY(Int, kills) = 0;              // shown but not editable
+//       KPROPERTY(Actor*, target) = nullptr;             // another actor of the scene, picked in the Inspector
+//       KPROPERTY(SpriteComponent*, sprite) = nullptr;   // a component of an actor of the scene
 //   };
 //
 // Supported types: bool, int, float, std::string, FVector2, Color and the engine's Bool, Int, Float, String.
+// References: a pointer to Actor, Component or any class derived from them (include its header). Only objects of that class can be
+// picked; the scene saves which one it is and finds it again when it loads; the pointer becomes nullptr when its target is destroyed.
 // Components that scenes and the editor can add by name use KCOMPONENT(Class, Parent) with a public constructor Class(Actor*).
 // KPROPERTY leaves the following members public, like a Unity public field.
 
@@ -38,7 +42,9 @@ namespace Krampus
 		Events,		// stored as a string (EventList::Encode), edited as a list of function calls
 		InputBindings,	// stored as a string (InputComponent::EncodeBindings): input events and their function calls
 		MessageBindings,	// the same, but the names are network messages typed by the user
-		Shape			// stored as a string (name of a shape of Content/Shapes, without .kshape), picked from a list, edited in the Shape Editor
+		Shape,			// stored as a string (name of a shape of Content/Shapes, without .kshape), picked from a list, edited in the Shape Editor
+		ActorRef,		// a pointer to an actor of the level, stored as a string (Reflection::EncodeReference): see PropertyInfo::getObject
+		ComponentRef	// a pointer to a component of an actor of the level, stored the same way
 	};
 
 	/// <summary>
@@ -56,6 +62,14 @@ namespace Krampus
 		bool														readOnly	= false;
 		std::vector<std::string>									flagNames;	// for Flags: name of bit 0, bit 1... ; for Enum: name of value 0, 1...
 		std::function<bool(IGameObject*)>							visible;	// empty: always shown; else the Inspector hides the property when it returns false (the value is still saved)
+
+		// ActorRef and ComponentRef only: the pointer itself, the class it points to, and whether an object can be put in it.
+		std::function<IGameObject*(IGameObject*)>					getObject;
+		std::function<void(IGameObject*, IGameObject*)>				setObject;	// an object of another class is set as nullptr
+		std::function<bool(IGameObject*)>							accepts;
+		std::string													referenceClass;	// "Actor", "SpriteComponent"...
+
+		inline bool IsReference() const { return type == PropertyType::ActorRef || type == PropertyType::ComponentRef; }
 	};
 
 	/// <summary>
@@ -81,10 +95,32 @@ namespace Krampus
 			return _engine;
 		}
 
+		/// <summary>True for Actor*, Component* and pointers to their derived classes: a reference to another object of the level.</summary>
+		template <typename T>
+		inline constexpr bool IsReference = std::is_pointer_v<T>
+			&& (std::is_base_of_v<Actor, std::remove_cv_t<std::remove_pointer_t<T>>> || std::is_base_of_v<Component, std::remove_cv_t<std::remove_pointer_t<T>>>);
+
+		/// <summary>
+		/// What a scene saves for a reference: "" (nullptr), "<actor id>" for an actor, "<actor id>/<ComponentClass>" for a component.
+		/// </summary>
+		std::string EncodeReference(IGameObject* _target);
+
+		/// <summary>
+		/// The object EncodeReference gave _text for, in the level of _context (the object that holds the reference). nullptr when it is
+		/// not there (yet: a scene sets its references once all its actors are spawned).
+		/// </summary>
+		IGameObject* ResolveReference(IGameObject* _context, const std::string& _text);
+
+		/// <summary>The name of a C++ type without namespace ("SpriteComponent").</summary>
+		std::string TypeName(const std::type_info& _type);
+
 		template <typename T>
 		constexpr PropertyType TypeOf()
 		{
-			if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, Bool>)			return PropertyType::Bool;
+			static_assert(!std::is_base_of_v<IGameObject, T>, "KPROPERTY: an actor or a component is reflected as a pointer: KPROPERTY(Actor*, name) = nullptr;");
+			if constexpr (IsReference<T>)
+				return std::is_base_of_v<Actor, std::remove_cv_t<std::remove_pointer_t<T>>> ? PropertyType::ActorRef : PropertyType::ComponentRef;
+			else if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, Bool>)			return PropertyType::Bool;
 			else if constexpr (std::is_same_v<T, int> || std::is_same_v<T, Int>)		return PropertyType::Int;
 			else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, Float>)	return PropertyType::Float;
 			else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, String>)	return PropertyType::String;
@@ -150,21 +186,31 @@ namespace Krampus
 		void AddAccessor(const char* _name, std::function<T(Class&)> _get, std::function<void(Class&, const T&)> _set,
 			float _min = 0.f, float _max = 0.f, bool _readOnly = false)
 		{
-			PropertyInfo _property;
-			_property.name = _name;
-			_property.type = Reflection::TypeOf<T>();
-			_property.min = _min;
-			_property.max = _max;
-			_property.readOnly = _readOnly;
-			_property.get = [_get](IGameObject* _object)
+			if constexpr (Reflection::IsReference<T>)
 			{
-				return PropertyValue(_get(*static_cast<Class*>(_object)));
-			};
-			_property.set = [_set](IGameObject* _object, const PropertyValue& _value)
+				using Target = std::remove_cv_t<std::remove_pointer_t<T>>;
+				AddReference<Class, Target>(_name,
+					[_get](Class& _object) -> Target* { return _get(_object); },
+					[_set](Class& _object, Target* _target) { _set(_object, _target); }, _readOnly);
+			}
+			else
 			{
-				_set(*static_cast<Class*>(_object), Reflection::FromValue<T>(_value));
-			};
-			properties.push_back(std::move(_property));
+				PropertyInfo _property;
+				_property.name = _name;
+				_property.type = Reflection::TypeOf<T>();
+				_property.min = _min;
+				_property.max = _max;
+				_property.readOnly = _readOnly;
+				_property.get = [_get](IGameObject* _object)
+				{
+					return PropertyValue(_get(*static_cast<Class*>(_object)));
+				};
+				_property.set = [_set](IGameObject* _object, const PropertyValue& _value)
+				{
+					_set(*static_cast<Class*>(_object), Reflection::FromValue<T>(_value));
+				};
+				properties.push_back(std::move(_property));
+			}
 		}
 
 		/// <summary>
@@ -189,24 +235,67 @@ namespace Krampus
 			};
 		}
 
-		template <typename Class, typename T>
-		void AddProperty(const char* _name, T Class::* _member, float _min = 0.f, float _max = 0.f, bool _readOnly = false)
+		/// <summary>
+		/// Reflects a pointer to another object of the level (Target: Actor, Component or a class derived from them).
+		/// Its value is the text of Reflection::EncodeReference; getObject / setObject reach the pointer itself.
+		/// </summary>
+		template <typename Class, typename Target>
+		void AddReference(const char* _name, std::function<Target*(Class&)> _get, std::function<void(Class&, Target*)> _set, bool _readOnly = false)
 		{
 			PropertyInfo _property;
 			_property.name = _name;
-			_property.type = Reflection::TypeOf<T>();
-			_property.min = _min;
-			_property.max = _max;
+			_property.type = std::is_base_of_v<Actor, Target> ? PropertyType::ActorRef : PropertyType::ComponentRef;
 			_property.readOnly = _readOnly;
-			_property.get = [_member](IGameObject* _object)
+			_property.referenceClass = Reflection::TypeName(typeid(Target));
+			_property.accepts = [](IGameObject* _object) { return dynamic_cast<Target*>(_object) != nullptr; };
+			_property.getObject = [_get](IGameObject* _object) -> IGameObject*
 			{
-				return Reflection::ToValue<T>(static_cast<Class*>(_object)->*_member);
+				return _get(*static_cast<Class*>(_object));
 			};
-			_property.set = [_member](IGameObject* _object, const PropertyValue& _value)
+			_property.setObject = [_set](IGameObject* _object, IGameObject* _target)
 			{
-				static_cast<Class*>(_object)->*_member = Reflection::FromValue<T>(_value);
+				_set(*static_cast<Class*>(_object), dynamic_cast<Target*>(_target));
+			};
+			_property.get = [_get](IGameObject* _object)
+			{
+				return PropertyValue(Reflection::EncodeReference(_get(*static_cast<Class*>(_object))));
+			};
+			_property.set = [_set](IGameObject* _object, const PropertyValue& _value)
+			{
+				const std::string* _text = std::get_if<std::string>(&_value);
+				_set(*static_cast<Class*>(_object), _text ? dynamic_cast<Target*>(Reflection::ResolveReference(_object, *_text)) : nullptr);
 			};
 			properties.push_back(std::move(_property));
+		}
+
+		template <typename Class, typename T>
+		void AddProperty(const char* _name, T Class::* _member, float _min = 0.f, float _max = 0.f, bool _readOnly = false)
+		{
+			if constexpr (Reflection::IsReference<T>)
+			{
+				using Target = std::remove_cv_t<std::remove_pointer_t<T>>;
+				AddReference<Class, Target>(_name,
+					[_member](Class& _object) -> Target* { return _object.*_member; },
+					[_member](Class& _object, Target* _target) { _object.*_member = _target; }, _readOnly);
+			}
+			else
+			{
+				PropertyInfo _property;
+				_property.name = _name;
+				_property.type = Reflection::TypeOf<T>();
+				_property.min = _min;
+				_property.max = _max;
+				_property.readOnly = _readOnly;
+				_property.get = [_member](IGameObject* _object)
+				{
+					return Reflection::ToValue<T>(static_cast<Class*>(_object)->*_member);
+				};
+				_property.set = [_member](IGameObject* _object, const PropertyValue& _value)
+				{
+					static_cast<Class*>(_object)->*_member = Reflection::FromValue<T>(_value);
+				};
+				properties.push_back(std::move(_property));
+			}
 		}
 
 		void AddDeclarer(void(*_declare)(ClassInfo&))
@@ -240,6 +329,7 @@ namespace Krampus
 		template <typename Class, typename T>
 		void AddFunction(const char* _name, std::function<void(Class&, const T&)> _call)
 		{
+			static_assert(!Reflection::IsReference<T>, "KFUNCTION_ARG: an actor or a component cannot be an argument (give the function a KPROPERTY to read instead)");
 			FunctionInfo _function;
 			_function.name = _name;
 			_function.hasArgument = true;

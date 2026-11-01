@@ -21,6 +21,7 @@ namespace Krampus
 		KPROPERTY(Bool, showGizmo) = true;							// move arrows on the selection
 		KPROPERTY_RANGE(Float, gizmoSize, 40.f, 140.f) = 70.f;		// length of the arrows in pixels
 		KPROPERTY(Bool, showBillboards) = true;						// icons of the BillboardComponents in the Viewport
+		KPROPERTY(Bool, showNavigation) = false;					// navigation meshes, modifiers, links and agent paths (key P)
 		KPROPERTY_RANGE(Int, consoleMaxLines, 100, 20000) = 2000;	// lines kept by the Console
 		KPROPERTY(Bool, autoScrollConsole) = true;
 
@@ -38,6 +39,7 @@ namespace Krampus
 			showGizmo = true;
 			gizmoSize = 70.f;
 			showBillboards = true;
+			showNavigation = false;
 			consoleMaxLines = 2000;
 			autoScrollConsole = true;
 			consoleShowVerbose = true;

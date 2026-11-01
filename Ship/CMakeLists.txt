@@ -88,6 +88,7 @@ endif()
 target_link_options(KrampusGame PRIVATE
     $<$<CONFIG:Ship>:/SUBSYSTEM:WINDOWS>
     $<$<CONFIG:Ship>:/ENTRY:mainCRTStartup>
+    $<$<CONFIG:Debug>:/ignore:4099>    # box2dd.lib comes without its box2dd.pdb
 )
 
 set_target_properties(KrampusGame PROPERTIES

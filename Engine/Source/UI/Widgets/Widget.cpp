@@ -35,6 +35,9 @@ Krampus::Timer* Krampus::Widget::CreateTimer(const std::function<void()>& _callb
 
 void Krampus::Widget::Construct()
 {
+	// The components created in the constructor were waiting for this (CreateComponent): each one is constructed once.
+	if (constructed) return;
+	constructed = true;
 	for (const std::unique_ptr<WidgetComponent>& _component : components)
 	{
 		_component->Construct();
@@ -80,6 +83,15 @@ void Krampus::Widget::Destroy()
 	pendingDestroy = true;
 	Deconstruct();
 	level->GetHUD().MarkForDeleteWidget(this);
+
+	// Out of the hierarchy: the parent would move a deleted widget. The children stay in the HUD, without a parent.
+	if (parent) parent->RemoveChild(this);
+	for (Widget* _child : children)
+	{
+		_child->parent = nullptr;
+		_child->localTransform = _child->transform;
+	}
+	children.clear();
 }
 
 std::string Krampus::Widget::ToString() const
@@ -89,10 +101,9 @@ std::string Krampus::Widget::ToString() const
 
 void Krampus::Widget::SetPosition(const FVector2& _newPosition)
 {
-	for (Widget* _widget : children)
-		_widget->Move(_newPosition - GetPosition());
 	transform.position = _newPosition;
-	onMove.Broadcast(_newPosition);
+	WorldChanged();
+	onMove.Broadcast(_newPosition);		// even when it did not change: a setter always tells
 }
 
 Krampus::FVector2 Krampus::Widget::GetPosition() const
@@ -102,13 +113,8 @@ Krampus::FVector2 Krampus::Widget::GetPosition() const
 
 void Krampus::Widget::SetRotation(const Angle& _newRotation)
 {
-	for (Widget* _widget : children)
-	{
-		const Angle& _deltaRot = _newRotation - GetRotation();
-		_widget->SetPosition(_widget->GetPosition().FVector2::RotateAround(GetPosition(), _deltaRot));
-		_widget->Rotate(_deltaRot);
-	}
 	transform.rotation = _newRotation;
+	WorldChanged();
 	onRotate.Broadcast(_newRotation);
 }
 
@@ -119,10 +125,42 @@ Krampus::Angle Krampus::Widget::GetRotation() const
 
 void Krampus::Widget::SetScale(const FVector2& _newScale)
 {
-	for (Widget* _widget : children)
-		_widget->Scale(_newScale - GetScale());
 	transform.scale = _newScale;
+	WorldChanged();
 	onScale.Broadcast(_newScale);
+}
+
+void Krampus::Widget::SetLocalTransform(const Transform& _local)
+{
+	localTransform = _local;
+	const Transform _old = transform;
+	FollowParent();
+	Propagate(_old);
+}
+
+void Krampus::Widget::WorldChanged()
+{
+	localTransform = parent ? RelativeTransform(parent->transform, transform) : transform;
+	const Transform _same = transform;
+	Propagate(_same);	// only the children: nothing differs for this one
+}
+
+void Krampus::Widget::FollowParent()
+{
+	transform = parent ? ComposeTransform(parent->transform, localTransform) : localTransform;
+}
+
+void Krampus::Widget::Propagate(const Transform& _old)
+{
+	for (Widget* _child : children)
+	{
+		const Transform _childOld = _child->transform;
+		_child->FollowParent();
+		_child->Propagate(_childOld);
+	}
+	if (transform.position.x != _old.position.x || transform.position.y != _old.position.y) onMove.Broadcast(transform.position);
+	if (transform.rotation != _old.rotation) onRotate.Broadcast(transform.rotation);
+	if (transform.scale.x != _old.scale.x || transform.scale.y != _old.scale.y) onScale.Broadcast(transform.scale);
 }
 
 Krampus::FVector2 Krampus::Widget::GetScale() const

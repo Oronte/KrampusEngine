@@ -3,6 +3,7 @@
 #include "Graphics/Shapes/ShapeObject.h"
 #include "Utilities/System/Debuggable.h"
 #include "Utilities/System/Drawable.h"
+#include "Graphics/Shaders/ShaderMaterial.h"
 
 namespace Krampus
 {
@@ -12,7 +13,7 @@ namespace Krampus
 	/// <summary>
 	/// Component that renders 2D shapes (rectangles, circles) with textures and colors attached to an actor.
 	/// </summary>
-	class SpriteComponent : public Component, public IDebuggable, public IDrawable
+	class SpriteComponent : public Component, public IDebuggable, public IDrawable, public IShaded
 	{
 		std::unique_ptr<ShapeObject>	shape;
 

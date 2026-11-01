@@ -9,6 +9,7 @@
 namespace Krampus
 {
 	class ParticleComponent;
+	class NavigationSystem;
 	enum class ParticlePreset;
 
 	class CameraActor;
@@ -22,6 +23,7 @@ namespace Krampus
 		Int					frameCount				= 0;
 
 	protected:
+		std::unique_ptr<NavigationSystem>	navigation;		// first member: destroyed last, after the actors that use it
 		TimerManager		timerManager;
 		CameraManager		cameraManager;
 		WorldPhysics		worldPhysics;
@@ -80,6 +82,11 @@ namespace Krampus
 		{
 			return worldPhysics;
 		}
+
+		/// <summary>The navigation of the level: meshes of its NavMesh Bounds Volumes, paths, agents (made the first time it is asked).</summary>
+		NavigationSystem& GetNavigation();
+
+		virtual ~Level();
 
 		/// <summary>
 		/// Gets a reference to the level's ActorManager.

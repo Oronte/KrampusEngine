@@ -12,8 +12,11 @@
 #include "Components/PhysicsComponent.h"
 #include "Components/SpriteComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Navigation/NavigationSystem.h"
+#include "Graphics/Shaders/ShaderLibrary.h"
 #include "Managers/TextureManager.h"
 #include "Utilities/Debug/Debug.h"
+#include "Utilities/Debug/Profiler.h"
 #include <unordered_set>
 #include "Utilities/Math/Polygon2D.h"
 #include "Actors/Actor.h"
@@ -118,6 +121,7 @@ void EditorLayer::OnDetach()
 	Debug::displayScale = 1.f;
 	if (IsHotReloading()) SaveSettings();	// the settings changed and not saved yet survive a rebuild
 	if (IsHotReloading()) SaveShapeEditorChanges();
+	if (IsHotReloading()) SaveShaderEditorChanges();
 	if (IsHotReloading()) SaveSession(context);
 	ClearThumbnails();
 	if (Level* _level = context.GetLevel()) _level->GetCameraManager().ClearViewOverride();
@@ -174,6 +178,7 @@ Bool EditorLayer::OnEvent(const sf::Event& _event)
 void EditorLayer::OnRender(Window& _window)
 {
 	if (!initialized) return;
+	PROFILE_SCOPE("Editor");
 
 	sf::RenderWindow& _renderWindow = _window.GetRenderWindow();
 	const sf::Vector2u _size = _renderWindow.getSize();
@@ -200,6 +205,8 @@ void EditorLayer::OnRender(Window& _window)
 	}
 	ImGui::SFML::Update(_renderWindow, clock.restart());
 	context.history.Update(context);	// finishes an undo that swapped the scene
+	context.SyncSelection();
+	ShaderLibrary::CheckChanges();		// a shader file changed by another program is compiled again
 	HandleShortcuts();
 
 	DrawMainMenuBar(context);
@@ -215,7 +222,9 @@ void EditorLayer::OnRender(Window& _window)
 	DrawContentPanel(context);
 	DrawAnimationEditor(context);
 	DrawAnimationGraph(context);
+	DrawShaderEditor(context);
 	DrawNetworkWindow(context);
+	DrawProfiler(context);
 	DrawShapeEditor(context);
 
 	ImGui::SFML::Render(_renderWindow);
@@ -283,9 +292,11 @@ void EditorLayer::DrawViewport()
 			window.SetMouseViewport(sf::FloatRect({ _min.x, _min.y }, { _max.x - _min.x, _max.y - _min.y }));
 			viewportHovered = ImGui::IsItemHovered();
 			MoveCamera(_min, _max);
+			DrawSelectionOutlines(_min, _max);
 			DrawBillboards(_min, _max);	// under the gizmo
 			DrawGizmo(_min, _max);
 			PickInViewport(_min, _max);	// after the gizmo: a click on one of its handles is not a pick
+			BoxSelectInViewport(_min, _max);
 			DrawViewportOverlay(_min, _max);
 		}
 	}
@@ -341,10 +352,25 @@ void EditorLayer::PickInViewport(const ImVec2& _min, const ImVec2& _max)
 	for (const Hit& _hit : _hits)
 		if (std::find(_order.begin(), _order.end(), _hit.actor) == _order.end()) _order.push_back(_hit.actor);
 
+	const bool _ctrl = ImGui::GetIO().KeyCtrl;
 	if (_order.empty())
 	{
-		context.selected = nullptr;
-		context.selectedWidget = nullptr;
+		// On nothing: a rectangle may start here (BoxSelectInViewport). Ctrl keeps the selection to add to it.
+		if (!_ctrl)
+		{
+			context.Select(nullptr);
+			context.selectedWidget = nullptr;
+		}
+		boxSelecting = true;
+		boxStart = _mouse;
+		return;
+	}
+
+	// Ctrl: the actor in front goes in or out of the selection.
+	if (_ctrl)
+	{
+		context.ToggleSelected(_order.front());
+		LOG(VerbosityType::Verbose, "Viewport: " + std::to_string(context.selection.size()) + " actor(s) selected");
 		return;
 	}
 
@@ -352,9 +378,80 @@ void EditorLayer::PickInViewport(const ImVec2& _min, const ImVec2& _max)
 	for (size_t _i = 0; _i < _order.size(); ++_i)
 		if (_order[_i] == context.selected) { _next = (_i + 1) % _order.size(); break; }
 
-	context.selected = _order[_next];
-	context.selectedWidget = nullptr;
+	context.Select(_order[_next]);
 	LOG(VerbosityType::Verbose, "Viewport: selected actor " + context.selected->GetName().StdString());
+}
+
+// A drag that started on nothing draws a rectangle; on release the actors whose position is inside are selected (Ctrl: added).
+void EditorLayer::BoxSelectInViewport(const ImVec2& _min, const ImVec2& _max)
+{
+	if (!boxSelecting) return;
+	Level* _level = context.GetLevel();
+	if (context.playing || !_level || gizmoAxis >= 0) { boxSelecting = false; return; }
+
+	const ImVec2 _mouse = ImGui::GetIO().MousePos;
+	const ImVec2 _a(std::min(boxStart.x, _mouse.x), std::min(boxStart.y, _mouse.y)), _b(std::max(boxStart.x, _mouse.x), std::max(boxStart.y, _mouse.y));
+	const bool _dragged = _b.x - _a.x > 4.f || _b.y - _a.y > 4.f;
+	if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+	{
+		if (!_dragged) return;
+		ImDrawList* _draw = ImGui::GetWindowDrawList();
+		_draw->PushClipRect(_min, _max, true);
+		const ImU32 _accent = EditorTheme::GetU32(EditorTheme::Custom::Selection);
+		_draw->AddRectFilled(_a, _b, (_accent & 0x00FFFFFF) | 0x30000000);
+		_draw->AddRect(_a, _b, _accent);
+		_draw->PopClipRect();
+		return;
+	}
+
+	boxSelecting = false;
+	if (!_dragged) return;
+	const sf::Vector2f _windowSize(window.GetRenderWindow().getSize());
+	const sf::View _view = context.GetCameraView(_windowSize);
+	if (!ImGui::GetIO().KeyCtrl) context.Select(nullptr);
+	for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+	{
+		const FVector2 _position = _actor->GetPosition();
+		const sf::Vector2i _pixel = window.GetRenderWindow().mapCoordsToPixel(sf::Vector2f(_position.x, _position.y), _view);
+		const ImVec2 _screen(_min.x + _pixel.x * (_max.x - _min.x) / _windowSize.x, _min.y + _pixel.y * (_max.y - _min.y) / _windowSize.y);
+		if (_screen.x >= _a.x && _screen.x <= _b.x && _screen.y >= _a.y && _screen.y <= _b.y)
+			context.AddToSelection(_actor.get());
+	}
+	LOG(VerbosityType::Verbose, "Viewport: " + std::to_string(context.selection.size()) + " actor(s) selected by rectangle");
+}
+
+// Every selected actor: the outline of its sprite (or a small square where it is), the one shown in the Inspector thicker.
+void EditorLayer::DrawSelectionOutlines(const ImVec2& _min, const ImVec2& _max)
+{
+	if (context.playing || context.selection.empty()) return;
+	const sf::Vector2f _windowSize(window.GetRenderWindow().getSize());
+	const sf::View _view = context.GetCameraView(_windowSize);
+	const auto _toScreen = [&](const FVector2& _world)
+	{
+		const sf::Vector2i _pixel = window.GetRenderWindow().mapCoordsToPixel(sf::Vector2f(_world.x, _world.y), _view);
+		return ImVec2(_min.x + _pixel.x * (_max.x - _min.x) / _windowSize.x, _min.y + _pixel.y * (_max.y - _min.y) / _windowSize.y);
+	};
+
+	ImDrawList* _draw = ImGui::GetWindowDrawList();
+	_draw->PushClipRect(_min, _max, true);
+	const ImU32 _accent = EditorTheme::GetU32(EditorTheme::Custom::Selection);
+	for (Actor* _actor : context.selection)
+	{
+		const float _thickness = _actor == context.selected ? 2.5f : 1.5f;
+		if (SpriteComponent* _sprite = _actor->GetComponent<SpriteComponent>())
+		{
+			std::vector<ImVec2> _points;
+			for (const FVector2& _point : Polygon2D::Transform(_sprite->GetShapeObject()->GetOutline().points, _sprite->GetPosition(), _sprite->GetRotation(), _sprite->GetScale()))
+				_points.push_back(_toScreen(_point));
+			if (_points.size() >= 2) _draw->AddPolyline(_points.data(), static_cast<int>(_points.size()), _accent, ImDrawFlags_Closed, _thickness);
+		}
+		else
+		{
+			const ImVec2 _center = _toScreen(_actor->GetPosition());
+			_draw->AddRect(ImVec2(_center.x - 6.f, _center.y - 6.f), ImVec2(_center.x + 6.f, _center.y + 6.f), _accent, 0.f, 0, _thickness);
+		}
+	}
+	_draw->PopClipRect();
 }
 
 // The icons of the BillboardComponents, where their actor is, at the same size on the screen whatever the zoom. Only while
@@ -403,7 +500,7 @@ void EditorLayer::DrawBillboards(const ImVec2& _min, const ImVec2& _max)
 		const ImVec2 _a(_center.x - _half, _center.y - _half), _b(_center.x + _half, _center.y + _half);
 		billboardRects.push_back({ _actor.get(), ImVec4(_a.x, _a.y, _b.x, _b.y) });
 
-		const bool _selected = context.selected == _actor.get();
+		const bool _selected = context.IsSelected(_actor.get());
 		const bool _hovered = _windowHovered && _mouse.x >= _a.x && _mouse.y >= _a.y && _mouse.x <= _b.x && _mouse.y <= _b.y;
 		const float _fade = _actor->IsActive() ? 1.f : 0.4f;	// an inactive actor: a faded icon
 		const Color& _tint = _billboard->tint;
@@ -750,6 +847,21 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 	enum Handle { MoveX = 0, MoveY = 1, MoveFree = 2, Ring = 3, ScaleX = 4, ScaleY = 5, ScaleAll = 6, HandleCount = 7 };
 	bool _over[HandleCount] = { };
 
+	// Multi-selection: the other selected actors (not those inside the dragged one or above it) follow it, as one group.
+	const auto _captureGroup = [&]()
+	{
+		gizmoGroup.clear();
+		if (context.selectedWidget || !context.selected) return;
+		const auto _related = [&](Actor* _actor)
+		{
+			for (Actor* _above = context.selected; _above; _above = _above->GetParent()) if (_above == _actor) return true;
+			for (Actor* _above = _actor->GetParent(); _above; _above = _above->GetParent()) if (_above == context.selected) return true;
+			return false;
+		};
+		for (Actor* _actor : context.SelectedRoots())
+			if (!_related(_actor)) gizmoGroup.push_back({ _actor, Transform(_actor->GetPosition(), _actor->GetRotation(), _actor->GetScale()) });
+	};
+
 	ImDrawList* _draw = ImGui::GetWindowDrawList();
 	_draw->PushClipRect(_min, _max, true);
 
@@ -776,6 +888,7 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 			gizmoStartPosition = _position;
 			gizmoStartRotation = _currentRotation;
 			gizmoStartScale = _currentScale;
+			_captureGroup();
 			LOG(VerbosityType::VeryVerbose, "Gizmo: drag started on handle " + std::to_string(static_cast<int>(_id)));
 		}
 		return gizmoAxis == _id && ImGui::IsItemActive();
@@ -854,6 +967,7 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 			gizmoStartScale = _currentScale;
 			gizmoLastAngle = std::atan2(gizmoStartMouse.y - _origin.y, gizmoStartMouse.x - _origin.x);
 			gizmoAccum = 0.f;
+			_captureGroup();
 			LOG(VerbosityType::VeryVerbose, "Gizmo: drag started on the rotation ring");
 		}
 
@@ -870,6 +984,22 @@ void EditorLayer::DrawGizmo(const ImVec2& _min, const ImVec2& _max)
 			float _degrees = gizmoStartRotation + gizmoAccum * 180.f / PI;
 			if (_snap) _degrees = std::round(_degrees / 15.f) * 15.f;
 			_target->SetRotation(Angle::FromDegrees(_degrees));
+		}
+	}
+
+	// ---- The group: moved, turned around the dragged actor and scaled from it by as much as the dragged actor.
+	if (gizmoAxis >= 0 && !gizmoGroup.empty() && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+	{
+		const FVector2 _move = _target->GetPosition() - gizmoStartPosition;
+		const float _turn = (static_cast<float>(_target->GetRotation().ToDegrees()) - gizmoStartRotation) * PI / 180.f;
+		const FVector2 _now = _target->GetScale();
+		const FVector2 _ratio(gizmoStartScale.x != 0.f ? _now.x / gizmoStartScale.x : 1.f, gizmoStartScale.y != 0.f ? _now.y / gizmoStartScale.y : 1.f);
+		for (const auto& [_actor, _start] : gizmoGroup)
+		{
+			const FVector2 _offset = _start.position - gizmoStartPosition;
+			_actor->SetPosition(gizmoStartPosition + _move + FVector2(_offset.x * _ratio.x, _offset.y * _ratio.y).Rotated(_turn));
+			_actor->SetRotation(Angle(static_cast<float>(_start.rotation.ToRadians()) + _turn));
+			_actor->SetScale(FVector2(_start.scale.x * _ratio.x, _start.scale.y * _ratio.y));
 		}
 	}
 
@@ -1002,7 +1132,25 @@ void EditorLayer::HandleShortcuts()
 	if (Shortcuts::Pressed("Package Game") && !IsCompiling())
 		StartShip();
 
+	if (Shortcuts::Pressed("Copy")) CopySelection(context);
+	if (Shortcuts::Pressed("Paste")) PasteActors(context);
+	if (Shortcuts::Pressed("Duplicate")) DuplicateSelection(context);
+
 	// Delete in the Viewport (the Hierarchy checks its own focus).
+	// Show Navigation: the P key, the Tools menu (it changes NavigationSystem::showNavigation) and the Settings window agree.
+	if (NavigationSystem::showNavigation != appliedNavigation)
+	{
+		editorSettings.showNavigation = NavigationSystem::showNavigation;
+		settingsDirty = true;
+	}
+	if (viewportHovered && !ImGui::GetIO().WantTextInput && Shortcuts::Pressed("Show Navigation"))
+	{
+		editorSettings.showNavigation = !editorSettings.showNavigation;
+		settingsDirty = true;
+	}
+	NavigationSystem::showNavigation = editorSettings.showNavigation;
+	appliedNavigation = editorSettings.showNavigation;
+
 	if (viewportHovered && Shortcuts::Pressed("Delete Selection"))
 		DeleteSelection(context);
 }

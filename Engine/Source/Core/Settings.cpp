@@ -73,6 +73,8 @@ namespace
 		case PropertyType::InputBindings:
 		case PropertyType::MessageBindings:
 		case PropertyType::Shape:
+		case PropertyType::ActorRef:
+		case PropertyType::ComponentRef:
 		case PropertyType::Sound:	return PropertyValue(_text);
 		case PropertyType::Vector2:
 		{

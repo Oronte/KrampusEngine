@@ -61,6 +61,53 @@ namespace Krampus
 		{
 			SetRotation(GetAngleTo(_target));
 		}
+
+		/// <summary>
+		/// The transform relative to the parent (an actor or a widget in a hierarchy); the world one without a parent.
+		/// </summary>
+		NO_DISCARD virtual Transform GetLocalTransform() const
+		{
+			return Transform(GetPosition(), GetRotation(), GetScale());
+		}
+
+		/// <summary>
+		/// Sets the transform relative to the parent; the world one without a parent.
+		/// </summary>
+		virtual void SetLocalTransform(const Transform& _local)
+		{
+			SetTransform(_local);
+		}
+
+		/// <summary>
+		/// True when the transform is relative to a parent (GetLocalTransform differs from the world one).
+		/// </summary>
+		NO_DISCARD virtual bool HasParentTransform() const
+		{
+			return false;
+		}
+
+		/// <summary>
+		/// The world transform of a child: its local one placed in its parent (scaled along the parent's axes, then turned and moved).
+		/// </summary>
+		static Transform ComposeTransform(const Transform& _parent, const Transform& _local)
+		{
+			const float _turn = _parent.rotation.ToRadians();
+			const FVector2 _offset(_local.position.x * _parent.scale.x, _local.position.y * _parent.scale.y);
+			return Transform(_parent.position + _offset.Rotated(_turn), _parent.rotation + _local.rotation,
+				FVector2(_parent.scale.x * _local.scale.x, _parent.scale.y * _local.scale.y));
+		}
+
+		/// <summary>
+		/// The local transform that gives _world in _parent (the opposite of ComposeTransform). A parent axis at 0 has no size to
+		/// divide by: the child keeps its world value on that axis.
+		/// </summary>
+		static Transform RelativeTransform(const Transform& _parent, const Transform& _world)
+		{
+			const auto _divide = [](const float _value, const float _by) { return _by != 0.f ? _value / _by : _value; };
+			const FVector2 _offset = (_world.position - _parent.position).Rotated(-static_cast<float>(_parent.rotation.ToRadians()));
+			return Transform(FVector2(_divide(_offset.x, _parent.scale.x), _divide(_offset.y, _parent.scale.y)), _world.rotation - _parent.rotation,
+				FVector2(_divide(_world.scale.x, _parent.scale.x), _divide(_world.scale.y, _parent.scale.y)));
+		}
 	};
 
 }

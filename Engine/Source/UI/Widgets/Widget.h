@@ -9,8 +9,11 @@ namespace Krampus
 	class Widget : public IGameObject, public ITransformable
 	{
 		std::vector<Widget*>						children;
-		Transform									transform;
+		Widget*										parent			= nullptr;
+		Transform									transform;					// on the screen
+		Transform									localTransform;				// in the parent (the screen one without a parent): what a child keeps
 		Bool										pendingDestroy	= false;
+		Bool										constructed		= false;	// Construct() ran: the components added from now on are constructed at once
 
 	public:
 		/// <summary>Broadcast when widget position changes.</summary>
@@ -33,10 +36,26 @@ namespace Krampus
 		/// <param name="_actor">Pointer to child Widget.</param>
 		inline void AddChild(Widget* _actor)
 		{
+			if (!_actor || _actor == this) return;
+			for (Widget* _above = parent; _above; _above = _above->parent)
+				if (_above == _actor)
+				{
+					LOG_WARNING("Widget: " + _actor->GetName().StdString() + " is above " + GetName().StdString() + " in the hierarchy, it cannot be its child");
+					return;
+				}
+			if (_actor->parent && _actor->parent != this) _actor->parent->RemoveChild(_actor);	// one parent at a time
+			_actor->parent = this;
+			_actor->localTransform = RelativeTransform(transform, _actor->transform);	// it stays where it is
 			if (std::find(children.begin(), children.end(), _actor) == children.end())
 			{
 				children.push_back(_actor);
 			}
+		}
+
+		/// <summary>The widget this one is a child of, or nullptr.</summary>
+		inline Widget* GetParent() const
+		{
+			return parent;
 		}
 
 		/// <summary>Gets the child widgets.</summary>
@@ -76,6 +95,11 @@ namespace Krampus
 				{
 					return _actor == _toRemove;
 				});
+			if (_toRemove && _toRemove->parent == this)
+			{
+				_toRemove->parent = nullptr;
+				_toRemove->localTransform = _toRemove->transform;
+			}
 		}
 
 		/// <summary>Gets frame delta time in seconds.</summary>
@@ -103,7 +127,8 @@ namespace Krampus
 			std::unique_ptr<Type> _component = std::make_unique<Type>(this, std::forward<Args>(_args)...);
 			Type* _rawComponent = _component.get();
 			components.push_back(std::move(_component));
-			_rawComponent->Construct();
+			// From the widget's constructor: the widget's Construct() constructs it, once it is placed in the HUD.
+			if (constructed) _rawComponent->Construct();
 			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(Type).name()) + " added to " + GetName().StdString());
 			return _rawComponent;
 		}
@@ -214,5 +239,23 @@ namespace Krampus
 		/// <summary>Gets widget scale multipliers.</summary>
 		/// <returns>Scale factors.</returns>
 		FVector2 GetScale() const override;
+
+		/// <summary>The position, rotation and scale in the parent (the screen ones without a parent).</summary>
+		Transform GetLocalTransform() const override { return localTransform; }
+
+		/// <summary>Places the widget in its parent; the children follow.</summary>
+		void SetLocalTransform(const Transform& _local) override;
+
+		bool HasParentTransform() const override { return parent != nullptr; }
+
+	private:
+		/// <summary>The screen transform was set: the local one is computed again, then the children follow.</summary>
+		void WorldChanged();
+
+		/// <summary>The screen transform comes from the parent and the local one.</summary>
+		void FollowParent();
+
+		/// <summary>The children follow, then onMove / onRotate / onScale for what differs from _old.</summary>
+		void Propagate(const Transform& _old);
 	};
 }

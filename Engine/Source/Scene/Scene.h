@@ -33,6 +33,17 @@ namespace Krampus
 		/// Makes a scene the current level (swapped at the start of the next frame, safe to call from game code).
 		/// </summary>
 		static void Open(Engine& _engine, const std::string& _nameOrPath);
+
+		/// <summary>
+		/// Writes these actors, with their children and components, to a file: what the editor's Copy keeps.
+		/// </summary>
+		static bool CopyActors(const std::vector<Actor*>& _actors, const std::filesystem::path& _path);
+
+		/// <summary>
+		/// Spawns the actors of a CopyActors file in the level, with new ids: a reference from one pasted actor to another goes to
+		/// the new copy, a reference to an actor that was not copied stays on it. Returns the new actors without a parent.
+		/// </summary>
+		static std::vector<Actor*> PasteActors(Level& _level, const std::filesystem::path& _path);
 	};
 
 	/// <summary>

@@ -68,7 +68,10 @@ void Krampus::SpriteComponent::Deconstruct()
 void Krampus::SpriteComponent::Draw(Window& _window)
 {
 	if (!isActive) return;
-	_window.Draw(*shape);
+	sf::RenderStates _states;
+	const sf::Shape& _drawn = *shape->GetShape()->Get();
+	if (material.Apply(_states, _drawn.getTexture(), sf::Vector2f(_window.GetRenderWindow().getSize()))) _window.GetRenderWindow().draw(_drawn, _states);
+	else _window.Draw(*shape);
 	if (stainLayer) stainLayer->DrawOver(_window, *shape->GetShape()->Get());	// right after: the next sprites cover the marks too
 }
 

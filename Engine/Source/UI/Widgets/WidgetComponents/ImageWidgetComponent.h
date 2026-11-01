@@ -3,13 +3,14 @@
 #include "Graphics/Shapes/ShapeObject.h"
 #include "Utilities/System/Debuggable.h"
 #include "Utilities/System/Drawable.h"
+#include "Graphics/Shaders/ShaderMaterial.h"
 
 namespace Krampus
 {
     /// <summary>
     /// Component that renders textured 2D shapes (rectangles, circles) within a screen-space HUD widget.
     /// </summary>
-    class ImageWidgetComponent : public WidgetComponent, public IDebuggable, public IDrawable
+    class ImageWidgetComponent : public WidgetComponent, public IDebuggable, public IDrawable, public IShaded
     {
         std::unique_ptr<ShapeObject>	shape;
 

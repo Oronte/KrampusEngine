@@ -66,6 +66,9 @@ if(WIN32)
     target_compile_definitions(EditorModule PRIVATE WINDOWS)
 endif()
 
+# box2dd.lib comes without its box2dd.pdb: box2d is linked without debug info, nothing to warn about.
+target_link_options(EditorModule PRIVATE $<$<CONFIG:Debug>:/ignore:4099>)
+
 set_target_properties(EditorModule PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
     PDB_OUTPUT_DIRECTORY "${BIN_DIR}"

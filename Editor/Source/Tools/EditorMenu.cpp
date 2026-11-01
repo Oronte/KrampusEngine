@@ -7,7 +7,9 @@
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
 #include "Graphics/Particles/ParticleEmitter.h"
+#include "Navigation/NavigationSystem.h"
 #include <imgui.h>
+#include <unordered_set>
 #include <imgui_internal.h>
 
 #define NOMINMAX
@@ -26,6 +28,71 @@ sf::View EditorContext::GetCameraView(const sf::Vector2f& _windowSize) const
 {
 	const float _zoom = std::max(cameraZoom, 0.01f);
 	return sf::View(sf::Vector2f(cameraCenter.x, cameraCenter.y), sf::Vector2f(_windowSize.x / _zoom, _windowSize.y / _zoom));
+}
+
+void EditorContext::Select(Actor* _actor)
+{
+	selection.clear();
+	if (_actor) selection.push_back(_actor);
+	selected = _actor;
+	if (_actor) selectedWidget = nullptr;
+}
+
+void EditorContext::ToggleSelected(Actor* _actor)
+{
+	if (!_actor) return;
+	if (IsSelected(_actor))
+	{
+		std::erase(selection, _actor);
+		if (selected == _actor) selected = selection.empty() ? nullptr : selection.back();
+		return;
+	}
+	AddToSelection(_actor);
+}
+
+void EditorContext::AddToSelection(Actor* _actor)
+{
+	if (!_actor) return;
+	if (!IsSelected(_actor)) selection.push_back(_actor);
+	selected = _actor;
+	selectedWidget = nullptr;
+}
+
+bool EditorContext::IsSelected(const Actor* _actor) const
+{
+	return _actor && std::find(selection.begin(), selection.end(), _actor) != selection.end();
+}
+
+std::vector<Actor*> EditorContext::SelectedRoots() const
+{
+	std::vector<Actor*> _roots;
+	Level* _level = GetLevel();
+	if (!_level) return _roots;
+	for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+	{
+		if (!IsSelected(_actor.get())) continue;
+		bool _insideSelected = false;
+		for (Actor* _above = _actor->GetParent(); _above && !_insideSelected; _above = _above->GetParent())
+			_insideSelected = IsSelected(_above);
+		if (!_insideSelected) _roots.push_back(_actor.get());
+	}
+	return _roots;
+}
+
+void EditorContext::SyncSelection()
+{
+	if (!selected) { selection.clear(); return; }
+	if (!IsSelected(selected)) selection = { selected };	// set directly by some code: only it
+	if (selection.size() < 2) return;
+
+	// Forget the actors that are gone (deleted, or another scene).
+	Level* _level = GetLevel();
+	std::unordered_set<const Actor*> _alive;
+	if (_level)
+		for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+			if (!_actor->IsPendingDestroy()) _alive.insert(_actor.get());
+	std::erase_if(selection, [&](const Actor* _actor) { return !_alive.contains(_actor); });
+	if (!IsSelected(selected)) selected = selection.empty() ? nullptr : selection.back();
 }
 
 void Krampus::NewScene(EditorContext& _context)
@@ -149,6 +216,13 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 			if (ImGui::MenuItem(_redoText.c_str(), Shortcuts::Text("Redo").c_str(), false, _history.CanRedo() && !_context.playing))
 				_context.history.Redo(_context);
 			ImGui::Separator();
+			const bool _actors = _context.selected && !_context.playing;
+			if (ImGui::MenuItem("Copy", Shortcuts::Text("Copy").c_str(), false, _actors))
+				CopySelection(_context);
+			if (ImGui::MenuItem("Paste", Shortcuts::Text("Paste").c_str(), false, !_context.playing && CanPaste()))
+				PasteActors(_context);
+			if (ImGui::MenuItem("Duplicate", Shortcuts::Text("Duplicate").c_str(), false, _actors))
+				DuplicateSelection(_context);
 			if (ImGui::MenuItem("Delete Selection", Shortcuts::Text("Delete Selection").c_str(), false, (_context.selected || _context.selectedWidget) && !_context.playing))
 				DeleteSelection(_context);
 			ImGui::EndMenu();
@@ -158,12 +232,18 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 		{
 			if (ImGui::MenuItem("Network"))
 				OpenNetworkWindow();
+			if (ImGui::MenuItem("Profiler"))
+				OpenProfiler();
 			if (ImGui::MenuItem("Animation Editor"))
 				OpenAnimationEditor();
 			if (ImGui::MenuItem("Animation Graph"))
 				OpenAnimationGraph();
 			if (ImGui::MenuItem("Shape Editor"))
 				OpenShapeEditor();
+			if (ImGui::MenuItem("Shader Editor"))
+				OpenShaderEditor();
+			ImGui::Separator();
+			ImGui::MenuItem("Show Navigation", Shortcuts::Text("Show Navigation").c_str(), &NavigationSystem::showNavigation);
 			ImGui::EndMenu();
 		}
 
@@ -365,7 +445,8 @@ void Krampus::DrawStatusBar(EditorContext& _context)
 
 		// Selection and how many actors
 		Level* _level = _context.GetLevel();
-		if (_context.selected) ImGui::Text("Selected: %s", _context.selected->GetName().StdString().c_str());
+		if (_context.selection.size() > 1) ImGui::Text("Selected: %s + %d more", _context.selected->GetName().StdString().c_str(), static_cast<int>(_context.selection.size()) - 1);
+		else if (_context.selected) ImGui::Text("Selected: %s", _context.selected->GetName().StdString().c_str());
 		else if (_context.selectedWidget) ImGui::Text("Selected: %s (HUD)", _context.selectedWidget->GetName().StdString().c_str());
 		else ImGui::TextDisabled("Nothing selected");
 		if (_level)

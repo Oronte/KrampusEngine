@@ -26,6 +26,7 @@ namespace Krampus
 		bool						cameraDragging		= false;	// right or middle mouse held: the editor camera is being moved
 		bool						layoutChecked		= false;
 		float						appliedUiScale		= 0.f;		// interface scale the font and sizes were made for
+		bool						appliedNavigation	= false;	// NavigationSystem::showNavigation as set last frame
 		std::vector<std::pair<class Actor*, ImVec4>>	billboardRects;	// icons drawn this frame (min x, min y, max x, max y), for clicks
 
 		int							gizmoAxis			= -1;		// handle being dragged: 0 X arrow, 1 Y arrow, 2 center, 3 rotation ring, 4 X box, 5 Y box, 6 grey box, -1 none
@@ -36,6 +37,10 @@ namespace Krampus
 		float						gizmoAccum			= 0.f;		// radians turned since the drag started
 		ImVec2						gizmoStartMouse;
 		FVector2					gizmoStartPosition;
+		std::vector<std::pair<class Actor*, Transform>>	gizmoGroup;	// the other selected actors and where they were when the drag started
+
+		bool						boxSelecting		= false;	// a drag on nothing in the Viewport: a rectangle selects what is inside
+		ImVec2						boxStart;
 
 		std::vector<Logger::Entry>	consoleLines;
 		ImGuiTextFilter				consoleSearch;					// "word", "a,b" (one of them), "-word" (not this one)
@@ -67,6 +72,8 @@ namespace Krampus
 		void DrawGizmo(const ImVec2& _min, const ImVec2& _max);
 		void DrawViewportOverlay(const ImVec2& _min, const ImVec2& _max);
 		void PickInViewport(const ImVec2& _min, const ImVec2& _max);
+		void BoxSelectInViewport(const ImVec2& _min, const ImVec2& _max);
+		void DrawSelectionOutlines(const ImVec2& _min, const ImVec2& _max);
 		void DrawBillboards(const ImVec2& _min, const ImVec2& _max);
 		void MoveCamera(const ImVec2& _min, const ImVec2& _max);
 		void DrawSettingsWindow();

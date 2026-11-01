@@ -64,7 +64,10 @@ void Krampus::ImageWidgetComponent::Deconstruct()
 void Krampus::ImageWidgetComponent::Draw(Window &_window)
 {
     if (!isActive) return;
-    _window.Draw(*shape);
+    sf::RenderStates _states;
+    const sf::Shape& _drawn = *shape->GetShape()->Get();
+    if (material.Apply(_states, _drawn.getTexture(), sf::Vector2f(_window.GetRenderWindow().getSize()))) _window.GetRenderWindow().draw(_drawn, _states);
+    else _window.Draw(*shape);
 }
 
 void Krampus::ImageWidgetComponent::DrawDebug()

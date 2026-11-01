@@ -82,7 +82,10 @@ Float Krampus::TimerManager::Update()
 
     lastTimeStamp = _currentTime;
     elapsedTime = lastFrameDuration;
-    deltaTime = lastFrameDuration * timeScale;
+    // A long frame (a breakpoint, the window dragged, a load) slows the game down for a moment instead of making it jump: the
+    // physics, the timers and the movements never get a huge step.
+    const float _frame = lastFrameDuration > MaxDeltaTime ? MaxDeltaTime : static_cast<float>(lastFrameDuration);
+    deltaTime = _frame * timeScale;
     framesCount++;
 
 

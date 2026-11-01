@@ -3,6 +3,7 @@
 #include "Components/SpriteComponent.h"
 #include "Actors/Actor.h"
 #include "Core/KrampusObject.h"
+#include "Graphics/Lighting/LightRenderer.h"
 
 namespace Krampus
 {
@@ -19,6 +20,8 @@ namespace Krampus
 		std::vector<std::shared_ptr<Vertices>>		debugs;			// outlines drawn in the world, through the camera
 		std::vector<std::shared_ptr<Vertices>>		screenDebugs;	// outlines of HUD widgets, drawn in the HUD view
 		std::vector<sf::Vertex>						debugTriangles;	// lines and points made thick, drawn at once (reused)
+		LightRenderer								lights;			// 2D lights over the world (a level without lights is not touched)
+		std::vector<CameraComponent*>				splitCameras;	// split screen: each one draws the world in its part of the window
 		bool										drawingScreenDebug	= false;
 
 	public:
@@ -63,6 +66,29 @@ namespace Krampus
 		/// Sets the currently active rendering camera.
 		/// </summary>
 		/// <param name="_camera">Pointer to CameraComponent.</param>
+		/// <summary>
+		/// Split screen: the world is drawn by each camera in its part of the window, the HUD once over the whole window.
+		/// 2 cameras: side by side (one over the other when _stacked); 3: two at the top, one at the bottom; 4: a 2 x 2 grid.
+		/// Each camera keeps its zoom. An empty list (or ClearSplitScreen) goes back to the current camera alone.
+		/// </summary>
+		void SetSplitScreen(const std::vector<CameraComponent*>& _cameras, const bool& _stacked = false);
+
+		/// <summary>Back to one camera on the whole window.</summary>
+		void ClearSplitScreen();
+
+		inline bool IsSplitScreen() const
+		{
+			return splitCameras.size() > 1;
+		}
+
+		inline const std::vector<CameraComponent*>& GetSplitCameras() const
+		{
+			return splitCameras;
+		}
+
+		/// <summary>A camera that is destroyed leaves the split screen (the others share the window again).</summary>
+		void RemoveSplitCamera(CameraComponent* _camera);
+
 		inline void SetCurrent(CameraComponent* _camera)
 		{
 			LOG(VerbosityType::Verbose, std::string("Camera: current camera changed to ") + (_camera && _camera->GetOwner() ? _camera->GetOwner()->GetName().StdString() : std::string("none")));
@@ -80,8 +106,7 @@ namespace Krampus
 				LOG(VerbosityType::Error, "You try to add to window an invalide sprite");
 				return;
 			}
-			// Construct runs twice for the components created in an actor's constructor (CreateComponent, then the actor's Construct):
-			// a second entry would draw the sprite twice.
+			// Never twice in the list: a second entry would draw the sprite twice.
 			std::vector<IDrawable*>& _layer = actors[_drawable->GetZOrder()];
 			if (std::find(_layer.begin(), _layer.end(), _drawable) == _layer.end())
 				_layer.push_back(_drawable);
@@ -188,6 +213,8 @@ namespace Krampus
 
 	private:
 		void RenderActors(Window& _window, const Bool& splitScreen);
+		void RenderPostProcess(Window& _window);
+		sf::Texture									screenCopy;		// the picture of the world, for the post-process effects
 		void RenderDebugs(Window& _window, const Bool& splitScreen);
 		void DrawDebugList(Window& _window, const std::vector<std::shared_ptr<Vertices>>& _list);
 		void RenderWidgets(Window& _window, const Bool& splitScreen);

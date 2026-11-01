@@ -8,6 +8,7 @@
 #include "Layers/PauseLayer.h"
 #include "Layers/SplashLayer.h"
 #include "Graphics/Mouse.h"
+#include "Utilities/Debug/Profiler.h"
 
 using namespace Krampus;
 #undef new
@@ -87,18 +88,36 @@ Bool Engine::Tick()
 {
 	if (shouldClose) return false;
 
-	network->Update();	// receives what arrived, even while the level is paused (edit mode)
+	{
+		PROFILE_SCOPE("Network");
+		network->Update();	// receives what arrived, even while the level is paused (edit mode)
+	}
 
 	levelManager->ChangeLevel();
 	Level* _currentLevel = levelManager->GetCurrentLevel();
-	if (!_currentLevel) return false;
+	if (!_currentLevel) { Profiler::EndFrame(); return false; }
 	if (!levelPaused) _currentLevel->StartPlay();	// the first frame of Play: the actors get their BeginPlay
 
 	mouse->Update();
-	layerStack.Update(_currentLevel->UpdateTime());
-	layerStack.Render(window);
-	window.Display();
+	Float _deltaTime = 0.f;
+	{
+		PROFILE_SCOPE("Timers + frame limit");	// the wait of maxFrameRate is in it
+		_deltaTime = _currentLevel->UpdateTime();
+	}
+	{
+		PROFILE_SCOPE("Update");
+		layerStack.Update(_deltaTime);
+	}
+	{
+		PROFILE_SCOPE("Render");
+		layerStack.Render(window);
+	}
+	{
+		PROFILE_SCOPE("Display");	// waits for the graphics card (and the screen with vsync)
+		window.Display();
+	}
 
+	Profiler::Begin("Events");
 	while (true)
 	{
 		const std::optional<sf::Event> _event = GetWindowRef().PollEvent();
@@ -124,6 +143,8 @@ Bool Engine::Tick()
 	if (!layerStack.BlocksInput())
 		inputManager->UpdateOnPerform();
 
+	Profiler::End();
+	Profiler::EndFrame();
 	return !shouldClose;
 }
 

@@ -1,5 +1,6 @@
 #include "EditorContext.h"
 #include "Reflection/Reflection.h"
+#include "Scene/Scene.h"
 #include "Managers/LevelManager.h"
 #include "Components/CameraComponent.h"
 #include "UI/Widgets/Widget.h"
@@ -40,7 +41,30 @@ namespace
 		Actor*											toDelete	= nullptr;
 		Actor*											dragged		= nullptr;
 		Actor*											dropTarget	= nullptr;	// null with dragged set = make root
+		std::vector<Actor*>								order;					// the actors as listed, top to bottom (Shift+click)
 	};
+
+	std::vector<Actor*>	g_lastOrder;	// the list of the frame before: a Shift+click selects what lies between two lines of it
+
+	// A click on an actor of the list: Ctrl adds or removes it, Shift selects from the one shown in the Inspector to it, else only it.
+	void ClickActor(EditorContext& _context, Actor* _actor)
+	{
+		const ImGuiIO& _io = ImGui::GetIO();
+		if (_io.KeyCtrl) { _context.ToggleSelected(_actor); return; }
+		if (_io.KeyShift && _context.selected)
+		{
+			const auto _from = std::find(g_lastOrder.begin(), g_lastOrder.end(), _context.selected);
+			const auto _to = std::find(g_lastOrder.begin(), g_lastOrder.end(), _actor);
+			if (_from != g_lastOrder.end() && _to != g_lastOrder.end())
+			{
+				const auto [_first, _last] = std::minmax(_from, _to);
+				for (auto _it = _first; _it <= _last; ++_it) _context.AddToSelection(*_it);
+				_context.AddToSelection(_actor);	// the clicked one is shown in the Inspector
+				return;
+			}
+		}
+		_context.Select(_actor);
+	}
 
 	/// <returns>True when _text has _needle in it, whatever the case (an empty needle is in everything).</returns>
 	bool ContainsNoCase(const std::string& _text, const std::string& _needle)
@@ -122,15 +146,15 @@ namespace
 	{
 		ImGuiTreeNodeFlags _flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 		if (_actor->GetChildren().empty()) _flags |= ImGuiTreeNodeFlags_Leaf;
-		if (_state.context->selected == _actor) _flags |= ImGuiTreeNodeFlags_Selected;
+		if (_state.context->IsSelected(_actor)) _flags |= ImGuiTreeNodeFlags_Selected;
+		_state.order.push_back(_actor);
 
 		const bool _open = ImGui::TreeNodeEx(_actor, _flags, "%s", _actor->GetName().StdString().c_str());
 
 		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 		{
-			_state.context->selected = _actor;
-			_state.context->selectedWidget = nullptr;
-			LOG(VerbosityType::Verbose, "Hierarchy: selected actor " + _actor->GetName().StdString());
+			ClickActor(*_state.context, _actor);
+			LOG(VerbosityType::Verbose, "Hierarchy: selected actor " + _actor->GetName().StdString() + " (" + std::to_string(_state.context->selection.size()) + " selected)");
 		}
 
 		if (ImGui::BeginDragDropSource())
@@ -216,8 +240,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					Actor* _actor = _class->factory(_level);
 					LOG(VerbosityType::Log, "Hierarchy: added actor " + _class->name);
 					_actor->SetPosition(_context.cameraCenter); // where the Viewport looks
-					_context.selected = _actor;
-					_context.selectedWidget = nullptr;
+					_context.Select(_actor);
 				}
 				ImGui::EndPopup();
 			}
@@ -238,11 +261,9 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 					if (!ContainsNoCase(_name, _search)) continue;
 					++_shown;
 					ImGui::PushID(_actor);
-					if (ImGui::Selectable(_name.c_str(), _context.selected == _actor))
-					{
-						_context.selected = _actor;
-						_context.selectedWidget = nullptr;
-					}
+					_state.order.push_back(_actor);
+					if (ImGui::Selectable(_name.c_str(), _context.IsSelected(_actor)))
+						ClickActor(_context, _actor);
 					ImGui::PopID();
 				}
 				if (_shown == 0) ImGui::TextDisabled("No actor named like \"%s\"", _search);
@@ -255,6 +276,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				if (_actors.empty())
 					ImGui::TextDisabled("The scene is empty: + Add Actor");
 			}
+			g_lastOrder = _state.order;
 
 			// HUD: the screen widgets of the level (drawn in the HUD view, not in the world).
 			ImGui::Separator();
@@ -378,12 +400,14 @@ void Krampus::DeleteSelection(EditorContext& _context)
 
 	if (_context.selected)
 	{
-		_context.history.Record(_context, "Delete " + _context.selected->GetName().StdString());
-		LOG(VerbosityType::Log, "Editor: deleting actor " + _context.selected->GetName().StdString());
-		for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
-			_actor->RemoveChild(_context.selected);
-		_context.selected->Destroy();
-		_context.selected = nullptr;
+		const std::vector<Actor*> _doomed = _context.selection.empty() ? std::vector<Actor*>{ _context.selected } : _context.selection;
+		_context.history.Record(_context, _doomed.size() == 1 ? "Delete " + _context.selected->GetName().StdString() : "Delete " + std::to_string(_doomed.size()) + " actors");
+		for (Actor* _doomedActor : _doomed)
+		{
+			LOG(VerbosityType::Log, "Editor: deleting actor " + _doomedActor->GetName().StdString());
+			_doomedActor->Destroy();	// leaves its parent by itself
+		}
+		_context.Select(nullptr);
 	}
 	else if (_context.selectedWidget)
 	{
@@ -394,4 +418,51 @@ void Krampus::DeleteSelection(EditorContext& _context)
 		_context.selectedWidget->Destroy();
 		_context.selectedWidget = nullptr;
 	}
+}
+
+namespace
+{
+	// Pastes a CopyActors file: the new actors a bit to the side of the copied ones (so they are seen), and selected.
+	void PasteFrom(EditorContext& _context, const std::filesystem::path& _path, const std::string& _what)
+	{
+		Level* _level = _context.GetLevel();
+		if (!_level || _context.playing || !std::filesystem::exists(_path)) return;
+
+		_context.history.Record(_context, _what);
+		const std::vector<Actor*> _pasted = Scene::PasteActors(*_level, _path);
+		if (_pasted.empty()) return;
+
+		_context.Select(nullptr);
+		for (Actor* _actor : _pasted)
+		{
+			_actor->Move(FVector2(20.f, 20.f));		// the children follow
+			_context.AddToSelection(_actor);
+		}
+		LOG(VerbosityType::Log, "Editor: " + _what + " (" + std::to_string(_pasted.size()) + " actor(s))");
+	}
+}
+
+void Krampus::CopySelection(EditorContext& _context)
+{
+	if (!_context.selected || _context.playing) return;
+	const std::vector<Actor*> _roots = _context.SelectedRoots();
+	if (Scene::CopyActors(_roots, CLIPBOARD_PATH))
+		LOG(VerbosityType::Log, "Editor: copied " + std::to_string(_roots.size()) + " actor(s)");
+}
+
+void Krampus::PasteActors(EditorContext& _context)
+{
+	PasteFrom(_context, CLIPBOARD_PATH, "Paste");
+}
+
+void Krampus::DuplicateSelection(EditorContext& _context)
+{
+	if (!_context.selected || _context.playing) return;
+	if (Scene::CopyActors(_context.SelectedRoots(), DUPLICATE_PATH))
+		PasteFrom(_context, DUPLICATE_PATH, "Duplicate");
+}
+
+bool Krampus::CanPaste()
+{
+	return std::filesystem::exists(CLIPBOARD_PATH);
 }

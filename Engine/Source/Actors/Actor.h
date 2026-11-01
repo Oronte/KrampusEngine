@@ -7,13 +7,26 @@ namespace Krampus
 	class Level;
 
 	/// <summary>
+	/// Sets to nullptr every reflected reference (KPROPERTY(Actor*, ...), KPROPERTY(SpriteComponent*, ...)) of the level that points to
+	/// _object, or to a component of _object when it is an actor. Called when an actor is destroyed and when a component is removed.
+	/// Defined in Reflection.cpp.
+	/// </summary>
+	void ForgetReferencesTo(Level* _level, IGameObject* _object);
+
+	/// <summary>
 	/// Base class for all interactive entities that can be placed or spawned in a level.
 	/// </summary>
 	class Actor : public IGameObject, public ITransformable
 	{
 		std::vector<Actor*>							children;
-		Transform									transform;
+		Actor*										parent			= nullptr;
+		Transform									transform;					// in the world
+		Transform									localTransform;				// in the parent (the world one without a parent): what a child keeps
 		Bool										pendingDestroy	= false;
+		Bool										constructed		= false;	// Construct() ran: the components added from now on are constructed at once
+		std::uint64_t								id				= 0;	// unique, saved in scenes: what references to this actor remember
+		int											componentLoops	= 0;	// > 0 while the components are walked (ForEachComponent)
+		std::vector<Component*>						removedComponents;		// removed during a walk: deleted when it ends
 
 	public:
 		/// <summary>
@@ -48,10 +61,28 @@ namespace Krampus
 		/// <param name="_actor">Pointer to the child actor to add.</param>
 		inline void AddChild(Actor* _actor)
 		{
+			if (!_actor || _actor == this) return;
+			for (Actor* _above = parent; _above; _above = _above->parent)
+				if (_above == _actor)
+				{
+					LOG_WARNING("Actor: " + _actor->GetName().StdString() + " is above " + GetName().StdString() + " in the hierarchy, it cannot be its child");
+					return;
+				}
+			if (_actor->parent && _actor->parent != this) _actor->parent->RemoveChild(_actor);	// one parent at a time
+			_actor->parent = this;
+			_actor->localTransform = RelativeTransform(transform, _actor->transform);	// it stays where it is
 			if (std::find(children.begin(), children.end(), _actor) == children.end())
 			{
 				children.push_back(_actor);
 			}
+		}
+
+		/// <summary>
+		/// The actor this one is a child of, or nullptr.
+		/// </summary>
+		inline Actor* GetParent() const
+		{
+			return parent;
 		}
 
 		/// <summary>
@@ -60,6 +91,21 @@ namespace Krampus
 		inline const std::vector<Actor*>& GetChildren() const
 		{
 			return children;
+		}
+
+		/// <summary>
+		/// The unique number of this actor: random when it is spawned, read back from the scene file when it is loaded,
+		/// so a reference to it (KPROPERTY(Actor*, ...)) finds it again.
+		/// </summary>
+		inline std::uint64_t GetId() const
+		{
+			return id;
+		}
+
+		/// <summary>Used by scenes when they load the actor. Two actors of a level must not have the same id.</summary>
+		inline void SetId(const std::uint64_t _id)
+		{
+			id = _id;
 		}
 
 		/// <summary>
@@ -84,11 +130,14 @@ namespace Krampus
 		/// </summary>
 		inline void RemoveComponentInstance(Component* _component)
 		{
-			if (!_component) return;
+			if (!_component || IsRemoved(_component)) return;
 			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(*_component).name()) + " removed from " + GetName().StdString());
 			_component->Deconstruct();
 			_component->BeginDestroy();
-			std::erase_if(components, [&](const std::unique_ptr<Component>& _item) { return _item.get() == _component; });
+			ForgetReferencesTo(level, _component);
+			// A component may remove itself (or another one) from its Tick: deleting it now would break the walk of the components.
+			if (componentLoops > 0) removedComponents.push_back(_component);
+			else std::erase_if(components, [&](const std::unique_ptr<Component>& _item) { return _item.get() == _component; });
 		}
 
 		/// <summary>
@@ -101,6 +150,11 @@ namespace Krampus
 				{
 					return _actor == _toRemove;
 				});
+			if (_toRemove && _toRemove->parent == this)
+			{
+				_toRemove->parent = nullptr;
+				_toRemove->localTransform = _toRemove->transform;
+			}
 		}
 
 		/// <summary>
@@ -109,13 +163,13 @@ namespace Krampus
 		/// <returns>Delta time as a Float.</returns>
 		Float GetDeltaTime() const;
 
-	protected:
 		/// <summary>
 		/// Constructs an Actor within the specified level.
 		/// </summary>
 		/// <param name="_level">Pointer to the owning Level.</param>
 		Actor(Level* _level);
 
+	protected:
 		/// <summary>
 		/// Creates and attaches a component of the specified type to this actor.
 		/// </summary>
@@ -134,7 +188,8 @@ namespace Krampus
 			std::unique_ptr<Type> _component = std::make_unique<Type>(this, std::forward<Args>(_args)...);
 			Type* _rawComponent = _component.get();
 			components.push_back(std::move(_component));
-			_rawComponent->Construct();
+			// From the actor's constructor: the actor's Construct() constructs it, once it is placed in the level.
+			if (constructed) _rawComponent->Construct();
 			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(Type).name()) + " added to " + GetName().StdString());
 			return _rawComponent;
 		}
@@ -152,16 +207,36 @@ namespace Krampus
 				LOG_WARNING("There is not a component of type" + std::string(NAME_OF(Type)));
 				return;
 			}
+			RemoveComponentInstance(_component);
+		}
 
-			LOG(VerbosityType::Verbose, "Component: " + std::string(typeid(Type).name()) + " removed from " + GetName().StdString());
-			_component->Deconstruct();
-			_component->BeginDestroy();
+		/// <summary>
+		/// Calls _function on each component. A component added meanwhile waits for the next walk, a component removed meanwhile is
+		/// skipped and deleted when the walk ends: a Tick may add or remove components safely.
+		/// </summary>
+		template <typename Function>
+		inline void ForEachComponent(Function&& _function)
+		{
+			++componentLoops;
+			const size_t _count = components.size();
+			for (size_t _i = 0; _i < _count; ++_i)
+			{
+				Component* _component = components[_i].get();	// read again each time: an addition may move the list
+				if (!IsRemoved(_component)) _function(_component);
+			}
+			if (--componentLoops == 0 && !removedComponents.empty())
+			{
+				std::erase_if(components, [&](const std::unique_ptr<Component>& _item) { return IsRemoved(_item.get()); });
+				removedComponents.clear();
+			}
+		}
 
-			std::erase_if(components,
-				[&](const std::unique_ptr<Component>& _item)
-				{
-					return _item.get() == _component;
-				});
+		/// <summary>
+		/// True for a component removed during a walk of the components, not deleted yet.
+		/// </summary>
+		inline bool IsRemoved(const Component* _component) const
+		{
+			return !removedComponents.empty() && std::find(removedComponents.begin(), removedComponents.end(), _component) != removedComponents.end();
 		}
 
 		/// <summary>
@@ -238,7 +313,7 @@ namespace Krampus
 		inline Type* GetComponent()
 		{
 			for (const std::unique_ptr<Component>& _component : components)
-				if (Type* _castedComponent = Cast<Type>(_component.get())) return _castedComponent;
+				if (Type* _castedComponent = Cast<Type>(_component.get()); _castedComponent && !IsRemoved(_component.get())) return _castedComponent;
 
 			return nullptr;
 		}
@@ -292,6 +367,31 @@ namespace Krampus
 		/// </summary>
 		/// <returns>The scale vector.</returns>
 		FVector2 GetScale() const override;
+
+		/// <summary>The position, rotation and scale in the parent (the world ones without a parent).</summary>
+		Transform GetLocalTransform() const override { return localTransform; }
+
+		/// <summary>Places the actor in its parent; the children follow.</summary>
+		void SetLocalTransform(const Transform& _local) override;
+
+		bool HasParentTransform() const override { return parent != nullptr; }
+
+		inline FVector2 GetLocalPosition() const { return localTransform.position; }
+		inline Angle GetLocalRotation() const { return localTransform.rotation; }
+		inline FVector2 GetLocalScale() const { return localTransform.scale; }
+		inline void SetLocalPosition(const FVector2& _position) { Transform _local = localTransform; _local.position = _position; SetLocalTransform(_local); }
+		inline void SetLocalRotation(const Angle& _rotation) { Transform _local = localTransform; _local.rotation = _rotation; SetLocalTransform(_local); }
+		inline void SetLocalScale(const FVector2& _scale) { Transform _local = localTransform; _local.scale = _scale; SetLocalTransform(_local); }
+
+	private:
+		/// <summary>The world transform was set: the local one is computed again, then the children and the listeners follow.</summary>
+		void WorldChanged();
+
+		/// <summary>The world transform comes from the parent and the local one (the parent moved, or the local one was set).</summary>
+		void FollowParent();
+
+		/// <summary>The children follow, then onMove / onRotate / onScale for what differs from _old.</summary>
+		void Propagate(const Transform& _old);
 };
 
 }

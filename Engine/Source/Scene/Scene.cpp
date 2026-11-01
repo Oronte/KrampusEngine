@@ -5,6 +5,7 @@
 #include "Managers/SaveManager.h"
 #include "Managers/LevelManager.h"
 #include "UI/Widgets/Widget.h"
+#include <charconv>
 
 using namespace Krampus;
 
@@ -49,6 +50,8 @@ namespace
 		case PropertyType::MessageBindings:
 		case PropertyType::Shape:
 		case PropertyType::Sound:
+		case PropertyType::ActorRef:
+		case PropertyType::ComponentRef:
 		case PropertyType::String:
 			if (auto _v = _node.TryGet<String>(_key)) return PropertyValue(_v->StdString());
 			break;
@@ -66,6 +69,15 @@ namespace
 		return std::nullopt;
 	}
 
+	template <typename C>
+	C* FindComponent(const std::vector<std::unique_ptr<C>>& _components, const std::string& _className)
+	{
+		for (const std::unique_ptr<C>& _component : _components)
+			if (ClassNameOf(*_component) == _className)
+				return _component.get();
+		return nullptr;
+	}
+
 	std::vector<const PropertyInfo*> PropertiesOf(const IGameObject& _object)
 	{
 		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(_object));
@@ -80,14 +92,54 @@ namespace
 		return _props;
 	}
 
-	void ReadProperties(IGameObject& _object, const SaveNode& _node)
+	// The values first, while the actors are spawned; the references (KPROPERTY(Actor*, ...)) once they all exist, since one may
+	// point to an actor further in the file.
+	enum class Pass { Values, References };
+
+	// While PasteActors reads: the ids of the copied actors (hex) -> the ids of their new copies.
+	const std::unordered_map<std::string, std::string>* g_idRemap = nullptr;
+
+	// "id" or "id/Component": an id of a copied actor becomes the one of its copy.
+	void RemapReference(std::string& _reference)
+	{
+		const std::string _id = _reference.substr(0, _reference.find('/'));
+		if (const auto _new = g_idRemap->find(_id); _new != g_idRemap->end())
+			_reference = _new->second + _reference.substr(_id.size());
+	}
+
+	void ReadProperties(IGameObject& _object, const SaveNode& _node, const Pass _pass = Pass::Values)
 	{
 		const std::optional<SaveNode> _props = _node.GetNode("props");
 		if (!_props) return;
 
 		for (const PropertyInfo* _property : PropertiesOf(_object))
+		{
+			if (_property->IsReference() != (_pass == Pass::References)) continue;
 			if (std::optional<PropertyValue> _value = ReadValue(*_props, _property->type, String(_property->name)))
+			{
+				if (_pass == Pass::References && g_idRemap) RemapReference(std::get<std::string>(*_value));
 				_property->set(&_object, *_value);
+				if (_pass == Pass::References && !std::get<std::string>(*_value).empty() && !_property->getObject(&_object))
+					LOG_WARNING("Scene: " + _object.GetName().StdString() + "." + _property->name + " points to an object that is not in the scene (or not a " + _property->referenceClass + "), set to none");
+			}
+		}
+	}
+
+	// Second pass of an actor or a widget: the references of the object and of its components.
+	template <typename T>
+	void ReadReferences(T& _object, const SaveNode& _node)
+	{
+		ReadProperties(_object, _node, Pass::References);
+		for (const SaveNodePtr& _componentNode : _node.GetNodes("components"))
+			if (auto* _component = FindComponent(_object.GetComponents(), _componentNode->Get<String>("class").StdString()))
+				ReadProperties(*_component, *_componentNode, Pass::References);
+	}
+
+	template <typename T>
+	void ReadAllReferences(const std::vector<SaveNodePtr>& _nodes, const std::vector<T*>& _spawned)
+	{
+		for (size_t _i = 0; _i < _nodes.size(); ++_i)
+			if (_spawned[_i]) ReadReferences(*_spawned[_i], *_nodes[_i]);
 	}
 
 	// ---- What an actor and a widget have in common: name, active, transform, props, parent, components.
@@ -103,12 +155,22 @@ namespace
 		_node.Set("scale", std::vector<Float>{ Float(_object.GetScale().x), Float(_object.GetScale().y) });
 		_node.Set("props", WriteProperties(_object));
 		_node.Set("parent", Int(_parent));
+		if constexpr (std::is_base_of_v<Actor, T>)
+			_node.Set("id", String(std::format("{:016x}", _object.GetId())));	// what references to it remember
 	}
 
 	template <typename T>
 	void ReadCommon(const SaveNode& _node, T& _object)
 	{
 		_object.SetName(_node.Get<String>("name", _object.GetName()));
+		if constexpr (std::is_base_of_v<Actor, T>)
+		{
+			// A scene saved before ids existed keeps the random one given at spawn.
+			const std::string _id = _node.Get<String>("id", String("")).StdString();
+			std::uint64_t _value = 0;
+			if (!_id.empty() && std::from_chars(_id.data(), _id.data() + _id.size(), _value, 16).ec == std::errc() && _value != 0)
+				_object.SetId(_value);
+		}
 		_object.SetActive(_node.Get<Bool>("active", Bool(true)));
 
 		const std::vector<Float> _position = _node.Get<std::vector<Float>>("position");
@@ -138,15 +200,6 @@ namespace
 			_nodes.push_back(_node);
 		}
 		return _nodes;
-	}
-
-	template <typename C>
-	C* FindComponent(const std::vector<std::unique_ptr<C>>& _components, const std::string& _className)
-	{
-		for (const std::unique_ptr<C>& _component : _components)
-			if (ClassNameOf(*_component) == _className)
-				return _component.get();
-		return nullptr;
 	}
 
 	void ReadComponents(Actor& _actor, const SaveNode& _node)
@@ -331,6 +384,10 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 	}
 	LinkParents(_widgetNodes, _widgets);
 
+	// ---- References between objects: every actor and widget exists now
+	ReadAllReferences(_actorNodes, _actors);
+	ReadAllReferences(_widgetNodes, _widgets);
+
 	LOG(_level.GetWorld()->GetLevelManager()->IsChangeSilent() ? VerbosityType::Log : VerbosityType::Display, "Scene: loaded " + _path.generic_string() + " (" + std::to_string(_actorNodes.size()) + " actors, " + std::to_string(_widgetNodes.size()) + " widgets)");
 
 	return true;
@@ -356,4 +413,86 @@ void SceneLevel::InitLevel()
 
 	if (!scenePath.empty())
 		Scene::Load(*this, scenePath);
+}
+
+// ---- Copy / paste of actors (editor)
+
+bool Scene::CopyActors(const std::vector<Actor*>& _actors, const std::filesystem::path& _path)
+{
+	// The actors and everything under them, each once, in hierarchy order (a parent before its children).
+	std::vector<Actor*> _saved;
+	const std::function<void(Actor*)> _add = [&](Actor* _actor)
+	{
+		if (!_actor || std::find(_saved.begin(), _saved.end(), _actor) != _saved.end()) return;
+		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(*_actor));
+		if (!_class || !_class->factory)
+		{
+			LOG_WARNING("Scene: '" + _actor->GetName().StdString() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not copied");
+			return;
+		}
+		_saved.push_back(_actor);
+		for (Actor* _child : _actor->GetChildren()) _add(_child);
+	};
+	for (Actor* _actor : _actors) _add(_actor);
+	if (_saved.empty()) return false;
+
+	std::vector<SaveNodePtr> _nodes;
+	for (Actor* _actor : _saved)
+	{
+		auto _node = std::make_shared<SaveNode>("actor");
+		WriteCommon(*_node, *_actor, IndexOfParent(_saved, _actor));
+		_node->Set("components", WriteComponents(_actor->GetComponents()));
+		_nodes.push_back(_node);
+	}
+	SaveNode _root("Actors");
+	_root.Set("version", Int(SCENE_VERSION));
+	_root.Set("actors", std::move(_nodes));
+
+	std::error_code _error;
+	if (_path.has_parent_path()) std::filesystem::create_directories(_path.parent_path(), _error);
+	if (SaveManager::SaveToFile(_path, _root) != SaveResult::Success)
+	{
+		LOG_ERROR("Scene: cannot write " + _path.string());
+		return false;
+	}
+	LOG(VerbosityType::Verbose, "Scene: copied " + std::to_string(_saved.size()) + " actor(s)");
+	return true;
+}
+
+std::vector<Actor*> Scene::PasteActors(Level& _level, const std::filesystem::path& _path)
+{
+	SaveNode _root;
+	if (SaveManager::LoadFromFile(_path, _root) != SaveResult::Success) return {};
+
+	const std::vector<SaveNodePtr> _nodes = _root.GetNodes("actors");
+	std::vector<Actor*> _actors(_nodes.size(), nullptr);
+	std::unordered_map<std::string, std::string> _remap;
+	for (size_t _i = 0; _i < _nodes.size(); ++_i)
+	{
+		const std::string _className = _nodes[_i]->Get<String>("class").StdString();
+		const ClassInfo* _class = ClassRegistry::Find(_className);
+		if (!_class || !_class->factory)
+		{
+			LOG_WARNING("Scene: unknown actor class '" + _className + "', not pasted");
+			continue;
+		}
+		Actor* _actor = _class->factory(&_level);
+		const std::uint64_t _newId = _actor->GetId();	// the random one it got at spawn
+		ReadComponents(*_actor, *_nodes[_i]);
+		ReadCommon(*_nodes[_i], *_actor);				// gives it the copied actor's id...
+		_remap[std::format("{:016x}", _actor->GetId())] = std::format("{:016x}", _newId);
+		_actor->SetId(_newId);							// ...two actors must not share one
+		_actors[_i] = _actor;
+	}
+	LinkParents(_nodes, _actors);
+
+	g_idRemap = &_remap;
+	ReadAllReferences(_nodes, _actors);
+	g_idRemap = nullptr;
+
+	std::vector<Actor*> _roots;
+	for (Actor* _actor : _actors)
+		if (_actor && !_actor->GetParent()) _roots.push_back(_actor);
+	LOG(VerbosityType::Verbose, "Scene: pasted " + std::to_string(_nodes.size()) + " actor(s)");
+	return _roots;
 }

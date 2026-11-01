@@ -45,6 +45,22 @@ namespace Krampus
 
 		/// <returns>The view of the editor's camera for a window of this size.</returns>
 		sf::View GetCameraView(const sf::Vector2f& _windowSize) const;
+
+		// Multi-selection: every selected actor. `selected` is the one the Inspector and the gizmo show (the last clicked); code that
+		// sets `selected` directly selects only it (SyncSelection, every frame).
+		std::vector<Actor*>			selection;
+
+		/// <summary>Only this actor (nullptr: nothing).</summary>
+		void Select(Actor* _actor);
+		/// <summary>Ctrl+click: in the selection or out of it.</summary>
+		void ToggleSelected(Actor* _actor);
+		/// <summary>Adds it, and makes it the one the Inspector shows.</summary>
+		void AddToSelection(Actor* _actor);
+		bool IsSelected(const Actor* _actor) const;
+		/// <summary>The selected actors without those inside another selected one (they move with it), in the level's order.</summary>
+		std::vector<Actor*> SelectedRoots() const;
+		/// <summary>Every frame: follows `selected` when code set it, and forgets destroyed actors.</summary>
+		void SyncSelection();
 	};
 
 	inline const std::filesystem::path		CONTENT_DIRECTORY	= "Content";
@@ -125,6 +141,14 @@ namespace Krampus
 	/// </summary>
 	void DeleteSelection(EditorContext& _context);
 
+	// Copy / Paste / Duplicate of the selected actors, with their children, components and references (HierarchyPanel.cpp).
+	inline const std::filesystem::path		CLIPBOARD_PATH		= EDITOR_DATA_DIRECTORY / "_clipboard.ka7";		// kept between sessions
+	inline const std::filesystem::path		DUPLICATE_PATH		= EDITOR_DATA_DIRECTORY / "_duplicate.ka7";		// Duplicate leaves the clipboard alone
+	void CopySelection(EditorContext& _context);
+	void PasteActors(EditorContext& _context);
+	void DuplicateSelection(EditorContext& _context);
+	bool CanPaste();
+
 	// Panels and menu, drawn every frame between ImGui::NewFrame and Render.
 	void DrawMainMenuBar(EditorContext& _context);
 	/// <summary>The bar at the bottom of the window: scene and its unsaved changes, mode, selection, build, frame rate.</summary>
@@ -137,12 +161,22 @@ namespace Krampus
 	void OpenAnimationEditor();
 	void DrawAnimationEditor(EditorContext& _context);
 
+	/// <summary>Opens the Shader Editor, on the shader _name (Content/Shaders, without extension) when it is given.</summary>
+	void OpenShaderEditor(const std::string& _name = "");
+	void DrawShaderEditor(EditorContext& _context);
+	/// <summary>Saves the shader being edited if it has changes (before a hot reload).</summary>
+	void SaveShaderEditorChanges();
+	/// <summary>The widget of one shader parameter (Shader Editor, Inspector). Returns true when the value changed.</summary>
+	bool DrawShaderParam(const struct ShaderParam& _param, std::string& _value);
+
 	/// <summary>Opens the Animation Graph (the state machine of the selected AnimationComponentSM: transitions and their conditions).</summary>
 	void OpenAnimationGraph();
 	void DrawAnimationGraph(EditorContext& _context);
 
 	/// <summary>Opens the Network window (host, join, players, messages).</summary>
 	void OpenNetworkWindow();
+	void OpenProfiler();
+	void DrawProfiler(EditorContext& _context);
 	void DrawNetworkWindow(EditorContext& _context);
 
 	/// <summary>Opens the Shape Editor (the polygons of Content/Shapes), on _shape when it is given.</summary>

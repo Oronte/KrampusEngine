@@ -205,6 +205,7 @@ void ParticleComponent::Draw(Window& _window)
 	sf::RenderStates _states;
 	_states.texture = &_picture;
 	_states.blendMode = static_cast<ParticleBlend>(Settings().blend) == ParticleBlend::Add ? sf::BlendAdd : sf::BlendAlpha;
+	material.Apply(_states, &_picture, sf::Vector2f(_target.getSize()));	// a shader on the particles, when there is one
 	_target.draw(vertices.data(), _count, sf::PrimitiveType::Triangles, _states);	// every particle in one draw call
 }
 

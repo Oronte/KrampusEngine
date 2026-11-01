@@ -2,6 +2,7 @@
 #include "Component.h"
 #include "Graphics/Particles/ParticleEmitter.h"
 #include "StainComponent.h"
+#include "Graphics/Shaders/ShaderMaterial.h"
 #include "Utilities/System/Debuggable.h"
 #include "Utilities/System/Drawable.h"
 #include "Utilities/System/Event.h"
@@ -17,7 +18,7 @@ namespace Krampus
 	/// what you want. Drawn in one call for all its particles, with nothing drawn when it is out of the view.
 	/// In the editor it plays in the Viewport too (previewInEditor), without the level running.
 	/// </summary>
-	class ParticleComponent : public Component, public IDrawable, public IDebuggable
+	class ParticleComponent : public Component, public IDrawable, public IDebuggable, public IShaded
 	{
 		ParticleEmitter							emitter;
 		int										preset				= static_cast<int>(ParticlePreset::Fire);

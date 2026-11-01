@@ -7,6 +7,8 @@
 #include "Components/InputComponent.h"
 #include "Managers/InputManager.h"
 #include "Graphics/Shapes/ShapeAssets.h"
+#include "Graphics/Shaders/ShaderMaterial.h"
+#include "EditorTheme.h"
 #include <imgui.h>
 
 using namespace Krampus;
@@ -654,6 +656,107 @@ namespace
 		return _changed;
 	}
 
+	// "Player" for an actor, "Player > SpriteComponent" for a component.
+	std::string ReferenceLabel(IGameObject* _target)
+	{
+		if (Component* _component = dynamic_cast<Component*>(_target))
+			return (_component->GetOwner() ? _component->GetOwner()->GetName().StdString() : std::string("?")) + " > " + ClassNameOf(*_component);
+		return _target ? _target->GetName().StdString() : std::string("(none)");
+	}
+
+	// KPROPERTY(Actor*, ...), KPROPERTY(SpriteComponent*, ...): an object of the level picked in a list, or an actor dropped from the
+	// Hierarchy (a component reference takes its component of the right class). The arrow selects the target.
+	bool DrawReferencePicker(const PropertyInfo& _property, IGameObject& _owner, std::string& _text)
+	{
+		Level* _level = g_historyContext ? g_historyContext->GetLevel() : nullptr;
+		IGameObject* _current = _text.empty() ? nullptr : Reflection::ResolveReference(&_owner, _text);
+		const bool _components = _property.type == PropertyType::ComponentRef;
+		bool _changed = false;
+		const auto _pick = [&](IGameObject* _target)
+		{
+			const std::string _new = Reflection::EncodeReference(_target);
+			if (_new == _text) return;
+			_text = _new;
+			_changed = true;
+		};
+		// What an actor dropped or picked gives: itself, or its first component the property accepts.
+		const auto _fromActor = [&](Actor* _actor) -> IGameObject*
+		{
+			if (!_components) return _property.accepts(_actor) ? _actor : nullptr;
+			for (const std::unique_ptr<Component>& _component : _actor->GetComponents())
+				if (_property.accepts(_component.get())) return _component.get();
+			return nullptr;
+		};
+
+		ImGui::PushID(_property.name.c_str());
+		const float _arrow = ImGui::GetFrameHeight();
+		ImGui::SetNextItemWidth((std::max)(60.f, ImGui::CalcItemWidth() - _arrow - ImGui::GetStyle().ItemInnerSpacing.x));
+		const bool _missing = !_text.empty() && !_current;
+		const std::string _preview = _missing ? "(missing " + _property.referenceClass + ")" : _current ? ReferenceLabel(_current) : "(none)";
+		if (_missing) ImGui::PushStyleColor(ImGuiCol_Text, EditorTheme::Get(EditorTheme::Custom::ConsoleWarning));
+		const bool _open = ImGui::BeginCombo("##reference", _preview.c_str(), ImGuiComboFlags_HeightLarge);
+		if (_missing) ImGui::PopStyleColor();
+		if (_open)
+		{
+			static char _filter[64] = "";
+			if (ImGui::IsWindowAppearing()) { _filter[0] = 0; ImGui::SetKeyboardFocusHere(); }
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::InputTextWithHint("##filter", "Search", _filter, sizeof(_filter));
+			const std::string _search = Lower(_filter);
+
+			if (ImGui::Selectable("(none)", _current == nullptr)) _pick(nullptr);
+			int _shown = 0;
+			if (_level)
+				for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
+				{
+					std::vector<IGameObject*> _candidates;
+					if (!_components) _candidates.push_back(_actor.get());
+					else for (const std::unique_ptr<Component>& _component : _actor->GetComponents()) _candidates.push_back(_component.get());
+
+					for (IGameObject* _candidate : _candidates)
+					{
+						if (!_property.accepts(_candidate)) continue;
+						const std::string _label = ReferenceLabel(_candidate);
+						if (!_search.empty() && Lower(_label).find(_search) == std::string::npos) continue;
+						ImGui::PushID(_candidate);
+						if (ImGui::Selectable(_label.c_str(), _candidate == _current)) _pick(_candidate);
+						if (_candidate == &_owner && ImGui::IsItemHovered()) ImGui::SetTooltip("This object itself");
+						ImGui::PopID();
+						++_shown;
+					}
+				}
+			if (_shown == 0) ImGui::TextDisabled("No %s in the scene", _property.referenceClass.c_str());
+			ImGui::EndCombo();
+		}
+		if (ImGui::IsItemHovered() && !_open)
+			ImGui::SetTooltip("%s\nPick one, or drag an actor from the Hierarchy here", _property.referenceClass.c_str());
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* _payload = ImGui::AcceptDragDropPayload("KRAMPUS_ACTOR"))
+			{
+				Actor* _actor = *static_cast<Actor* const*>(_payload->Data);
+				if (IGameObject* _target = _fromActor(_actor)) _pick(_target);
+				else LOG_WARNING("Inspector: " + _actor->GetName().StdString() + " has no " + _property.referenceClass + " for " + _property.name);
+			}
+			ImGui::EndDragDropTarget();
+		}
+
+		ImGui::SameLine(0.f, ImGui::GetStyle().ItemInnerSpacing.x);
+		ImGui::BeginDisabled(_current == nullptr || !g_historyContext);
+		if (ImGui::ArrowButton("##select", ImGuiDir_Right) && _current)
+		{
+			Component* _component = dynamic_cast<Component*>(_current);
+			g_historyContext->selected = _component ? _component->GetOwner() : dynamic_cast<Actor*>(_current);
+			g_historyContext->selectedWidget = nullptr;
+		}
+		ImGui::EndDisabled();
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Select it");
+		ImGui::SameLine(0.f, ImGui::GetStyle().ItemInnerSpacing.x);
+		ImGui::TextUnformatted(_property.name.c_str());
+		ImGui::PopID();
+		return _changed;
+	}
+
 	// Draws the widget of one property and writes the new value back when it changes.
 	void DrawProperty(const PropertyInfo& _property, IGameObject& _object)
 	{
@@ -736,6 +839,10 @@ namespace
 		case PropertyType::Shape:
 			_changed = DrawShapePicker(_property.name.c_str(), std::get<std::string>(_value));
 			break;
+		case PropertyType::ActorRef:
+		case PropertyType::ComponentRef:
+			_changed = DrawReferencePicker(_property, _object, std::get<std::string>(_value));
+			break;
 		case PropertyType::Vector2:
 		{
 			FVector2& _vector = std::get<FVector2>(_value);
@@ -784,30 +891,37 @@ namespace
 		}
 	}
 
+	// A child shows (and edits) its place in its parent, like the gizmo moves it in the world.
 	void DrawTransform(ITransformable& _actor)
 	{
-		FVector2 _position = _actor.GetPosition();
-		float _positionValues[2] = { _position.x, _position.y };
+		const bool _local = _actor.HasParentTransform();
+		Transform _transform = _actor.GetLocalTransform();
+		if (_local) ImGui::TextDisabled("In the parent (local)");
+
+		float _positionValues[2] = { _transform.position.x, _transform.position.y };
 		if (ImGui::DragFloat2("Position", _positionValues, 0.5f))
 		{
 			RecordEdit("Move", KeyOf(&_actor, "position"));
-			_actor.SetPosition(FVector2(_positionValues[0], _positionValues[1]));
+			_transform.position = FVector2(_positionValues[0], _positionValues[1]);
+			_actor.SetLocalTransform(_transform);
 		}
 
-		float _rotation = _actor.GetRotation().ToDegrees();
+		float _rotation = _transform.rotation.ToDegrees();
 		if (ImGui::DragFloat("Rotation", &_rotation, 0.5f))
 		{
 			RecordEdit("Rotate", KeyOf(&_actor, "rotation"));
-			_actor.SetRotation(Angle::FromDegrees(_rotation));
+			_transform.rotation = Angle::FromDegrees(_rotation);
+			_actor.SetLocalTransform(_transform);
 		}
 
-		FVector2 _scale = _actor.GetScale();
-		float _scaleValues[2] = { _scale.x, _scale.y };
+		float _scaleValues[2] = { _transform.scale.x, _transform.scale.y };
 		if (ImGui::DragFloat2("Scale", _scaleValues, 0.01f))
 		{
 			RecordEdit("Scale", KeyOf(&_actor, "scale"));
-			_actor.SetScale(FVector2(_scaleValues[0], _scaleValues[1]));
+			_transform.scale = FVector2(_scaleValues[0], _scaleValues[1]);
+			_actor.SetLocalTransform(_transform);
 		}
+		if (_local && ImGui::IsItemHovered()) ImGui::SetTooltip("World: %.1f, %.1f  rotation %.1f", _actor.GetPosition().x, _actor.GetPosition().y, static_cast<float>(_actor.GetRotation().ToDegrees()));
 	}
 }
 
@@ -844,6 +958,45 @@ namespace
 			if (!_class || _class->GetProperties().empty())
 				ImGui::TextDisabled("No KPROPERTY on this class");
 		}
+	}
+
+	// Material: the shader of what is drawn, and its parameters (read from the shader file: the Inspector shows what it declares).
+	void DrawMaterial(EditorContext& _context, IShaded& _shaded)
+	{
+		ShaderMaterial& _material = _shaded.material;
+		ImGui::SeparatorText("Material");
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::BeginCombo("##shader", _material.shader.empty() ? "(no shader)" : _material.shader.c_str(), ImGuiComboFlags_HeightLarge))
+		{
+			if (ImGui::Selectable("(no shader)", _material.shader.empty())) { _context.history.Record(_context, "Set shader"); _material.shader.clear(); }
+			for (const std::string& _name : ShaderLibrary::List())
+				if (ImGui::Selectable(_name.c_str(), _name == _material.shader)) { _context.history.Record(_context, "Set shader"); _material.shader = _name; }
+			ImGui::EndCombo();
+		}
+		if (_material.shader.empty()) return;
+
+		const ShaderAsset* _asset = ShaderLibrary::Get(_material.shader);
+		if (!_asset) { ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::ConsoleWarning), "No file %s", ShaderLibrary::FragmentPath(_material.shader).generic_string().c_str()); return; }
+		if (!_asset->IsReady())
+		{
+			ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::ConsoleError), "Does not compile (drawn without it)");
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", _asset->error.c_str());
+		}
+		for (const ShaderParam& _param : _asset->params)
+		{
+			std::string _value = _material.ValueOf(_param);
+			if (DrawShaderParam(_param, _value))
+			{
+				_context.history.Record(_context, "Edit material", "material." + std::to_string(reinterpret_cast<std::uintptr_t>(&_shaded)) + "." + _param.name);
+				_material.values[_param.name] = _value;
+			}
+		}
+		const float _half = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+		if (ImGui::Button("Open in Shader Editor", ImVec2(_half, 0.f))) OpenShaderEditor(_material.shader);
+		ImGui::SameLine();
+		ImGui::BeginDisabled(_material.values.empty());
+		if (ImGui::Button("Default values", ImVec2(-1.f, 0.f))) { _context.history.Record(_context, "Reset material"); _material.values.clear(); }
+		ImGui::EndDisabled();
 	}
 
 	// Animation components: the list of their animations is edited in the Animation Editor; here one is picked as the starting one.
@@ -904,6 +1057,7 @@ namespace
 					_component->SetActive(Bool(_componentActive));
 				DrawProperties(*_component);
 				if (ClassNameOf(*_component).starts_with("Animation")) DrawStartAnimation(*_component);
+				if (IShaded* _shaded = dynamic_cast<IShaded*>(_component.get()); _shaded && g_historyContext) DrawMaterial(*g_historyContext, *_shaded);
 				if (ClassNameOf(*_component).starts_with("Animation") && ImGui::Button("Open Animation Editor", ImVec2(-1.f, 0.f)))
 					OpenAnimationEditor();
 				if (ClassNameOf(*_component) == "AnimationComponentSM" && ImGui::Button("Open Animation Graph (transitions)", ImVec2(-1.f, 0.f)))

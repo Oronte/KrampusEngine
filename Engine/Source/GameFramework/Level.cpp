@@ -4,6 +4,8 @@
 #include "Actors/CameraActor.h"
 #include "Actors/EmptyActor.h"
 #include "Components/ParticleComponent.h"
+#include "Navigation/NavigationSystem.h"
+#include "Utilities/Debug/Profiler.h"
 
 using namespace Krampus;
 
@@ -69,10 +71,20 @@ void Krampus::Level::Unload()
 
 void Level::Update(const Float& _deltaTime)
 {
-	actorManager.Update(_deltaTime);
-	worldPhysics.Update();
+	{
+		PROFILE_SCOPE("Actors");
+		actorManager.Update(_deltaTime);
+	}
+	{
+		PROFILE_SCOPE("Physics");
+		worldPhysics.Update();
+	}
 	cameraManager.UpdateView();
-	hud.Update(_deltaTime);
+	{
+		PROFILE_SCOPE("HUD update");
+		hud.Update(_deltaTime);
+	}
+	PROFILE_SCOPE("Destroy");
 	actorManager.DestroyPendingDeleteActors();
 	hud.DestroyPendingDeleteWidgets();
 }
@@ -80,7 +92,7 @@ void Level::Update(const Float& _deltaTime)
 void Level::Render()
 {
 	GetWorld()->GetWindowRef().Clear(backgroundColor);
-	cameraManager.Render(false); // TODO SplitScreen
+	cameraManager.Render(cameraManager.IsSplitScreen());	// SetSplitScreen: each camera in its part of the window
 }
 
 Float Krampus::Level::UpdateTime()
@@ -107,4 +119,12 @@ Krampus::ParticleComponent* Krampus::Level::SpawnParticles(const ParticlePreset&
 	_particles->destroyOwnerWhenDone = !_particles->Settings().looping;
 	_particles->Restart();	// from where the actor is now
 	return _particles;
+}
+
+Krampus::Level::~Level() = default;	// here: NavigationSystem is complete
+
+Krampus::NavigationSystem& Krampus::Level::GetNavigation()
+{
+	if (!navigation) navigation = std::make_unique<NavigationSystem>(this);
+	return *navigation;
 }

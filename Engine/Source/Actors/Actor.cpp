@@ -1,6 +1,8 @@
 #include "Actor.h"
 #include "GameFramework/Level.h"
 #include "Managers/TimerManager.h"
+#include <chrono>
+#include <random>
 
 Krampus::Engine* Krampus::Actor::GetWorld() const
 {
@@ -14,8 +16,10 @@ Float Krampus::Actor::GetDeltaTime() const
 
 Krampus::Actor::Actor(Level* _level)
 {
+	static std::mt19937_64 _random(std::random_device{ }() ^ static_cast<std::uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count()));
 	name = NAME_OF(Actor);
 	level = _level;
+	do id = _random(); while (id == 0);	// 0 is never an actor
 }
 
 void Krampus::Actor::SetActive(const Bool& _status)
@@ -35,43 +39,35 @@ Krampus::Timer* Krampus::Actor::CreateTimer(const std::function<void()>& _callba
 
 void Krampus::Actor::Construct()
 {
-	for (const std::unique_ptr<Component>& _component : components)
-	{
-		_component->Construct();
-	}
+	// The components created in the constructor were waiting for this (CreateComponent): each one is constructed once, with the
+	// actor at its place in the level.
+	if (constructed) return;
+	constructed = true;
+	ForEachComponent([](Component* _component) { _component->Construct(); });
 }
 
 void Krampus::Actor::Deconstruct()
 {
-	for (const std::unique_ptr<Component>& _component : components)
-	{
-		_component->Deconstruct();
-	}
+	ForEachComponent([](Component* _component) { _component->Deconstruct(); });
 }
 
 void Krampus::Actor::BeginPlay()
 {
-	for (const std::unique_ptr<Component>& _component : components)
-	{
-		_component->BeginPlay();
-	}
+	ForEachComponent([](Component* _component) { _component->BeginPlay(); });
 }
 
 void Krampus::Actor::Tick(const Float& _deltaTime)
 {
-	for (const std::unique_ptr<Component>& _component : components)
-	{
-		if (_component->IsActive()) 
-			_component->Tick(_deltaTime);
-	}
+	ForEachComponent([&](Component* _component)
+		{
+			if (_component->IsActive())
+				_component->Tick(_deltaTime);
+		});
 }
 
 void Krampus::Actor::BeginDestroy()
 {
-	for (const std::unique_ptr<Component>& _component : components)
-	{
-		_component->BeginDestroy();
-	}
+	ForEachComponent([](Component* _component) { _component->BeginDestroy(); });
 }
 
 void Krampus::Actor::Destroy()
@@ -80,6 +76,16 @@ void Krampus::Actor::Destroy()
 	pendingDestroy = true;
 	Deconstruct();
 	level->GetActorManager().MarkForDeleteActor(this);
+	ForgetReferencesTo(level, this);	// a reference to it is nullptr from now on, not a pointer to a deleted actor
+
+	// Out of the hierarchy: the parent would move a deleted actor. The children stay in the level, without a parent.
+	if (parent) parent->RemoveChild(this);
+	for (Actor* _child : children)
+	{
+		_child->parent = nullptr;
+		_child->localTransform = _child->transform;
+	}
+	children.clear();
 }
 
 std::string Krampus::Actor::ToString() const
@@ -89,10 +95,9 @@ std::string Krampus::Actor::ToString() const
 
 void Krampus::Actor::SetPosition(const FVector2& _newPosition)
 {
-	for (Actor* _actor : children)
-		_actor->Move(_newPosition - GetPosition());
 	transform.position = _newPosition;
-	onMove.Broadcast(_newPosition);
+	WorldChanged();
+	onMove.Broadcast(_newPosition);		// even when it did not change: a setter always tells
 }
 
 Krampus::FVector2 Krampus::Actor::GetPosition() const
@@ -102,13 +107,8 @@ Krampus::FVector2 Krampus::Actor::GetPosition() const
 
 void Krampus::Actor::SetRotation(const Angle& _newRotation)
 {
-	for (Actor* _actor : children)
-	{
-		const Angle& _deltaRot = _newRotation - GetRotation();
-		_actor->SetPosition(_actor->GetPosition().FVector2::RotateAround(GetPosition(), _deltaRot));
-		_actor->Rotate(_deltaRot);
-	}
 	transform.rotation = _newRotation;
+	WorldChanged();
 	onRotate.Broadcast(_newRotation);
 }
 
@@ -119,13 +119,45 @@ Krampus::Angle Krampus::Actor::GetRotation() const
 
 void Krampus::Actor::SetScale(const FVector2& _newScale)
 {
-	for (Actor* _actor : children)
-		_actor->Scale(_newScale - GetScale());
 	transform.scale = _newScale;
+	WorldChanged();
 	onScale.Broadcast(_newScale);
 }
 
 Krampus::FVector2 Krampus::Actor::GetScale() const
 {
 	return transform.scale;
+}
+
+void Krampus::Actor::SetLocalTransform(const Transform& _local)
+{
+	localTransform = _local;
+	const Transform _old = transform;
+	FollowParent();
+	Propagate(_old);
+}
+
+void Krampus::Actor::WorldChanged()
+{
+	localTransform = parent ? RelativeTransform(parent->transform, transform) : transform;
+	const Transform _same = transform;
+	Propagate(_same);	// only the children: nothing differs for this one
+}
+
+void Krampus::Actor::FollowParent()
+{
+	transform = parent ? ComposeTransform(parent->transform, localTransform) : localTransform;
+}
+
+void Krampus::Actor::Propagate(const Transform& _old)
+{
+	for (Actor* _child : children)
+	{
+		const Transform _childOld = _child->transform;
+		_child->FollowParent();
+		_child->Propagate(_childOld);
+	}
+	if (transform.position.x != _old.position.x || transform.position.y != _old.position.y) onMove.Broadcast(transform.position);
+	if (transform.rotation != _old.rotation) onRotate.Broadcast(transform.rotation);
+	if (transform.scale.x != _old.scale.x || transform.scale.y != _old.scale.y) onScale.Broadcast(transform.scale);
 }

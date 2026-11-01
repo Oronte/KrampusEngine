@@ -62,6 +62,7 @@ void Krampus::CameraComponent::BeginDestroy()
 	// Only the camera in use lets go; destroying another one must not blank the view.
 	if (GetLevel()->GetCameraManager().GetCurrent() == this)
 		GetLevel()->GetCameraManager().SetCurrent(nullptr);
+	GetLevel()->GetCameraManager().RemoveSplitCamera(this);
 }
 
 void Krampus::CameraComponent::InitEvent()

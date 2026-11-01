@@ -14,6 +14,9 @@ namespace Krampus
 		b2WorldId							physicsWorldID;
 		int									subStepsCount = 8;
 
+		static constexpr float				MaxStepTime	= 1.f / 60.f;	// the longest step given to box2d
+		static constexpr int				MaxSteps	= 8;			// steps per frame at most (a very slow frame is slowed down instead)
+
 	public:
 		/// <summary>
 		/// Event broadcast when all collisions have been resolved for the current frame.
@@ -215,5 +218,29 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_info">The ExplosionInfo structure containing details about the explosion.</param>
 		void Explode(ExplosionInfo _info);
+
+		/// <summary>
+		/// The first body on the segment _from -> _to (pixels). _channels: the collision channels it can hit (CollisionChannel bits,
+		/// all by default). _ignore: an actor the ray goes through (the one that shoots it).
+		/// </summary>
+		RaycastHitInfo Raycast(const FVector2& _from, const FVector2& _to, const CollisionChannel& _channels = AllChannels(), const class Actor* _ignore = nullptr) const;
+
+		/// <summary>
+		/// Every body on the segment _from -> _to, the nearest first.
+		/// </summary>
+		std::vector<RaycastHitInfo> RaycastAll(const FVector2& _from, const FVector2& _to, const CollisionChannel& _channels = AllChannels(), const class Actor* _ignore = nullptr) const;
+
+		/// <summary>
+		/// The bodies with a shape touching the rectangle (pixels, not rotated).
+		/// </summary>
+		std::vector<class PhysicsComponent*> OverlapBox(const FVector2& _center, const FVector2& _size, const CollisionChannel& _channels = AllChannels()) const;
+
+		/// <summary>
+		/// The bodies with a shape touching the circle (pixels).
+		/// </summary>
+		std::vector<class PhysicsComponent*> OverlapCircle(const FVector2& _center, const Float& _radius, const CollisionChannel& _channels = AllChannels()) const;
+
+		/// <summary>Every collision channel.</summary>
+		static constexpr CollisionChannel AllChannels() { return static_cast<CollisionChannel>(~0ull); }
 	};
 }

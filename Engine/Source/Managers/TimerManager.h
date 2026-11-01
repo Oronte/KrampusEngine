@@ -28,6 +28,8 @@ namespace Krampus
 		Float elapsedTime = 0.0f;			// Raw frame duration
 		Float timeScale = 1.0f;				// Time speed multiplier
 
+		static constexpr float MaxDeltaTime = 0.1f;	// A longer frame counts as this much game time (before timeScale)
+
 		ULongLong framesCount = 0;			// Total number of frames since program start
 		UInt maxFrameRate = 60;				// Frame rate cap (0 = unlimited)
 		Float fps = 0.0f;					// Frames Per Seconds

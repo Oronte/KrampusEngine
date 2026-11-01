@@ -240,6 +240,7 @@ void Krampus::PhysicsComponent::Init()
     const FVector2 _pos = GetPosition() / PX_TO_M;
     _body.position = b2Vec2(_pos.x, _pos.y);
     _body.rotation = b2MakeRot(GetRotation());
+    _body.userData = this;	// what a raycast or an overlap gives back (WorldPhysics::Raycast)
 
     bodyId = b2CreateBody(GetLevel()->GetWorldPhysics().GetPhysicsWorldID(), &_body);
 

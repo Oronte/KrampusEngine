@@ -35,13 +35,17 @@ namespace Krampus
 		float						impulsePerLength	= 0.0f;
 	};
 
-	// TODO raycast
+	/// <summary>
+	/// What WorldPhysics::Raycast found: the point and normal of the hit (pixels), how far from the start, and who was hit.
+	/// </summary>
 	struct RaycastHitInfo
 	{
-		FVector2	normal		= FVector2::Zero();
-		Float		distance	= 0.f;
-		FVector2	point		= FVector2::Zero();
-		Bool		hit			= false;
+		FVector2					normal		= FVector2::Zero();
+		Float						distance	= 0.f;
+		FVector2					point		= FVector2::Zero();
+		Bool						hit			= false;
+		class PhysicsComponent*		component	= nullptr;
+		class Actor*				actor		= nullptr;
 	};
 
 	class Physics
