@@ -63,6 +63,16 @@ void Krampus::PhysicsComponent::Deconstruct()
 
 	shapeSavedHandle.Disconnect();
 
+	// The bodies this one touched get their end event now (box2d would report shapes that are already gone).
+	const std::vector<PhysicsComponent*> _touching = touching, _overlapping = overlapping;
+	touching.clear(); overlapping.clear(); contactCounts.clear(); overlapCounts.clear();
+	PhysicsContact _contact;
+	_contact.other = this;
+	_contact.otherActor = GetOwner();
+	for (PhysicsComponent* _other : _touching) _other->CountContact(_contact, -1000);
+	for (PhysicsComponent* _other : _overlapping) _other->CountOverlap(_contact, -1000);
+	GetLevel()->GetWorldPhysics().Forget(this);
+
 	if (b2Body_IsValid(bodyId))
 		b2DestroyBody(bodyId);
 	bodyId = b2_nullBodyId;
@@ -318,7 +328,10 @@ void Krampus::PhysicsComponent::Rebuild()
 void Krampus::PhysicsComponent::DestroyShapes()
 {
     for (const b2ShapeId _shape : shapeIds)
+    {
+        GetLevel()->GetWorldPhysics().RetireShape(_shape);	// its end events come after the next step: still known as this body's
         if (b2Shape_IsValid(_shape)) b2DestroyShape(_shape, false);
+    }
     shapeIds.clear();
     shapeId = b2_nullShapeId;
     polygonParts.clear();
@@ -330,6 +343,88 @@ void Krampus::PhysicsComponent::AddShape(const b2ShapeId _shape)
     b2Shape_SetFilter(_shape, filter);
     if (shapeIds.empty()) shapeId = _shape;
     shapeIds.push_back(_shape);
+    GetLevel()->GetWorldPhysics().RegisterShape(_shape, this);
+}
+
+b2ShapeDef Krampus::PhysicsComponent::ShapeDef()
+{
+    b2ShapeDef _shape = b2DefaultShapeDef();
+    _shape.density = 1.0f;
+    _shape.isSensor = trigger;
+    _shape.enableSensorEvents = true;		// triggers see this body (and a trigger sees the others)
+    _shape.enableContactEvents = true;
+    _shape.enableHitEvents = hitEvents;
+    _shape.userData = this;
+    return _shape;
+}
+
+void Krampus::PhysicsComponent::SetTrigger(const bool& _trigger)
+{
+    if (_trigger == trigger) return;
+    trigger = _trigger;
+    Rebuild();	// box2d sets it when a shape is made
+}
+
+void Krampus::PhysicsComponent::SetHitEventsEnabled(const bool& _enable)
+{
+    hitEvents = _enable;
+    for (const b2ShapeId _shape : shapeIds)
+        if (b2Shape_IsValid(_shape)) b2Shape_EnableHitEvents(_shape, _enable);
+}
+
+bool Krampus::PhysicsComponent::IsTouching(const PhysicsComponent* _other) const
+{
+    return std::find(touching.begin(), touching.end(), _other) != touching.end();
+}
+
+bool Krampus::PhysicsComponent::IsOverlapping(const PhysicsComponent* _other) const
+{
+    return std::find(overlapping.begin(), overlapping.end(), _other) != overlapping.end();
+}
+
+namespace
+{
+    // The count of _other goes up or down; true when it went from 0 to 1 (_began) or back to 0 (an end).
+    bool Count(std::vector<std::pair<Krampus::PhysicsComponent*, int>>& _counts, std::vector<Krampus::PhysicsComponent*>& _list,
+        Krampus::PhysicsComponent* _other, const int _delta, bool& _began)
+    {
+        auto _entry = std::find_if(_counts.begin(), _counts.end(), [&](const auto& _pair) { return _pair.first == _other; });
+        const int _before = _entry == _counts.end() ? 0 : _entry->second;
+        const int _after = std::max(0, _before + _delta);
+        if (_after == _before) return false;
+        if (_entry == _counts.end()) _counts.push_back({ _other, _after });
+        else if (_after == 0) _counts.erase(_entry);
+        else _entry->second = _after;
+        _began = _before == 0;
+        if (_before == 0) _list.push_back(_other);
+        else if (_after == 0) std::erase(_list, _other);
+        return _before == 0 || _after == 0;
+    }
+}
+
+void Krampus::PhysicsComponent::CountContact(const PhysicsContact& _contact, const int& _delta)
+{
+    bool _began = false;
+    if (!Count(contactCounts, touching, _contact.other, _delta, _began)) return;
+    lastContact = _contact;
+    if (_began) { onCollisionBegin.Broadcast(_contact); if (IsAlive()) onCollisionBeginCalls.Invoke(this); }
+    else { onCollisionEnd.Broadcast(_contact); if (IsAlive()) onCollisionEndCalls.Invoke(this); }
+}
+
+void Krampus::PhysicsComponent::CountOverlap(const PhysicsContact& _contact, const int& _delta)
+{
+    bool _began = false;
+    if (!Count(overlapCounts, overlapping, _contact.other, _delta, _began)) return;
+    lastContact = _contact;
+    if (_began) { onTriggerBegin.Broadcast(_contact); if (IsAlive()) onTriggerBeginCalls.Invoke(this); }
+    else { onTriggerEnd.Broadcast(_contact); if (IsAlive()) onTriggerEndCalls.Invoke(this); }
+}
+
+void Krampus::PhysicsComponent::Hit(const PhysicsContact& _contact)
+{
+    lastContact = _contact;
+    onHit.Broadcast(_contact);
+    if (IsAlive()) onHitCalls.Invoke(this);
 }
 
 void Krampus::PhysicsComponent::MakeCircle(const Float& _radius)
@@ -342,8 +437,7 @@ void Krampus::PhysicsComponent::MakeCircle(const Float& _radius)
     b2Circle _circle = {0};
     const float _scale = std::max(std::abs(builtScale.x), std::abs(builtScale.y));	// like the sprite's outline
     _circle.radius = std::max(0.5f, static_cast<float>(_radius) * _scale) / PX_TO_M;
-    b2ShapeDef _shape = b2DefaultShapeDef();
-    _shape.density = 1.0f;
+    b2ShapeDef _shape = ShapeDef();
     AddShape(b2CreateCircleShape(bodyId, &_shape, &_circle));
     b2Body_ApplyMassFromShapes(bodyId);
 }
@@ -357,8 +451,7 @@ void Krampus::PhysicsComponent::MakeRectangle(const FVector2& _size)
     builtScale = GetScale();
     const FVector2 _scaled = FVector2(std::max(1.f, _size.x * std::abs(builtScale.x)), std::max(1.f, _size.y * std::abs(builtScale.y)));
     b2Polygon _polygon = b2MakeBox(_scaled.x / PX_TO_M / 2.0f, _scaled.y / PX_TO_M / 2.0f);
-    b2ShapeDef _shape = b2DefaultShapeDef();
-    _shape.density = 1.0f;
+    b2ShapeDef _shape = ShapeDef();
     AddShape(b2CreatePolygonShape(bodyId, &_shape, &_polygon));
     b2Body_ApplyMassFromShapes(bodyId);
 }
@@ -374,8 +467,7 @@ void Krampus::PhysicsComponent::MakePolygon(const std::string& _shapeName)
     const Polygon2D& _polygon = ShapeAssets::Get(polygonName);
     debugSize = _polygon.Bounds().GetSize();
     builtScale = GetScale();
-    b2ShapeDef _shape = b2DefaultShapeDef();
-    _shape.density = 1.0f;
+    b2ShapeDef _shape = ShapeDef();
     for (std::vector<FVector2> _part : _polygon.ConvexParts(B2_MAX_POLYGON_VERTICES))
     {
         // Scaled like the sprite (a convex piece stays convex, even mirrored by a negative scale).

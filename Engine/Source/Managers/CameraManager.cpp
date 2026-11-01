@@ -217,9 +217,28 @@ void Krampus::CameraManager::DrawDebugList(Window& _window, const std::vector<st
 
 void Krampus::CameraManager::RenderWidgets(Window& _window, const Bool& splitScreen)
 {
+	sf::RenderWindow& _target = _window.GetRenderWindow();
 	for (const auto& [_zOrder, _sprites] : widgets)
 		for (IDrawable* _sprite : _sprites)
+		{
+			// A widget in a scroll box is drawn only inside it.
+			std::optional<FRect> _clip;
+			if (Widget::clippingWidgets > 0)
+			{
+				const Widget* _owner = dynamic_cast<const Widget*>(_sprite);
+				if (!_owner)
+					if (const WidgetComponent* _component = dynamic_cast<const WidgetComponent*>(_sprite)) _owner = _component->GetOwner();
+				if (_owner) _clip = _owner->GetClip();
+			}
+			if (!_clip) { _sprite->Draw(_window); continue; }
+
+			const sf::View _view = _target.getView();
+			const std::optional<sf::View> _clipped = Widget::ClipView(_view, *_clip);
+			if (!_clipped) continue;	// out of its scroll box
+			_target.setView(*_clipped);
 			_sprite->Draw(_window);
+			_target.setView(_view);
+		}
 }
 
 // ---- Split screen

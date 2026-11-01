@@ -30,9 +30,90 @@ void Krampus::WorldPhysics::Update()
 	const float _deltaTime = _level->GetTimerManager().GetDeltaTime();
 	const int _steps = std::clamp(static_cast<int>(std::ceil(_deltaTime / MaxStepTime)), 1, MaxSteps);
 	for (int _i = 0; _i < _steps; ++_i)
+	{
 		b2World_Step(physicsWorldID, _deltaTime / static_cast<float>(_steps), subStepsCount);
+		++stepCount;
+		DispatchEvents();	// box2d keeps the events of the last step only
+	}
 
 	onResolveCollision.Broadcast();
+}
+
+// ---- Events
+void Krampus::WorldPhysics::RegisterShape(const b2ShapeId& _shape, PhysicsComponent* _owner)
+{
+	shapeOwners[b2StoreShapeId(_shape)] = _owner;
+}
+
+void Krampus::WorldPhysics::RetireShape(const b2ShapeId& _shape)
+{
+	retiredShapes.push_back({ b2StoreShapeId(_shape), stepCount });
+}
+
+void Krampus::WorldPhysics::Forget(const PhysicsComponent* _owner)
+{
+	std::erase_if(shapeOwners, [&](const auto& _pair) { return _pair.second == _owner; });
+}
+
+Krampus::PhysicsComponent* Krampus::WorldPhysics::OwnerOf(const b2ShapeId& _shape) const
+{
+	const auto _found = shapeOwners.find(b2StoreShapeId(_shape));
+	return _found == shapeOwners.end() ? nullptr : _found->second;
+}
+
+void Krampus::WorldPhysics::DispatchEvents()
+{
+	// Read first, broadcast after: a listener may destroy bodies, which writes in the arrays box2d gave.
+	enum class Kind { Begin, End, Hit, TriggerBegin, TriggerEnd };
+	struct Pending { Kind kind; PhysicsComponent* a; PhysicsComponent* b; FVector2 point; FVector2 normal; float speed; };
+	std::vector<Pending> _pending;
+
+	const b2ContactEvents _contacts = b2World_GetContactEvents(physicsWorldID);
+	for (int _i = 0; _i < _contacts.beginCount; ++_i)
+	{
+		const b2ContactBeginTouchEvent& _event = _contacts.beginEvents[_i];
+		const b2Manifold& _manifold = _event.manifold;
+		const FVector2 _point = _manifold.pointCount > 0 ? FVector2(_manifold.points[0].point.x, _manifold.points[0].point.y) * PX_TO_M : FVector2();
+		_pending.push_back({ Kind::Begin, OwnerOf(_event.shapeIdA), OwnerOf(_event.shapeIdB), _point, FVector2(_manifold.normal.x, _manifold.normal.y), 0.f });
+	}
+	for (int _i = 0; _i < _contacts.endCount; ++_i)
+		_pending.push_back({ Kind::End, OwnerOf(_contacts.endEvents[_i].shapeIdA), OwnerOf(_contacts.endEvents[_i].shapeIdB), FVector2(), FVector2(), 0.f });
+	for (int _i = 0; _i < _contacts.hitCount; ++_i)
+	{
+		const b2ContactHitEvent& _event = _contacts.hitEvents[_i];
+		_pending.push_back({ Kind::Hit, OwnerOf(_event.shapeIdA), OwnerOf(_event.shapeIdB), FVector2(_event.point.x, _event.point.y) * PX_TO_M,
+			FVector2(_event.normal.x, _event.normal.y), _event.approachSpeed * PX_TO_M });
+	}
+
+	const b2SensorEvents _sensors = b2World_GetSensorEvents(physicsWorldID);
+	for (int _i = 0; _i < _sensors.beginCount; ++_i)
+		_pending.push_back({ Kind::TriggerBegin, OwnerOf(_sensors.beginEvents[_i].sensorShapeId), OwnerOf(_sensors.beginEvents[_i].visitorShapeId), FVector2(), FVector2(), 0.f });
+	for (int _i = 0; _i < _sensors.endCount; ++_i)
+		_pending.push_back({ Kind::TriggerEnd, OwnerOf(_sensors.endEvents[_i].sensorShapeId), OwnerOf(_sensors.endEvents[_i].visitorShapeId), FVector2(), FVector2(), 0.f });
+
+	// Shapes destroyed two steps ago have given their last events.
+	std::erase_if(retiredShapes, [&](const auto& _retired)
+		{
+			if (_retired.second + 2 > stepCount) return false;
+			shapeOwners.erase(_retired.first);
+			return true;
+		});
+
+	for (const Pending& _event : _pending)
+	{
+		// A body destroyed by an earlier listener of this step has had its end events already (PhysicsComponent::Deconstruct).
+		if (!_event.a || !_event.b || _event.a == _event.b || !_event.a->IsAlive() || !_event.b->IsAlive()) continue;
+		PhysicsContact _forA{ _event.b, _event.b->GetOwner(), _event.point, _event.normal, _event.speed };
+		PhysicsContact _forB{ _event.a, _event.a->GetOwner(), _event.point, FVector2() - _event.normal, _event.speed };
+		switch (_event.kind)
+		{
+		case Kind::Begin:			_event.a->CountContact(_forA, 1);	if (_event.b->IsAlive()) _event.b->CountContact(_forB, 1);	break;
+		case Kind::End:				_event.a->CountContact(_forA, -1);	if (_event.b->IsAlive()) _event.b->CountContact(_forB, -1);	break;
+		case Kind::Hit:				_event.a->Hit(_forA);				if (_event.b->IsAlive()) _event.b->Hit(_forB);					break;
+		case Kind::TriggerBegin:	_event.a->CountOverlap(_forA, 1);	if (_event.b->IsAlive()) _event.b->CountOverlap(_forB, 1);	break;
+		case Kind::TriggerEnd:		_event.a->CountOverlap(_forA, -1);	if (_event.b->IsAlive()) _event.b->CountOverlap(_forB, -1);	break;
+		}
+	}
 }
 
 

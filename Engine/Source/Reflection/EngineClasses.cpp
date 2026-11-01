@@ -22,6 +22,9 @@
 #include "Core/Settings.h"
 #include "Scene/Scene.h"
 #include "UI/Widgets/ButtonWidget.h"
+#include "UI/Widgets/BasicWidgets.h"
+#include "UI/Widgets/LayoutWidgets.h"
+#include "UI/Widgets/InputWidgets.h"
 #include "UI/Widgets/WidgetComponents/AnimationWidgetComponent.h"
 #include "UI/Widgets/WidgetComponents/ButtonWidgetComponent.h"
 #include "UI/Widgets/WidgetComponents/ImageWidgetComponent.h"
@@ -455,6 +458,17 @@ void Krampus::RegisterEngineClasses()
 		_info.AddAccessor<PhysicsComponent, bool>("bullet",
 			[](PhysicsComponent& _c) { return _c.IsBullet(); },
 			[](PhysicsComponent& _c, const bool& _v) { _c.SetBullet(_v); });
+		_info.AddAccessor<PhysicsComponent, bool>("trigger",	// a trigger does not collide: it tells what enters and leaves it
+			[](PhysicsComponent& _c) { return _c.IsTrigger(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.SetTrigger(_v); });
+		_info.AddAccessor<PhysicsComponent, bool>("hitEvents",	// onHit when a body hits this one fast enough
+			[](PhysicsComponent& _c) { return _c.AreHitEventsEnabled(); },
+			[](PhysicsComponent& _c, const bool& _v) { _c.SetHitEventsEnabled(_v); });
+		_info.AddProperty<PhysicsComponent, EventList>("onCollisionBegin", &PhysicsComponent::onCollisionBeginCalls);
+		_info.AddProperty<PhysicsComponent, EventList>("onCollisionEnd", &PhysicsComponent::onCollisionEndCalls);
+		_info.AddProperty<PhysicsComponent, EventList>("onHit", &PhysicsComponent::onHitCalls);
+		_info.AddProperty<PhysicsComponent, EventList>("onTriggerBegin", &PhysicsComponent::onTriggerBeginCalls);
+		_info.AddProperty<PhysicsComponent, EventList>("onTriggerEnd", &PhysicsComponent::onTriggerEndCalls);
 
 		// Collision filter (SetFilter takes the three together).
 		_info.AddAccessor<PhysicsComponent, int>("filterCategory",
@@ -894,6 +908,127 @@ void Krampus::RegisterEngineClasses()
 		_info.AddProperty<ButtonWidget, String>("targetScene", &ButtonWidget::targetScene);
 	}
 
+	// ================= Layout and input widgets (ControlWidget.h) =================
+	{
+		ClassInfo& _info = Describe("ControlWidget", "Widget");
+		_info.AddProperty<ControlWidget, FVector2>("size", &ControlWidget::size);	// before the scale
+		_info.AddProperty<ControlWidget, Color>("backgroundColor", &ControlWidget::backgroundColor);
+		_info.AddProperty<ControlWidget, Color>("outlineColor", &ControlWidget::outlineColor);
+		_info.AddProperty<ControlWidget, Float>("outlineThickness", &ControlWidget::outlineThickness, 0.f, 20.f);
+		_info.AddAccessor<ControlWidget, int>("zOrder",		// 0 behind, 255 in front
+			[](ControlWidget& _w) { return static_cast<int>(_w.GetZOrder()); },
+			[](ControlWidget& _w, const int& _v) { _w.SetZOrder(static_cast<uint8_t>(std::clamp(_v, 0, 255))); }, 0.f, 255.f);
+	}
+	{
+		ClassInfo& _info = Describe("PanelWidget", "ControlWidget");
+		_info.AddProperty<PanelWidget, Float>("padding", &PanelWidget::padding, 0.f, 500.f);
+		_info.AddProperty<PanelWidget, Float>("spacing", &PanelWidget::spacing, 0.f, 500.f);
+		_info.AddProperty<PanelWidget, Int>("alignment", &PanelWidget::alignment, 0.f, 2.f);	// across the box
+		_info.SetLastPropertyType(PropertyType::Enum, { "Start", "Center", "End" });
+		_info.AddProperty<PanelWidget, Bool>("fitContent", &PanelWidget::fitContent);
+	}
+	Describe("CanvasWidget", "PanelWidget").widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<CanvasWidget>(_level); };
+	{
+		ClassInfo& _info = Describe("BoxWidget", "PanelWidget");
+		_info.AddProperty<BoxWidget, Int>("justify", &BoxWidget::justify, 0.f, 2.f);	// along the box
+		_info.SetLastPropertyType(PropertyType::Enum, { "Start", "Center", "End" });
+	}
+	Describe("HorizontalBoxWidget", "BoxWidget").widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<HorizontalBoxWidget>(_level); };
+	Describe("VerticalBoxWidget", "BoxWidget").widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<VerticalBoxWidget>(_level); };
+	{
+		ClassInfo& _info = Describe("GridWidget", "PanelWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<GridWidget>(_level); };
+		_info.AddProperty<GridWidget, Int>("columns", &GridWidget::columns, 1.f, 64.f);
+		_info.AddProperty<GridWidget, FVector2>("cellSize", &GridWidget::cellSize);	// 0: the biggest child
+	}
+	{
+		ClassInfo& _info = Describe("ScrollBoxWidget", "PanelWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<ScrollBoxWidget>(_level); };
+		_info.AddProperty<ScrollBoxWidget, Float>("scroll", &ScrollBoxWidget::scroll, 0.f, 0.f);
+		_info.AddProperty<ScrollBoxWidget, Float>("scrollSpeed", &ScrollBoxWidget::scrollSpeed, 0.f, 500.f);
+		_info.AddProperty<ScrollBoxWidget, Bool>("showScrollBar", &ScrollBoxWidget::showScrollBar);
+		_info.AddProperty<ScrollBoxWidget, Color>("scrollBarColor", &ScrollBoxWidget::scrollBarColor);
+	}
+	Describe("SpacerWidget", "ControlWidget").widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<SpacerWidget>(_level); };
+	Describe("ImageWidget", "Widget").widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<ImageWidget>(_level, RectangleShapeData()); };
+	Describe("TextWidget", "Widget").widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<TextWidget>(_level, TextData("Text")); };
+	{
+		ClassInfo& _info = Describe("SliderWidget", "ControlWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<SliderWidget>(_level); };
+		// The range before the value: a loaded value is clamped to it.
+		_info.AddProperty<SliderWidget, Float>("minValue", &SliderWidget::minValue);
+		_info.AddProperty<SliderWidget, Float>("maxValue", &SliderWidget::maxValue);
+		_info.AddProperty<SliderWidget, Float>("step", &SliderWidget::step, 0.f, 0.f);
+		_info.AddAccessor<SliderWidget, float>("value",
+			[](SliderWidget& _w) { return static_cast<float>(_w.GetValue()); },
+			[](SliderWidget& _w, const float& _v) { _w.SetValue(_v); });
+		_info.AddProperty<SliderWidget, Bool>("vertical", &SliderWidget::vertical);
+		_info.AddProperty<SliderWidget, Color>("trackColor", &SliderWidget::trackColor);
+		_info.AddProperty<SliderWidget, Color>("fillColor", &SliderWidget::fillColor);
+		_info.AddProperty<SliderWidget, Color>("handleColor", &SliderWidget::handleColor);
+		_info.AddProperty<SliderWidget, Float>("handleSize", &SliderWidget::handleSize, 1.f, 200.f);
+		_info.AddProperty<SliderWidget, EventList>("onValueChanged", &SliderWidget::onValueChangedCalls);
+	}
+	{
+		ClassInfo& _info = Describe("ProgressBarWidget", "ControlWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<ProgressBarWidget>(_level); };
+		_info.AddAccessor<ProgressBarWidget, float>("value",	// 0 to 1
+			[](ProgressBarWidget& _w) { return static_cast<float>(_w.GetValue()); },
+			[](ProgressBarWidget& _w, const float& _v) { _w.SetValue(_v); }, 0.f, 1.f);
+		_info.AddProperty<ProgressBarWidget, Color>("fillColor", &ProgressBarWidget::fillColor);
+		_info.AddProperty<ProgressBarWidget, Int>("direction", &ProgressBarWidget::direction, 0.f, 3.f);
+		_info.SetLastPropertyType(PropertyType::Enum, { "Left to right", "Right to left", "Bottom to top", "Top to bottom" });
+		_info.AddProperty<ProgressBarWidget, Bool>("showText", &ProgressBarWidget::showText);
+		_info.AddProperty<ProgressBarWidget, Color>("textColor", &ProgressBarWidget::textColor);
+		_info.AddProperty<ProgressBarWidget, Int>("characterSize", &ProgressBarWidget::characterSize, 1.f, 200.f);
+	}
+	{
+		ClassInfo& _info = Describe("CheckBoxWidget", "ControlWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<CheckBoxWidget>(_level); };
+		_info.AddProperty<CheckBoxWidget, String>("text", &CheckBoxWidget::text);
+		_info.AddProperty<CheckBoxWidget, String>("group", &CheckBoxWidget::group);	// not empty: a radio button
+		_info.AddAccessor<CheckBoxWidget, bool>("checked",
+			[](CheckBoxWidget& _w) { return static_cast<bool>(_w.IsChecked()); },
+			[](CheckBoxWidget& _w, const bool& _v) { _w.SetChecked(_v); });
+		_info.AddProperty<CheckBoxWidget, Color>("boxColor", &CheckBoxWidget::boxColor);
+		_info.AddProperty<CheckBoxWidget, Color>("checkColor", &CheckBoxWidget::checkColor);
+		_info.AddProperty<CheckBoxWidget, Color>("textColor", &CheckBoxWidget::textColor);
+		_info.AddProperty<CheckBoxWidget, Int>("characterSize", &CheckBoxWidget::characterSize, 1.f, 200.f);
+		_info.AddProperty<CheckBoxWidget, EventList>("onChecked", &CheckBoxWidget::onCheckedCalls);
+		_info.AddProperty<CheckBoxWidget, EventList>("onUnchecked", &CheckBoxWidget::onUncheckedCalls);
+	}
+	{
+		ClassInfo& _info = Describe("TextEntryWidget", "ControlWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<TextEntryWidget>(_level); };
+		_info.AddProperty<TextEntryWidget, Int>("maxLength", &TextEntryWidget::maxLength, 0.f, 10000.f);	// before the text: it is cut to it
+		_info.AddAccessor<TextEntryWidget, std::string>("text",
+			[](TextEntryWidget& _w) { return _w.GetText(); },
+			[](TextEntryWidget& _w, const std::string& _v) { _w.SetText(_v); });
+		_info.AddProperty<TextEntryWidget, String>("placeholder", &TextEntryWidget::placeholder);
+		_info.AddProperty<TextEntryWidget, Bool>("password", &TextEntryWidget::password);
+		_info.AddProperty<TextEntryWidget, Int>("characterSize", &TextEntryWidget::characterSize, 1.f, 200.f);
+		_info.AddProperty<TextEntryWidget, Color>("textColor", &TextEntryWidget::textColor);
+		_info.AddProperty<TextEntryWidget, Color>("placeholderColor", &TextEntryWidget::placeholderColor);
+		_info.AddProperty<TextEntryWidget, Color>("focusColor", &TextEntryWidget::focusColor);
+		_info.AddProperty<TextEntryWidget, EventList>("onTextChanged", &TextEntryWidget::onTextChangedCalls);
+		_info.AddProperty<TextEntryWidget, EventList>("onSubmit", &TextEntryWidget::onSubmitCalls);
+	}
+	{
+		ClassInfo& _info = Describe("DropdownWidget", "ControlWidget");
+		_info.widgetFactory = [](Level* _level) -> Widget* { return _level->GetHUD().CreateWidget<DropdownWidget>(_level); };
+		_info.AddAccessor<DropdownWidget, std::string>("options",	// separated by ';', before the selection
+			[](DropdownWidget& _w) { return _w.GetOptionsText(); },
+			[](DropdownWidget& _w, const std::string& _v) { _w.SetOptions(_v); });
+		_info.AddAccessor<DropdownWidget, int>("selected",
+			[](DropdownWidget& _w) { return static_cast<int>(_w.GetSelected()); },
+			[](DropdownWidget& _w, const int& _v) { _w.SetSelected(_v); });
+		_info.AddProperty<DropdownWidget, Color>("itemColor", &DropdownWidget::itemColor);
+		_info.AddProperty<DropdownWidget, Color>("hoverColor", &DropdownWidget::hoverColor);
+		_info.AddProperty<DropdownWidget, Color>("textColor", &DropdownWidget::textColor);
+		_info.AddProperty<DropdownWidget, Int>("characterSize", &DropdownWidget::characterSize, 1.f, 200.f);
+		_info.AddProperty<DropdownWidget, EventList>("onSelectionChanged", &DropdownWidget::onSelectionChangedCalls);
+	}
+
 	// ================= Widget components =================
 	{
 		ClassInfo& _info = Describe("AnimationWidgetComponent", "WidgetComponent");
@@ -968,6 +1103,18 @@ void Krampus::RegisterEngineClasses()
 
 	Describe("LabelComponent", "Component").AddFunction<LabelComponent, std::string>("SetText", [](LabelComponent& _c, const std::string& _text) { _c.SetString(String(_text)); });
 	Describe("LabelWidgetComponent", "WidgetComponent").AddFunction<LabelWidgetComponent, std::string>("SetText", [](LabelWidgetComponent& _c, const std::string& _text) { _c.SetString(String(_text)); });
+	Describe("TextWidget", "Widget").AddFunction<TextWidget, std::string>("SetText", [](TextWidget& _w, const std::string& _text) { _w.SetText(String(_text)); });
+	Describe("SliderWidget", "ControlWidget").AddFunction<SliderWidget, float>("SetValue", [](SliderWidget& _w, const float& _value) { _w.SetValue(_value, true); });
+	Describe("ProgressBarWidget", "ControlWidget").AddFunction<ProgressBarWidget, float>("SetValue", [](ProgressBarWidget& _w, const float& _value) { _w.SetValue(_value); });
+	Describe("CheckBoxWidget", "ControlWidget").AddFunction<CheckBoxWidget, bool>("SetChecked", [](CheckBoxWidget& _w, const bool& _checked) { _w.SetChecked(_checked, true); });
+	{
+		ClassInfo& _info = Describe("TextEntryWidget", "ControlWidget");
+		_info.AddFunction<TextEntryWidget, std::string>("SetText", [](TextEntryWidget& _w, const std::string& _text) { _w.SetText(_text); });
+		_info.AddFunction<TextEntryWidget>("Clear", [](TextEntryWidget& _w) { _w.SetText(""); });
+		_info.AddFunction<TextEntryWidget>("Focus", [](TextEntryWidget& _w) { _w.SetFocused(true); });
+	}
+	Describe("DropdownWidget", "ControlWidget").AddFunction<DropdownWidget, int>("SetSelected", [](DropdownWidget& _w, const int& _index) { _w.SetSelected(_index, true); });
+	Describe("ScrollBoxWidget", "PanelWidget").AddFunction<ScrollBoxWidget, float>("ScrollTo", [](ScrollBoxWidget& _w, const float& _scroll) { _w.scroll = _scroll; });
 
 	{
 		ClassInfo& _info = Describe("SpatialSoundComponent", "Component");

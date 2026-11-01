@@ -2,9 +2,11 @@
 #include "Core/KrampusObject.h"
 #include "Utilities/Math/Physics.h"
 #include "box2d/box2d.h"
+#include <unordered_map>
 
 namespace Krampus
 {
+	class PhysicsComponent;
 
 	/// <summary>
 	/// Manages broad-phase and narrow-phase collision checks and multi-step collision resolution between colliders.
@@ -16,6 +18,15 @@ namespace Krampus
 
 		static constexpr float				MaxStepTime	= 1.f / 60.f;	// the longest step given to box2d
 		static constexpr int				MaxSteps	= 8;			// steps per frame at most (a very slow frame is slowed down instead)
+
+		// The body of each box2d shape, for the events: box2d reports the end of a contact with the ids of shapes that may be
+		// destroyed already. A destroyed shape stays known two steps (retiredShapes) for that.
+		std::unordered_map<uint64_t, PhysicsComponent*>	shapeOwners;
+		std::vector<std::pair<uint64_t, uint64_t>>		retiredShapes;	// shape, step it was destroyed at
+		uint64_t										stepCount	= 0;
+
+		void DispatchEvents();	// the contact and trigger events of the last step, to the PhysicsComponents
+		PhysicsComponent* OwnerOf(const b2ShapeId& _shape) const;
 
 	public:
 		/// <summary>
@@ -239,6 +250,11 @@ namespace Krampus
 		/// The bodies with a shape touching the circle (pixels).
 		/// </summary>
 		std::vector<class PhysicsComponent*> OverlapCircle(const FVector2& _center, const Float& _radius, const CollisionChannel& _channels = AllChannels()) const;
+
+		/// <summary>For PhysicsComponent: a shape made, destroyed, a body gone (its shapes are forgotten at once).</summary>
+		void RegisterShape(const b2ShapeId& _shape, PhysicsComponent* _owner);
+		void RetireShape(const b2ShapeId& _shape);
+		void Forget(const PhysicsComponent* _owner);
 
 		/// <summary>Every collision channel.</summary>
 		static constexpr CollisionChannel AllChannels() { return static_cast<CollisionChannel>(~0ull); }

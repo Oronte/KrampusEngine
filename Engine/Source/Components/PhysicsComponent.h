@@ -3,10 +3,26 @@
 #include "Utilities/System/Debuggable.h"
 #include "Utilities/System/CollisionChannel.h"
 #include "Graphics/Shapes/ShapeObject.h"
+#include "Reflection/EventList.h"
 #include "box2d/box2d.h"
 
 namespace Krampus
 {
+	class PhysicsComponent;
+
+	/// <summary>
+	/// What a physics event tells: the other body, where and how hard (point, normal and speed are only set by onCollisionBegin
+	/// and onHit; the normal points from this body toward the other one).
+	/// </summary>
+	struct PhysicsContact
+	{
+		PhysicsComponent*	other		= nullptr;
+		class Actor*		otherActor	= nullptr;
+		FVector2			point;				// pixels, in the world
+		FVector2			normal;				// from this body toward the other one
+		Float				speed		= 0.f;	// pixels / second the bodies came closer at (onHit)
+	};
+
 	/// <summary>
 	/// Component that integrates Box2D 2D rigid body physics simulation with an actor.
 	/// </summary>
@@ -21,6 +37,47 @@ namespace Krampus
         Event<FVector2>::ListenerHandle scaleHandle;
 
     public:
+		// ---- Events (broadcast after the physics step, never while box2d is working)
+		// A body made of several shapes (a concave polygon) tells once per other body, not once per shape.
+
+		/// <summary>Another body starts touching this one (not for a trigger).</summary>
+		Event<const PhysicsContact&>	onCollisionBegin;
+		/// <summary>The other body does not touch this one anymore (or it was destroyed).</summary>
+		Event<const PhysicsContact&>	onCollisionEnd;
+		/// <summary>Another body hits this one faster than the hit threshold of the world (SetHitEventsEnabled must be on for one of the two).</summary>
+		Event<const PhysicsContact&>	onHit;
+		/// <summary>A body enters this trigger, or this body enters a trigger.</summary>
+		Event<const PhysicsContact&>	onTriggerBegin;
+		/// <summary>A body leaves this trigger, or this body leaves a trigger.</summary>
+		Event<const PhysicsContact&>	onTriggerEnd;
+
+		/// <summary>The same moments, as functions to call set in the Inspector (GetLastContact gives the other body).</summary>
+		EventList						onCollisionBeginCalls;
+		EventList						onCollisionEndCalls;
+		EventList						onHitCalls;
+		EventList						onTriggerBeginCalls;
+		EventList						onTriggerEndCalls;
+
+		/// <summary>
+		/// A trigger (box2d sensor) does not collide: it only tells what enters and leaves it (onTriggerBegin / onTriggerEnd).
+		/// </summary>
+		void SetTrigger(const bool& _trigger);
+		bool IsTrigger() const { return trigger; }
+
+		/// <summary>onHit needs it on one of the two bodies (off by default: box2d computes the speed of every contact for it).</summary>
+		void SetHitEventsEnabled(const bool& _enable);
+		bool AreHitEventsEnabled() const { return hitEvents; }
+
+		/// <summary>The bodies that touch this one now.</summary>
+		const std::vector<PhysicsComponent*>& GetTouching() const { return touching; }
+		/// <summary>The bodies in this trigger now, or the triggers this body is in.</summary>
+		const std::vector<PhysicsComponent*>& GetOverlapping() const { return overlapping; }
+		bool IsTouching(const PhysicsComponent* _other) const;
+		bool IsOverlapping(const PhysicsComponent* _other) const;
+
+		/// <summary>The contact of the last event of this body (for the functions of the event lists).</summary>
+		const PhysicsContact& GetLastContact() const { return lastContact; }
+
 		/// <summary>
 		/// Constructs a PhysicsComponent that always has the shape of the owner's SpriteComponent (see SetMatchSprite).
 		/// Without a sprite it is a box of 100 x 100 until one is added.
@@ -304,6 +361,24 @@ namespace Krampus
         std::vector<b2ShapeId>				shapeIds;		// every box2d shape of the body (shapeId is the first)
         b2Filter    filter      = b2DefaultFilter();		// kept: a new shape gets it too
         ListenerHandle shapeSavedHandle;
+        bool        trigger     = false;
+        bool        hitEvents   = false;
+
+        // How many shapes of each other body touch (or overlap) a shape of this one: an event at 0 -> 1 and 1 -> 0 only.
+        std::vector<std::pair<PhysicsComponent*, int>>	contactCounts;
+        std::vector<std::pair<PhysicsComponent*, int>>	overlapCounts;
+        std::vector<PhysicsComponent*>					touching;
+        std::vector<PhysicsComponent*>					overlapping;
+        PhysicsContact									lastContact;
+
+        b2ShapeDef ShapeDef();	// density, trigger, events, user data: the same for every shape of the body
+        bool IsAlive() const { return b2Body_IsValid(bodyId); }
+
+        // Called by WorldPhysics with the events of a step (+1 begins, -1 ends).
+        void CountContact(const PhysicsContact& _contact, const int& _delta);
+        void CountOverlap(const PhysicsContact& _contact, const int& _delta);
+        void Hit(const PhysicsContact& _contact);
+        friend class WorldPhysics;
 
         void Init();
         void MakeCircle(const Float& _radius);
