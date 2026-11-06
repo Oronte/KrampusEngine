@@ -14,9 +14,9 @@ namespace Krampus
         Exception(const String& _error, const String& _debugInfo = "");
 
     private:
-        NO_DISCARD virtual const char* what() const noexcept override;
+        [[nodiscard]] const char* what() const noexcept override;
     public:
-        NO_DISCARD const char* What() const;
+        [[nodiscard]] const char* What() const;
     };
 
 }

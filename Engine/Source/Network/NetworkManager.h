@@ -1,6 +1,8 @@
 #pragma once
 #include "Core/KrampusObject.h"
 #include "Reflection/EventList.h"
+#include "NetSocket.h"
+#include "SteamNet.h"
 #include <SFML/Network.hpp>
 #include <future>
 
@@ -120,7 +122,7 @@ namespace Krampus
 		struct Peer
 		{
 			int									id			= 0;
-			std::unique_ptr<sf::TcpSocket>		socket;
+			std::unique_ptr<NetSocket>		socket;
 			std::optional<sf::IpAddress>		udpAddress;
 			unsigned short						udpPort		= 0;
 			float								silence		= 0.f;		// seconds since the last thing received
@@ -130,14 +132,14 @@ namespace Krampus
 
 		struct Joining
 		{
-			std::unique_ptr<sf::TcpSocket>		socket;
+			std::unique_ptr<NetSocket>		socket;
 			float								age			= 0.f;
 		};
 
 		struct ConnectResult
 		{
 			sf::Socket::Status					status		= sf::Socket::Status::Error;
-			std::unique_ptr<sf::TcpSocket>		socket;
+			std::unique_ptr<NetSocket>		socket;
 		};
 
 		struct SpawnRecord
@@ -163,7 +165,7 @@ namespace Krampus
 		std::uint32_t							session			= 0;		// random, for the LAN answers
 
 		// Client
-		std::unique_ptr<sf::TcpSocket>			server;
+		std::unique_ptr<NetSocket>			server;
 		std::future<ConnectResult>				connecting;
 		std::optional<sf::IpAddress>			serverAddress;
 		unsigned short							serverPort		= 0;
@@ -186,6 +188,11 @@ namespace Krampus
 		float									searchTime		= 0.f;		// seconds of search left
 		float									searchResend	= 0.f;
 		std::vector<NetLanGame>					lanGames;
+
+		// Steam (SteamNet.cpp): the same game, carried by Steam connections instead of TCP/UDP sockets.
+		std::unique_ptr<SteamNet>				steam;
+		std::unique_ptr<NetSocket>				steamPending;		// the connection to a Steam host, until it is established
+		bool									steamMode		= false;	// this game runs on Steam: no TCP port, no UDP, no LAN search
 
 		// Statistics
 		NetStats								stats;
@@ -254,6 +261,44 @@ namespace Krampus
 		/// <summary>Join with the address and port of the Network settings.</summary>
 		void Join();
 
+		// ---- Steam (needs the Steam client running and the Steamworks SDK in ThirdParty, see SteamNet.h)
+
+		/// <summary>Steam AppID (480 = the test app of Valve). Set before the first Steam call.</summary>
+		int										steamAppId		= 480;
+		/// <summary>HostSteam: only the friends of the host can see the game.</summary>
+		bool									steamFriendsOnly = true;
+		/// <summary>The lobbies found by SearchSteam were updated.</summary>
+		Event<>									onSteamLobbiesFound;
+
+		/// <summary>Connects to Steam (once). False when Steam is not running or this build has no Steam: GetSteamError() says why.</summary>
+		bool InitSteam();
+		bool IsSteamReady() const { return steam->IsReady(); }
+		std::string GetSteamError() const { return steam->lastError; }
+		std::string GetSteamName() const { return steam->GetPersonaName(); }
+
+		/// <summary>Hosts a game through Steam: friends join from the Steam overlay or the list of SearchSteam. Returns false if Steam is not ready.</summary>
+		bool HostSteam();
+
+		/// <summary>Joins the host with this SteamID64 (a number). Returns at once: onConnected or onConnectionFailed tells the result.</summary>
+		void JoinSteam(const std::string& _hostSteamId);
+
+		/// <summary>Opens the Steam overlay to invite friends to the game being hosted.</summary>
+		void InviteSteamFriends();
+
+		/// <summary>Looks for Steam games of this game name. Results: GetSteamLobbies() and onSteamLobbiesFound.</summary>
+		void SearchSteam();
+		const std::vector<SteamLobby>& GetSteamLobbies() const { return steam->GetLobbies(); }
+		void JoinSteamLobby(const SteamLobby& _lobby) { JoinSteam(std::to_string(_lobby.host)); }
+		/// <summary>Enters a Steam lobby by its id (the lobby of a friend, SteamFriend::lobby), then joins its host. A failure ends in onConnectionFailed.</summary>
+		void JoinSteamLobby(std::uint64_t _lobbyId);
+
+		/// <returns>The Steam friends who are online (those in this game first). Empty when Steam is not ready.</returns>
+		std::vector<SteamFriend> GetSteamFriends() const { return steam->GetFriends(); }
+		/// <summary>Host of a Steam game: invites this friend (a Steam chat invitation, no overlay needed). False otherwise (GetSteamError).</summary>
+		bool InviteSteamFriend(std::uint64_t _friendId);
+		/// <returns>True while the game (hosted or joined) goes through Steam.</returns>
+		bool IsSteamMode() const { return steamMode; }
+
 		/// <summary>Leaves the game (a host closes it: clients are disconnected).</summary>
 		void Disconnect();
 
@@ -321,7 +366,7 @@ namespace Krampus
 			if constexpr (std::is_same_v<V, bool> || std::is_same_v<V, ::Bool>)						return PropertyValue(static_cast<bool>(_value));
 			else if constexpr (std::is_same_v<V, ::Int>)												return PropertyValue(static_cast<int>(_value));
 			else if constexpr (std::is_same_v<V, ::Float>)											return PropertyValue(static_cast<float>(_value));
-			else if constexpr (std::is_same_v<V, ::String>)											return PropertyValue(_value.StdString());
+			else if constexpr (std::is_same_v<V, ::String>)											return PropertyValue(_value);
 			else if constexpr (std::is_integral_v<V> || std::is_enum_v<V>)									return PropertyValue(static_cast<int>(_value));
 			else if constexpr (std::is_floating_point_v<V>)													return PropertyValue(static_cast<float>(_value));
 			else if constexpr (std::is_convertible_v<const V&, std::string>)								return PropertyValue(std::string(_value));
@@ -395,7 +440,7 @@ namespace Krampus
 
 	private:
 		void Deliver(const NetMessage& _message);
-		void SendPacket(sf::TcpSocket& _socket, sf::Packet& _packet);
+		void SendPacket(NetSocket& _socket, sf::Packet& _packet);
 		void SendMessageTo(Peer& _peer, const NetMessage& _message, NetChannel _channel);
 		void SendToServer(const NetMessage& _message, int _target, NetChannel _channel);
 		void Route(const NetMessage& _message, int _target, const Peer* _from, NetChannel _channel);
@@ -415,6 +460,9 @@ namespace Krampus
 		void ReadHostSocket(Peer& _peer);
 		void ReadServerSocket();
 		void ReadUdp();
+		void BeginHosting(const std::string& _where);
+		bool SendSteamUnreliable(NetSocket& _socket, const sf::Packet& _packet);
+		void OnServerConnected();
 		void HandleHostPacket(Peer& _peer, sf::Packet& _packet);
 		void HandleServerPacket(sf::Packet& _packet);
 		void HandleJoiningPacket(Joining& _join, sf::Packet& _packet, bool& _accepted);

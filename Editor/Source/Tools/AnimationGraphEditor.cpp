@@ -23,19 +23,22 @@ namespace
 	constexpr float		PANEL_WIDTH		= 330.f;
 	const std::string	ANY				= AnimationTransition::ANY;
 
-	bool				g_open			= false;
-	const void*			g_component		= nullptr;	// the component the state below is about (compared only, never used)
-	ImVec2				g_pan			= ImVec2(40.f, 40.f);
-	float				g_zoom			= 1.f;
-	std::string			g_selectedNode;
-	int					g_selectedTransition = -1;
-	std::string			g_dragNode;
-	ImVec2				g_dragGrab;					// where in the box it was grabbed (graph units)
-	bool				g_dragMoved		= false;
-	std::string			g_linkFrom;					// a transition being drawn from this box
-	std::string			g_menuNode;					// the box the right click menu is about
-	char				g_renameBuffer[64]	= "";
-	int					g_renaming		= -1;
+	struct AnimationGraphState
+	{
+		bool				open			= false;
+		const void*			component		= nullptr;	// the component the state below is about (compared only, never used)
+		ImVec2				pan			= ImVec2(40.f, 40.f);
+		float				zoom			= 1.f;
+		std::string			selectedNode;
+		int					selectedTransition = -1;
+		std::string			dragNode;
+		ImVec2				dragGrab;					// where in the box it was grabbed (graph units)
+		bool				dragMoved		= false;
+		std::string			linkFrom;					// a transition being drawn from this box
+		std::string			menuNode;					// the box the right click menu is about
+		char				renameBuffer[64]	= "";
+		int					renaming		= -1;
+	} state;
 
 	const char* TYPE_NAMES[] = { "Bool", "Int", "Float", "Trigger" };
 	const char* TEST_NAMES[] = { "is true", "is false", "==", "!=", ">", "<" };
@@ -79,10 +82,10 @@ namespace
 		if (!_context.selected) return false;
 		_graph.component = _context.selected->GetComponent<AnimationComponentSM>();
 		if (!_graph.component) return false;
-		_graph.owner = _context.selected->GetName().StdString();
+		_graph.owner = _context.selected->GetName();
 		for (const AnimationClip& _clip : _graph.component->clips)
 		{
-			const std::string _name = _clip.name.StdString();
+			const std::string _name = _clip.name;
 			if (std::find(_graph.names.begin(), _graph.names.end(), _name) == _graph.names.end()) _graph.names.push_back(_name);
 		}
 		_graph.names.push_back(ANY);
@@ -125,14 +128,14 @@ namespace
 
 			// Name: applied when the field is left (one undo step, and the conditions follow the new name).
 			ImGui::SetNextItemWidth(110.f);
-			if (g_renaming != _i) std::snprintf(g_renameBuffer, sizeof(g_renameBuffer), "%s", _parameter.name.c_str());
+			if (state.renaming != _i) std::snprintf(state.renameBuffer, sizeof(state.renameBuffer), "%s", _parameter.name.c_str());
 			ImGui::BeginDisabled(_playing);
 			char _buffer[64];
-			std::snprintf(_buffer, sizeof(_buffer), "%s", g_renaming == _i ? g_renameBuffer : _parameter.name.c_str());
-			if (ImGui::InputText("##name", _buffer, sizeof(_buffer))) { g_renaming = _i; std::snprintf(g_renameBuffer, sizeof(g_renameBuffer), "%s", _buffer); }
-			if (ImGui::IsItemDeactivatedAfterEdit() && g_renaming == _i)
+			std::snprintf(_buffer, sizeof(_buffer), "%s", state.renaming == _i ? state.renameBuffer : _parameter.name.c_str());
+			if (ImGui::InputText("##name", _buffer, sizeof(_buffer))) { state.renaming = _i; std::snprintf(state.renameBuffer, sizeof(state.renameBuffer), "%s", _buffer); }
+			if (ImGui::IsItemDeactivatedAfterEdit() && state.renaming == _i)
 			{
-				const std::string _new = g_renameBuffer;
+				const std::string _new = state.renameBuffer;
 				const bool _taken = _data.FindParameter(_new) != nullptr;
 				if (!_new.empty() && !_taken && _new != _parameter.name)
 				{
@@ -144,7 +147,7 @@ namespace
 					_graph.component->ResetParameters();
 				}
 				else if (_taken && _new != _parameter.name) LOG_WARNING("Animation Graph: a parameter is already named \"" + _new + "\"");
-				g_renaming = -1;
+				state.renaming = -1;
 			}
 
 			ImGui::SameLine();
@@ -214,7 +217,7 @@ namespace
 			for (AnimationTransition& _transition : _data.transitions)
 				std::erase_if(_transition.conditions, [&](const AnimationCondition& _condition) { return _condition.parameter == _gone; });
 			_graph.component->ResetParameters();
-			g_renaming = -1;
+			state.renaming = -1;
 		}
 
 		ImGui::BeginDisabled(_playing);
@@ -234,7 +237,7 @@ namespace
 	void DrawTransition(EditorContext& _context, Graph& _graph, const bool _playing)
 	{
 		AnimationGraph& _data = _graph.component->graph;
-		AnimationTransition& _transition = _data.transitions[g_selectedTransition];
+		AnimationTransition& _transition = _data.transitions[state.selectedTransition];
 		ImGui::SeparatorText("Transition");
 		ImGui::Text("%s  ->  %s", _transition.from == ANY ? "Any animation" : _transition.from.c_str(), _transition.to.c_str());
 
@@ -243,7 +246,7 @@ namespace
 		if (ImGui::Checkbox("Wait for the end of the animation", &_wait))
 		{
 			Record(_context, "Edit transition");
-			_data.transitions[g_selectedTransition].waitForEnd = _wait;
+			_data.transitions[state.selectedTransition].waitForEnd = _wait;
 		}
 		if (ImGui::IsItemHovered()) ImGui::SetTooltip("Only once the current animation reached its last frame (an attack plays to its end).");
 
@@ -251,7 +254,7 @@ namespace
 		int _remove = -1;
 		for (int _c = 0; _c < static_cast<int>(_transition.conditions.size()); ++_c)
 		{
-			AnimationCondition& _condition = _data.transitions[g_selectedTransition].conditions[_c];
+			AnimationCondition& _condition = _data.transitions[state.selectedTransition].conditions[_c];
 			ImGui::PushID(_c);
 			const AnimationParameter* _parameter = _data.FindParameter(_condition.parameter);
 
@@ -305,7 +308,7 @@ namespace
 		if (_remove >= 0)
 		{
 			Record(_context, "Delete condition");
-			auto& _conditions = _data.transitions[g_selectedTransition].conditions;
+			auto& _conditions = _data.transitions[state.selectedTransition].conditions;
 			_conditions.erase(_conditions.begin() + _remove);
 		}
 
@@ -318,30 +321,30 @@ namespace
 				_condition.parameter = _data.parameters.front().name;
 				_condition.test = IsTruthType(_data.parameters.front().type) ? 0 : 4;
 			}
-			_data.transitions[g_selectedTransition].conditions.push_back(_condition);
+			_data.transitions[state.selectedTransition].conditions.push_back(_condition);
 		}
 
 		// Order: the first transition (of the same animation) whose conditions are true is taken.
 		ImGui::Spacing();
-		if (ImGui::Button("Higher priority") && g_selectedTransition > 0)
+		if (ImGui::Button("Higher priority") && state.selectedTransition > 0)
 		{
 			Record(_context, "Reorder transitions");
-			std::swap(_data.transitions[g_selectedTransition], _data.transitions[g_selectedTransition - 1]);
-			--g_selectedTransition;
+			std::swap(_data.transitions[state.selectedTransition], _data.transitions[state.selectedTransition - 1]);
+			--state.selectedTransition;
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Lower") && g_selectedTransition + 1 < static_cast<int>(_data.transitions.size()))
+		if (ImGui::Button("Lower") && state.selectedTransition + 1 < static_cast<int>(_data.transitions.size()))
 		{
 			Record(_context, "Reorder transitions");
-			std::swap(_data.transitions[g_selectedTransition], _data.transitions[g_selectedTransition + 1]);
-			++g_selectedTransition;
+			std::swap(_data.transitions[state.selectedTransition], _data.transitions[state.selectedTransition + 1]);
+			++state.selectedTransition;
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Delete"))
 		{
 			Record(_context, "Delete transition");
-			_data.transitions.erase(_data.transitions.begin() + g_selectedTransition);
-			g_selectedTransition = -1;
+			_data.transitions.erase(_data.transitions.begin() + state.selectedTransition);
+			state.selectedTransition = -1;
 		}
 		ImGui::EndDisabled();
 	}
@@ -349,19 +352,19 @@ namespace
 	void DrawNodeDetails(EditorContext& _context, Graph& _graph, const bool _playing)
 	{
 		AnimationComponentSM& _component = *_graph.component;
-		ImGui::SeparatorText(g_selectedNode == ANY ? "Any animation" : g_selectedNode.c_str());
-		if (g_selectedNode == ANY)
+		ImGui::SeparatorText(state.selectedNode == ANY ? "Any animation" : state.selectedNode.c_str());
+		if (state.selectedNode == ANY)
 		{
 			ImGui::TextWrapped("Its transitions leave whatever animation plays, before the others are tested (hurt, die...).");
 			return;
 		}
-		const bool _isStart = _component.startAnimation.StdString() == g_selectedNode
-			|| (_component.startAnimation.StdString().empty() && !_graph.names.empty() && _graph.names.front() == g_selectedNode);
+		const bool _isStart = _component.startAnimation == state.selectedNode
+			|| (_component.startAnimation.empty() && !_graph.names.empty() && _graph.names.front() == state.selectedNode);
 		ImGui::BeginDisabled(_playing || _isStart);
 		if (ImGui::Button(_isStart ? "Starting animation" : "Set as starting animation", ImVec2(-1.f, 0.f)))
 		{
 			Record(_context, "Set starting animation");
-			_component.startAnimation = String(g_selectedNode);
+			_component.startAnimation = String(state.selectedNode);
 			_component.ApplyClips();
 		}
 		ImGui::EndDisabled();
@@ -371,12 +374,12 @@ namespace
 		for (int _i = 0; _i < static_cast<int>(_component.graph.transitions.size()); ++_i)
 		{
 			const AnimationTransition& _transition = _component.graph.transitions[_i];
-			if (_transition.from != g_selectedNode) continue;
+			if (_transition.from != state.selectedNode) continue;
 			ImGui::PushID(_i);
 			if (ImGui::Selectable(("-> " + _transition.to + "  (" + std::to_string(_transition.conditions.size()) + " condition(s))").c_str(), false))
 			{
-				g_selectedTransition = _i;
-				g_selectedNode.clear();
+				state.selectedTransition = _i;
+				state.selectedNode.clear();
 			}
 			ImGui::PopID();
 		}
@@ -402,14 +405,14 @@ namespace
 		_draw->AddRectFilled(_origin, _origin + _size, ImGui::GetColorU32(ImGuiCol_FrameBg));
 
 		// Grid
-		const float _step = 32.f * g_zoom;
+		const float _step = 32.f * state.zoom;
 		const ImU32 _gridColor = IM_COL32(255, 255, 255, 12);
-		for (float _x = std::fmod(g_pan.x, _step); _x < _size.x; _x += _step) _draw->AddLine(ImVec2(_origin.x + _x, _origin.y), ImVec2(_origin.x + _x, _origin.y + _size.y), _gridColor);
-		for (float _y = std::fmod(g_pan.y, _step); _y < _size.y; _y += _step) _draw->AddLine(ImVec2(_origin.x, _origin.y + _y), ImVec2(_origin.x + _size.x, _origin.y + _y), _gridColor);
+		for (float _x = std::fmod(state.pan.x, _step); _x < _size.x; _x += _step) _draw->AddLine(ImVec2(_origin.x + _x, _origin.y), ImVec2(_origin.x + _x, _origin.y + _size.y), _gridColor);
+		for (float _y = std::fmod(state.pan.y, _step); _y < _size.y; _y += _step) _draw->AddLine(ImVec2(_origin.x, _origin.y + _y), ImVec2(_origin.x + _size.x, _origin.y + _y), _gridColor);
 
-		const auto _toScreen = [&](const ImVec2& _p) { return _origin + g_pan + _p * g_zoom; };
-		const auto _toGraph = [&](const ImVec2& _s) { return (_s - _origin - g_pan) * (1.f / g_zoom); };
-		const ImVec2 _nodeSize = ImVec2(NODE_WIDTH, NODE_HEIGHT) * g_zoom;
+		const auto _toScreen = [&](const ImVec2& _p) { return _origin + state.pan + _p * state.zoom; };
+		const auto _toGraph = [&](const ImVec2& _s) { return (_s - _origin - state.pan) * (1.f / state.zoom); };
+		const ImVec2 _nodeSize = ImVec2(NODE_WIDTH, NODE_HEIGHT) * state.zoom;
 		const auto _nodeMin = [&](const std::string& _name) { return _toScreen(PositionOf(_data, _graph.names, _name)); };
 		const auto _nodeCenter = [&](const std::string& _name) { return _nodeMin(_name) + _nodeSize * 0.5f; };
 		const auto _handleOf = [&](const std::string& _name) { return _nodeMin(_name) + ImVec2(_nodeSize.x, _nodeSize.y * 0.5f); };
@@ -427,7 +430,7 @@ namespace
 			for (const std::string& _name : _graph.names)
 			{
 				const ImVec2 _h = _handleOf(_name);
-				if ((_p.x - _h.x) * (_p.x - _h.x) + (_p.y - _h.y) * (_p.y - _h.y) <= std::pow((HANDLE_RADIUS + 3.f) * g_zoom, 2.f)) return _name;
+				if ((_p.x - _h.x) * (_p.x - _h.x) + (_p.y - _h.y) * (_p.y - _h.y) <= std::pow((HANDLE_RADIUS + 3.f) * state.zoom, 2.f)) return _name;
 			}
 			return "";
 		};
@@ -447,7 +450,7 @@ namespace
 			_direction = _direction * (1.f / _length);
 			const ImVec2 _side(-_direction.y, _direction.x);
 			const bool _opposite = std::any_of(_data.transitions.begin(), _data.transitions.end(), [&](const AnimationTransition& _o) { return _o.from == _t.to && _o.to == _t.from; });
-			const ImVec2 _shift = _opposite ? _side * (7.f * g_zoom) : ImVec2(0.f, 0.f);
+			const ImVec2 _shift = _opposite ? _side * (7.f * state.zoom) : ImVec2(0.f, 0.f);
 			const ImVec2 _half = _nodeSize * 0.5f;
 			_arrows[_i] = { EdgeOfBox(_from, _half, _direction) + _shift, EdgeOfBox(_to, _half, _direction * -1.f) + _shift };
 		}
@@ -456,26 +459,26 @@ namespace
 		if (_hovered && _io.MouseWheel != 0.f)
 		{
 			const ImVec2 _before = _toGraph(_mouse);
-			g_zoom = std::clamp(g_zoom * (_io.MouseWheel > 0.f ? 1.1f : 1.f / 1.1f), 0.35f, 2.5f);
-			g_pan = _mouse - _origin - _before * g_zoom;	// the point under the mouse stays there
+			state.zoom = std::clamp(state.zoom * (_io.MouseWheel > 0.f ? 1.1f : 1.f / 1.1f), 0.35f, 2.5f);
+			state.pan = _mouse - _origin - _before * state.zoom;	// the point under the mouse stays there
 		}
 		if (_active && (ImGui::IsMouseDragging(ImGuiMouseButton_Right) || ImGui::IsMouseDragging(ImGuiMouseButton_Middle)))
-			g_pan = g_pan + _io.MouseDelta;
+			state.pan = state.pan + _io.MouseDelta;
 
 		if (_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 		{
 			const std::string _handle = _playing ? std::string() : _handleAt(_mouse);
 			const std::string _node = _nodeAt(_mouse);
-			if (!_handle.empty()) g_linkFrom = _handle;
+			if (!_handle.empty()) state.linkFrom = _handle;
 			else if (!_node.empty())
 			{
-				g_selectedNode = _node;
-				g_selectedTransition = -1;
+				state.selectedNode = _node;
+				state.selectedTransition = -1;
 				if (!_playing)
 				{
-					g_dragNode = _node;
-					g_dragGrab = _toGraph(_mouse) - PositionOf(_data, _graph.names, _node);
-					g_dragMoved = false;
+					state.dragNode = _node;
+					state.dragGrab = _toGraph(_mouse) - PositionOf(_data, _graph.names, _node);
+					state.dragMoved = false;
 				}
 			}
 			else
@@ -483,52 +486,52 @@ namespace
 				int _hit = -1;
 				for (size_t _i = 0; _i < _arrows.size() && _hit < 0; ++_i)
 					if (DistanceToSegment(_mouse, _arrows[_i].a, _arrows[_i].b) < 6.f) _hit = static_cast<int>(_i);
-				g_selectedTransition = _hit;
-				g_selectedNode.clear();
+				state.selectedTransition = _hit;
+				state.selectedNode.clear();
 			}
 		}
 
-		if (!g_dragNode.empty() && ImGui::IsMouseDown(ImGuiMouseButton_Left) && (_io.MouseDelta.x != 0.f || _io.MouseDelta.y != 0.f))
+		if (!state.dragNode.empty() && ImGui::IsMouseDown(ImGuiMouseButton_Left) && (_io.MouseDelta.x != 0.f || _io.MouseDelta.y != 0.f))
 		{
-			if (!g_dragMoved) Record(_context, "Move animation box", "move." + g_dragNode);
-			g_dragMoved = true;
-			const ImVec2 _at = _toGraph(_mouse) - g_dragGrab;
-			_data.positions[g_dragNode] = FVector2(std::round(_at.x), std::round(_at.y));
+			if (!state.dragMoved) Record(_context, "Move animation box", "move." + state.dragNode);
+			state.dragMoved = true;
+			const ImVec2 _at = _toGraph(_mouse) - state.dragGrab;
+			_data.positions[state.dragNode] = FVector2(std::round(_at.x), std::round(_at.y));
 		}
 
 		if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
-			if (!g_linkFrom.empty())
+			if (!state.linkFrom.empty())
 			{
 				const std::string _target = _nodeAt(_mouse);
-				if (!_target.empty() && _target != ANY && _target != g_linkFrom)
+				if (!_target.empty() && _target != ANY && _target != state.linkFrom)
 				{
 					Record(_context, "Add transition");
 					AnimationTransition _transition;
-					_transition.from = g_linkFrom;
+					_transition.from = state.linkFrom;
 					_transition.to = _target;
 					_data.transitions.push_back(_transition);
-					g_selectedTransition = static_cast<int>(_data.transitions.size()) - 1;
-					g_selectedNode.clear();
+					state.selectedTransition = static_cast<int>(_data.transitions.size()) - 1;
+					state.selectedNode.clear();
 				}
 			}
-			g_linkFrom.clear();
-			g_dragNode.clear();
+			state.linkFrom.clear();
+			state.dragNode.clear();
 		}
 
 		// Right click without moving the view: the menu of the box under the mouse, or of the canvas.
 		if (_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::GetMouseDragDelta(ImGuiMouseButton_Right).x * ImGui::GetMouseDragDelta(ImGuiMouseButton_Right).x
 			+ ImGui::GetMouseDragDelta(ImGuiMouseButton_Right).y * ImGui::GetMouseDragDelta(ImGuiMouseButton_Right).y < 16.f)
 		{
-			g_menuNode = _nodeAt(_mouse);
+			state.menuNode = _nodeAt(_mouse);
 			ImGui::OpenPopup("##graphMenu");
 		}
 
-		if (ImGui::IsWindowFocused() && !_playing && g_selectedTransition >= 0 && ImGui::IsKeyPressed(ImGuiKey_Delete) && !_io.WantTextInput)
+		if (ImGui::IsWindowFocused() && !_playing && state.selectedTransition >= 0 && ImGui::IsKeyPressed(ImGuiKey_Delete) && !_io.WantTextInput)
 		{
 			Record(_context, "Delete transition");
-			_data.transitions.erase(_data.transitions.begin() + g_selectedTransition);
-			g_selectedTransition = -1;
+			_data.transitions.erase(_data.transitions.begin() + state.selectedTransition);
+			state.selectedTransition = -1;
 			_arrows.clear();
 		}
 
@@ -537,17 +540,17 @@ namespace
 		{
 			const Arrow& _arrow = _arrows[_i];
 			if (_arrow.a.x < -1e5f) continue;
-			const bool _selected = static_cast<int>(_i) == g_selectedTransition;
-			const bool _hover = _hovered && g_dragNode.empty() && g_linkFrom.empty() && DistanceToSegment(_mouse, _arrow.a, _arrow.b) < 6.f;
+			const bool _selected = static_cast<int>(_i) == state.selectedTransition;
+			const bool _hover = _hovered && state.dragNode.empty() && state.linkFrom.empty() && DistanceToSegment(_mouse, _arrow.a, _arrow.b) < 6.f;
 			const ImU32 _color = _selected ? _accent : (_hover ? IM_COL32(230, 230, 235, 255) : IM_COL32(150, 155, 165, 255));
-			_draw->AddLine(_arrow.a, _arrow.b, _color, (_selected ? 3.f : 2.f) * std::max(0.6f, g_zoom));
+			_draw->AddLine(_arrow.a, _arrow.b, _color, (_selected ? 3.f : 2.f) * std::max(0.6f, state.zoom));
 
 			ImVec2 _direction = _arrow.b - _arrow.a;
 			const float _length = std::max(1e-3f, std::sqrt(_direction.x * _direction.x + _direction.y * _direction.y));
 			_direction = _direction * (1.f / _length);
 			const ImVec2 _side(-_direction.y, _direction.x);
 			const ImVec2 _middle = (_arrow.a + _arrow.b) * 0.5f;
-			const float _head = 7.f * g_zoom;
+			const float _head = 7.f * state.zoom;
 			_draw->AddTriangleFilled(_middle + _direction * _head, _middle - _direction * _head + _side * _head, _middle - _direction * _head - _side * _head, _color);
 
 			if (_hover)
@@ -567,27 +570,27 @@ namespace
 		}
 
 		// The transition being drawn
-		if (!g_linkFrom.empty())
-			_draw->AddLine(_handleOf(g_linkFrom), _mouse, _accent, 2.f * std::max(0.6f, g_zoom));
+		if (!state.linkFrom.empty())
+			_draw->AddLine(_handleOf(state.linkFrom), _mouse, _accent, 2.f * std::max(0.6f, state.zoom));
 
 		// ---- Draw boxes
-		const std::string _current = _component.GetCurrentAnimation() ? _component.GetCurrentAnimation()->GetName().StdString() : std::string();
-		const std::string _start = _component.startAnimation.StdString().empty() && !_graph.names.empty() ? _graph.names.front() : _component.startAnimation.StdString();
-		const float _rounding = 6.f * g_zoom;
-		const float _fontSize = ImGui::GetFontSize() * std::clamp(g_zoom, 0.6f, 1.6f);
+		const std::string _current = _component.GetCurrentAnimation() ? _component.GetCurrentAnimation()->GetName() : std::string();
+		const std::string _start = _component.startAnimation.empty() && !_graph.names.empty() ? _graph.names.front() : _component.startAnimation;
+		const float _rounding = 6.f * state.zoom;
+		const float _fontSize = ImGui::GetFontSize() * std::clamp(state.zoom, 0.6f, 1.6f);
 		for (const std::string& _name : _graph.names)
 		{
 			const ImVec2 _min = _nodeMin(_name), _max = _min + _nodeSize;
 			const bool _isAny = _name == ANY;
 			const bool _isCurrent = _playing && _name == _current;
-			const bool _selected = _name == g_selectedNode;
+			const bool _selected = _name == state.selectedNode;
 			const bool _hover = _hovered && _nodeAt(_mouse) == _name;
 
 			ImU32 _fill = _isAny ? IM_COL32(92, 62, 30, 255) : IM_COL32(48, 51, 58, 255);
 			if (_isCurrent) _fill = IM_COL32(40, 120, 70, 255);
 			if (_hover) _fill = (EditorTheme::Lighten(_fill) & 0x00FFFFFFu) | (_fill & 0xFF000000u);
 			_draw->AddRectFilled(_min, _max, _fill, _rounding);
-			if (_name == _start && !_isAny) _draw->AddRectFilled(_min, ImVec2(_min.x + 5.f * g_zoom, _max.y), EditorTheme::GetU32(EditorTheme::Custom::PlayButton), _rounding, ImDrawFlags_RoundCornersLeft);
+			if (_name == _start && !_isAny) _draw->AddRectFilled(_min, ImVec2(_min.x + 5.f * state.zoom, _max.y), EditorTheme::GetU32(EditorTheme::Custom::PlayButton), _rounding, ImDrawFlags_RoundCornersLeft);
 			_draw->AddRect(_min, _max, _selected ? _accent : IM_COL32(20, 21, 24, 255), _rounding, 0, _selected ? 2.5f : 1.f);
 
 			const std::string _title = _isAny ? "Any animation" : _name;
@@ -597,7 +600,7 @@ namespace
 			{
 				// Frames and loop, small, under the name.
 				for (const AnimationClip& _clip : _component.clips)
-					if (_clip.name.StdString() == _name)
+					if (_clip.name == _name)
 					{
 						const std::string _info = std::to_string(static_cast<int>(_clip.frameCount)) + " frames" + (static_cast<bool>(_clip.loop) ? ", loop" : "") + (_name == _start ? ", start" : "");
 						const float _small = _fontSize * 0.8f;
@@ -612,8 +615,8 @@ namespace
 			{
 				const ImVec2 _handle = _handleOf(_name);
 				const bool _overHandle = _hovered && _handleAt(_mouse) == _name;
-				_draw->AddCircleFilled(_handle, HANDLE_RADIUS * g_zoom, _overHandle || g_linkFrom == _name ? _accent : IM_COL32(200, 205, 215, 255));
-				if (_overHandle && g_linkFrom.empty()) ImGui::SetTooltip("Drag to another animation: a transition");
+				_draw->AddCircleFilled(_handle, HANDLE_RADIUS * state.zoom, _overHandle || state.linkFrom == _name ? _accent : IM_COL32(200, 205, 215, 255));
+				if (_overHandle && state.linkFrom.empty()) ImGui::SetTooltip("Drag to another animation: a transition");
 			}
 		}
 
@@ -626,25 +629,25 @@ namespace
 		// ---- Menu
 		if (ImGui::BeginPopup("##graphMenu"))
 		{
-			if (!g_menuNode.empty() && g_menuNode != ANY)
+			if (!state.menuNode.empty() && state.menuNode != ANY)
 			{
-				ImGui::TextDisabled("%s", g_menuNode.c_str());
+				ImGui::TextDisabled("%s", state.menuNode.c_str());
 				ImGui::BeginDisabled(_playing);
 				if (ImGui::MenuItem("Set as starting animation"))
 				{
 					Record(_context, "Set starting animation");
-					_component.startAnimation = String(g_menuNode);
+					_component.startAnimation = String(state.menuNode);
 					_component.ApplyClips();
 				}
 				if (ImGui::BeginMenu("Transition to"))
 				{
 					for (const std::string& _name : _graph.names)
-						if (_name != ANY && _name != g_menuNode && ImGui::MenuItem(_name.c_str()))
+						if (_name != ANY && _name != state.menuNode && ImGui::MenuItem(_name.c_str()))
 						{
 							Record(_context, "Add transition");
-							_data.transitions.push_back({ g_menuNode, _name, {}, false });
-							g_selectedTransition = static_cast<int>(_data.transitions.size()) - 1;
-							g_selectedNode.clear();
+							_data.transitions.push_back({ state.menuNode, _name, {}, false });
+							state.selectedTransition = static_cast<int>(_data.transitions.size()) - 1;
+							state.selectedNode.clear();
 						}
 					ImGui::EndMenu();
 				}
@@ -654,8 +657,8 @@ namespace
 			}
 			if (ImGui::MenuItem("Fit the view"))
 			{
-				g_zoom = 1.f;
-				g_pan = ImVec2(40.f, 40.f);
+				state.zoom = 1.f;
+				state.pan = ImVec2(40.f, 40.f);
 			}
 			ImGui::BeginDisabled(_playing || _data.positions.empty());
 			if (ImGui::MenuItem("Arrange the boxes again"))
@@ -673,16 +676,16 @@ namespace Krampus
 {
 	void OpenAnimationGraph()
 	{
-		g_open = true;
+		state.open = true;
 		ImGui::SetWindowFocus("Animation Graph");
 	}
 
 	void DrawAnimationGraph(EditorContext& _context)
 	{
-		if (!g_open) return;
+		if (!state.open) return;
 
 		ImGui::SetNextWindowSize(ImVec2(1100.f, 620.f), ImGuiCond_FirstUseEver);
-		if (!ImGui::Begin("Animation Graph", &g_open))
+		if (!ImGui::Begin("Animation Graph", &state.open))
 		{
 			ImGui::End();
 			return;
@@ -698,17 +701,17 @@ namespace Krampus
 		}
 
 		// Another component: its own view and selection.
-		if (g_component != _graph.component)
+		if (state.component != _graph.component)
 		{
-			g_component = _graph.component;
-			g_selectedNode.clear();
-			g_selectedTransition = -1;
-			g_dragNode.clear();
-			g_linkFrom.clear();
-			g_renaming = -1;
+			state.component = _graph.component;
+			state.selectedNode.clear();
+			state.selectedTransition = -1;
+			state.dragNode.clear();
+			state.linkFrom.clear();
+			state.renaming = -1;
 		}
-		if (g_selectedTransition >= static_cast<int>(_graph.component->graph.transitions.size())) g_selectedTransition = -1;
-		if (!g_selectedNode.empty() && !HasNode(_graph, g_selectedNode)) g_selectedNode.clear();
+		if (state.selectedTransition >= static_cast<int>(_graph.component->graph.transitions.size())) state.selectedTransition = -1;
+		if (!state.selectedNode.empty() && !HasNode(_graph, state.selectedNode)) state.selectedNode.clear();
 
 		const bool _playing = _context.playing;
 		ImGui::TextDisabled("%s%s", _graph.owner.c_str(), _playing ? "  (Play: live view, stop to edit the graph)" : "");
@@ -722,8 +725,8 @@ namespace Krampus
 		ImGui::SameLine();
 		if (ImGui::BeginChild("##graphPanel", ImVec2(0.f, 0.f), ImGuiChildFlags_Borders))
 		{
-			if (g_selectedTransition >= 0) DrawTransition(_context, _graph, _playing);
-			else if (!g_selectedNode.empty()) DrawNodeDetails(_context, _graph, _playing);
+			if (state.selectedTransition >= 0) DrawTransition(_context, _graph, _playing);
+			else if (!state.selectedNode.empty()) DrawNodeDetails(_context, _graph, _playing);
 			else ImGui::TextWrapped("Click a box or an arrow to see it here.");
 			ImGui::Spacing();
 			DrawParameters(_context, _graph, _playing);
@@ -741,7 +744,7 @@ namespace Krampus
 				{
 					Record(_context, "Delete lost transitions");
 					std::erase_if(_data.transitions, _lost);
-					g_selectedTransition = -1;
+					state.selectedTransition = -1;
 				}
 				ImGui::EndDisabled();
 			}

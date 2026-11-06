@@ -1,4 +1,5 @@
 #include "EditorContext.h"
+#include "EditorWidgets.h"
 #include "EditorThumbnails.h"
 #include "Graphics/Shapes/ShapeAssets.h"
 #include <imgui.h>
@@ -14,28 +15,31 @@ using namespace Krampus;
 
 namespace
 {
-	bool						g_open			= false;
-	std::string					g_current;							// name of the shape being edited (empty: none)
-	Polygon2D					g_edit;								// its points, as edited (saved with Save)
-	bool						g_dirty			= false;
-	std::vector<Polygon2D>		g_undo;
-	int							g_selected		= -1;
-	int							g_dragging		= -1;
-	ImVec2						g_pan			= ImVec2(0.f, 0.f);
-	float						g_zoom			= 2.f;				// screen pixels per shape pixel
-	bool						g_snap			= true;
-	float						g_grid			= 5.f;
-	bool						g_showParts		= true;				// the convex pieces collisions and box2d use
-	bool						g_showTriangles	= false;			// how it is filled
-	std::string					g_pendingOpen;						// a shape to open once the unsaved changes are saved or dropped
-	bool						g_askDiscard	= false;
-	char						g_newName[64]	= "";
-	char						g_renameTo[64]	= "";
-	std::string					g_trace;							// texture shown behind the shape (Content/Textures relative)
-	float						g_traceOpacity	= 0.45f;
-	float						g_traceScale	= 1.f;
-	int							g_traceAlpha	= 20;				// alpha above which a pixel is part of the picture
-	float						g_traceDetail	= 2.f;				// how far (pixels) the outline may be from the picture
+	struct ShapeEditorState
+	{
+		bool						open			= false;
+		std::string					current;							// name of the shape being edited (empty: none)
+		Polygon2D					edit;								// its points, as edited (saved with Save)
+		bool						dirty			= false;
+		std::vector<Polygon2D>		undo;
+		int							selected		= -1;
+		int							dragging		= -1;
+		ImVec2						pan			= ImVec2(0.f, 0.f);
+		float						zoom			= 2.f;				// screen pixels per shape pixel
+		bool						snap			= true;
+		float						grid			= 5.f;
+		bool						showParts		= true;				// the convex pieces collisions and box2d use
+		bool						showTriangles	= false;			// how it is filled
+		std::string					pendingOpen;						// a shape to open once the unsaved changes are saved or dropped
+		bool						askDiscard	= false;
+		char						newName[64]	= "";
+		char						renameTo[64]	= "";
+		std::string					trace;							// texture shown behind the shape (Content/Textures relative)
+		float						traceOpacity	= 0.45f;
+		float						traceScale	= 1.f;
+		int							traceAlpha	= 20;				// alpha above which a pixel is part of the picture
+		float						traceDetail	= 2.f;				// how far (pixels) the outline may be from the picture
+	} state;
 
 	const char* const			PRESETS[]		= { "Triangle", "Square", "Pentagon", "Hexagon", "Octagon", "Circle (16)", "Star", "Arrow", "L", "Cross", "Capsule" };
 
@@ -43,27 +47,27 @@ namespace
 
 	void PushUndo()
 	{
-		g_undo.push_back(g_edit);
-		if (g_undo.size() > 100) g_undo.erase(g_undo.begin());
-		g_dirty = true;
+		state.undo.push_back(state.edit);
+		if (state.undo.size() > 100) state.undo.erase(state.undo.begin());
+		state.dirty = true;
 	}
 
 	void Load(const std::string& _name)
 	{
-		g_current = _name;
-		g_edit = ShapeAssets::Get(_name);
-		g_dirty = false;
-		g_undo.clear();
-		g_selected = g_dragging = -1;
+		state.current = _name;
+		state.edit = ShapeAssets::Get(_name);
+		state.dirty = false;
+		state.undo.clear();
+		state.selected = state.dragging = -1;
 	}
 
 	void RequestOpen(const std::string& _name)
 	{
-		if (_name == g_current) return;
-		if (g_dirty)
+		if (_name == state.current) return;
+		if (state.dirty)
 		{
-			g_pendingOpen = _name;
-			g_askDiscard = true;
+			state.pendingOpen = _name;
+			state.askDiscard = true;
 			return;
 		}
 		Load(_name);
@@ -71,9 +75,9 @@ namespace
 
 	bool Save()
 	{
-		if (g_current.empty()) return false;
-		if (!ShapeAssets::Save(g_current, g_edit)) return false;
-		g_dirty = false;
+		if (state.current.empty()) return false;
+		if (!ShapeAssets::Save(state.current, state.edit)) return false;
+		state.dirty = false;
 		return true;
 	}
 
@@ -118,7 +122,7 @@ namespace
 
 	float Snap(const float _value)
 	{
-		return g_snap && g_grid > 0.f ? std::round(_value / g_grid) * g_grid : std::round(_value * 100.f) / 100.f;
+		return state.snap && state.grid > 0.f ? std::round(_value / state.grid) * state.grid : std::round(_value * 100.f) / 100.f;
 	}
 
 	// ---- Tracing a picture: the outline of its first opaque part (marching squares), simplified (Douglas-Peucker).
@@ -260,16 +264,16 @@ namespace
 	{
 		ImGui::TextUnformatted("Shapes (Content/Shapes)");
 		ImGui::SetNextItemWidth(-60.f);
-		ImGui::InputTextWithHint("##new", "New shape name", g_newName, sizeof(g_newName));
+		ImGui::InputTextWithHint("##new", "New shape name", state.newName, sizeof(state.newName));
 		ImGui::SameLine();
-		const std::string _newName = g_newName;
+		const std::string _newName = state.newName;
 		ImGui::BeginDisabled(!ValidName(_newName) || ShapeAssets::Exists(_newName));
 		if (ImGui::Button("Create", ImVec2(-FLT_MIN, 0.f)))
 		{
 			if (ShapeAssets::Save(_newName, Polygon2D::Regular(6, 50.f)))
 			{
 				RequestOpen(_newName);
-				g_newName[0] = 0;
+				state.newName[0] = 0;
 			}
 		}
 		ImGui::EndDisabled();
@@ -278,23 +282,23 @@ namespace
 		ImGui::BeginChild("ShapeList", ImVec2(0.f, -ImGui::GetFrameHeightWithSpacing() * 2.f), ImGuiChildFlags_Borders);
 		for (const std::string& _name : ShapeAssets::List())
 		{
-			const bool _current = _name == g_current;
-			const std::string _label = _name + (_current && g_dirty ? " *" : "");
+			const bool _current = _name == state.current;
+			const std::string _label = _name + (_current && state.dirty ? " *" : "");
 			if (ImGui::Selectable(_label.c_str(), _current)) RequestOpen(_name);
 		}
 		ImGui::EndChild();
 
-		ImGui::BeginDisabled(g_current.empty());
+		ImGui::BeginDisabled(state.current.empty());
 		if (ImGui::Button("Duplicate"))
 		{
-			std::string _copy = g_current + "Copy";
-			for (int _i = 2; ShapeAssets::Exists(_copy); ++_i) _copy = g_current + "Copy" + std::to_string(_i);
-			if (ShapeAssets::Save(_copy, g_edit)) { g_dirty = false; Load(_copy); }
+			std::string _copy = state.current + "Copy";
+			for (int _i = 2; ShapeAssets::Exists(_copy); ++_i) _copy = state.current + "Copy" + std::to_string(_i);
+			if (ShapeAssets::Save(_copy, state.edit)) { state.dirty = false; Load(_copy); }
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Rename"))
 		{
-			std::snprintf(g_renameTo, sizeof(g_renameTo), "%s", g_current.c_str());
+			std::snprintf(state.renameTo, sizeof(state.renameTo), "%s", state.current.c_str());
 			ImGui::OpenPopup("RenameShape");
 		}
 		ImGui::SameLine();
@@ -304,12 +308,12 @@ namespace
 		if (ImGui::BeginPopup("RenameShape"))
 		{
 			ImGui::SetNextItemWidth(200.f);
-			ImGui::InputText("##rename", g_renameTo, sizeof(g_renameTo));
-			const std::string _to = g_renameTo;
+			ImGui::InputText("##rename", state.renameTo, sizeof(state.renameTo));
+			const std::string _to = state.renameTo;
 			ImGui::BeginDisabled(!ValidName(_to) || ShapeAssets::Exists(_to));
-			if (ImGui::Button("Rename") && ShapeAssets::Rename(g_current, _to))
+			if (ImGui::Button("Rename") && ShapeAssets::Rename(state.current, _to))
 			{
-				g_current = _to;
+				state.current = _to;
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::EndDisabled();
@@ -318,13 +322,13 @@ namespace
 		}
 		if (ImGui::BeginPopup("DeleteShape"))
 		{
-			ImGui::Text("Delete \"%s\"? Components that use it will show a hexagon.", g_current.c_str());
+			ImGui::Text("Delete \"%s\"? Components that use it will show a hexagon.", state.current.c_str());
 			if (ImGui::Button("Delete"))
 			{
-				ShapeAssets::Delete(g_current);
-				g_current.clear();
-				g_edit = Polygon2D();
-				g_dirty = false;
+				ShapeAssets::Delete(state.current);
+				state.current.clear();
+				state.edit = Polygon2D();
+				state.dirty = false;
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -335,18 +339,18 @@ namespace
 
 	void DrawToolbar()
 	{
-		ImGui::BeginDisabled(!g_dirty);
+		ImGui::BeginDisabled(!state.dirty);
 		if (ImGui::Button("Save")) Save();
 		ImGui::SameLine();
-		if (ImGui::Button("Revert")) Load(g_current);
+		if (ImGui::Button("Revert")) Load(state.current);
 		ImGui::EndDisabled();
 		ImGui::SameLine();
-		ImGui::BeginDisabled(g_undo.empty());
+		ImGui::BeginDisabled(state.undo.empty());
 		if (ImGui::Button("Undo"))
 		{
-			g_edit = g_undo.back();
-			g_undo.pop_back();
-			g_selected = -1;
+			state.edit = state.undo.back();
+			state.undo.pop_back();
+			state.selected = -1;
 		}
 		ImGui::EndDisabled();
 		ImGui::SameLine();
@@ -357,41 +361,41 @@ namespace
 				if (ImGui::Selectable(PRESETS[_i]))
 				{
 					PushUndo();
-					g_edit = Preset(_i);
-					g_selected = -1;
+					state.edit = Preset(_i);
+					state.selected = -1;
 				}
 			ImGui::EndCombo();
 		}
 		ImGui::SameLine();
-		ImGui::Checkbox("Snap", &g_snap);
+		ImGui::Checkbox("Snap", &state.snap);
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(60.f);
-		ImGui::DragFloat("##grid", &g_grid, 0.5f, 1.f, 100.f, "%.0f px");
+		ImGui::DragFloat("##grid", &state.grid, 0.5f, 1.f, 100.f, "%.0f px");
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(110.f);
-		ImGui::SliderFloat("Zoom", &g_zoom, 0.25f, 12.f, "%.2fx", ImGuiSliderFlags_Logarithmic);
+		EditorUI::SliderFloat("Zoom", &state.zoom, 0.25f, 12.f, "%.2fx", ImGuiSliderFlags_Logarithmic);
 		ImGui::SameLine();
-		ImGui::Checkbox("Convex parts", &g_showParts);
+		ImGui::Checkbox("Convex parts", &state.showParts);
 		ImGui::SetItemTooltip("The convex pieces collisions and box2d use (a concave shape is cut in several)");
 		ImGui::SameLine();
-		ImGui::Checkbox("Triangles", &g_showTriangles);
+		ImGui::Checkbox("Triangles", &state.showTriangles);
 
 		// Changes of the whole shape.
 		const auto _apply = [](const std::function<FVector2(const FVector2&)>& _change)
 		{
 			PushUndo();
-			for (FVector2& _point : g_edit.points) _point = _change(_point);
+			for (FVector2& _point : state.edit.points) _point = _change(_point);
 		};
 		if (ImGui::Button("Center"))
 		{
-			const FVector2 _center = g_edit.Centroid();
+			const FVector2 _center = state.edit.Centroid();
 			_apply([_center](const FVector2& _p) { return FVector2(Snap(_p.x - _center.x), Snap(_p.y - _center.y)); });
 		}
 		ImGui::SetItemTooltip("Moves the shape so that its middle is on the pivot (0, 0), where the actor is");
 		ImGui::SameLine();
-		if (ImGui::Button("Flip H")) { _apply([](const FVector2& _p) { return FVector2(-_p.x, _p.y); }); std::reverse(g_edit.points.begin(), g_edit.points.end()); }
+		if (ImGui::Button("Flip H")) { _apply([](const FVector2& _p) { return FVector2(-_p.x, _p.y); }); std::reverse(state.edit.points.begin(), state.edit.points.end()); }
 		ImGui::SameLine();
-		if (ImGui::Button("Flip V")) { _apply([](const FVector2& _p) { return FVector2(_p.x, -_p.y); }); std::reverse(g_edit.points.begin(), g_edit.points.end()); }
+		if (ImGui::Button("Flip V")) { _apply([](const FVector2& _p) { return FVector2(_p.x, -_p.y); }); std::reverse(state.edit.points.begin(), state.edit.points.end()); }
 		ImGui::SameLine();
 		if (ImGui::Button("Rotate 90")) _apply([](const FVector2& _p) { return FVector2(-_p.y, _p.x); });
 		ImGui::SameLine();
@@ -402,17 +406,17 @@ namespace
 		if (ImGui::Button("Snap all")) _apply([](const FVector2& _p) { return FVector2(Snap(_p.x), Snap(_p.y)); });
 
 		// What the shape is, and whether it is usable.
-		const bool _valid = g_edit.IsValid();
-		const bool _simple = g_edit.IsSimple();
-		ImGui::Text("%d points", static_cast<int>(g_edit.points.size()));
+		const bool _valid = state.edit.IsValid();
+		const bool _simple = state.edit.IsSimple();
+		ImGui::Text("%d points", static_cast<int>(state.edit.points.size()));
 		ImGui::SameLine();
-		const FRect _bounds = g_edit.Bounds();
-		ImGui::TextDisabled("| %.0f x %.0f px | area %.0f |", _bounds.GetSize().x, _bounds.GetSize().y, g_edit.Area());
+		const FRect _bounds = state.edit.Bounds();
+		ImGui::TextDisabled("| %.0f x %.0f px | area %.0f |", _bounds.GetSize().x, _bounds.GetSize().y, state.edit.Area());
 		ImGui::SameLine();
 		if (!_valid) ImGui::TextColored(ImVec4(1.f, 0.4f, 0.3f, 1.f), "needs 3 points that are not on one line");
 		else if (!_simple) ImGui::TextColored(ImVec4(1.f, 0.4f, 0.3f, 1.f), "edges cross: move the points so that they do not");
-		else if (g_edit.IsConvex()) ImGui::TextColored(ImVec4(0.5f, 0.9f, 0.5f, 1.f), "convex");
-		else ImGui::TextColored(ImVec4(0.95f, 0.8f, 0.4f, 1.f), "concave: %d convex parts for collisions and box2d", static_cast<int>(g_edit.ConvexParts(8).size()));
+		else if (state.edit.IsConvex()) ImGui::TextColored(ImVec4(0.5f, 0.9f, 0.5f, 1.f), "convex");
+		else ImGui::TextColored(ImVec4(0.95f, 0.8f, 0.4f, 1.f), "concave: %d convex parts for collisions and box2d", static_cast<int>(state.edit.ConvexParts(8).size()));
 	}
 
 	void DrawTracePanel()
@@ -420,43 +424,43 @@ namespace
 		if (!ImGui::CollapsingHeader("Trace a picture")) return;
 		ImGui::TextDisabled("Shows a texture behind the shape, or makes the shape from its opaque outline.");
 		ImGui::SetNextItemWidth(200.f);
-		if (ImGui::BeginCombo("Texture", g_trace.empty() ? "(none)" : g_trace.c_str()))
+		if (ImGui::BeginCombo("Texture", state.trace.empty() ? "(none)" : state.trace.c_str()))
 		{
-			if (ImGui::Selectable("(none)", g_trace.empty())) g_trace.clear();
+			if (ImGui::Selectable("(none)", state.trace.empty())) state.trace.clear();
 			for (const std::string& _file : TextureFiles())
-				if (ImGui::Selectable(_file.c_str(), _file == g_trace)) g_trace = _file;
+				if (ImGui::Selectable(_file.c_str(), _file == state.trace)) state.trace = _file;
 			ImGui::EndCombo();
 		}
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(90.f);
-		ImGui::SliderFloat("Opacity", &g_traceOpacity, 0.f, 1.f, "%.2f");
+		EditorUI::SliderFloat("Opacity", &state.traceOpacity, 0.f, 1.f, "%.2f");
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(90.f);
-		ImGui::DragFloat("Scale", &g_traceScale, 0.01f, 0.05f, 20.f, "%.2f");
+		ImGui::DragFloat("Scale", &state.traceScale, 0.01f, 0.05f, 20.f, "%.2f");
 		ImGui::SetItemTooltip("Size of the picture against the shape: the same as the sprite's (its size / the texture size)");
 
 		ImGui::SetNextItemWidth(90.f);
-		ImGui::SliderInt("Alpha", &g_traceAlpha, 0, 254);
+		EditorUI::SliderInt("Alpha", &state.traceAlpha, 0, 254);
 		ImGui::SetItemTooltip("A pixel more opaque than this is part of the picture");
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(90.f);
-		ImGui::SliderFloat("Detail", &g_traceDetail, 0.25f, 20.f, "%.2f px", ImGuiSliderFlags_Logarithmic);
+		EditorUI::SliderFloat("Detail", &state.traceDetail, 0.25f, 20.f, "%.2f px", ImGuiSliderFlags_Logarithmic);
 		ImGui::SetItemTooltip("How far the outline may be from the picture: small = more points");
 		ImGui::SameLine();
-		ImGui::BeginDisabled(g_trace.empty() || g_current.empty());
+		ImGui::BeginDisabled(state.trace.empty() || state.current.empty());
 		if (ImGui::Button("Make shape from picture"))
 		{
 			Polygon2D _traced;
 			std::string _error;
-			if (TracePicture(CONTENT_DIRECTORY / "Textures" / g_trace, g_traceAlpha, g_traceDetail, g_traceScale, _traced, _error))
+			if (TracePicture(CONTENT_DIRECTORY / "Textures" / state.trace, state.traceAlpha, state.traceDetail, state.traceScale, _traced, _error))
 			{
 				PushUndo();
-				g_edit = _traced;
-				g_selected = -1;
-				LOG_MSG("Shape Editor: traced " + g_trace + " (" + std::to_string(_traced.points.size()) + " points)");
+				state.edit = _traced;
+				state.selected = -1;
+				LOG_MSG("Shape Editor: traced " + state.trace + " (" + std::to_string(_traced.points.size()) + " points)");
 			}
 			else
-				LOG_WARNING("Shape Editor: cannot trace " + g_trace + ": " + _error);
+				LOG_WARNING("Shape Editor: cannot trace " + state.trace + ": " + _error);
 		}
 		ImGui::EndDisabled();
 	}
@@ -474,13 +478,13 @@ namespace
 		_draw->PushClipRect(_min, _max, true);
 		_draw->AddRectFilled(_min, _max, IM_COL32(28, 30, 36, 255));
 
-		const ImVec2 _origin(_min.x + _size.x * 0.5f + g_pan.x, _min.y + _size.y * 0.5f + g_pan.y);
-		const auto _toScreen = [&](const FVector2& _p) { return ImVec2(_origin.x + _p.x * g_zoom, _origin.y + _p.y * g_zoom); };
-		const auto _toShape = [&](const ImVec2& _s) { return FVector2((_s.x - _origin.x) / g_zoom, (_s.y - _origin.y) / g_zoom); };
+		const ImVec2 _origin(_min.x + _size.x * 0.5f + state.pan.x, _min.y + _size.y * 0.5f + state.pan.y);
+		const auto _toScreen = [&](const FVector2& _p) { return ImVec2(_origin.x + _p.x * state.zoom, _origin.y + _p.y * state.zoom); };
+		const auto _toShape = [&](const ImVec2& _s) { return FVector2((_s.x - _origin.x) / state.zoom, (_s.y - _origin.y) / state.zoom); };
 
 		// Grid (every 'grid' pixels, a stronger line every 5), and the axes through the pivot.
-		float _step = std::max(1.f, g_grid);
-		while (_step * g_zoom < 8.f) _step *= 5.f;
+		float _step = std::max(1.f, state.grid);
+		while (_step * state.zoom < 8.f) _step *= 5.f;
 		const FVector2 _topLeft = _toShape(_min), _bottomRight = _toShape(_max);
 		for (float _x = std::floor(_topLeft.x / _step) * _step; _x <= _bottomRight.x; _x += _step)
 		{
@@ -496,29 +500,29 @@ namespace
 		_draw->AddLine(ImVec2(_min.x, _origin.y), ImVec2(_max.x, _origin.y), IM_COL32(170, 70, 70, 160), 1.5f);
 
 		// The picture to trace, centered on the pivot like a sprite.
-		if (!g_trace.empty())
-			if (sf::Texture* _texture = ThumbnailOf(CONTENT_DIRECTORY / "Textures" / g_trace))
+		if (!state.trace.empty())
+			if (sf::Texture* _texture = ThumbnailOf(CONTENT_DIRECTORY / "Textures" / state.trace))
 			{
-				const FVector2 _half(_texture->getSize().x * 0.5f * g_traceScale, _texture->getSize().y * 0.5f * g_traceScale);
+				const FVector2 _half(_texture->getSize().x * 0.5f * state.traceScale, _texture->getSize().y * 0.5f * state.traceScale);
 				_draw->AddImage(TextureId(*_texture), _toScreen(FVector2(-_half.x, -_half.y)), _toScreen(_half), ImVec2(0.f, 0.f), ImVec2(1.f, 1.f),
-					IM_COL32(255, 255, 255, static_cast<int>(g_traceOpacity * 255.f)));
+					IM_COL32(255, 255, 255, static_cast<int>(state.traceOpacity * 255.f)));
 			}
 
-		std::vector<FVector2>& _points = g_edit.points;
+		std::vector<FVector2>& _points = state.edit.points;
 		const int _count = static_cast<int>(_points.size());
 
 		// The inside (triangles), the convex parts, the outline.
 		if (_count >= 3)
 		{
-			const ImU32 _fill = g_edit.IsSimple() ? IM_COL32(90, 150, 255, 70) : IM_COL32(255, 90, 70, 70);
-			for (const std::array<int, 3>& _triangle : g_edit.Triangulate())
+			const ImU32 _fill = state.edit.IsSimple() ? IM_COL32(90, 150, 255, 70) : IM_COL32(255, 90, 70, 70);
+			for (const std::array<int, 3>& _triangle : state.edit.Triangulate())
 			{
 				_draw->AddTriangleFilled(_toScreen(_points[_triangle[0]]), _toScreen(_points[_triangle[1]]), _toScreen(_points[_triangle[2]]), _fill);
-				if (g_showTriangles)
+				if (state.showTriangles)
 					_draw->AddTriangle(_toScreen(_points[_triangle[0]]), _toScreen(_points[_triangle[1]]), _toScreen(_points[_triangle[2]]), IM_COL32(255, 255, 255, 50));
 			}
-			if (g_showParts && !g_edit.IsConvex())
-				for (const std::vector<FVector2>& _part : g_edit.ConvexParts(8))
+			if (state.showParts && !state.edit.IsConvex())
+				for (const std::vector<FVector2>& _part : state.edit.ConvexParts(8))
 				{
 					std::vector<ImVec2> _screen;
 					for (const FVector2& _p : _part) _screen.push_back(_toScreen(_p));
@@ -535,7 +539,7 @@ namespace
 		// What is under the mouse: a point, or the "+" in the middle of an edge.
 		const ImVec2 _mouse = _io.MousePos;
 		int _hoverPoint = -1, _hoverEdge = -1;
-		if (_hovered && g_dragging < 0)
+		if (_hovered && state.dragging < 0)
 		{
 			float _best = 8.f;
 			for (int _i = 0; _i < _count; ++_i)
@@ -560,7 +564,7 @@ namespace
 			if (_hoverPoint >= 0)
 			{
 				PushUndo();
-				g_selected = g_dragging = _hoverPoint;
+				state.selected = state.dragging = _hoverPoint;
 			}
 			else if (_hoverEdge >= 0)
 			{
@@ -568,12 +572,12 @@ namespace
 				const FVector2& _a = _points[_hoverEdge];
 				const FVector2& _b = _points[(_hoverEdge + 1) % _count];
 				_points.insert(_points.begin() + _hoverEdge + 1, FVector2(Snap((_a.x + _b.x) * 0.5f), Snap((_a.y + _b.y) * 0.5f)));
-				g_selected = g_dragging = _hoverEdge + 1;
+				state.selected = state.dragging = _hoverEdge + 1;
 			}
 			else
-				g_selected = -1;
+				state.selected = -1;
 		}
-		if (_hovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && _hoverPoint < 0 && _hoverEdge < 0 && !g_current.empty())
+		if (_hovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && _hoverPoint < 0 && _hoverEdge < 0 && !state.current.empty())
 		{
 			// A new point where the mouse is, on the edge closest to it.
 			const FVector2 _at = _toShape(_mouse);
@@ -586,37 +590,37 @@ namespace
 			}
 			PushUndo();
 			_points.insert(_points.begin() + std::max(0, _edge + 1), FVector2(Snap(_at.x), Snap(_at.y)));
-			g_selected = std::max(0, _edge + 1);
+			state.selected = std::max(0, _edge + 1);
 		}
-		if (g_dragging >= 0)
+		if (state.dragging >= 0)
 		{
-			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && g_dragging < static_cast<int>(_points.size()))
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && state.dragging < static_cast<int>(_points.size()))
 			{
 				const FVector2 _at = _toShape(_mouse);
-				_points[g_dragging] = FVector2(Snap(_at.x), Snap(_at.y));
+				_points[state.dragging] = FVector2(Snap(_at.x), Snap(_at.y));
 			}
 			else
-				g_dragging = -1;
+				state.dragging = -1;
 		}
 		if (_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right) && _hoverPoint >= 0 && _count > 3)
 		{
 			PushUndo();
 			_points.erase(_points.begin() + _hoverPoint);
-			g_selected = -1;
+			state.selected = -1;
 		}
 		if (_hovered && (ImGui::IsMouseDragging(ImGuiMouseButton_Right) || ImGui::IsMouseDragging(ImGuiMouseButton_Middle)))
 		{
-			g_pan.x += _io.MouseDelta.x;
-			g_pan.y += _io.MouseDelta.y;
+			state.pan.x += _io.MouseDelta.x;
+			state.pan.y += _io.MouseDelta.y;
 		}
 		if (_hovered && _io.MouseWheel != 0.f)
 		{
 			// Zoom around the mouse: the point under it stays under it.
 			const FVector2 _before = _toShape(_mouse);
-			g_zoom = std::clamp(g_zoom * (_io.MouseWheel > 0.f ? 1.15f : 1.f / 1.15f), 0.25f, 12.f);
+			state.zoom = std::clamp(state.zoom * (_io.MouseWheel > 0.f ? 1.15f : 1.f / 1.15f), 0.25f, 12.f);
 			const ImVec2 _after = _toScreen(_before);
-			g_pan.x += _mouse.x - _after.x;
-			g_pan.y += _mouse.y - _after.y;
+			state.pan.x += _mouse.x - _after.x;
+			state.pan.y += _mouse.y - _after.y;
 		}
 
 		// Handles: the "+" of each edge, then the points (numbered).
@@ -632,7 +636,7 @@ namespace
 		for (int _i = 0; _i < static_cast<int>(_points.size()); ++_i)
 		{
 			const ImVec2 _s = _toScreen(_points[_i]);
-			const bool _selected = _i == g_selected;
+			const bool _selected = _i == state.selected;
 			_draw->AddCircleFilled(_s, _selected ? 6.f : 4.5f, _selected ? IM_COL32(255, 210, 80, 255) : (_i == _hoverPoint ? IM_COL32(255, 255, 255, 255) : IM_COL32(120, 190, 255, 255)));
 			_draw->AddText(ImVec2(_s.x + 6.f, _s.y - 15.f), IM_COL32(200, 205, 220, 160), std::to_string(_i).c_str());
 		}
@@ -654,12 +658,12 @@ namespace
 		ImGui::TextUnformatted("Points");
 		ImGui::BeginChild("Points", ImVec2(0.f, 0.f), ImGuiChildFlags_Borders);
 		int _remove = -1;
-		for (int _i = 0; _i < static_cast<int>(g_edit.points.size()); ++_i)
+		for (int _i = 0; _i < static_cast<int>(state.edit.points.size()); ++_i)
 		{
 			ImGui::PushID(_i);
-			FVector2& _point = g_edit.points[_i];
+			FVector2& _point = state.edit.points[_i];
 			float _values[2] = { _point.x, _point.y };
-			if (ImGui::Selectable(std::to_string(_i).c_str(), _i == g_selected, 0, ImVec2(22.f, 0.f))) g_selected = _i;
+			if (ImGui::Selectable(std::to_string(_i).c_str(), _i == state.selected, 0, ImVec2(22.f, 0.f))) state.selected = _i;
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(-28.f);
 			const bool _edited = ImGui::DragFloat2("##p", _values, 0.5f);
@@ -667,10 +671,10 @@ namespace
 			if (_edited)
 			{
 				_point = FVector2(_values[0], _values[1]);
-				g_dirty = true;
+				state.dirty = true;
 			}
 			ImGui::SameLine();
-			ImGui::BeginDisabled(g_edit.points.size() <= 3);
+			ImGui::BeginDisabled(state.edit.points.size() <= 3);
 			if (ImGui::SmallButton("x")) _remove = _i;
 			ImGui::EndDisabled();
 			ImGui::PopID();
@@ -678,8 +682,8 @@ namespace
 		if (_remove >= 0)
 		{
 			PushUndo();
-			g_edit.points.erase(g_edit.points.begin() + _remove);
-			g_selected = -1;
+			state.edit.points.erase(state.edit.points.begin() + _remove);
+			state.selected = -1;
 		}
 		ImGui::EndChild();
 	}
@@ -689,25 +693,25 @@ namespace Krampus
 {
 	void SaveShapeEditorChanges()
 	{
-		if (!g_dirty || g_current.empty()) return;
-		if (Save()) LOG_MSG("Shape Editor: unsaved changes of \"" + g_current + "\" saved before the reload");
-		else LOG_WARNING("Shape Editor: the changes of \"" + g_current + "\" could not be saved (the shape is not valid)");
+		if (!state.dirty || state.current.empty()) return;
+		if (Save()) LOG_MSG("Shape Editor: unsaved changes of \"" + state.current + "\" saved before the reload");
+		else LOG_WARNING("Shape Editor: the changes of \"" + state.current + "\" could not be saved (the shape is not valid)");
 	}
 
 	void OpenShapeEditor(const std::string& _shape)
 	{
-		g_open = true;
+		state.open = true;
 		ImGui::SetWindowFocus("###Shape Editor");	// the title shows the shape: the window is known by what follows ###
 		if (!_shape.empty()) RequestOpen(_shape);
 	}
 
 	void DrawShapeEditor(EditorContext& _context)
 	{
-		if (!g_open) return;
+		if (!state.open) return;
 
 		ImGui::SetNextWindowSize(ImVec2(1100.f, 700.f), ImGuiCond_FirstUseEver);
-		const std::string _title = std::string("Shape Editor") + (g_current.empty() ? "" : " - " + g_current + (g_dirty ? " *" : "")) + "###Shape Editor";
-		if (!ImGui::Begin(_title.c_str(), &g_open))
+		const std::string _title = std::string("Shape Editor") + (state.current.empty() ? "" : " - " + state.current + (state.dirty ? " *" : "")) + "###Shape Editor";
+		if (!ImGui::Begin(_title.c_str(), &state.open))
 		{
 			ImGui::End();
 			return;
@@ -717,18 +721,18 @@ namespace Krampus
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::GetIO().WantTextInput)
 		{
 			const bool _ctrl = ImGui::GetIO().KeyCtrl;
-			if (_ctrl && ImGui::IsKeyPressed(ImGuiKey_S) && g_dirty) Save();
-			if (_ctrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !g_undo.empty())
+			if (_ctrl && ImGui::IsKeyPressed(ImGuiKey_S) && state.dirty) Save();
+			if (_ctrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !state.undo.empty())
 			{
-				g_edit = g_undo.back();
-				g_undo.pop_back();
-				g_selected = -1;
+				state.edit = state.undo.back();
+				state.undo.pop_back();
+				state.selected = -1;
 			}
-			if (ImGui::IsKeyPressed(ImGuiKey_Delete) && g_selected >= 0 && g_selected < static_cast<int>(g_edit.points.size()) && g_edit.points.size() > 3)
+			if (ImGui::IsKeyPressed(ImGuiKey_Delete) && state.selected >= 0 && state.selected < static_cast<int>(state.edit.points.size()) && state.edit.points.size() > 3)
 			{
 				PushUndo();
-				g_edit.points.erase(g_edit.points.begin() + g_selected);
-				g_selected = -1;
+				state.edit.points.erase(state.edit.points.begin() + state.selected);
+				state.selected = -1;
 			}
 		}
 
@@ -738,7 +742,7 @@ namespace Krampus
 		ImGui::SameLine();
 
 		ImGui::BeginChild("ShapeMain", ImVec2(0.f, 0.f));
-		if (g_current.empty())
+		if (state.current.empty())
 		{
 			ImGui::TextDisabled("Pick a shape on the left, or create one.");
 			ImGui::TextDisabled("A shape is used by SpriteComponent, ImageWidgetComponent and PhysicsComponent:");
@@ -759,24 +763,24 @@ namespace Krampus
 		ImGui::EndChild();
 
 		// Unsaved changes when another shape is opened.
-		if (g_askDiscard)
+		if (state.askDiscard)
 		{
 			ImGui::OpenPopup("Unsaved shape");
-			g_askDiscard = false;
+			state.askDiscard = false;
 		}
 		if (ImGui::BeginPopupModal("Unsaved shape", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			ImGui::Text("\"%s\" has changes that are not saved.", g_current.c_str());
+			ImGui::Text("\"%s\" has changes that are not saved.", state.current.c_str());
 			if (ImGui::Button("Save"))
 			{
 				Save();
-				Load(g_pendingOpen);
+				Load(state.pendingOpen);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Discard"))
 			{
-				Load(g_pendingOpen);
+				Load(state.pendingOpen);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();

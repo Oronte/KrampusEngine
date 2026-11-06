@@ -7,7 +7,7 @@ Krampus::InputComponent::InputComponent(Actor* _owner)
 std::string Krampus::InputComponent::ToString() const
 {
 	const Int& _totalCount = handlesVoid.size() + handlesFloat.size() + handlesFVector2.size() + handlesIVector2.size();
-	return name + " -> Binded Callback Count = " + _totalCount.ToString();
+	return name + std::format(" -> Bound callback count = {}", _totalCount);
 }
 
 void Krampus::InputComponent::Bind(Event<>* _event, std::function<void()> _callback, const Bool& _once)

@@ -90,20 +90,20 @@ namespace
 		if (_widget->GetChildren().empty()) _flags |= ImGuiTreeNodeFlags_Leaf;
 		if (_context.selectedWidget == _widget) _flags |= ImGuiTreeNodeFlags_Selected;
 
-		const bool _open = ImGui::TreeNodeEx(_widget, _flags, "%s", _widget->GetName().StdString().c_str());
+		const bool _open = ImGui::TreeNodeEx(_widget, _flags, "%s", _widget->GetName().c_str());
 
 		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 		{
 			_context.selectedWidget = _widget;
 			_context.selected = nullptr;
-			LOG(VerbosityType::Verbose, "Hierarchy: selected widget " + _widget->GetName().StdString());
+			LOG(VerbosityType::Verbose, "Hierarchy: selected widget " + _widget->GetName());
 		}
 
 		// Drag a widget onto another one to attach it (it then moves with it).
 		if (ImGui::BeginDragDropSource())
 		{
 			ImGui::SetDragDropPayload(DRAG_WIDGET, &_widget, sizeof(Widget*));
-			ImGui::Text("%s", _widget->GetName().StdString().c_str());
+			ImGui::Text("%s", _widget->GetName().c_str());
 			ImGui::EndDragDropSource();
 		}
 		if (ImGui::BeginDragDropTarget())
@@ -112,7 +112,7 @@ namespace
 			{
 				Widget* _moved = *static_cast<Widget**>(_peek->Data);
 				const bool _ok = !IsWidgetDescendantOf(_ops, _widget, _moved);
-				ImGui::SetTooltip(_ok ? "Attach %s to %s" : "%s cannot be attached to %s (it would contain itself)", _moved->GetName().StdString().c_str(), _widget->GetName().StdString().c_str());
+				ImGui::SetTooltip(_ok ? "Attach %s to %s" : "%s cannot be attached to %s (it would contain itself)", _moved->GetName().c_str(), _widget->GetName().c_str());
 			}
 			if (const ImGuiPayload* _payload = ImGui::AcceptDragDropPayload(DRAG_WIDGET))
 			{
@@ -149,18 +149,18 @@ namespace
 		if (_state.context->IsSelected(_actor)) _flags |= ImGuiTreeNodeFlags_Selected;
 		_state.order.push_back(_actor);
 
-		const bool _open = ImGui::TreeNodeEx(_actor, _flags, "%s", _actor->GetName().StdString().c_str());
+		const bool _open = ImGui::TreeNodeEx(_actor, _flags, "%s", _actor->GetName().c_str());
 
 		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 		{
 			ClickActor(*_state.context, _actor);
-			LOG(VerbosityType::Verbose, "Hierarchy: selected actor " + _actor->GetName().StdString() + " (" + std::to_string(_state.context->selection.size()) + " selected)");
+			LOG(VerbosityType::Verbose, "Hierarchy: selected actor " + _actor->GetName() + " (" + std::to_string(_state.context->selection.size()) + " selected)");
 		}
 
 		if (ImGui::BeginDragDropSource())
 		{
 			ImGui::SetDragDropPayload(DRAG_PAYLOAD, &_actor, sizeof(Actor*));
-			ImGui::TextUnformatted(_actor->GetName().StdString().c_str());
+			ImGui::TextUnformatted(_actor->GetName().c_str());
 			ImGui::EndDragDropSource();
 		}
 		if (ImGui::BeginDragDropTarget())
@@ -170,7 +170,7 @@ namespace
 			{
 				Actor* _moved = *static_cast<Actor**>(_peek->Data);
 				const bool _ok = !IsDescendantOf(_state, _actor, _moved);
-				ImGui::SetTooltip(_ok ? "Attach %s to %s" : "%s cannot be attached to %s (it would contain itself)", _moved->GetName().StdString().c_str(), _actor->GetName().StdString().c_str());
+				ImGui::SetTooltip(_ok ? "Attach %s to %s" : "%s cannot be attached to %s (it would contain itself)", _moved->GetName().c_str(), _actor->GetName().c_str());
 			}
 			if (const ImGuiPayload* _payload = ImGui::AcceptDragDropPayload(DRAG_PAYLOAD))
 			{
@@ -257,7 +257,7 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				int _shown = 0;
 				for (Actor* _actor : _actors)
 				{
-					const std::string _name = _actor->GetName().StdString();
+					const std::string _name = _actor->GetName();
 					if (!ContainsNoCase(_name, _search)) continue;
 					++_shown;
 					ImGui::PushID(_actor);
@@ -322,8 +322,8 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				if (_widgetOps.toDelete)
 				{
 					Widget* _widgetToDelete = _widgetOps.toDelete;
-					_context.history.Record(_context, "Delete " + _widgetToDelete->GetName().StdString());
-					LOG(VerbosityType::Log, "Hierarchy: deleting widget " + _widgetToDelete->GetName().StdString());
+					_context.history.Record(_context, "Delete " + _widgetToDelete->GetName());
+					LOG(VerbosityType::Log, "Hierarchy: deleting widget " + _widgetToDelete->GetName());
 					if (_context.selectedWidget == _widgetToDelete) _context.selectedWidget = nullptr;
 					for (const std::unique_ptr<Widget>& _other : _level->GetHUD().GetWidgets())
 						_other->RemoveChild(_widgetToDelete);
@@ -358,8 +358,8 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				const bool _cycle = _widgetOps.dropTarget && IsWidgetDescendantOf(_widgetOps, _widgetOps.dropTarget, _moved);
 				if (!_cycle && _currentParent != _widgetOps.dropTarget)
 				{
-					_context.history.Record(_context, "Reparent " + _moved->GetName().StdString());
-					LOG(VerbosityType::Log, "Hierarchy: widget " + _moved->GetName().StdString() + (_widgetOps.dropTarget ? " attached to " + _widgetOps.dropTarget->GetName().StdString() : std::string(" detached")));
+					_context.history.Record(_context, "Reparent " + _moved->GetName());
+					LOG(VerbosityType::Log, "Hierarchy: widget " + _moved->GetName() + (_widgetOps.dropTarget ? " attached to " + _widgetOps.dropTarget->GetName() : std::string(" detached")));
 					if (_currentParent) _currentParent->RemoveChild(_moved);
 					if (_widgetOps.dropTarget) _widgetOps.dropTarget->AddChild(_moved);
 				}
@@ -372,8 +372,8 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 				Actor* _currentParent = _old == _state.parentOf.end() ? nullptr : _old->second;
 				if (!_cycle && _currentParent != _state.dropTarget)	// already attached there: nothing to do
 				{
-					_context.history.Record(_context, "Reparent " + _state.dragged->GetName().StdString());
-					LOG(VerbosityType::Log, "Hierarchy: " + _state.dragged->GetName().StdString() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName().StdString() : std::string(" detached")));
+					_context.history.Record(_context, "Reparent " + _state.dragged->GetName());
+					LOG(VerbosityType::Log, "Hierarchy: " + _state.dragged->GetName() + (_state.dropTarget ? " attached to " + _state.dropTarget->GetName() : std::string(" detached")));
 					if (_old != _state.parentOf.end()) _old->second->RemoveChild(_state.dragged);
 					if (_state.dropTarget) _state.dropTarget->AddChild(_state.dragged);
 				}
@@ -381,8 +381,8 @@ void Krampus::DrawHierarchyPanel(EditorContext& _context)
 
 			if (_state.toDelete)
 			{
-				_context.history.Record(_context, "Delete " + _state.toDelete->GetName().StdString());
-				LOG(VerbosityType::Log, "Hierarchy: deleting actor " + _state.toDelete->GetName().StdString());
+				_context.history.Record(_context, "Delete " + _state.toDelete->GetName());
+				LOG(VerbosityType::Log, "Hierarchy: deleting actor " + _state.toDelete->GetName());
 				const auto _parent = _state.parentOf.find(_state.toDelete);
 				if (_parent != _state.parentOf.end()) _parent->second->RemoveChild(_state.toDelete);
 				if (_context.selected == _state.toDelete) _context.selected = nullptr;
@@ -401,18 +401,18 @@ void Krampus::DeleteSelection(EditorContext& _context)
 	if (_context.selected)
 	{
 		const std::vector<Actor*> _doomed = _context.selection.empty() ? std::vector<Actor*>{ _context.selected } : _context.selection;
-		_context.history.Record(_context, _doomed.size() == 1 ? "Delete " + _context.selected->GetName().StdString() : "Delete " + std::to_string(_doomed.size()) + " actors");
+		_context.history.Record(_context, _doomed.size() == 1 ? "Delete " + _context.selected->GetName() : "Delete " + std::to_string(_doomed.size()) + " actors");
 		for (Actor* _doomedActor : _doomed)
 		{
-			LOG(VerbosityType::Log, "Editor: deleting actor " + _doomedActor->GetName().StdString());
+			LOG(VerbosityType::Log, "Editor: deleting actor " + _doomedActor->GetName());
 			_doomedActor->Destroy();	// leaves its parent by itself
 		}
 		_context.Select(nullptr);
 	}
 	else if (_context.selectedWidget)
 	{
-		_context.history.Record(_context, "Delete " + _context.selectedWidget->GetName().StdString());
-		LOG(VerbosityType::Log, "Editor: deleting widget " + _context.selectedWidget->GetName().StdString());
+		_context.history.Record(_context, "Delete " + _context.selectedWidget->GetName());
+		LOG(VerbosityType::Log, "Editor: deleting widget " + _context.selectedWidget->GetName());
 		for (const std::unique_ptr<Widget>& _widget : _level->GetHUD().GetWidgets())
 			_widget->RemoveChild(_context.selectedWidget);
 		_context.selectedWidget->Destroy();

@@ -33,6 +33,7 @@ namespace Krampus
 		std::filesystem::path		pendingScene;
 		bool						askUnsaved		= false;	// show the question for pendingScene
 		bool						askQuit			= false;	// show the question before closing
+		bool						quitAsked		= false;	// the question is on screen: closing the window again quits for good
 
 		// The editor's own camera, used to look at the scene when it is not playing (right mouse to move, wheel to zoom).
 		// It is not an actor of the scene: it is never saved and the game does not see it.
@@ -100,12 +101,13 @@ namespace Krampus
 	void StartCompile();
 
 	/// <summary>
-	/// Builds the engine and the game in Ship mode and gathers the game to give away (exe, DLLs, Content) in GetPackageDirectory().
-	/// Same background build as Compile.
+	/// Asks where to write the game (a folder picker, Settings > Ship > packageFolder), then builds the engine and the game in Ship
+	/// mode and gathers the game to give away (launcher, Binaries, Content) in GetPackageDirectory(). Same background build as Compile.
 	/// </summary>
-	void StartShip();
+	void StartShip(EditorContext& _context);
 	bool IsShipping();	// the build in progress is a package
-	std::filesystem::path GetPackageDirectory();
+	/// <returns>Where the package goes: <packageFolder, or Bin/windows-x64/Ship/Package>/<gameName> (CMake/Package.cmake does the same).</returns>
+	std::filesystem::path GetPackageDirectory(const EditorContext& _context);
 	bool IsCompiling();
 	void PumpCompile();	// every frame
 
@@ -174,6 +176,10 @@ namespace Krampus
 	void DrawAnimationGraph(EditorContext& _context);
 
 	/// <summary>Opens the Network window (host, join, players, messages).</summary>
+	/// <summary>The search box of every command (Ctrl+K): scene, Play, Compile, tools, add or select an actor.</summary>
+	void OpenCommandPalette();
+	void DrawCommandPalette(EditorContext& _context);
+
 	void OpenNetworkWindow();
 	void OpenProfiler();
 	void DrawProfiler(EditorContext& _context);

@@ -1,7 +1,7 @@
 #pragma once
 #include "Widget.h"
 #include "Utilities/System/Drawable.h"
-#include "Graphics/Ressources/Font.h"
+#include "Graphics/Resources/Font.h"
 
 namespace Krampus
 {

@@ -1,4 +1,5 @@
 #include "EditorContext.h"
+#include "EditorWidgets.h"
 #include "Utilities/Debug/Profiler.h"
 #include <imgui.h>
 #include <algorithm>
@@ -53,7 +54,7 @@ namespace Krampus
 		if (ImGui::Button("Clear")) Profiler::Clear();
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(140.f);
-		ImGui::SliderInt("Frames", &g_frames, 1, Profiler::HISTORY);
+		EditorUI::SliderInt("Frames", &g_frames, 1, Profiler::HISTORY);
 
 		// The whole frame, oldest on the left.
 		std::array<float, Profiler::HISTORY> _ordered;

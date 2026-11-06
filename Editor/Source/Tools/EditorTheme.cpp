@@ -1,6 +1,6 @@
 #include "EditorTheme.h"
 #include "EditorContext.h"
-#include "Utilities/KrampusInclude.h"
+#include "Core/CoreMinimal.h"
 #include <imgui-SFML.h>
 #include <array>
 #include <cstring>

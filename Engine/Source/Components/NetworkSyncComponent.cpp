@@ -18,7 +18,7 @@ int Krampus::NetworkSyncComponent::IdFromName(const std::string& _name)
 int Krampus::NetworkSyncComponent::GetNetworkId()
 {
 	if (static_cast<int>(networkId) != 0) return networkId;
-	return IdFromName(owner->GetName().StdString());
+	return IdFromName(owner->GetName());
 }
 
 bool Krampus::NetworkSyncComponent::IsLocalOwner()
@@ -76,7 +76,7 @@ std::string Krampus::NetworkSyncComponent::ToString() const
 
 void Krampus::NetworkSyncComponent::ParseProperties()
 {
-	const std::string _text = properties.StdString();
+	const std::string _text = properties;
 	if (_text == parsedFor) return;
 	parsedFor = _text;
 	parsed.clear();

@@ -165,6 +165,68 @@ namespace Krampus
 			}
 		}
 
+		// ---- Steam
+		if (ImGui::CollapsingHeader("Steam", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (!SteamNet::IsCompiled())
+				ImGui::TextDisabled("Steamworks SDK not found when the engine was built (ThirdParty/Steamworks/sdk): see Tutorial, Steam");
+			else
+			{
+				const bool _offline = _net->GetRole() == NetRole::Offline;
+				if (!_net->IsSteamReady())
+				{
+					if (ImGui::Button("Start Steam")) _net->InitSteam();
+					ImGui::SameLine();
+					ImGui::TextDisabled("the Steam client must be running");
+					if (!_net->GetSteamError().empty())
+						ImGui::TextColored(ImVec4(1.f, 0.5f, 0.4f, 1.f), "%s", _net->GetSteamError().c_str());
+				}
+				else
+				{
+					ImGui::Text("Steam: %s", _net->GetSteamName().c_str());
+					bool _friends = _settings.steamFriendsOnly;
+					if (ImGui::Checkbox("Friends only", &_friends)) { _settings.steamFriendsOnly = _friends; _net->steamFriendsOnly = _friends; }
+
+					ImGui::BeginDisabled(!_offline);
+					if (ImGui::Button("Host (Steam)")) _net->HostSteam();
+					ImGui::EndDisabled();
+					ImGui::SameLine();
+					ImGui::BeginDisabled(!_net->IsHost());
+					if (ImGui::Button("Invite friends")) _net->InviteSteamFriends();
+					ImGui::EndDisabled();
+					ImGui::SameLine();
+					if (ImGui::Button("Search")) _net->SearchSteam();
+
+					const std::vector<SteamLobby>& _lobbies = _net->GetSteamLobbies();
+					if (_lobbies.empty()) ImGui::TextDisabled("No Steam game listed (Search)");
+					for (size_t _i = 0; _i < _lobbies.size(); ++_i)
+					{
+						ImGui::PushID(static_cast<int>(_i));
+						ImGui::BeginDisabled(!_offline);
+						const bool _join = ImGui::SmallButton("Join");
+						ImGui::EndDisabled();
+						ImGui::SameLine();
+						ImGui::Text("%s  (%d/%d)", _lobbies[_i].name.c_str(), _lobbies[_i].players, _lobbies[_i].maxPlayers);
+						ImGui::PopID();
+						if (_join)
+						{
+							const SteamLobby _copy = _lobbies[_i];	// Join changes the list
+							_net->JoinSteamLobby(_copy);
+							break;
+						}
+					}
+
+					static char s_steamId[32] = "";
+					ImGui::SetNextItemWidth(180.f);
+					ImGui::InputTextWithHint("##steamId", "host SteamID64", s_steamId, sizeof(s_steamId));
+					ImGui::SameLine();
+					ImGui::BeginDisabled(!_offline || !s_steamId[0]);
+					if (ImGui::Button("Join id")) _net->JoinSteam(s_steamId);
+					ImGui::EndDisabled();
+				}
+			}
+		}
+
 		// ---- Players
 		if (ImGui::CollapsingHeader("Players", ImGuiTreeNodeFlags_DefaultOpen))
 		{

@@ -6,7 +6,7 @@
 #include "GameFramework/Level.h"
 #include "Graphics/Shapes/ShapeAssets.h"
 #include "Utilities/Debug/Debug.h"
-#include "Graphics/Ressources/Vertices.h"
+#include "Graphics/Resources/Vertices.h"
 #include <cmath>
 
 using namespace Krampus;

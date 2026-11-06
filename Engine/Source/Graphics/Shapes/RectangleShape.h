@@ -14,7 +14,7 @@ namespace Krampus
         /// Sets the dimensions (width and height) of the rectangle.
         /// </summary>
         /// <param name="_size">Dimensions vector.</param>
-        inline void SetSize(const FVector2& _size)
+        void SetSize(const FVector2& _size)
         {
             Cast<sf::RectangleShape>(shape.get())->setSize(_size);
         }
@@ -23,7 +23,7 @@ namespace Krampus
         /// Gets the dimensions of the rectangle.
         /// </summary>
         /// <returns>Dimensions vector.</returns>
-        inline FVector2 GetSize() const
+        FVector2 GetSize() const
         {
             return FVector2(Cast<const sf::RectangleShape>(shape.get())->getSize());
         }

@@ -19,7 +19,7 @@ namespace Krampus
 		/// Gets a const reference to all managed screen widgets.
 		/// </summary>
 		/// <returns>Vector of unique pointers to Widget.</returns>
-		inline const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
+		const std::vector<std::unique_ptr<Widget>>& GetWidgets() const noexcept
 		{
 			return widgets;
 		}
@@ -29,8 +29,8 @@ namespace Krampus
 		/// </summary>
 		/// <typeparam name="Type">Widget derived class.</typeparam>
 		/// <returns>Vector of raw pointers to matching widgets.</returns>
-		template <typename Type, IS_BASE_OF(Widget, Type)>
-		inline std::vector<Type*> GetAllWidgetOfClass()
+		template <typename Type> requires std::is_base_of_v<Widget, Type>
+		std::vector<Type*> GetAllWidgetOfClass()
 		{
 			std::vector<Type*> _finalVector;
 
@@ -49,14 +49,14 @@ namespace Krampus
 		/// <typeparam name="Type">Widget class to instantiate.</typeparam>
 		/// <param name="_args">Arguments forwarded to widget constructor.</param>
 		/// <returns>Pointer to newly created Widget.</returns>
-		template <typename Type, typename ...Args, IS_BASE_OF(Widget, Type)>
-		inline Type* CreateWidget(Args&&... _args)
+		template <typename Type, typename ...Args> requires std::is_base_of_v<Widget, Type>
+		Type* CreateWidget(Args&&... _args)
 		{
 			std::unique_ptr<Type> _widget = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _rawWidget = _widget.get();
 			widgets.push_back(std::move(_widget));
 			_rawWidget->Construct();
-			LOG(VerbosityType::Log, "HUD: widget created " + _rawWidget->GetName().StdString() + " (" + std::string(typeid(Type).name()) + ")");
+			LOG(VerbosityType::Log, "HUD: widget created " + _rawWidget->GetName() + " (" + std::string(typeid(Type).name()) + ")");
 			return _rawWidget;
 		}
 
@@ -64,7 +64,7 @@ namespace Krampus
 		/// Marks a widget for deferred deletion at the end of the frame.
 		/// </summary>
 		/// <param name="toMark">Pointer to Widget to remove.</param>
-		inline void MarkForDeleteWidget(Widget* toMark)
+		void MarkForDeleteWidget(Widget* toMark)
 		{
 			auto it = std::find_if(
 				widgets.begin(),
@@ -77,7 +77,7 @@ namespace Krampus
 			if (it == widgets.end())
 				return;
 
-			LOG(VerbosityType::Log, "HUD: widget destroyed " + (*it)->GetName().StdString());
+			LOG(VerbosityType::Log, "HUD: widget destroyed " + (*it)->GetName());
 			pendingDeleteWidgets.push_back(std::move(*it));
 
 			widgets.erase(it);
@@ -86,7 +86,7 @@ namespace Krampus
 		/// <summary>
 		/// Destroys all widgets queued in the pending deletion list.
 		/// </summary>
-		inline void DestroyPendingDeleteWidgets()
+		void DestroyPendingDeleteWidgets()
 		{
 			// Same order as the actors: BeginDestroy, then delete. A widget destroyed from a BeginDestroy is handled by the next turn.
 			while (!pendingDeleteWidgets.empty())
@@ -108,7 +108,7 @@ namespace Krampus
 		/// Gets the screen view projection used for rendering HUD widgets.
 		/// </summary>
 		/// <returns>sf::View for screen rendering.</returns>
-		NO_DISCARD sf::View GetView() const;
+		[[nodiscard]] sf::View GetView() const;
 
 		/// <summary>
 		/// Sets the screen view projection for HUD widgets.

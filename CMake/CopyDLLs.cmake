@@ -3,6 +3,7 @@
 #   -D CONFIG=<Debug|Release|Ship>
 #   -D SFML_BIN_DIR=<chemin>
 #   -D OUT_DIR=<chemin>
+#   -D STEAM_BIN_DIR=<chemin>   (optional: steam_api64.dll is copied when it exists)
 
 if(NOT CONFIG)
     message(FATAL_ERROR "CONFIG not defined")
@@ -36,3 +37,8 @@ foreach(DLL ${DLLS})
         message(WARNING "DLL introuvable, copie ignorée : ${SRC}")
     endif()
 endforeach()
+
+# Steam: the game finds steam_api64.dll next to the exe (nothing to copy when the SDK is not in ThirdParty).
+if(STEAM_BIN_DIR AND EXISTS "${STEAM_BIN_DIR}/steam_api64.dll")
+    file(COPY_FILE "${STEAM_BIN_DIR}/steam_api64.dll" "${OUT_DIR}/steam_api64.dll" ONLY_IF_DIFFERENT)
+endif()

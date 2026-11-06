@@ -1,8 +1,14 @@
 #include "EditorContext.h"
 
+#include "Core/Engine.h"
+
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <shobjidl.h>
+#include <future>
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "shell32.lib")
 
 using namespace Krampus;
 
@@ -24,6 +30,7 @@ namespace
 		int							errors		= 0;
 		int							warnings	= 0;
 		bool						shipping	= false;						// the Package target (Ship configuration) instead of EditorModule
+		std::filesystem::path		packageDir;									// shipping: where the game goes
 	};
 
 	CompileState g_compile;
@@ -131,9 +138,14 @@ namespace
 	}
 }
 
+namespace
+{
+	bool Picking();		// the folder of Package Game is being chosen (below)
+}
+
 bool Krampus::IsCompiling()
 {
-	if (g_compile.process != nullptr) return true;
+	if (g_compile.process != nullptr || Picking()) return true;
 
 	// A build started by the module before a hot reload: checked twice a second, not at each of the calls of a frame.
 	static sf::Clock _clock;
@@ -218,9 +230,133 @@ void Krampus::StartCompile()
 	StartBuild(false);
 }
 
-void Krampus::StartShip()
+namespace
 {
+	const std::filesystem::path DEFAULT_PACKAGE_ROOT = "Bin/windows-x64/Ship/Package";
+
+	/// <summary>The name of the game as a file name (what CMake/Package.cmake does): no \ / : * ? " < > |, no dot or space at the end.</summary>
+	std::string PackageName(const std::string& _gameName)
+	{
+		std::string _name;
+		for (const char _c : _gameName)
+			if (std::string("\\/:*?\"<>|").find(_c) == std::string::npos) _name += _c;
+		while (!_name.empty() && (_name.back() == ' ' || _name.back() == '.')) _name.pop_back();
+		while (!_name.empty() && _name.front() == ' ') _name.erase(_name.begin());
+		return _name.empty() ? std::string("KrampusGame") : _name;
+	}
+
+	std::filesystem::path PackageRoot(const ShipSettings& _ship)
+	{
+		return _ship.packageFolder.empty() ? DEFAULT_PACKAGE_ROOT : std::filesystem::path(_ship.packageFolder);
+	}
+
+	/// <summary>The folder picker of Windows, opened on _start. Nothing when it is cancelled. Runs on its own thread (FolderPick):
+	/// on the main thread, COM is not in the mode the dialog needs (STA) and the call never came back, the editor froze.</summary>
+	std::optional<std::filesystem::path> PickFolder(HWND _owner, const std::filesystem::path& _start)
+	{
+		const HRESULT _init = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+		std::optional<std::filesystem::path> _result;
+		IFileOpenDialog* _dialog = nullptr;
+		if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&_dialog))))
+		{
+			DWORD _options = 0;
+			_dialog->GetOptions(&_options);
+			_dialog->SetOptions(_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
+			_dialog->SetTitle(L"Package Game: where to write the game (it goes in a folder named after it)");
+			_dialog->SetOkButtonLabel(L"Package here");
+			std::error_code _error;
+			const std::filesystem::path _folder = std::filesystem::absolute(_start, _error);
+			IShellItem* _startItem = nullptr;
+			if (std::filesystem::is_directory(_folder, _error)
+				&& SUCCEEDED(SHCreateItemFromParsingName(_folder.c_str(), nullptr, IID_PPV_ARGS(&_startItem))))
+			{
+				_dialog->SetFolder(_startItem);
+				_startItem->Release();
+			}
+			IShellItem* _item = nullptr;
+			if (SUCCEEDED(_dialog->Show(_owner)) && SUCCEEDED(_dialog->GetResult(&_item)))
+			{
+				PWSTR _path = nullptr;
+				if (SUCCEEDED(_item->GetDisplayName(SIGDN_FILESYSPATH, &_path)))
+				{
+					_result = std::filesystem::path(_path);
+					CoTaskMemFree(_path);
+				}
+				_item->Release();
+			}
+			_dialog->Release();
+		}
+		if (SUCCEEDED(_init)) CoUninitialize();
+		return _result;
+	}
+
+	/// <summary>The folder picker open on its thread: the editor keeps running, PumpCompile starts the package when it closes.</summary>
+	struct FolderPickState
+	{
+		std::future<std::optional<std::filesystem::path>>	result;
+		Engine*												engine		= nullptr;
+	};
+
+	FolderPickState g_pick;
+
+	bool Picking()
+	{
+		return g_pick.result.valid();
+	}
+
+	void StartPackage(Engine* _engine, std::optional<std::filesystem::path> _chosen);
+}
+
+void Krampus::StartShip(EditorContext& _context)
+{
+	if (Picking()) return;
+	if (IsCompiling() || LockedBuildRunning())
+	{
+		LOG_WARNING("A build is already running: wait until it ends (the Console says when)");
+		return;
+	}
+	const std::filesystem::path _root = PackageRoot(_context.engine->GetSettings().ship);
+	std::error_code _error;
+	std::filesystem::create_directories(_root, _error);	// the picker opens on it
+
+	const HWND _owner = static_cast<HWND>(_context.engine->GetWindowRef().GetRenderWindow().getNativeHandle());
+	g_pick.engine = _context.engine;
+	g_pick.result = std::async(std::launch::async, [_owner, _root]() { return PickFolder(_owner, _root); });
+	LOG_MSG("Package Game: choose the folder where the game goes");
+}
+
+namespace
+{
+void PumpFolderPick()
+{
+	if (!Picking() || g_pick.result.wait_for(std::chrono::seconds(0)) != std::future_status::ready) return;
+	std::optional<std::filesystem::path> _chosen = g_pick.result.get();
+	g_pick.result = { };
+	StartPackage(g_pick.engine, std::move(_chosen));
+}
+
+void StartPackage(Engine* _engine, std::optional<std::filesystem::path> _chosen)
+{
+	if (!_chosen)
+	{
+		LOG_MSG("Package Game: cancelled");
+		return;
+	}
+	EngineSettings& _settings = _engine->GetSettings();
+	ShipSettings& _ship = _settings.ship;
+	std::error_code _error;
+	// The folder of the game itself was picked (an older package): its parent is meant.
+	if (_chosen->filename() == std::filesystem::path(PackageName(_ship.gameName)) && std::filesystem::exists(*_chosen / "BuildInfo.txt", _error))
+		_chosen = _chosen->parent_path();
+
+	// Remembered in the settings (CMake/Package.cmake reads them): the default folder stays written as "nothing".
+	const bool _isDefault = std::filesystem::equivalent(*_chosen, DEFAULT_PACKAGE_ROOT, _error);
+	_ship.packageFolder = _isDefault ? std::string() : _chosen->generic_string();
+	if (!_settings.Save()) LOG_WARNING("Package Game: the settings could not be saved, the package goes to " + PackageRoot(_ship).generic_string());
+
 	StartBuild(true);
+	g_compile.packageDir = PackageRoot(_ship) / PackageName(_ship.gameName);
+}
 }
 
 bool Krampus::IsShipping()
@@ -228,13 +364,16 @@ bool Krampus::IsShipping()
 	return g_compile.shipping;
 }
 
-std::filesystem::path Krampus::GetPackageDirectory()
+std::filesystem::path Krampus::GetPackageDirectory(const EditorContext& _context)
 {
-	return std::filesystem::path("Bin/windows-x64/Ship/Package");
+	const ShipSettings& _ship = _context.engine->GetSettings().ship;
+	return PackageRoot(_ship) / PackageName(_ship.gameName);
 }
 
 void Krampus::PumpCompile()
 {
+	PumpFolderPick();
+	if (g_compile.process == nullptr && Picking()) return;
 	if (!IsCompiling()) return;
 
 	ReadOutput();
@@ -252,10 +391,12 @@ void Krampus::PumpCompile()
 	const int _errors = g_compile.errors;
 	const int _warnings = g_compile.warnings;
 	const bool _shipping = g_compile.shipping;
+	const std::filesystem::path _packageDir = g_compile.packageDir;
 	g_compile = CompileState { };
 
 	if (_exitCode == 0 && _shipping)
-		LOG_MSG("Package ready: " + std::filesystem::absolute(GetPackageDirectory()).generic_string() + " (copy the whole folder to another PC and run KrampusGame.exe: nothing to install).");
+		LOG_MSG("Package ready: " + std::filesystem::absolute(_packageDir).generic_string() + " (copy the whole folder to another PC and run "
+			+ _packageDir.filename().string() + ".exe: nothing to install).");
 	else if (_exitCode == 0)
 		LOG_MSG("Compilation succeeded (" + std::to_string(_warnings) + " warnings). The game reloads in a moment.");
 	else if (_shipping)

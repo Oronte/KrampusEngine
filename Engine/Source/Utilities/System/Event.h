@@ -523,7 +523,7 @@ namespace Krampus
 
         /// Registers any callable taking Args... and returning void or Propagation.
         template<EventCallable<Args...> F>
-        NO_DISCARD ListenerHandle AddListener(F&& _callback, const ListenerOptions& _options = {})
+        [[nodiscard]] ListenerHandle AddListener(F&& _callback, const ListenerOptions& _options = {})
         {
             // A null function pointer or an empty std::function is refused instead of crashing at the first Broadcast.
             bool _isNull = false;
@@ -545,7 +545,7 @@ namespace Krampus
         /// Registers a member function (const or not) of an instance. The instance must outlive the handle:
         /// prefer the weak_ptr/shared_ptr overloads below when that is not guaranteed.
         template<typename T, typename MemFn>
-        NO_DISCARD ListenerHandle AddListener(T* _instance, MemFn _memFn, const ListenerOptions& _options = {})
+        [[nodiscard]] ListenerHandle AddListener(T* _instance, MemFn _memFn, const ListenerOptions& _options = {})
             requires EventMemberCallable<MemFn, T, Args...>
         {
             if (!_instance)
@@ -569,7 +569,7 @@ namespace Krampus
         /// dangling pointer - this is the classic "component destroyed but still listening" crash, and
         /// it is a non-issue here by construction. Typically allocates (see the note at the top of the file).
         template<typename T, typename MemFn>
-        NO_DISCARD ListenerHandle AddListener(std::weak_ptr<T> _weak, MemFn _memFn, const ListenerOptions& _options = {})
+        [[nodiscard]] ListenerHandle AddListener(std::weak_ptr<T> _weak, MemFn _memFn, const ListenerOptions& _options = {})
             requires EventMemberCallable<MemFn, T, Args...>
         {
             return RegisterWeak(std::move(_weak), _memFn, _options);
@@ -577,7 +577,7 @@ namespace Krampus
 
         /// Convenience overload: binds on the weak_ptr obtained from a shared_ptr the caller already has.
         template<typename T, typename MemFn>
-        NO_DISCARD ListenerHandle AddListener(const std::shared_ptr<T>& _shared, MemFn _memFn, const ListenerOptions& _options = {})
+        [[nodiscard]] ListenerHandle AddListener(const std::shared_ptr<T>& _shared, MemFn _memFn, const ListenerOptions& _options = {})
             requires EventMemberCallable<MemFn, T, Args...>
         {
             return RegisterWeak(std::weak_ptr<T>(_shared), _memFn, _options);
@@ -585,14 +585,14 @@ namespace Krampus
 
         /// Registers a callable that fires at most once.
         template<EventCallable<Args...> F>
-        NO_DISCARD ListenerHandle AddOnce(F&& _callback, std::int32_t _priority = EventPriority::Normal)
+        [[nodiscard]] ListenerHandle AddOnce(F&& _callback, std::int32_t _priority = EventPriority::Normal)
         {
             return AddListener(std::forward<F>(_callback), ListenerOptions{ .priority = _priority, .once = true });
         }
 
         /// Shorthand for AddListener(callback): `event += [] (...) { ... };`
         template<EventCallable<Args...> F>
-        NO_DISCARD ListenerHandle operator+=(F&& _callback)
+        [[nodiscard]] ListenerHandle operator+=(F&& _callback)
         {
             return AddListener(std::forward<F>(_callback));
         }
@@ -752,7 +752,7 @@ namespace Krampus
             return depth > 0;
         }
 
-        virtual std::string ToString() const override
+        std::string ToString() const override
         {
             std::string _types;
             ((_types += (_types.empty() ? "" : ", ") + std::string(typeid(Args).name())), ...);

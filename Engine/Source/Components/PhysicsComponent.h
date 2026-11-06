@@ -99,17 +99,17 @@ namespace Krampus
 		/// <param name="_size">Width and height of the physics box.</param>
         PhysicsComponent(Actor* _owner, const FVector2& _size);
 
-		virtual void Construct() override;
+		void Construct() override;
 
 		/// <summary>
 		/// Follows the sprite: its shape is changed when the sprite's one is (checked every frame).
 		/// </summary>
-		virtual void Tick(const Float& _deltaTime) override;
+		void Tick(const Float& _deltaTime) override;
 
 		/// <summary>
 		/// Lifecycle callback invoked when the component is deconstructed, destroying the Box2D body.
 		/// </summary>
-		virtual void Deconstruct() override;
+		void Deconstruct() override;
 
 		/// <summary>
 		/// Callback invoked after collision resolution to synchronize transforms.

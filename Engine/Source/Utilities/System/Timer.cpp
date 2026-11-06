@@ -28,7 +28,7 @@ void Timer::Update(const Float& _deltaTime)
 		if (isToDelete) return;	// the callback stopped the timer
 
 		if (isLoop)
-			currentTime = duration > 0.0f ? currentTime - duration : Float(0.0f);	// keep the overshoot: a loop does not drift
+			currentTime = duration > 0.0f ? currentTime - duration : 0.0f;	// keep the overshoot: a loop does not drift
 		else
 			Stop();
 	}

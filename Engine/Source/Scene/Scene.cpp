@@ -18,7 +18,7 @@ namespace
 		std::visit([&](const auto& _v)
 		{
 			using V = std::decay_t<decltype(_v)>;
-			if constexpr (std::is_same_v<V, bool>)				_node.Set(_key, Bool(_v));
+			if constexpr (std::is_same_v<V, bool>)				_node.Set(_key, _v);
 			else if constexpr (std::is_same_v<V, int>)			_node.Set(_key, Int(_v));
 			else if constexpr (std::is_same_v<V, float>)		_node.Set(_key, Float(_v));
 			else if constexpr (std::is_same_v<V, std::string>)	_node.Set(_key, String(_v));
@@ -48,12 +48,15 @@ namespace
 		case PropertyType::Events:
 		case PropertyType::InputBindings:
 		case PropertyType::MessageBindings:
+		case PropertyType::GameplayTag:
+		case PropertyType::GameplayTagContainer:
+		case PropertyType::GameplayTagQuery:
 		case PropertyType::Shape:
 		case PropertyType::Sound:
 		case PropertyType::ActorRef:
 		case PropertyType::ComponentRef:
 		case PropertyType::String:
-			if (auto _v = _node.TryGet<String>(_key)) return PropertyValue(_v->StdString());
+			if (auto _v = _node.TryGet<String>(_key)) return PropertyValue(*_v);
 			break;
 		case PropertyType::Vector2:
 			if (auto _v = _node.TryGet<std::vector<Float>>(_key); _v && _v->size() == 2)
@@ -120,7 +123,7 @@ namespace
 				if (_pass == Pass::References && g_idRemap) RemapReference(std::get<std::string>(*_value));
 				_property->set(&_object, *_value);
 				if (_pass == Pass::References && !std::get<std::string>(*_value).empty() && !_property->getObject(&_object))
-					LOG_WARNING("Scene: " + _object.GetName().StdString() + "." + _property->name + " points to an object that is not in the scene (or not a " + _property->referenceClass + "), set to none");
+					LOG_WARNING("Scene: " + _object.GetName() + "." + _property->name + " points to an object that is not in the scene (or not a " + _property->referenceClass + "), set to none");
 			}
 		}
 	}
@@ -131,7 +134,7 @@ namespace
 	{
 		ReadProperties(_object, _node, Pass::References);
 		for (const SaveNodePtr& _componentNode : _node.GetNodes("components"))
-			if (auto* _component = FindComponent(_object.GetComponents(), _componentNode->Get<String>("class").StdString()))
+			if (auto* _component = FindComponent(_object.GetComponents(), _componentNode->Get<String>("class")))
 				ReadProperties(*_component, *_componentNode, Pass::References);
 	}
 
@@ -166,16 +169,16 @@ namespace
 		if constexpr (std::is_base_of_v<Actor, T>)
 		{
 			// A scene saved before ids existed keeps the random one given at spawn.
-			const std::string _id = _node.Get<String>("id", String("")).StdString();
+			const std::string _id = _node.Get<String>("id", String(""));
 			std::uint64_t _value = 0;
 			if (!_id.empty() && std::from_chars(_id.data(), _id.data() + _id.size(), _value, 16).ec == std::errc() && _value != 0)
 				_object.SetId(_value);
 		}
-		_object.SetActive(_node.Get<Bool>("active", Bool(true)));
+		_object.SetActive(_node.Get<Bool>("active", true));
 
 		const std::vector<Float> _position = _node.Get<std::vector<Float>>("position");
 		if (_position.size() == 2) _object.SetPosition(FVector2(static_cast<float>(_position[0]), static_cast<float>(_position[1])));
-		_object.SetRotation(Angle::FromDegrees(_node.Get<Float>("rotation", Float(0.f))));
+		_object.SetRotation(Angle::FromDegrees(_node.Get<Float>("rotation", 0.f)));
 		const std::vector<Float> _scale = _node.Get<std::vector<Float>>("scale");
 		if (_scale.size() == 2) _object.SetScale(FVector2(static_cast<float>(_scale[0]), static_cast<float>(_scale[1])));
 
@@ -206,13 +209,13 @@ namespace
 	{
 		for (const SaveNodePtr& _componentNode : _node.GetNodes("components"))
 		{
-			const std::string _className = _componentNode->Get<String>("class").StdString();
+			const std::string _className = _componentNode->Get<String>("class");
 			Component* _component = FindComponent(_actor.GetComponents(), _className);	// made by the actor's constructor
 			if (!_component)
 			{
 				const ClassInfo* _class = ClassRegistry::Find(_className);
 				if (_class && _class->componentFactory) _component = _class->componentFactory(&_actor);
-				else LOG_WARNING("Scene: unknown component class '" + _className + "' on '" + _actor.GetName().StdString() + "', skipped");
+				else LOG_WARNING("Scene: unknown component class '" + _className + "' on '" + _actor.GetName() + "', skipped");
 			}
 			if (_component) ReadProperties(*_component, *_componentNode);
 		}
@@ -222,13 +225,13 @@ namespace
 	{
 		for (const SaveNodePtr& _componentNode : _node.GetNodes("components"))
 		{
-			const std::string _className = _componentNode->Get<String>("class").StdString();
+			const std::string _className = _componentNode->Get<String>("class");
 			WidgetComponent* _component = FindComponent(_widget.GetComponents(), _className);
 			if (!_component)
 			{
 				const ClassInfo* _class = ClassRegistry::Find(_className);
 				if (_class && _class->widgetComponentFactory) _component = _class->widgetComponentFactory(&_widget);
-				else LOG_WARNING("Scene: unknown widget component class '" + _className + "' on '" + _widget.GetName().StdString() + "', skipped");
+				else LOG_WARNING("Scene: unknown widget component class '" + _className + "' on '" + _widget.GetName() + "', skipped");
 			}
 			if (_component) ReadProperties(*_component, *_componentNode);
 		}
@@ -251,7 +254,7 @@ namespace
 	{
 		for (size_t _i = 0; _i < _nodes.size(); ++_i)
 		{
-			const int _parent = static_cast<int>(_nodes[_i]->Get<Int>("parent", Int(-1)));
+			const int _parent = static_cast<int>(_nodes[_i]->Get<Int>("parent", -1));
 			if (_spawned[_i] && _parent >= 0 && _parent < static_cast<int>(_spawned.size()) && _spawned[_parent])
 				_spawned[_parent]->AddChild(_spawned[_i]);
 		}
@@ -266,7 +269,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path, const bool& 
 		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(*_actor));
 		if (!_class || !_class->factory)
 		{
-			if (!_quiet) LOG_WARNING("Scene: '" + _actor->GetName().StdString() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not saved");
+			if (!_quiet) LOG_WARNING("Scene: '" + _actor->GetName() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not saved");
 			continue;
 		}
 		_savedActors.push_back(_actor.get());
@@ -287,7 +290,7 @@ bool Scene::Save(Level& _level, const std::filesystem::path& _path, const bool& 
 		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(*_widget));
 		if (!_class || !_class->widgetFactory)
 		{
-			if (!_quiet) LOG_WARNING("Scene: widget '" + _widget->GetName().StdString() + "' (" + ClassNameOf(*_widget) + ") is not a registered widget class, not saved");
+			if (!_quiet) LOG_WARNING("Scene: widget '" + _widget->GetName() + "' (" + ClassNameOf(*_widget) + ") is not a registered widget class, not saved");
 			continue;
 		}
 		_savedWidgets.push_back(_widget.get());
@@ -345,7 +348,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 	for (size_t _i = 0; _i < _actorNodes.size(); ++_i)
 	{
 		const SaveNode& _node = *_actorNodes[_i];
-		const std::string _className = _node.Get<String>("class").StdString();
+		const std::string _className = _node.Get<String>("class");
 		const ClassInfo* _class = ClassRegistry::Find(_className);
 		if (!_class || !_class->factory)
 		{
@@ -357,7 +360,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		_actors[_i] = _actor;
 		ReadComponents(*_actor, _node);
 		ReadCommon(_node, *_actor);
-		LOG(VerbosityType::Verbose, "Scene: actor " + _actor->GetName().StdString() + " (" + _className + ", " + std::to_string(_actor->GetComponents().size()) + " components)");
+		LOG(VerbosityType::Verbose, "Scene: actor " + _actor->GetName() + " (" + _className + ", " + std::to_string(_actor->GetComponents().size()) + " components)");
 	}
 	LinkParents(_actorNodes, _actors); // every actor exists now
 
@@ -368,7 +371,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 	for (size_t _i = 0; _i < _widgetNodes.size(); ++_i)
 	{
 		const SaveNode& _node = *_widgetNodes[_i];
-		const std::string _className = _node.Get<String>("class").StdString();
+		const std::string _className = _node.Get<String>("class");
 		const ClassInfo* _class = ClassRegistry::Find(_className);
 		if (!_class || !_class->widgetFactory)
 		{
@@ -380,7 +383,7 @@ bool Scene::Load(Level& _level, const std::filesystem::path& _path)
 		_widgets[_i] = _widget;
 		ReadComponents(*_widget, _node);	// before the transform: components follow their owner
 		ReadCommon(_node, *_widget);
-		LOG(VerbosityType::Verbose, "Scene: widget " + _widget->GetName().StdString() + " (" + _className + ", " + std::to_string(_widget->GetComponents().size()) + " components)");
+		LOG(VerbosityType::Verbose, "Scene: widget " + _widget->GetName() + " (" + _className + ", " + std::to_string(_widget->GetComponents().size()) + " components)");
 	}
 	LinkParents(_widgetNodes, _widgets);
 
@@ -427,7 +430,7 @@ bool Scene::CopyActors(const std::vector<Actor*>& _actors, const std::filesystem
 		const ClassInfo* _class = ClassRegistry::Find(ClassNameOf(*_actor));
 		if (!_class || !_class->factory)
 		{
-			LOG_WARNING("Scene: '" + _actor->GetName().StdString() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not copied");
+			LOG_WARNING("Scene: '" + _actor->GetName() + "' (" + ClassNameOf(*_actor) + ") is not registered with KACTOR, not copied");
 			return;
 		}
 		_saved.push_back(_actor);
@@ -469,7 +472,7 @@ std::vector<Actor*> Scene::PasteActors(Level& _level, const std::filesystem::pat
 	std::unordered_map<std::string, std::string> _remap;
 	for (size_t _i = 0; _i < _nodes.size(); ++_i)
 	{
-		const std::string _className = _nodes[_i]->Get<String>("class").StdString();
+		const std::string _className = _nodes[_i]->Get<String>("class");
 		const ClassInfo* _class = ClassRegistry::Find(_className);
 		if (!_class || !_class->factory)
 		{

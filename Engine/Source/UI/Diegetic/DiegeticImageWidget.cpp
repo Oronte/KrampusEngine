@@ -24,5 +24,5 @@ Krampus::DiegeticImageWidget::DiegeticImageWidget(Level* _level, const Rectangle
 std::string Krampus::DiegeticImageWidget::ToString() const
 {
 	if (sprite->GetShapeType() == ShapeType::Polygon) return name + " -> Polygon = " + sprite->GetShapeObject()->GetPolygonName();
-	return name + " -> Size/Radius = " + (sprite->GetShapeType() == ShapeType::Circle ? sprite->GetRadius().ToString() : sprite->GetSize().ToString());
+	return name + " -> Size/Radius = " + (sprite->GetShapeType() == ShapeType::Circle ? std::to_string(sprite->GetRadius()) : sprite->GetSize().ToString());
 }

@@ -72,6 +72,9 @@ namespace
 		case PropertyType::Events:
 		case PropertyType::InputBindings:
 		case PropertyType::MessageBindings:
+		case PropertyType::GameplayTag:
+		case PropertyType::GameplayTagContainer:
+		case PropertyType::GameplayTagQuery:
 		case PropertyType::Shape:
 		case PropertyType::ActorRef:
 		case PropertyType::ComponentRef:
@@ -352,6 +355,9 @@ void NetworkSettings::Apply()
 	_net->discoveryPort = static_cast<unsigned short>(std::clamp(discoveryPort, 1, 65535));
 	_net->lanVisible = lanVisible;
 	_net->gameName = engine->GetSettings().ship.gameName;	// what the LAN search shows
+	_net->steamAppId = steamAppId;
+	_net->steamFriendsOnly = steamFriendsOnly;
+	if (steamEnabled && !_net->IsSteamReady()) _net->InitSteam();
 }
 
 void NetworkSettings::ResetToDefaults()

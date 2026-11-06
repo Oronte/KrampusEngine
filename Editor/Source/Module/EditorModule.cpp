@@ -1,9 +1,8 @@
-// The editor first: its ImGui headers must come before KrampusInclude.h, which redefines new.
 #include "EditorLayer.h"
 
 //Core engine includes
 #include "Core/Engine.h"
-#include "Utilities/KrampusInclude.h"
+#include "Core/CoreMinimal.h"
 
 //Game and editor
 #include "GameEntry.h"

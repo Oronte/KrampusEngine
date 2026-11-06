@@ -1,5 +1,6 @@
 #include "Reflection.h"
 #include "UI/Widgets/Widget.h"
+#include "Components/GameplayTagComponent.h"
 
 using namespace Krampus;
 
@@ -122,13 +123,13 @@ namespace
 		if (_target.starts_with("A:"))
 		{
 			for (const std::unique_ptr<Actor>& _actor : _level->GetActorManager().GetActors())
-				if (_actor->GetName().StdString() == _target.substr(2))
+				if (_actor->GetName() == _target.substr(2))
 					return _actor.get();
 		}
 		else if (_target.starts_with("W:"))
 		{
 			for (const std::unique_ptr<Widget>& _widget : _level->GetHUD().GetWidgets())
-				if (_widget->GetName().StdString() == _target.substr(2))
+				if (_widget->GetName() == _target.substr(2))
 					return _widget.get();
 		}
 		return nullptr;
@@ -187,40 +188,71 @@ void EventList::Invoke(IGameObject* _owner) const
 	const std::vector<EventCall> _calls = calls;
 	for (const EventCall& _call : _calls)
 	{
-		IGameObject* _object = Resolve(_owner, _call);
-		if (!_object)
+		// One object, or every actor that has the tag for a target "T:Tag".
+		const std::vector<IGameObject*> _objects = ResolveAll(_owner, _call);
+		if (_objects.empty())
 		{
-			LOG_WARNING("Event: target \"" + _call.target + "\" " + _call.component + " not found for " + _call.function);
+			if (!_call.target.starts_with("T:"))	// nobody with the tag is normal: nothing to call
+				LOG_WARNING("Event: target \"" + _call.target + "\" " + _call.component + " not found for " + _call.function);
 			continue;
 		}
 
-		const ClassInfo* _class = ClassRegistry::Find(_call.target == "Game" ? std::string("Game") : ClassNameOf(*_object));
-		const FunctionInfo* _function = nullptr;
-		if (_class)
-			for (const FunctionInfo* _candidate : _class->GetFunctions())
-				if (_candidate->name == _call.function)
-					_function = _candidate;
+		for (IGameObject* _object : _objects)
+		{
+			const ClassInfo* _class = ClassRegistry::Find(_call.target == "Game" ? std::string("Game") : ClassNameOf(*_object));
+			const FunctionInfo* _function = nullptr;
+			if (_class)
+				for (const FunctionInfo* _candidate : _class->GetFunctions())
+					if (_candidate->name == _call.function)
+						_function = _candidate;
 
-		if (!_function)
-		{
-			LOG_WARNING("Event: no function \"" + _call.function + "\" on " + (_class ? _class->name : std::string("?")));
-			continue;
-		}
+			if (!_function)
+			{
+				LOG_WARNING("Event: no function \"" + _call.function + "\" on " + (_class ? _class->name : std::string("?")));
+				break;
+			}
 
-		try
-		{
-			_function->call(_object, _function->hasArgument ? &_call.argument : nullptr);
-		}
-		catch (const std::bad_variant_access&)
-		{
-			LOG_WARNING("Event: the argument of \"" + _call.function + "\" has the wrong type");
+			try
+			{
+				_function->call(_object, _function->hasArgument ? &_call.argument : nullptr);
+			}
+			catch (const std::bad_variant_access&)
+			{
+				LOG_WARNING("Event: the argument of \"" + _call.function + "\" has the wrong type");
+				break;
+			}
 		}
 	}
+}
+
+std::vector<IGameObject*> EventList::ResolveAll(IGameObject* _owner, const EventCall& _call)
+{
+	std::vector<IGameObject*> _objects;
+	if (_call.target.starts_with("T:"))
+	{
+		Level* _level = LevelOf(_owner);
+		if (!_level) return _objects;
+		for (Actor* _actor : GameplayTagComponent::FindActors(_level, GameplayTag::Request(_call.target.substr(2))))
+		{
+			IGameObject* _object = _actor;
+			if (!_call.component.empty()) _object = FindComponent(_actor->GetComponents(), _call.component);
+			if (_object) _objects.push_back(_object);
+		}
+		return _objects;
+	}
+
+	if (IGameObject* _object = Resolve(_owner, _call)) _objects.push_back(_object);
+	return _objects;
 }
 
 IGameObject* EventList::Resolve(IGameObject* _owner, const EventCall& _call)
 {
 	if (_call.target == "Game") return _owner;	// the functions of the class "Game" do not use the object
+	if (_call.target.starts_with("T:"))		// a group: the first actor that has the tag (the editor needs one to list its functions)
+	{
+		const std::vector<IGameObject*> _all = ResolveAll(_owner, _call);
+		return _all.empty() ? nullptr : _all.front();
+	}
 
 	Level* _level = LevelOf(_owner);
 	if (!_level) return nullptr;

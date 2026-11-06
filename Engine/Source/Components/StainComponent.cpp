@@ -299,7 +299,7 @@ bool StainComponent::EnsureTarget(const sf::Shape& _shape)
 	target = std::make_unique<sf::RenderTexture>();
 	if (!target->resize(_size))
 	{
-		LOG_WARNING("StainComponent: no picture for the marks of \"" + GetOwner()->GetName().StdString() + "\"");
+		LOG_WARNING("StainComponent: no picture for the marks of \"" + GetOwner()->GetName() + "\"");
 		target.reset();
 		return false;
 	}

@@ -10,7 +10,7 @@ namespace Krampus
 	{
 		FVector2					normal				= FVector2::Zero();
 		Float						penetration			= 0.0f;
-		FVector2					avrageContactPoint	= FVector2::Zero();
+		FVector2					averageContactPoint	= FVector2::Zero();
 		std::vector<FVector2>		contacts;
 		class CollisionComponent*	collision			= nullptr;
 		Bool						hit					= false;

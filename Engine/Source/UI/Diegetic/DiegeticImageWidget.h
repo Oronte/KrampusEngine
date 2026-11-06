@@ -29,7 +29,7 @@ namespace Krampus
 
 		/// <summary>Returns a string representation of the diegetic image.</summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 	};
 
 }

@@ -7,10 +7,11 @@ project(Ship LANGUAGES CXX)
 # Windows PC and run, nothing to install:
 #
 #       cmake --build Build/vs2026 --config Ship --target Package        (or Ship.bat, or File > Package Game in the editor)
-#       -> Bin/windows-x64/Ship/Package/
-#              KrampusGame.exe     the game (SFML is linked statically: no sfml-*.dll)
-#              KrampusGame.pak     everything of Content/ in one file (see Engine/Source/Core/AssetPack.h)
-#              *.dll               the Visual C++ and Universal C runtimes, so that the PC needs no Redistributable
+#       -> <Settings > Ship > packageFolder, by default Bin/windows-x64/Ship/Package>/<gameName>/
+#              <gameName>.exe           the launcher (KrampusLauncher), with the icon of Settings > Ship > icon
+#              Binaries/<gameName>.exe  the game (SFML is linked statically: no sfml-*.dll)
+#              Binaries/*.dll           the Visual C++ and Universal C runtimes, so that the PC needs no Redistributable
+#              Content/<gameName>.pak   everything of Content/ in one file (see Engine/Source/Core/AssetPack.h)
 #
 # Debug and Release: the dynamic libraries and the files of Content on the disk, to run the game from Visual Studio.
 set(SHIP_BIN_DIR "${CMAKE_SOURCE_DIR}/Bin/${KRAMPUS_PLATFORM}-${KRAMPUS_ARCH}/$<CONFIG>/Game")
@@ -102,7 +103,17 @@ set_target_properties(KrampusGame PROPERTIES
 # ---------------------------------------------------------------------------------------------------------------
 add_executable(PackTool Tools/PackTool.cpp ${CMAKE_SOURCE_DIR}/Engine/Source/Core/AssetPack.cpp)
 
-target_include_directories(PackTool PRIVATE ${CMAKE_SOURCE_DIR}/Engine/Source)
+target_include_directories(PackTool PRIVATE
+    ${CMAKE_SOURCE_DIR}/Engine/Source
+    ${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/include
+)
+# --icon reads pictures with sf::Image (SFML static: the tool runs alone).
+target_compile_definitions(PackTool PRIVATE SFML_STATIC)
+target_link_directories(PackTool PRIVATE ${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/lib)
+target_link_libraries(PackTool PRIVATE
+    $<IF:$<CONFIG:Debug>,sfml-graphics-s-d,sfml-graphics-s>
+    $<IF:$<CONFIG:Debug>,sfml-system-s-d,sfml-system-s>
+)
 
 set_target_properties(PackTool PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/Bin/${KRAMPUS_PLATFORM}-${KRAMPUS_ARCH}/$<CONFIG>/Tools"
@@ -110,7 +121,20 @@ set_target_properties(PackTool PROPERTIES
 )
 
 # ---------------------------------------------------------------------------------------------------------------
-# Package: the folder to copy to another PC, in Bin/<platform>/Ship/Package.
+# KrampusLauncher: the <Game>.exe at the root of the package, which starts Binaries/<Game>.exe (Ship/Launcher/Launcher.cpp).
+# The C runtime is linked in (/MT): it must run before the DLLs of Binaries are found. It uses no other library.
+# ---------------------------------------------------------------------------------------------------------------
+add_executable(KrampusLauncher WIN32 Launcher/Launcher.cpp)
+target_compile_definitions(KrampusLauncher PRIVATE UNICODE _UNICODE)
+set_target_properties(KrampusLauncher PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    RUNTIME_OUTPUT_DIRECTORY "${SHIP_BIN_DIR}"
+    PDB_OUTPUT_DIRECTORY "${SHIP_BIN_DIR}"
+)
+
+# ---------------------------------------------------------------------------------------------------------------
+# Package: the folder to copy to another PC: <packageFolder of Settings > Ship>/<gameName>, by default
+# Bin/<platform>/Ship/Package/<gameName> (CMake/Package.cmake reads Content/Settings/EngineSettings.cfg).
 # ---------------------------------------------------------------------------------------------------------------
 set(PACKAGE_DIR "${CMAKE_SOURCE_DIR}/Bin/${KRAMPUS_PLATFORM}-${KRAMPUS_ARCH}/$<CONFIG>/Package")
 
@@ -124,10 +148,11 @@ add_custom_target(Package
         -D "SOURCE_DIR=${CMAKE_SOURCE_DIR}"
         -D "EXE=$<TARGET_FILE:KrampusGame>"
         -D "PACK_TOOL=$<TARGET_FILE:PackTool>"
+        -D "LAUNCHER=$<TARGET_FILE:KrampusLauncher>"
         -D "VC_ROOT=${VC_ROOT}"
-        -D "OUT_DIR=${PACKAGE_DIR}"
+        -D "DEFAULT_ROOT=${PACKAGE_DIR}"
         -P "${CMAKE_SOURCE_DIR}/CMake/Package.cmake"
-    DEPENDS KrampusGame PackTool
+    DEPENDS KrampusGame PackTool KrampusLauncher
     COMMENT "Packaging the game ($<CONFIG>)..."
     VERBATIM
 )

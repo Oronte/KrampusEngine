@@ -13,7 +13,7 @@ Krampus::Exception::Exception(const String& _error, const String& _debugInfo)
 
 const char* Krampus::Exception::what() const noexcept
 {
-	return message;
+	return message.c_str();
 }
 
 const char* Krampus::Exception::What() const

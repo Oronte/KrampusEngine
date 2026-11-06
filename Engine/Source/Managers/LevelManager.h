@@ -28,7 +28,7 @@ namespace Krampus
 		/// <typeparam name="LevelType">Level derived class.</typeparam>
 		/// <returns>Pointer to active LevelType, or nullptr if cast fails.</returns>
 		template<typename LevelType = Level>
-		inline LevelType* GetCurrentLevel() const
+		LevelType* GetCurrentLevel() const
 		{
 			if (!currentLevel) return nullptr;	// no level yet (start, or between two levels): not an error
 
@@ -44,7 +44,7 @@ namespace Krampus
 		/// <summary>
 		/// Number of levels loaded so far: changes each time a level is swapped in.
 		/// </summary>
-		inline int GetLevelSerial() const
+		int GetLevelSerial() const
 		{
 			return levelSerial;
 		}
@@ -52,13 +52,13 @@ namespace Krampus
 		/// <summary>
 		/// Makes the next level change silent: no fade in, and its messages go to the log file only. Used by the editor to swap a scene in place (undo).
 		/// </summary>
-		inline void SetNextChangeSilent()
+		void SetNextChangeSilent()
 		{
 			silentChange = true;
 		}
 
 		/// <returns>True while a silent level change is in progress.</returns>
-		inline bool IsChangeSilent() const
+		bool IsChangeSilent() const
 		{
 			return silentChange;
 		}
@@ -66,7 +66,7 @@ namespace Krampus
 		/// <summary>
 		/// The level in progress, or nullptr when there is none (no error is logged, unlike GetCurrentLevel).
 		/// </summary>
-		inline Level* Peek() const
+		Level* Peek() const
 		{
 			return currentLevel.get();
 		}
@@ -77,7 +77,7 @@ namespace Krampus
 		/// <typeparam name="LevelType">Level derived class to instantiate.</typeparam>
 		/// <returns>Pointer to newly staged level.</returns>
 		template<typename LevelType = Level>
-		inline LevelType* SetLevel()
+		LevelType* SetLevel()
 		{
 			levelFactory = [this]() -> std::unique_ptr<Level> { return std::make_unique<LevelType>(GetWorld()); };
 			LOG(VerbosityType::Log, "LevelManager: next level will be " + std::string(typeid(LevelType).name()));
@@ -88,7 +88,7 @@ namespace Krampus
 		/// <summary>
 		/// Stages a fresh instance of the last level given to SetLevel (restart).
 		/// </summary>
-		inline void ReloadLevel()
+		void ReloadLevel()
 		{
 			LOG(VerbosityType::Log, "LevelManager: reload requested");
 			if (levelFactory)
@@ -99,10 +99,10 @@ namespace Krampus
 		/// Executes the transition to the staged pending level, unloading the current level and loading the new one.
 		/// </summary>
 		/// <returns>True if a level transition occurred, false if no pending level was staged.</returns>
-		inline Bool ChangeLevel()
+		Bool ChangeLevel()
 		{
 			if (!pendingAddLevel.get())
-				return Bool::False();
+				return false;
 
 			LOG(silentChange ? VerbosityType::Log : VerbosityType::Display, "LevelManager: switching level");
 
@@ -118,7 +118,7 @@ namespace Krampus
 			onLevelChanged.Broadcast();
 			silentChange = false;
 
-			return Bool::True();
+			return true;
 		}
 
 		/// <summary>

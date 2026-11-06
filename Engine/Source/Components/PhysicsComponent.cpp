@@ -12,7 +12,7 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner)
 
     // The shape of the sprite, now and when it changes (Tick). Without a sprite: a box until one is added.
     if (!_owner->GetComponent<SpriteComponent>())
-        LOG_WARNING("PhysicsComponent: \"" + _owner->GetName().StdString() + "\" has no SpriteComponent yet: its body is a box of 100 x 100 until it gets one");
+        LOG_WARNING("PhysicsComponent: \"" + _owner->GetName() + "\" has no SpriteComponent yet: its body is a box of 100 x 100 until it gets one");
     MakeRectangle(FVector2(100.f, 100.f));
     SyncWithSprite();
 }
@@ -37,7 +37,7 @@ Krampus::PhysicsComponent::PhysicsComponent(Actor* _owner, const FVector2& _size
 
 void Krampus::PhysicsComponent::Construct()
 {
-    Super::Construct();
+    Component::Construct();
 
     FVector2 _meterPos = GetPosition() / PX_TO_M;
     b2Body_SetTransform(bodyId, b2Vec2(_meterPos.x, _meterPos.y), b2MakeRot(GetRotation()));
@@ -46,13 +46,13 @@ void Krampus::PhysicsComponent::Construct()
 
 void Krampus::PhysicsComponent::Tick(const Float& _deltaTime)
 {
-    Super::Tick(_deltaTime);
+    Component::Tick(_deltaTime);
     SyncWithSprite();
 }
 
 void Krampus::PhysicsComponent::Deconstruct()
 {
-	Super::Deconstruct();
+	Component::Deconstruct();
 
 	// The body is gone after this: nothing may reach it anymore (the physics step of this frame still broadcasts, and the actor
 	// can still move until it is deleted at the end of the frame).
@@ -256,7 +256,7 @@ void Krampus::PhysicsComponent::Init()
 
     if (!b2Body_IsValid(bodyId))
     {
-        LOG_ERROR("PhysicsComponent: box2d could not create the body of \"" + GetOwner()->GetName().StdString() + "\"");
+        LOG_ERROR("PhysicsComponent: box2d could not create the body of \"" + GetOwner()->GetName() + "\"");
         return;		// nothing below makes sense without a body
     }
 

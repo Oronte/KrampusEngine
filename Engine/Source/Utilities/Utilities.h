@@ -8,7 +8,7 @@ namespace Krampus
 	/// Casts a base type pointer to a derived type pointer safely.
     /// </summary>
     /// <param name="_baseType"> -> The object that will be cast </param>
-    template <typename Type, typename BaseType, IS_BASE_OF(BaseType, Type)>
+    template <typename Type, typename BaseType> requires std::is_base_of_v<BaseType, Type>
     Type* Cast(BaseType* _baseType)
     {
         if (!_baseType) return nullptr;
@@ -23,8 +23,10 @@ namespace Krampus
     Bool InstanceOf(K _object)
     {
         if constexpr (std::is_pointer_v<K> && std::is_polymorphic_v<std::remove_cv_t<std::remove_pointer_t<K>>>)
-            return Bool(_object != nullptr && dynamic_cast<const T*>(_object) != nullptr);
+            return _object != nullptr && dynamic_cast<const T*>(_object) != nullptr;
+
         else
-            return Bool(std::is_same_v<T, std::remove_cvref_t<K>>);
+            return std::is_same_v<T, std::remove_cvref_t<K>>;
+
     }
 }

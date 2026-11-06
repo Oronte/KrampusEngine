@@ -1,5 +1,4 @@
 #pragma once
-// #pragma warning (disable : 4275) // non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
 
 // STL
 #include <iostream>
@@ -22,6 +21,7 @@
 #include <cstddef>
 #include <memory>
 #include <cmath>
+#include <cassert>
 
 // Collections
 #include <vector>
@@ -39,44 +39,16 @@
 
 // Krampus
 #include "Utilities/System/Types/Types.h"
+#include "Utilities/System/Printable.h"
 
-#define DEBUG_PATH
-#ifdef DEBUG_PATH
-#define PATH __func__
-#else
-#define PATH __FILE__
-#endif // DEBUG_FILE
-
-#ifdef _MSC_VER
-	#define NOMINMAX
-	#include <windows.h>
-	#define Super						__super
-#endif
-
-#define frulse							0.5
-#define tralse							frulse
-#define FILE_NAME						std::filesystem::path(__FILE__).filename().string()
-#define DEBUG_INFO						std::string("(File : " + FILE_NAME + " | Func : " + CAST(std::string, PATH) + " | Line : " + std::to_string(__LINE__) + ")")						
-#define CAST(_type, _expr)				static_cast<_type>(_expr)
-#define SLEEP(_time)					sf::sleep(sf::seconds(_time))
-#define SLEEP_MILLISECOND(_time)		sf::sleep(sf::milliseconds(_time))
-#define SLEEP_MICROSECONDS(_time)		sf::sleep(sf::microseconds(_time))
-#define NO_DISCARD						[[nodiscard]]
-#define DEPRECATED						[[deprecated]]
-#define SAME_VALUE(_first, _second)		std::is_same_v<_first, _second>
-#define ENABLE_IF(_element)				std::enable_if_t<_element>
-#define IS_BASE_OF(_base, _type)		typename = std::enable_if_t<std::is_base_of_v<_base, _type>>
-#define IS_NOT_BASE_OF(_base, _type)	typename = std::enable_if_t<!std::is_base_of_v<_base, _type>>
-#define TYPE(_type)						std::decay_t<decltype(_type)>
-#define TYPE_ID(_type)					typeid(_type)
-#define TYPE_NAME(_type)				CAST(std::string, TYPE_ID(_type).name())
-#define TYPE_INDEX_NAME(_typeIndex)		CAST(std::string, _typeIndex.name())
-#define NAME_OF(var)					#var
-#define CURRENT_PATH					std::filesystem::current_path().string()
-#define PROJECT_ROOT					std::string(PROJECT_ROOT_DIR)
+#define DEBUG_INFO		std::string("(File : " + std::filesystem::path(__FILE__).filename().string() + " | Func : " + __func__ + " | Line : " + std::to_string(__LINE__) + ")")
+#define NAME_OF(_name)	#_name
+#define PROJECT_ROOT	std::string(PROJECT_ROOT_DIR)
 #ifdef SHIP
-#define CONTENT_PATH					std::string("Content/")		// a shipped game finds Content next to its exe (the exe moves to its own folder at start)
+#define CONTENT_PATH	std::string("Content/")		// a shipped game finds Content next to its exe (the exe moves to its own folder at start)
 #else
-#define CONTENT_PATH					PROJECT_ROOT + "/Content/"
+#define CONTENT_PATH	PROJECT_ROOT + "/Content/"
 #endif
-#define PX_TO_M							100.0f
+
+/// Pixels per meter between the SFML world and Box2D.
+inline constexpr float PX_TO_M = 100.f;

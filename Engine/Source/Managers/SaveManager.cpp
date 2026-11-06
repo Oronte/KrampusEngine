@@ -2,459 +2,311 @@
 #include <Utilities/Debug/Exception.h>
 #include "Utilities/Debug/Logger.h"
 #include "Core/AssetPack.h"
+#include <bit>
+#include <span>
 
 
 String                      SaveManager::saveDirectory = SaveManager::SAVE_DIRECTORY;
 SaveManager::EventCallback  SaveManager::onSave = nullptr;
 SaveManager::EventCallback  SaveManager::onLoad = nullptr;
 
-namespace 
+namespace
 {
-    static const Byte KA7_MAGIC[4] = { Byte('K'), Byte('A'), Byte('7'), Byte(0) };
-    static const Int  KA7_HDR_SIZE = Int(32);
+    constexpr Byte KA7_MAGIC[] = { 'K', 'A', '7', 0 };
+    constexpr std::size_t KA7_HEADER_SIZE = 32;
 
-    Int ComputeCRC32(const std::vector<Byte>& data) noexcept 
+    /// CRC-32 (IEEE 802.3, reflected polynomial 0xEDB88320), bit by bit.
+    Int ComputeCRC32(const std::vector<Byte>& _data) noexcept
     {
-        static const LongLong POLY = LongLong(0xEDB88320LL);
-        static const LongLong MASK32 = LongLong(0xFFFFFFFFLL);
-
-        LongLong crc = LongLong(0xFFFFFFFFLL);
-
-        for (Int i = 0; i < Int(data.size()); ++i) 
+        constexpr std::uint32_t POLYNOMIAL = 0xEDB88320u;
+        std::uint32_t _crc = 0xFFFFFFFFu;
+        for (const Byte _byte : _data)
         {
-            crc = crc ^ data[i].ToLongLong();
-            for (Int j = 0; j < 8; ++j) 
-            {
-                LongLong lowBit = crc & LongLong(1);
-                LongLong mask = LongLong(0) - lowBit;
-                crc = (crc >> 1) ^ (POLY & mask);
-            }
+            _crc ^= _byte;
+            for (int _bit = 0; _bit < 8; ++_bit)
+                _crc = (_crc >> 1) ^ (POLYNOMIAL & (0u - (_crc & 1u)));
         }
-
-        return ((crc ^ LongLong(0xFFFFFFFFLL)) & MASK32).ToInt();
+        return static_cast<Int>(~_crc);
     }
 
-    std::vector<unsigned char> ByteVecToRaw(const std::vector<Byte>& src) 
-    {
-        std::vector<unsigned char> out;
-        out.reserve(src.size());
-        for (const auto& b : src)
-            out.push_back(static_cast<unsigned char>(b));  
-        return out;
-    }
-
-    std::vector<Byte> RawToByteVec(const std::vector<unsigned char>& src)
-    {
-        std::vector<Byte> out;
-        out.reserve(src.size());
-        for (const auto c : src)
-            out.push_back(Byte(c));  
-        return out;
-    }
-
-    std::vector<Byte> RawToByteVec(const unsigned char* src, std::size_t n) 
-    {
-        std::vector<Byte> out;
-        out.reserve(n);
-        for (std::size_t i = 0; i < n; ++i)
-            out.push_back(Byte(src[i]));
-        return out;
-    }
-
-    class BinaryWriter 
+    /// Little-endian writer of the .ka7 binary format.
+    class BinaryWriter
     {
     public:
         std::vector<Byte> buffer;
 
-        void WriteU8(const Byte& v) 
+        void WriteU8(Byte _value) { buffer.push_back(_value); }
+
+        template<typename T>
+        void WriteLittleEndian(T _value)
         {
-            buffer.push_back(v);
+            const auto _bits = static_cast<std::make_unsigned_t<T>>(_value);
+            for (std::size_t _i = 0; _i < sizeof(T); ++_i)
+                buffer.push_back(static_cast<Byte>(_bits >> (_i * 8)));
         }
 
-        void WriteU16(const Short& v) 
+        void WriteU16(Short _value)     { WriteLittleEndian(_value); }
+        void WriteU32(Int _value)       { WriteLittleEndian(_value); }
+        void WriteI64(LongLong _value)  { WriteLittleEndian(_value); }
+        void WriteDouble(Double _value) { WriteI64(std::bit_cast<LongLong>(_value)); }
+
+        void WriteString(const String& _string)
         {
-            buffer.push_back((v & Short(0xFF)).ToByte());
-            buffer.push_back(((v >> 8) & Short(0xFF)).ToByte());
+            const std::string& _raw = _string;
+            WriteU32(static_cast<Int>(_raw.size()));
+            buffer.insert(buffer.end(), _raw.begin(), _raw.end());
         }
 
-        void WriteU32(const Int& v) 
+        void WriteNode(const SaveNode& _node)
         {
-            for (Int i = 0; i < 4; ++i)
-                buffer.push_back((v >> (i * 8)).ToByte());
-        }
-
-        void WriteI64(const LongLong& v) 
-        {
-            for (Int i = 0; i < 8; ++i)
-                buffer.push_back((v >> (i * 8)).ToByte());
-        }
-
-        void WriteDouble(const Double& v) 
-        {
-            LongLong bits = std::bit_cast<long long>(static_cast<double>(v));
-            WriteI64(bits);
-        }
-
-        void WriteString(const String& s)
-        {
-            const auto& raw = s.StdString();
-            WriteU32(Int(raw.size()));
-            for (const auto c : raw)
-                buffer.push_back(Byte(c));
-        }
-
-        void WriteBytes(const std::vector<Byte>& v) 
-        {
-            WriteU32(Int(v.size()));
-            buffer.insert(buffer.end(), v.begin(), v.end());
-        }
-
-        void WriteNode(const SaveNode& node) 
-        {
-            WriteString(node.GetName());
-            const auto& fields = node.GetFields();
-            WriteU32(Int(fields.size()));
-            for (const auto& [key, val] : fields) 
+            WriteString(_node.GetName());
+            WriteU32(static_cast<Int>(_node.GetFields().size()));
+            for (const auto& [_key, _value] : _node.GetFields())
             {
-                WriteString(key);
-                WriteValue(val);
+                WriteString(_key);
+                std::visit([this](const auto& _alternative) { WriteVariant(_alternative); }, _value);
             }
-        }
-
-        void WriteValue(const SaveValue& val)
-        {
-/// <summary>
-/// Implementation of std::visit.
-/// </summary>
-/// @param v
-/// @return
-/// <summary>
-/// Implementation of std::visit.
-/// </summary>
-/// @param v
-/// @return
-            std::visit([this](const auto& v) { WriteVariant(v); }, val);
         }
 
     private:
-        void WriteVariant(const Bool& v) 
+        void WriteType(SaveType _type) { WriteU8(static_cast<Byte>(_type)); }
+
+        void WriteNodeOrEmpty(const SaveNodePtr& _node) { WriteNode(_node ? *_node : SaveNode{}); }
+
+        template<typename T, typename WriteOne>
+        void WriteArray(SaveType _type, const std::vector<T>& _values, WriteOne _writeOne)
         {
-            WriteU8(Byte((unsigned char)SaveType::Bool));
-            WriteU8(v ? Byte(1) : Byte(0));
+            WriteType(_type);
+            WriteU32(static_cast<Int>(_values.size()));
+            for (const T& _value : _values) (this->*_writeOne)(_value);
         }
-        void WriteVariant(const LongLong& v) 
+
+        void WriteVariant(Bool _value)               { WriteType(SaveType::Bool);     WriteU8(_value ? 1 : 0); }
+        void WriteVariant(LongLong _value)           { WriteType(SaveType::LongLong); WriteI64(_value); }
+        void WriteVariant(Double _value)             { WriteType(SaveType::Double);   WriteDouble(_value); }
+        void WriteVariant(const String& _value)      { WriteType(SaveType::String);   WriteString(_value); }
+        void WriteVariant(const SaveNodePtr& _value) { WriteType(SaveType::Node);     WriteNodeOrEmpty(_value); }
+        void WriteVariant(const std::vector<Byte>& _value)
         {
-            WriteU8(Byte((unsigned char)SaveType::LongLong));
-            WriteI64(v);
+            WriteType(SaveType::Bytes);
+            WriteU32(static_cast<Int>(_value.size()));
+            buffer.insert(buffer.end(), _value.begin(), _value.end());
         }
-        void WriteVariant(const Double& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::Double));
-            WriteDouble(v);
-        }
-        void WriteVariant(const String& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::String));
-            WriteString(v);
-        }
-        void WriteVariant(const std::vector<Byte>& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::Bytes));
-            WriteBytes(v);
-        }
-        void WriteVariant(const std::vector<LongLong>& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::ArrayLongLong));
-            WriteU32(Int(v.size()));
-            for (const auto& x : v) WriteI64(x);
-        }
-        void WriteVariant(const std::vector<Double>& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::ArrayDouble));
-            WriteU32(Int(v.size()));
-            for (const auto& x : v) WriteDouble(x);
-        }
-        void WriteVariant(const std::vector<String>& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::ArrayString));
-            WriteU32(Int(v.size()));
-            for (const auto& s : v) WriteString(s);
-        }
-        void WriteVariant(const SaveNodePtr& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::Node));
-            WriteNode(v ? *v : SaveNode{});
-        }
-        void WriteVariant(const std::vector<SaveNodePtr>& v) 
-        {
-            WriteU8(Byte((unsigned char)SaveType::ArrayNode));
-            WriteU32(Int(v.size()));
-            for (const auto& n : v) WriteNode(n ? *n : SaveNode{});
-        }
+        void WriteVariant(const std::vector<LongLong>& _value)    { WriteArray(SaveType::ArrayLongLong, _value, &BinaryWriter::WriteI64); }
+        void WriteVariant(const std::vector<Double>& _value)      { WriteArray(SaveType::ArrayDouble,   _value, &BinaryWriter::WriteDouble); }
+        void WriteVariant(const std::vector<String>& _value)      { WriteArray(SaveType::ArrayString,   _value, &BinaryWriter::WriteString); }
+        void WriteVariant(const std::vector<SaveNodePtr>& _value) { WriteArray(SaveType::ArrayNode,     _value, &BinaryWriter::WriteNodeOrEmpty); }
     };
 
-    class BinaryReader 
+    /// Little-endian reader of the .ka7 binary format. Throws on truncated or corrupted data.
+    class BinaryReader
     {
     public:
-        explicit BinaryReader(const std::vector<Byte>& buf)
-            : buf(buf), pos(0) 
+        explicit BinaryReader(const std::vector<Byte>& _buffer) : buffer(_buffer) {}
+
+        Byte ReadU8()
         {
+            CheckBounds(1);
+            return buffer[position++];
         }
 
-        [[nodiscard]] Bool HasRemaining(const Int& n) const 
+        template<typename T>
+        T ReadLittleEndian()
         {
-            return (pos + n) <= Int(buf.size());
+            using Bits = std::make_unsigned_t<T>;
+            CheckBounds(sizeof(T));
+            Bits _bits = 0;
+            for (std::size_t _i = 0; _i < sizeof(T); ++_i)
+                _bits |= static_cast<Bits>(static_cast<Bits>(buffer[position + _i]) << (_i * 8));
+            position += sizeof(T);
+            return static_cast<T>(_bits);
         }
 
-        Byte ReadU8() 
+        Short    ReadU16()    { return ReadLittleEndian<Short>(); }
+        Int      ReadU32()    { return ReadLittleEndian<Int>(); }
+        LongLong ReadI64()    { return ReadLittleEndian<LongLong>(); }
+        Double   ReadDouble() { return std::bit_cast<Double>(ReadI64()); }
+
+        String ReadString()
         {
-            CheckBounds(Int(1));
-            Byte b = buf[pos];
-            ++pos;
-            return b;
+            const auto _bytes = ReadSpan(ReadCount());
+            return String(std::string(_bytes.begin(), _bytes.end()));
         }
 
-        Short ReadU16() 
+        SaveNode ReadNode()
         {
-            CheckBounds(Int(2));
-            Short lo = buf[pos].ToShort();
-            Short hi = buf[pos + 1].ToShort();
-            pos += Int(2);
-            return lo | (hi << 8);
-        }
-
-        Int ReadU32() 
-        {
-            CheckBounds(Int(4));
-            Int result = Int(0);
-            for (Int i = 0; i < 4; ++i)
-                result |= buf[pos + i].ToInt() << (i * 8);
-            pos += Int(4);
-            return result;
-        }
-
-        LongLong ReadI64() 
-        {
-            CheckBounds(Int(8));
-            LongLong result = LongLong(0);
-            for (Int i = 0; i < 8; ++i)
-                result |= buf[pos + i].ToLongLong() << (i * 8);
-            pos += Int(8);
-            return result;
-        }
-
-        Double ReadDouble() 
-        {
-            LongLong bits = ReadI64();
-            double raw = std::bit_cast<double>(static_cast<long long>(bits));
-            return Double(raw);
-        }
-
-        String ReadString() 
-        {
-            Int len = ReadU32();
-            CheckBounds(len);
-            std::string raw;
-            for (Int i = 0; i < len; ++i)
-                raw += static_cast<char>(buf[pos + i]);
-            pos += len;
-            return String(raw);
-        }
-
-        std::vector<Byte> ReadBytes() 
-        {
-            Int len = ReadU32();
-            CheckBounds(len);
-            std::vector<Byte> v;
-            const std::size_t count = static_cast<std::size_t>(static_cast<int>(len));
-            v.reserve(count);
-            for (std::size_t i = 0; i < count; ++i)
-                v.push_back(buf[pos + Int(static_cast<int>(i))]);
-            pos += len;
-            return v;
-        }
-
-        SaveNode ReadNode() 
-        {
-            SaveNode node(ReadString());
-            Int fieldCount = ReadU32();
-            node.GetFields().reserve(static_cast<std::size_t>(static_cast<int>(fieldCount)));
-            for (Int i = 0; i < fieldCount; ++i) {
-                String key = ReadString();
-                node.GetFields()[std::move(key)] = ReadValue();
-            }
-            return node;
-        }
-
-        SaveValue ReadValue() 
-        {
-            Byte typeByte = ReadU8();
-            Int  typeId = typeByte.ToInt();
-
-            if (typeId == Int(0)) return Bool(ReadU8() != Byte(0));
-            else if (typeId == Int(1)) return ReadI64();
-            else if (typeId == Int(2)) return ReadDouble();
-            else if (typeId == Int(3)) return ReadString();
-            else if (typeId == Int(4)) return ReadBytes();
-            else if (typeId == Int(5)) 
+            SaveNode _node(ReadString());
+            const std::size_t _fieldCount = ReadCount();
+            _node.GetFields().reserve(_fieldCount);
+            for (std::size_t _i = 0; _i < _fieldCount; ++_i)
             {
-                Int count = ReadU32();
-                std::vector<LongLong> v;
-                v.reserve(static_cast<std::size_t>(static_cast<int>(count)));
-                for (Int i = 0; i < count; ++i) v.push_back(ReadI64());
-                return v;
+                String _key = ReadString();
+                _node.GetFields()[std::move(_key)] = ReadValue();
             }
-            else if (typeId == Int(6)) 
+            return _node;
+        }
+
+        SaveValue ReadValue()
+        {
+            switch (static_cast<SaveType>(ReadU8()))
             {
-                Int count = ReadU32();
-                std::vector<Double> v;
-                v.reserve(static_cast<std::size_t>(static_cast<int>(count)));
-                for (Int i = 0; i < count; ++i) v.push_back(ReadDouble());
-                return v;
+            case SaveType::Bool:          return ReadU8() != 0;
+            case SaveType::LongLong:      return ReadI64();
+            case SaveType::Double:        return ReadDouble();
+            case SaveType::String:        return ReadString();
+            case SaveType::Bytes:
+            {
+                const auto _bytes = ReadSpan(ReadCount());
+                return std::vector<Byte>(_bytes.begin(), _bytes.end());
             }
-            else if (typeId == Int(7)) 
-            {
-                Int count = ReadU32();
-                std::vector<String> v;
-                v.reserve(static_cast<std::size_t>(static_cast<int>(count)));
-                for (Int i = 0; i < count; ++i) v.push_back(ReadString());
-                return v;
-            }
-            else if (typeId == Int(8))
-            {
-                return std::make_shared<SaveNode>(ReadNode());
-            }
-            else if (typeId == Int(9)) 
-            {
-                Int count = ReadU32();
-                std::vector<SaveNodePtr> v;
-                v.reserve(static_cast<std::size_t>(static_cast<int>(count)));
-                for (Int i = 0; i < count; ++i)
-                    v.push_back(std::make_shared<SaveNode>(ReadNode()));
-                return v;
+            case SaveType::ArrayLongLong: return ReadArray<LongLong>(&BinaryReader::ReadI64);
+            case SaveType::ArrayDouble:   return ReadArray<Double>(&BinaryReader::ReadDouble);
+            case SaveType::ArrayString:   return ReadArray<String>(&BinaryReader::ReadString);
+            case SaveType::Node:          return ReadNodePtr();
+            case SaveType::ArrayNode:     return ReadArray<SaveNodePtr>(&BinaryReader::ReadNodePtr);
             }
             THROW_EXCEPTION("Ka7::SaveManager: unknown value type in the .ka7 file");
         }
 
     private:
-        const std::vector<Byte>& buf;
-        Int pos;
+        const std::vector<Byte>& buffer;
+        std::size_t position = 0;
 
-        void CheckBounds(const Int& n) const 
+        SaveNodePtr ReadNodePtr() { return std::make_shared<SaveNode>(ReadNode()); }
+
+        /// A count read from the file can be anything: a negative one is rejected here.
+        std::size_t ReadCount()
         {
-            // A length read from the file can be anything: a negative one would pass the test below and read backwards.
-            if (n < Int(0) || (pos + n) > Int(buf.size()))
+            const Int _count = ReadU32();
+            if (_count < 0) THROW_EXCEPTION("Ka7::SaveManager: truncated or corrupted data");
+            return static_cast<std::size_t>(_count);
+        }
+
+        std::span<const Byte> ReadSpan(std::size_t _size)
+        {
+            CheckBounds(_size);
+            const std::span<const Byte> _bytes(buffer.data() + position, _size);
+            position += _size;
+            return _bytes;
+        }
+
+        template<typename T>
+        std::vector<T> ReadArray(T (BinaryReader::*_readOne)())
+        {
+            const std::size_t _count = ReadCount();
+            CheckBounds(_count);   // every element takes at least one byte: a corrupted count cannot reserve gigabytes
+            std::vector<T> _values;
+            _values.reserve(_count);
+            for (std::size_t _i = 0; _i < _count; ++_i) _values.push_back((this->*_readOne)());
+            return _values;
+        }
+
+        void CheckBounds(std::size_t _size) const
+        {
+            if (_size > buffer.size() - position)
                 THROW_EXCEPTION("Ka7::SaveManager: truncated or corrupted data");
         }
     };
 
-
-    void WriteHeader(BinaryWriter& w,
-        const Short& version,
-        const Short& flags,
-        const LongLong& timestamp,
-        const Int& checksum,
-        const Int& dataSize)
+    void WriteHeader(BinaryWriter& _writer, Short _version, Short _flags, LongLong _timestamp, Int _checksum, Int _dataSize)
     {
-        for (const auto& b : KA7_MAGIC) w.WriteU8(b);
-        w.WriteU16(version);
-        w.WriteU16(flags);
-        w.WriteI64(timestamp);
-        w.WriteU32(checksum);
-        w.WriteU32(dataSize);
-        w.WriteU32(Int(0));
-        w.WriteU32(Int(0));
+        for (const Byte _byte : KA7_MAGIC) _writer.WriteU8(_byte);
+        _writer.WriteU16(_version);
+        _writer.WriteU16(_flags);
+        _writer.WriteI64(_timestamp);
+        _writer.WriteU32(_checksum);
+        _writer.WriteU32(_dataSize);
+        _writer.WriteU32(0);   // reserved
+        _writer.WriteU32(0);   // reserved
     }
 
-    struct ParsedHeader 
+    struct ParsedHeader
     {
-        Short    version;
-        Short    flags;
-        LongLong timestamp;
-        Int      checksum;
-        Int      dataSize;
-        Bool     valid      = Bool::False();
+        Short    version   = 0;
+        Short    flags     = 0;
+        LongLong timestamp = 0;
+        Int      checksum  = 0;
+        Int      dataSize  = 0;
+        Bool     valid     = false;
     };
 
-    ParsedHeader ReadHeader(BinaryReader& r)
+    ParsedHeader ReadHeader(const std::vector<Byte>& _raw)
     {
-        ParsedHeader h;
+        BinaryReader _reader(_raw);
+        ParsedHeader _header;
+        for (const Byte _expected : KA7_MAGIC)
+            if (_reader.ReadU8() != _expected) return _header;
 
-        for (Int i = 0; i < 4; ++i) 
-        {
-            Byte b = r.ReadU8();
-            if (b != KA7_MAGIC[i]) return h;
-        }
-
-        h.version = r.ReadU16();
-        h.flags = r.ReadU16();
-        h.timestamp = r.ReadI64();
-        h.checksum = r.ReadU32();
-        h.dataSize = r.ReadU32();
-        r.ReadU32();
-        r.ReadU32();
-        h.valid = Bool::True();
-        return h;
+        _header.version   = _reader.ReadU16();
+        _header.flags     = _reader.ReadU16();
+        _header.timestamp = _reader.ReadI64();
+        _header.checksum  = _reader.ReadU32();
+        _header.dataSize  = _reader.ReadU32();
+        _header.valid     = true;
+        return _header;
     }
 
+    /// Reads the fixed-size header at the start of a .ka7 stream; invalid when the stream is too short or not a .ka7.
+    ParsedHeader ReadHeader(std::istream& _stream)
+    {
+        std::vector<Byte> _raw(KA7_HEADER_SIZE);
+        _stream.read(reinterpret_cast<char*>(_raw.data()), static_cast<std::streamsize>(_raw.size()));
+        return _stream.fail() ? ParsedHeader{} : ReadHeader(_raw);
+    }
+
+    constexpr Short FLAG_COMPRESSED = 1;
+
+    /// Copies the header fields into the metadata; false when the header is invalid (fields left untouched).
+    bool FillMetadata(SaveMetadata& _meta, const ParsedHeader& _header)
+    {
+        if (!_header.valid) return false;
+        _meta.version      = _header.version;
+        _meta.timestamp    = _header.timestamp;
+        _meta.isCompressed = (_header.flags & FLAG_COMPRESSED) != 0;
+        return true;
+    }
 }
 
 
 std::filesystem::path SaveManager::GetSavePath(const String& name) 
 {
-    return std::filesystem::path(saveDirectory.StdString())
-        / (name.StdString() + SAVE_EXTENSION.StdString());
+    return std::filesystem::path(saveDirectory)
+        / (name + SAVE_EXTENSION);
 }
 
 void SaveManager::EnsureSaveDirectoryExists() 
 {
     std::error_code ec;
-    std::filesystem::create_directories(saveDirectory.StdString(), ec);
+    std::filesystem::create_directories(saveDirectory, ec);
 }
 
 void SaveManager::SetSaveDirectory(String dir)
 {
-    if (dir.IsEmpty().Not() && dir.At(dir.Length() - Int(1)) != '/' &&
-        dir.At(dir.Length() - Int(1)) != '\\')
-        dir += String("/");
+    const std::string& _raw = dir;
+    if (!_raw.empty() && _raw.back() != '/' && _raw.back() != '\\')
+        dir += "/";
     saveDirectory = std::move(dir);
 }
 
-/// <summary>
-/// Implementation of SaveManager::SetOnSaveCallback.
-/// </summary>
-/// @param cb
-/// <summary>
-/// Implementation of SaveManager::SetOnSaveCallback.
-/// </summary>
-/// @param cb
 void SaveManager::SetOnSaveCallback(EventCallback cb) { onSave = std::move(cb); }
-/// <summary>
-/// Implementation of SaveManager::SetOnLoadCallback.
-/// </summary>
-/// @param cb
-/// <summary>
-/// Implementation of SaveManager::SetOnLoadCallback.
-/// </summary>
-/// @param cb
 void SaveManager::SetOnLoadCallback(EventCallback cb) { onLoad = std::move(cb); }
 
-Bool SaveManager::Exists(const String& name) 
+Bool SaveManager::Exists(const String& name)
 {
-    return Bool(std::filesystem::exists(GetSavePath(name)));
+    return std::filesystem::exists(GetSavePath(name));
 }
 
-Bool SaveManager::Delete(const String& name) 
+Bool SaveManager::Delete(const String& name)
 {
     std::error_code ec;
-    return Bool(std::filesystem::remove(GetSavePath(name), ec));
+    return std::filesystem::remove(GetSavePath(name), ec);
 }
 
-Bool SaveManager::Rename(const String& oldName, const String& newName) 
+Bool SaveManager::Rename(const String& oldName, const String& newName)
 {
     std::error_code ec;
     std::filesystem::rename(GetSavePath(oldName), GetSavePath(newName), ec);
-    return Bool(!ec);
+    return !ec;
 }
 
 Bool SaveManager::Copy(const String& src, const String& dst)
@@ -464,70 +316,39 @@ Bool SaveManager::Copy(const String& src, const String& dst)
     std::filesystem::copy_file(
         GetSavePath(src), GetSavePath(dst),
         std::filesystem::copy_options::overwrite_existing, ec);
-    return Bool(!ec);
+    return !ec;
 }
 
 std::vector<SaveMetadata> SaveManager::ListSaves() 
 {
     std::vector<SaveMetadata> result;
     std::error_code ec;
-    if (!std::filesystem::exists(saveDirectory.StdString(), ec)) return result;
+    if (!std::filesystem::exists(saveDirectory, ec)) return result;
 
-    for (const auto& entry : std::filesystem::directory_iterator(saveDirectory.StdString(), ec))
+    for (const auto& entry : std::filesystem::directory_iterator(saveDirectory, ec))
     {
         if (!entry.is_regular_file())                          continue;
-        if (entry.path().extension() != SAVE_EXTENSION.StdString()) continue;
+        if (entry.path().extension() != SAVE_EXTENSION) continue;
 
         SaveMetadata meta;
         meta.name = String(entry.path().stem().string());
         meta.filePath = String(entry.path().string());
 
         std::ifstream f(entry.path(), std::ios::binary);
-        if (f)
-        {
-            unsigned char rawHdrBuf[32] = {};
-            f.read(reinterpret_cast<char*>(rawHdrBuf), 32);
-            if (!f.fail())
-            {
-                std::vector<Byte> hdrBuf = RawToByteVec(rawHdrBuf, 32);
-                BinaryReader r(hdrBuf);
-                auto h = ReadHeader(r);
-                if (h.valid) 
-                {
-                    meta.version = h.version;
-                    meta.timestamp = h.timestamp;
-                    meta.isCompressed = Bool((h.flags & Short(1)) != Short(0));
-                }
-            }
-        }
+        FillMetadata(meta, ReadHeader(f));
         result.push_back(std::move(meta));
     }
     return result;
 }
 
-std::optional<SaveMetadata> SaveManager::GetMetadata(const String& name) 
+std::optional<SaveMetadata> SaveManager::GetMetadata(const String& name)
 {
-    auto path = GetSavePath(name);
-    if (!std::filesystem::exists(path)) return std::nullopt;
-
+    const auto path = GetSavePath(name);
     std::ifstream f(path, std::ios::binary);
-    if (!f) return std::nullopt;
-
-    unsigned char rawHdrBuf[32] = {};
-    f.read(reinterpret_cast<char*>(rawHdrBuf), 32);
-    if (f.fail()) return std::nullopt;
-    std::vector<Byte> hdrBuf = RawToByteVec(rawHdrBuf, 32);
-
-    BinaryReader r(hdrBuf);
-    auto h = ReadHeader(r);
-    if (!h.valid) return std::nullopt;
-
     SaveMetadata meta;
     meta.name = name;
     meta.filePath = String(path.string());
-    meta.version = h.version;
-    meta.timestamp = h.timestamp;
-    meta.isCompressed = Bool((h.flags & Short(1)) != Short(0));
+    if (!FillMetadata(meta, ReadHeader(f))) return std::nullopt;
     return meta;
 }
 
@@ -550,12 +371,11 @@ SaveResult SaveManager::SaveToFile(const std::filesystem::path& path, const Save
         dataWriter.WriteNode(root);
         const auto& data = dataWriter.buffer;
 
-        Int      checksum = ComputeCRC32(data);
-        Int      dataSize = Int(data.size());
-        LongLong timestamp = LongLong(
-            std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::system_clock::now().time_since_epoch()).count());
-        Short flags = compress ? Short(1) : Short(0);
+        const Int      checksum  = ComputeCRC32(data);
+        const Int      dataSize  = static_cast<Int>(data.size());
+        const LongLong timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        const Short    flags     = compress ? FLAG_COMPRESSED : 0;
 
         BinaryWriter hdrWriter;
         WriteHeader(hdrWriter, CURRENT_VERSION, flags, timestamp, checksum, dataSize);
@@ -571,12 +391,8 @@ SaveResult SaveManager::SaveToFile(const std::filesystem::path& path, const Save
                 return SaveResult::ErrorIO;
             }
 
-            const auto rawHdr = ByteVecToRaw(hdrWriter.buffer);
-            const auto rawData = ByteVecToRaw(data);
-            file.write(reinterpret_cast<const char*>(rawHdr.data()),
-                static_cast<std::streamsize>(rawHdr.size()));
-            file.write(reinterpret_cast<const char*>(rawData.data()),
-                static_cast<std::streamsize>(rawData.size()));
+            for (const std::vector<Byte>* _bytes : { &std::as_const(hdrWriter.buffer), &data })
+                file.write(reinterpret_cast<const char*>(_bytes->data()), static_cast<std::streamsize>(_bytes->size()));
             file.close();
 
             if (file.fail())
@@ -635,18 +451,7 @@ SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode
         }
         std::istream& file = *fileStream;
 
-        unsigned char rawHdrBuf[32] = {};
-        file.read(reinterpret_cast<char*>(rawHdrBuf), 32);
-        if (file.fail()) 
-        {
-            if (onLoad) onLoad(name, SaveResult::ErrorCorrupted);
-            return SaveResult::ErrorCorrupted;
-        }
-        std::vector<Byte> hdrBuf = RawToByteVec(rawHdrBuf, 32);
-
-        BinaryReader hdrReader(hdrBuf);
-        auto h = ReadHeader(hdrReader);
-
+        const ParsedHeader h = ReadHeader(file);
         if (!h.valid)
         {
             if (onLoad) onLoad(name, SaveResult::ErrorCorrupted);
@@ -659,16 +464,18 @@ SaveResult SaveManager::LoadFromFile(const std::filesystem::path& path, SaveNode
             return SaveResult::ErrorVersionMismatch;
         }
 
-        const std::size_t dataLen = static_cast<std::size_t>(static_cast<int>(h.dataSize));
-        std::vector<unsigned char> rawData(dataLen);
-        file.read(reinterpret_cast<char*>(rawData.data()),
-            static_cast<std::streamsize>(dataLen));
-        if (file.fail()) 
+        if (h.dataSize < 0)
         {
             if (onLoad) onLoad(name, SaveResult::ErrorCorrupted);
             return SaveResult::ErrorCorrupted;
         }
-        std::vector<Byte> data = RawToByteVec(rawData);
+        std::vector<Byte> data(static_cast<std::size_t>(h.dataSize));
+        file.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(data.size()));
+        if (file.fail())
+        {
+            if (onLoad) onLoad(name, SaveResult::ErrorCorrupted);
+            return SaveResult::ErrorCorrupted;
+        }
 
         if (ComputeCRC32(data) != h.checksum) 
         {
@@ -697,7 +504,7 @@ SaveNode SaveManager::LoadOrThrow(const String& name)
     if (result != SaveResult::Success)
         THROW_EXCEPTION(
             String("Ka7::SaveManager::LoadOrThrow - '")
-            .StdString() + name.StdString() + "': " + ToString(result));
+             + name + "': " + ToString(result));
     return root;
 }
 

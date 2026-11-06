@@ -1,6 +1,6 @@
 #pragma once
 #include "Component.h"
-#include "Graphics/Ressources/Animation.h"
+#include "Graphics/Resources/Animation.h"
 
 namespace Krampus
 {
@@ -157,7 +157,7 @@ namespace Krampus
 		/// Gets the currently active animation state.
 		/// </summary>
 		/// <returns>Pointer to the active AnimationSM, or nullptr.</returns>
-		inline AnimationSM* GetCurrentAnimation() const
+		AnimationSM* GetCurrentAnimation() const
 		{
 			return current;
 		}
@@ -167,7 +167,7 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_animationName">Animation name identifier.</param>
 		/// <returns>Pointer to AnimationSM, or nullptr if not found.</returns>
-		inline AnimationSM* GetAnimation(const String& _animationName) const
+		AnimationSM* GetAnimation(const String& _animationName) const
 		{
 			auto _iterator = animations.find(_animationName);
 			if (_iterator == animations.end())
@@ -181,7 +181,7 @@ namespace Krampus
 		/// <summary>
 		/// Starts playback of the active animation.
 		/// </summary>
-		inline void StartAnimation()
+		void StartAnimation()
 		{
 			if (!current) return;
 			current->Start();
@@ -190,7 +190,7 @@ namespace Krampus
 		/// <summary>
 		/// Stops playback of the active animation.
 		/// </summary>
-		inline void StopAnimation()
+		void StopAnimation()
 		{
 			if (!current) return;
 			current->Stop();
@@ -199,7 +199,7 @@ namespace Krampus
 		/// <summary>
 		/// Resumes playback of the active animation.
 		/// </summary>
-		inline void ResumeAnimation()
+		void ResumeAnimation()
 		{
 			if (!current) return;
 			current->Resume();
@@ -208,7 +208,7 @@ namespace Krampus
 		/// <summary>
 		/// Pauses playback of the active animation.
 		/// </summary>
-		inline void PauseAnimation()
+		void PauseAnimation()
 		{
 			if (!current) return;
 			current->Pause();
@@ -244,13 +244,13 @@ namespace Krampus
 		/// Updates the state machine, evaluates transition links, and updates frames.
 		/// </summary>
 		/// <param name="_deltaTime">Elapsed time in seconds.</param>
-		virtual void Tick(const Float& _deltaTime) override;
+		void Tick(const Float& _deltaTime) override;
 
 		/// <summary>
 		/// Returns a string representation of the component.
 		/// </summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 
 		friend struct AnimationSM;
 

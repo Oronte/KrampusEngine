@@ -141,7 +141,7 @@ namespace Krampus
 		/// Returns a string representation of the component.
 		/// </summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 	};
 
 }

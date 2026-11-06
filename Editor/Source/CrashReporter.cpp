@@ -146,7 +146,7 @@ namespace
 		std::strftime(_date, sizeof(_date), "%Y-%m-%d %H:%M:%S", &_local);
 
 		// The reporter reads the "Exception:" and "Location:" lines: keep them near the top.
-		std::fprintf(_out, "Krampus Editor crash report\nDate: %s\n", _date);
+		std::fprintf(_out, "Krampus Engine crash report\nDate: %s\n", _date);
 		std::fprintf(_out, "Exception: %s (0x%08lX)\n", ExceptionName(_record->ExceptionCode), _record->ExceptionCode);
 		std::fprintf(_out, "Location: %s\n", ModuleOf(_address).c_str());
 		if (crashMessage[0])
@@ -311,7 +311,7 @@ bool CrashReporter::RunReporterIfRequested()
 
 	const fs::path _report = _directory / "CrashReport.txt";
 	const std::wstring _text =
-		L"Krampus Editor s'est arrêté de façon inattendue.\n\n"
+		L"Krampus Engine s'est arrêté de façon inattendue.\n\n"
 		L"Erreur : " + ReadReportLine(_report, "Exception: ") + L"\n"
 		L"Endroit : " + ReadReportLine(_report, "Location: ") + L"\n\n"
 		L"Un rapport (pile d'appels, dump, log, dernière sauvegarde d'annulation) a été enregistré dans :\n" + _directory.wstring() + L"\n\n"
@@ -321,7 +321,7 @@ bool CrashReporter::RunReporterIfRequested()
 
 	for (;;)
 	{
-		const int _answer = MessageBoxW(nullptr, _text.c_str(), L"Krampus Editor - Crash", MB_YESNOCANCEL | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST);
+		const int _answer = MessageBoxW(nullptr, _text.c_str(), L"Krampus Engine - Crash", MB_YESNOCANCEL | MB_ICONERROR | MB_SETFOREGROUND | MB_TOPMOST);
 		if (_answer == IDYES)
 		{
 			ShellExecuteW(nullptr, L"open", _directory.c_str(), nullptr, nullptr, SW_SHOWNORMAL);

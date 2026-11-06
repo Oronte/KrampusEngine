@@ -25,12 +25,12 @@ Bool Krampus::Physics::CircleToCircle(const FVector2& _aPos, const Float& _aRadi
 
     _aInfo.normal = normal * -1.0f;
     _aInfo.penetration = penetration;
-    _aInfo.avrageContactPoint = contact;
+    _aInfo.averageContactPoint = contact;
     _aInfo.hit = true;
 
     _bInfo.normal = normal;
     _bInfo.penetration = penetration;
-    _bInfo.avrageContactPoint = contact;
+    _bInfo.averageContactPoint = contact;
     _bInfo.hit = true;
 
     _aInfo.contacts = _bInfo.contacts =
@@ -108,7 +108,7 @@ Bool Krampus::Physics::RectToRectOBB(const FRect& _aRect, const Angle& _aRot, co
     }
 
     _aInfo.contacts = _bInfo.contacts = _contacts;
-    _aInfo.avrageContactPoint = _bInfo.avrageContactPoint = ComputeAverageContactPoint(_contacts);
+    _aInfo.averageContactPoint = _bInfo.averageContactPoint = ComputeAverageContactPoint(_contacts);
 
     return true;
 }
@@ -150,12 +150,12 @@ Bool Krampus::Physics::RectToRectAABB(const FRect& _aRect, const FRect& _bRect, 
 
     _aInfo.normal = _normal * -1;
     _aInfo.penetration = FMath::MinVal(_sizeIntersection.x, _sizeIntersection.y);
-    _aInfo.avrageContactPoint = _contactPoint; 
+    _aInfo.averageContactPoint = _contactPoint; 
     _aInfo.hit = true;
 
     _bInfo.normal = _normal;
     _bInfo.penetration = _aInfo.penetration;
-    _bInfo.avrageContactPoint = _contactPoint;
+    _bInfo.averageContactPoint = _contactPoint;
     _bInfo.hit = true;
 
     _aInfo.contacts = _bInfo.contacts = { _contactPoint };
@@ -215,12 +215,12 @@ Bool Krampus::Physics::CircleToRect(const FVector2& _circlePos, const Float& _ra
 
     _circleInfo.normal = normalWorld;
     _circleInfo.penetration = _penetration;
-    _circleInfo.avrageContactPoint = contactWorld;
+    _circleInfo.averageContactPoint = contactWorld;
     _circleInfo.hit = true;
 
     _rectInfo.normal = normalWorld * -1.0f;
     _rectInfo.penetration = _penetration;
-    _rectInfo.avrageContactPoint = contactWorld;
+    _rectInfo.averageContactPoint = contactWorld;
     _rectInfo.hit = true;
 
     _circleInfo.contacts = _rectInfo.contacts = CircleToRectContacts(_circlePos, _radius, _rect, _rectRot);
@@ -243,7 +243,7 @@ Bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _circleP
 
     _info.normal = _normal;
     _info.penetration = _radius - _distance;
-    _info.avrageContactPoint = _point;
+    _info.averageContactPoint = _point;
     _info.contacts.push_back(_point);
     _info.hit = true;
 
@@ -291,7 +291,7 @@ Bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, co
 
     _info.normal = _normal;
     _info.penetration = _penetration;
-    _info.avrageContactPoint = _point;
+    _info.averageContactPoint = _point;
     _info.contacts.push_back(_point);
     _info.hit = true;
 
@@ -347,7 +347,7 @@ Bool Krampus::Physics::Contains(const FVector2& _point, const FVector2& _pos, co
 
     _info.normal = _worldNormal;
     _info.penetration = _penetration;
-    _info.avrageContactPoint = _point;
+    _info.averageContactPoint = _point;
     _info.contacts.push_back(_point);
     _info.hit = true;
 
@@ -450,7 +450,7 @@ Krampus::FVector2 Krampus::Physics::ComputeAverageContactPoint(const std::vector
     for (const FVector2& _p : _contacts)
         _sum += _p;
 
-    return _sum / CAST(float, _contacts.size());
+    return _sum / static_cast<float>(_contacts.size());
 }
 
 std::vector<Krampus::FVector2> Krampus::Physics::CircleToRectContacts(const FVector2& _circlePos, Float _radius, const FRect& _rect, Float _rectRot)
@@ -511,7 +511,7 @@ std::vector<Krampus::FVector2> Krampus::Physics::CircleCircleIntersections(const
     float d = v.Length();
 
     // Pas d'intersection
-    if (((d > _r1 + _r2).Or(d < FMath::Abs(_r1 - _r2))).Or(d < FMath::epsilon)) return contacts;
+    if (d > _r1 + _r2 || d < FMath::Abs(_r1 - _r2) || d < FMath::epsilon) return contacts;
 
     float a = (_r1 * _r1 - _r2 * _r2 + d * d) / (2 * d);
     FVector2 p0 = _c1 + v * (a / d);

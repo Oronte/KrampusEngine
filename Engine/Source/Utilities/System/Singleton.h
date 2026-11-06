@@ -12,7 +12,7 @@ namespace Krampus
 	{
 	public:
 		// Get/create the unique instance of Type
-		inline static Type& GetInstance()
+		static Type& GetInstance()
 		{
 			static Type _instance;
 			return _instance;

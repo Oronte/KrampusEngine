@@ -30,7 +30,7 @@ namespace Krampus
 
         template<typename U>
         constexpr explicit Vector3D(const Vector3D<U>& _other)
-            : x(CAST(T, _other.x)), y(CAST(T, _other.y)), z(CAST(T, _other.z)) { }
+            : x(static_cast<T>(_other.x)), y(static_cast<T>(_other.y)), z(static_cast<T>(_other.z)) { }
 
 
         static constexpr Vector3D Zero() { return { 0, 0, 0 }; }
@@ -44,28 +44,28 @@ namespace Krampus
         static constexpr Vector3D Back() { return { 0, 0, -1 }; }
 
 
-        NO_DISCARD CalcType LengthSquared() const
+        [[nodiscard]] CalcType LengthSquared() const
         {
-            return CAST(CalcType, x) * x
-                + CAST(CalcType, y) * y
-                + CAST(CalcType, z) * z;
+            return static_cast<CalcType>(x) * x
+                + static_cast<CalcType>(y) * y
+                + static_cast<CalcType>(z) * z;
         }
 
-        NO_DISCARD CalcType Length() const
+        [[nodiscard]] CalcType Length() const
         {
             return Math::Sqrt(LengthSquared());
         }
 
-        NO_DISCARD Vector3D Normalized() const
+        [[nodiscard]] Vector3D Normalized() const
         {
             CalcType _len = Length();
             if (_len == CalcType(0))
                 return Vector3D{};
             return Vector3D
             (
-                CAST(T, x / _len),
-                CAST(T, y / _len),
-                CAST(T, z / _len)
+                static_cast<T>(x / _len),
+                static_cast<T>(y / _len),
+                static_cast<T>(z / _len)
             );
         }
 
@@ -75,14 +75,14 @@ namespace Krampus
         }
 
 
-        NO_DISCARD static CalcType Dot(const Vector3D& _a, const Vector3D& _b)
+        [[nodiscard]] static CalcType Dot(const Vector3D& _a, const Vector3D& _b)
         {
-            return CAST(CalcType, _a.x) * _b.x
-                + CAST(CalcType, _a.y) * _b.y
-                + CAST(CalcType, _a.z) * _b.z;
+            return static_cast<CalcType>(_a.x) * _b.x
+                + static_cast<CalcType>(_a.y) * _b.y
+                + static_cast<CalcType>(_a.z) * _b.z;
         }
 
-        NO_DISCARD static Vector3D Cross(const Vector3D& _a, const Vector3D& _b)
+        [[nodiscard]] static Vector3D Cross(const Vector3D& _a, const Vector3D& _b)
         {
             return 
             {
@@ -92,12 +92,12 @@ namespace Krampus
             };
         }
 
-        NO_DISCARD static CalcType DistanceSquared(const Vector3D& _a, const Vector3D& _b)
+        [[nodiscard]] static CalcType DistanceSquared(const Vector3D& _a, const Vector3D& _b)
         {
             return (_a - _b).LengthSquared();
         }
 
-        NO_DISCARD static CalcType Distance(const Vector3D& _a, const Vector3D& _b)
+        [[nodiscard]] static CalcType Distance(const Vector3D& _a, const Vector3D& _b)
         {
             return Math::Sqrt(DistanceSquared(_a, _b));
         }

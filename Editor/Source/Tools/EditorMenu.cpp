@@ -3,6 +3,7 @@
 #include "Managers/LevelManager.h"
 #include "Shortcuts.h"
 #include "EditorTheme.h"
+#include "GameplayTagWidgets.h"
 #include "GameFramework/Level.h"
 #include "Actors/Actor.h"
 #include "UI/Widgets/Widget.h"
@@ -195,11 +196,11 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 			if (_context.playing) ImGui::TextDisabled("Stop Play to save the scene");
 
 			ImGui::Separator();
-			if (ImGui::MenuItem("Package Game (folder for another PC)", Shortcuts::Text("Package Game").c_str(), false, !IsCompiling()))
-				StartShip();
+			if (ImGui::MenuItem("Package Game... (folder for another PC)", Shortcuts::Text("Package Game").c_str(), false, !IsCompiling()))
+				StartShip(_context);
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-				ImGui::SetTooltip("Builds the engine and the game in Ship mode (no editor, optimized) and makes a folder that runs on any Windows PC, nothing to install: Bin/windows-x64/Ship/Package.");
-			const std::filesystem::path _package = GetPackageDirectory();
+				ImGui::SetTooltip("Asks for a folder, then builds the engine and the game in Ship mode (no editor, optimized) and writes there a folder named after the game that runs on any Windows PC, nothing to install. Icon: Settings > Ship > icon.");
+			const std::filesystem::path _package = GetPackageDirectory(_context);
 			if (ImGui::MenuItem("Open Package Folder", nullptr, false, std::filesystem::exists(_package)))
 				ShellExecuteW(nullptr, L"open", std::filesystem::absolute(_package).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 
@@ -232,6 +233,10 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 		{
 			if (ImGui::MenuItem("Network"))
 				OpenNetworkWindow();
+			if (ImGui::MenuItem("Command Palette", Shortcuts::Text("Command Palette").c_str()))
+				OpenCommandPalette();
+			if (ImGui::MenuItem("Gameplay Tags"))
+				OpenGameplayTagsWindow();
 			if (ImGui::MenuItem("Profiler"))
 				OpenProfiler();
 			if (ImGui::MenuItem("Animation Editor"))
@@ -374,6 +379,8 @@ void Krampus::DrawMainMenuBar(EditorContext& _context)
 		ImGui::OpenPopup("Quit the editor");
 		_context.askQuit = false;
 	}
+	if (_context.quitAsked && !_context.askQuit && !ImGui::IsPopupOpen("Quit the editor"))
+		_context.quitAsked = false;	// answered (Cancel): the next close asks again
 	const std::string _sceneName = _context.scenePath.empty() ? std::string("The new scene") : "\"" + _context.scenePath.stem().string() + "\"";
 	if (ImGui::BeginPopupModal("Unsaved scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
@@ -445,9 +452,9 @@ void Krampus::DrawStatusBar(EditorContext& _context)
 
 		// Selection and how many actors
 		Level* _level = _context.GetLevel();
-		if (_context.selection.size() > 1) ImGui::Text("Selected: %s + %d more", _context.selected->GetName().StdString().c_str(), static_cast<int>(_context.selection.size()) - 1);
-		else if (_context.selected) ImGui::Text("Selected: %s", _context.selected->GetName().StdString().c_str());
-		else if (_context.selectedWidget) ImGui::Text("Selected: %s (HUD)", _context.selectedWidget->GetName().StdString().c_str());
+		if (_context.selection.size() > 1) ImGui::Text("Selected: %s + %d more", _context.selected->GetName().c_str(), static_cast<int>(_context.selection.size()) - 1);
+		else if (_context.selected) ImGui::Text("Selected: %s", _context.selected->GetName().c_str());
+		else if (_context.selectedWidget) ImGui::Text("Selected: %s (HUD)", _context.selectedWidget->GetName().c_str());
 		else ImGui::TextDisabled("Nothing selected");
 		if (_level)
 		{

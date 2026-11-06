@@ -8,21 +8,21 @@ namespace Krampus
 	{
 	public:
 		virtual void SetPosition(const FVector2& _newPosition) = 0;
-		NO_DISCARD virtual FVector2 GetPosition() const = 0;
+		[[nodiscard]] virtual FVector2 GetPosition() const = 0;
 		virtual void Move(const FVector2& _offset)
 		{
 			SetPosition(GetPosition() + _offset);
 		}
 
 		virtual void SetRotation(const Angle& _newRotation) = 0;
-		NO_DISCARD virtual Angle GetRotation() const = 0;
+		[[nodiscard]] virtual Angle GetRotation() const = 0;
 		virtual void Rotate(const Angle& _offset)
 		{
 			SetRotation(GetRotation() + _offset);
 		}
 
 		virtual void SetScale(const FVector2& _newScale) = 0;
-		NO_DISCARD virtual FVector2 GetScale() const = 0;
+		[[nodiscard]] virtual FVector2 GetScale() const = 0;
 		virtual void Scale(const FVector2& _offset)
 		{
 			SetScale(GetScale() + _offset);
@@ -36,28 +36,28 @@ namespace Krampus
 		}
 
 
-		NO_DISCARD virtual inline FVector2 GetUpVector() const
+		[[nodiscard]] virtual FVector2 GetUpVector() const
 		{
 			return FVector2::Up().Rotated(GetRotation().ToRadians());
 		}
-		NO_DISCARD virtual inline FVector2 GetDownVector() const
+		[[nodiscard]] virtual FVector2 GetDownVector() const
 		{
 			return FVector2::Down().Rotated(GetRotation().ToRadians());
 		}
-		NO_DISCARD virtual inline FVector2 GetRightVector() const
+		[[nodiscard]] virtual FVector2 GetRightVector() const
 		{
 			return FVector2::Right().Rotated(GetRotation().ToRadians());
 		}
-		NO_DISCARD virtual inline FVector2 GetLeftVector() const
+		[[nodiscard]] virtual FVector2 GetLeftVector() const
 		{
 			return FVector2::Left().Rotated(GetRotation().ToRadians());
 		}
 
-		NO_DISCARD virtual inline Angle GetAngleTo(const FVector2& _target) const
+		[[nodiscard]] virtual Angle GetAngleTo(const FVector2& _target) const
 		{
 			return Angle((_target - GetPosition()).AtanToRadian());
 		}
-		virtual inline void LookAt(const FVector2& _target)
+		virtual void LookAt(const FVector2& _target)
 		{
 			SetRotation(GetAngleTo(_target));
 		}
@@ -65,7 +65,7 @@ namespace Krampus
 		/// <summary>
 		/// The transform relative to the parent (an actor or a widget in a hierarchy); the world one without a parent.
 		/// </summary>
-		NO_DISCARD virtual Transform GetLocalTransform() const
+		[[nodiscard]] virtual Transform GetLocalTransform() const
 		{
 			return Transform(GetPosition(), GetRotation(), GetScale());
 		}
@@ -81,7 +81,7 @@ namespace Krampus
 		/// <summary>
 		/// True when the transform is relative to a parent (GetLocalTransform differs from the world one).
 		/// </summary>
-		NO_DISCARD virtual bool HasParentTransform() const
+		[[nodiscard]] virtual bool HasParentTransform() const
 		{
 			return false;
 		}

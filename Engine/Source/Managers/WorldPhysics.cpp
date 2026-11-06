@@ -125,7 +125,7 @@ void Krampus::WorldPhysics::Explode(ExplosionInfo _info)
 	_explosionDef.radius = _info.radius / PX_TO_M;
 	_explosionDef.falloff = _info.falloff;
 	_explosionDef.impulsePerLength = _info.impulsePerLength;
-	_explosionDef.maskBits = CAST(uint64_t, _info.channel);
+	_explosionDef.maskBits = static_cast<uint64_t>(_info.channel);
 
 	b2World_Explode(physicsWorldID, &_explosionDef);
 }

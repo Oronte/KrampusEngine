@@ -15,7 +15,7 @@ using namespace Krampus;
 void NetworkManager::Register(const int _networkId, NetworkSyncComponent* _component)
 {
 	if (const auto _found = synced.find(_networkId); _found != synced.end() && _found->second != _component)
-		LOG_WARNING("Network: two actors have the network id " + std::to_string(_networkId) + " (\"" + _component->GetOwner()->GetName().StdString() + "\"): give them different names");
+		LOG_WARNING("Network: two actors have the network id " + std::to_string(_networkId) + " (\"" + _component->GetOwner()->GetName() + "\"): give them different names");
 	synced[_networkId] = _component;
 }
 
@@ -211,7 +211,7 @@ void NetworkManager::InvokeRPC(const int _networkId, const std::string& _functio
 	if (_tryCall(*_actor)) return;
 	for (const std::unique_ptr<Component>& _owned : _actor->GetComponents())
 		if (_tryCall(*_owned)) return;
-	LOG_WARNING("Network: RPC \"" + _function + "\": no KFUNCTION with this name on \"" + _actor->GetName().StdString() + "\" or its components");
+	LOG_WARNING("Network: RPC \"" + _function + "\": no KFUNCTION with this name on \"" + _actor->GetName() + "\" or its components");
 }
 
 void NetworkManager::ReplicationPeerJoined(const int _id)

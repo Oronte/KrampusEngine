@@ -63,7 +63,7 @@ Float Krampus::TimerManager::Update()
 
     if (maxFrameRate > 0)
     {
-        float _targetFrameTime = 1.0f / CAST(float, maxFrameRate);
+        float _targetFrameTime = 1.0f / static_cast<float>(maxFrameRate);
 
         if (lastFrameDuration > 0.0f && lastFrameDuration < _targetFrameTime)
         {

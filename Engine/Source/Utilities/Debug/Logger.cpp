@@ -249,32 +249,16 @@ void Krampus::Logger::PlayDebugSound(const VerbosityType& _type)
     if (!canPlaySound)
         return;
 
-    if (_type == VerbosityType::Display)
+    Sound* _sound = nullptr;
+    bool _enabled = false;
+    switch (_type)
     {
-        if (msgNotif.IsAvaliable())
-        {
-            if (canPlayMsgSound) msgNotif.Play();
-        }
+    case VerbosityType::Display: _sound = &msgNotif;     _enabled = canPlayMsgSound;     break;
+    case VerbosityType::Warning: _sound = &warningNotif; _enabled = canPlayWarningSound; break;
+    case VerbosityType::Error:   _sound = &errorNotif;   _enabled = canPlayErrorSound;   break;
+    case VerbosityType::Fatal:   _sound = &fatalNotif;   _enabled = canPlayFatalSound;   break;
+    default: return;
     }
-    else if (_type == VerbosityType::Warning)
-    {
-        if (warningNotif.IsAvaliable())
-        {
-            if (canPlayWarningSound) warningNotif.Play();
-        }
-    }
-    else if (_type == VerbosityType::Error)
-    {
-        if (errorNotif.IsAvaliable())
-        {
-            if (canPlayErrorSound) errorNotif.Play();
-        }
-    }
-    else if (_type == VerbosityType::Fatal)
-    {
-        if (fatalNotif.IsAvaliable())
-        {
-            if (canPlayFatalSound) fatalNotif.Play();
-        }
-    }
+    if (_enabled && _sound->IsValid() && !_sound->IsPlaying())
+        _sound->Play();
 }

@@ -40,24 +40,17 @@ namespace
 }
 
 ParticleComponent::ParticleComponent(Actor* _owner, const ParticlePreset& _preset)
-	: Component(_owner)
+	: DrawnComponent(_owner)
 {
 	name = NAME_OF(ParticleComponent);
-	IDrawable::SetZOrder(ZOrder::Particles);	// not in the world yet: Construct puts it there
+	SetZOrder(ZOrder::Particles);
 	ApplyPreset(_preset);
 }
 
 void ParticleComponent::Construct()
 {
-	Component::Construct();
-	GetLevel()->GetCameraManager().AddToWorld(this);
+	DrawnComponent::Construct();
 	if (Settings().playOnStart && !IsPlaying()) emitter.Play();	// shown at once, in the editor too
-}
-
-void ParticleComponent::Deconstruct()
-{
-	Component::Deconstruct();
-	GetLevel()->GetCameraManager().RemoveToWorld(this);
 }
 
 void ParticleComponent::BeginPlay()
@@ -139,18 +132,6 @@ void ParticleComponent::ApplyPreset(const ParticlePreset& _preset)
 	preset = static_cast<int>(_preset);
 	Settings().ApplyPreset(_preset);
 	if (Settings().playOnStart) Restart();	// what the new values look like, at once
-}
-
-void ParticleComponent::SetZOrder(const uint8_t& _zOrder)
-{
-	const uint8_t _old = GetZOrder();
-	IDrawable::SetZOrder(_zOrder);
-	GetLevel()->GetCameraManager().ChangeWorldZOrder(this, _old);
-}
-
-void ParticleComponent::SetZOrder(const ZOrder& _zOrder)
-{
-	SetZOrder(static_cast<uint8_t>(_zOrder));
 }
 
 void ParticleComponent::Draw(Window& _window)

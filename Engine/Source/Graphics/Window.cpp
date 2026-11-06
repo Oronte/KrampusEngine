@@ -17,16 +17,16 @@ void Krampus::Window::SetView(const CameraComponent* _camera)
 
 void Krampus::Window::Create(const String& _name, const UVector2& _windowSize)
 {
-	LOG(VerbosityType::Log, "Window: creating '" + _name.StdString() + "' " + std::to_string(_windowSize.x) + "x" + std::to_string(_windowSize.y));
+	LOG(VerbosityType::Log, "Window: creating '" + _name + "' " + std::to_string(_windowSize.x) + "x" + std::to_string(_windowSize.y));
 	window->create(sf::VideoMode(_windowSize),
-		CAST(sf::String, _name.ToCharPtr()), sf::Style::None);
+		static_cast<sf::String>(_name.c_str()), sf::Style::None);
 }
 
 void Krampus::Window::Create(const String& _name)
 {
-	LOG(VerbosityType::Log, "Window: creating '" + _name.StdString() + "' at the desktop size");
+	LOG(VerbosityType::Log, "Window: creating '" + _name + "' at the desktop size");
 	window->create(sf::VideoMode::getDesktopMode(),
-		CAST(sf::String, _name.ToCharPtr()), sf::Style::None);
+		static_cast<sf::String>(_name.c_str()), sf::Style::None);
 }
 
 Krampus::IVector2 Krampus::Window::GetMousePosition() const
@@ -86,7 +86,7 @@ void Krampus::Window::Draw(const ShapeObject& _drawable)
 }
 void Krampus::Window::Create(const String& _name, const UVector2& _windowSize, const bool& _fullscreen)
 {
-	window->create(sf::VideoMode(_windowSize), CAST(sf::String, _name.ToCharPtr()),
+	window->create(sf::VideoMode(_windowSize), static_cast<sf::String>(_name.c_str()),
 		_fullscreen ? sf::Style::None : sf::Style::Default,
 		_fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
 }

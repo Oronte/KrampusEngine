@@ -1,5 +1,6 @@
 #pragma once
 #include "WidgetComponent.h"
+#include "Graphics/Shapes/ShapeObject.h"
 #include "Reflection/EventList.h"
 
 namespace Krampus
@@ -47,7 +48,7 @@ namespace Krampus
     protected:
         /// <summary>Updates button hover and perform state each frame.</summary>
         /// <param name="_deltaTime">Elapsed time in seconds.</param>
-        virtual void Tick(const Float& _deltaTime) override;
+        void Tick(const Float& _deltaTime) override;
 
     private:
         void Init();
@@ -59,6 +60,6 @@ namespace Krampus
     public:
         /// <summary>Returns a string representation of the component.</summary>
         /// <returns>String representation.</returns>
-        virtual std::string ToString() const override;
+        std::string ToString() const override;
     };
 }

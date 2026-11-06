@@ -1,10 +1,9 @@
 #pragma once
-#include "Component.h"
+#include "DrawnComponent.h"
 #include "Graphics/Particles/ParticleEmitter.h"
 #include "StainComponent.h"
 #include "Graphics/Shaders/ShaderMaterial.h"
 #include "Utilities/System/Debuggable.h"
-#include "Utilities/System/Drawable.h"
 #include "Utilities/System/Event.h"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Clock.hpp>
@@ -18,7 +17,7 @@ namespace Krampus
 	/// what you want. Drawn in one call for all its particles, with nothing drawn when it is out of the view.
 	/// In the editor it plays in the Viewport too (previewInEditor), without the level running.
 	/// </summary>
-	class ParticleComponent : public Component, public IDrawable, public IDebuggable, public IShaded
+	class ParticleComponent : public DrawnComponent<Component>, public IDebuggable, public IShaded
 	{
 		ParticleEmitter							emitter;
 		int										preset				= static_cast<int>(ParticlePreset::Fire);
@@ -41,13 +40,9 @@ namespace Krampus
 		ParticleComponent(Actor* _owner, const ParticlePreset& _preset = ParticlePreset::Fire);
 
 		void Construct() override;
-		void Deconstruct() override;
 		void BeginPlay() override;
 		void Tick(const Float& _deltaTime) override;
 		void Draw(Window& _window) override;
-
-		void SetZOrder(const uint8_t& _zOrder) override;
-		void SetZOrder(const ZOrder& _zOrder) override;
 
 		/// <summary>The values of the effect: change them at any time, they apply at once.</summary>
 		ParticleSettings& Settings() { return emitter.settings; }

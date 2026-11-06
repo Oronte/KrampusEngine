@@ -26,13 +26,13 @@ namespace Krampus
 
 	public:
 		/// <summary>Gets the assigned screen position anchor (window pixels).</summary>
-		inline FVector2 GetScreenPosition() const
+		FVector2 GetScreenPosition() const
 		{
 			return screenPosition;
 		}
 
 		/// <summary>Gets the local rotation angle.</summary>
-		inline Angle GetLocalRotation() const
+		Angle GetLocalRotation() const
 		{
 			return localRotation;
 		}
@@ -54,7 +54,7 @@ namespace Krampus
 	public:
 		/// <summary>Returns a string representation of the diegetic widget.</summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 
 		friend class HUD;
 	};

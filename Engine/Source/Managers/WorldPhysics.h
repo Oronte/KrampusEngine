@@ -54,7 +54,7 @@ namespace Krampus
 		/// Gets the Box2D physics world identifier.
 		/// </summary>
 		/// <returns>b2WorldId identifying the Box2D world.</returns>
-		inline b2WorldId GetPhysicsWorldID()
+		b2WorldId GetPhysicsWorldID()
 		{
 			return physicsWorldID;
 		}
@@ -146,7 +146,7 @@ namespace Krampus
 		/// Returns the number of sub-steps.
 		/// </summary>
 		/// <returns>The current value of subStepsCount.</returns>
-		NO_DISCARD int GetSubStepsCount()
+		[[nodiscard]] int GetSubStepsCount()
 		{
 			return subStepsCount;
 		}

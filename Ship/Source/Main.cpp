@@ -10,15 +10,19 @@
 #include "Core/Engine.h"
 #include "Network/NetworkManager.h"
 #include "Scene/Scene.h"
-#include "Utilities/KrampusInclude.h"
+#include "Core/CoreMinimal.h"
 
 //Game
 #include "GameEntry.h"
 
 namespace
 {
-	// A packaged game has its assets in KrampusGame.pak, next to its exe: the pak is mounted before anything loads a file.
-	// It also moves to the folder of its exe, wherever it is started from (a shortcut, a console), where it writes its saves.
+	// A packaged game (CMake/Package.cmake) is laid out like this:
+	//     <Game>/<Game>.exe              the launcher (Ship/Launcher): starts the game below
+	//     <Game>/Binaries/<Game>.exe     this program, with its DLLs
+	//     <Game>/Content/<Game>.pak      the assets
+	// The pak is mounted before anything loads a file (an older package has KrampusGame.pak next to the exe). The game then moves to
+	// the root of the package, wherever it is started from (a shortcut, a console): its saves go to <Game>/Content/Saves.
 	// In the other configurations the game is started from the project root, like the editor, and reads the files from the disk.
 	void Prepare()
 	{
@@ -27,10 +31,18 @@ namespace
 		if (_length == 0 || _length >= MAX_PATH) return;
 
 		const std::filesystem::path _exeDirectory = std::filesystem::path(std::wstring(_buffer, _length)).parent_path();
-		Krampus::AssetPack::Mount(_exeDirectory / "KrampusGame.pak");
-#ifdef SHIP
+		std::filesystem::path _root = _exeDirectory;
 		std::error_code _error;
-		std::filesystem::current_path(_exeDirectory, _error);
+		if (std::filesystem::exists(_exeDirectory / "KrampusGame.pak", _error))
+			Krampus::AssetPack::Mount(_exeDirectory / "KrampusGame.pak");
+		else if (_exeDirectory.filename() == L"Binaries")
+		{
+			_root = _exeDirectory.parent_path();
+			for (const std::filesystem::directory_entry& _entry : std::filesystem::directory_iterator(_root / "Content", _error))
+				if (_entry.path().extension() == L".pak" && Krampus::AssetPack::Mount(_entry.path())) break;
+		}
+#ifdef SHIP
+		std::filesystem::current_path(_root, _error);
 #endif
 	}
 

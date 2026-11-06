@@ -13,13 +13,13 @@ struct SaveMetadata
     String   filePath;
 
     /// <summary>Unix timestamp when the save was created.</summary>
-    LongLong timestamp    = LongLong(0LL);
+    LongLong timestamp    = 0;
 
     /// <summary>Schema version number of the save file.</summary>
-    Short    version      = Short(0);
+    Short    version      = 0;
 
     /// <summary>Whether the save data is compressed.</summary>
-    Bool     isCompressed = Bool::False();
+    Bool     isCompressed = false;
 };
 
 /// <summary>
@@ -40,7 +40,7 @@ enum class SaveResult
 /// </summary>
 /// <param name="_result">The SaveResult code.</param>
 /// <returns>Status description string.</returns>
-NO_DISCARD constexpr const char* ToString(SaveResult _result) noexcept 
+[[nodiscard]] constexpr const char* ToString(SaveResult _result) noexcept 
 {
     switch (_result)
     {
@@ -64,7 +64,7 @@ public:
     using EventCallback = std::function<void(const String& name, SaveResult result)>;
 
     /// <summary>Current save format schema version.</summary>
-    static inline const Short  CURRENT_VERSION = Short(1);
+    static inline const Short  CURRENT_VERSION = 1;
 
     /// <summary>Default save directory in dev build.</summary>
     static inline const String SAVE_DIRECTORY  = String(CONTENT_PATH + "Saves/");
@@ -89,9 +89,9 @@ public:
     /// <param name="root">Root SaveNode tree to serialize.</param>
     /// <param name="compress">Whether to compress data.</param>
     /// <returns>SaveResult status code.</returns>
-    NO_DISCARD static SaveResult Save(const String& name,
+    [[nodiscard]] static SaveResult Save(const String& name,
                                          const SaveNode& root,
-                                         const Bool& compress = Bool::False());
+                                         const Bool& compress = false);
 
     /// <summary>
     /// Deserializes a SaveNode tree from a save file.
@@ -99,7 +99,7 @@ public:
     /// <param name="name">Save slot name.</param>
     /// <param name="outRoot">Target SaveNode to populate.</param>
     /// <returns>SaveResult status code.</returns>
-    NO_DISCARD static SaveResult Load(const String& name,
+    [[nodiscard]] static SaveResult Load(const String& name,
                                          SaveNode& outRoot);
 
     /// <summary>
@@ -110,35 +110,35 @@ public:
     /// <summary>
     /// Same as Save/Load but at an explicit file path (any extension, any folder), e.g. scenes (.ka7).
     /// </summary>
-    NO_DISCARD static SaveResult SaveToFile(const std::filesystem::path& path,
+    [[nodiscard]] static SaveResult SaveToFile(const std::filesystem::path& path,
                                             const SaveNode& root,
-                                            const Bool& compress = Bool::False());
+                                            const Bool& compress = false);
 
-    NO_DISCARD static SaveResult LoadFromFile(const std::filesystem::path& path,
+    [[nodiscard]] static SaveResult LoadFromFile(const std::filesystem::path& path,
                                               SaveNode& outRoot);
 
-    NO_DISCARD static SaveNode LoadOrThrow(const String& name);
+    [[nodiscard]] static SaveNode LoadOrThrow(const String& name);
 
     /// <summary>
     /// Attempts to load a save file, returning std::nullopt on failure.
     /// </summary>
     /// <param name="name">Save slot name.</param>
     /// <returns>Optional SaveNode.</returns>
-    NO_DISCARD static std::optional<SaveNode> TryLoad(const String& name);
+    [[nodiscard]] static std::optional<SaveNode> TryLoad(const String& name);
 
     /// <summary>
     /// Checks whether a save file exists on disk.
     /// </summary>
     /// <param name="name">Save slot name.</param>
     /// <returns>True if file exists.</returns>
-    NO_DISCARD static Bool Exists(const String& name);
+    [[nodiscard]] static Bool Exists(const String& name);
 
     /// <summary>
     /// Deletes a save file from disk.
     /// </summary>
     /// <param name="name">Save slot name.</param>
     /// <returns>True if successfully deleted.</returns>
-    NO_DISCARD static Bool Delete(const String& name);
+    [[nodiscard]] static Bool Delete(const String& name);
 
     /// <summary>
     /// Renames an existing save file.
@@ -146,7 +146,7 @@ public:
     /// <param name="oldName">Original save slot name.</param>
     /// <param name="newName">New save slot name.</param>
     /// <returns>True if renamed successfully.</returns>
-    NO_DISCARD static Bool Rename(const String& oldName, const String& newName);
+    [[nodiscard]] static Bool Rename(const String& oldName, const String& newName);
 
     /// <summary>
     /// Copies a save file to a new slot name.
@@ -154,20 +154,20 @@ public:
     /// <param name="src">Source save name.</param>
     /// <param name="dst">Destination save name.</param>
     /// <returns>True if copied successfully.</returns>
-    NO_DISCARD static Bool Copy  (const String& src,     const String& dst);
+    [[nodiscard]] static Bool Copy  (const String& src,     const String& dst);
 
     /// <summary>
     /// Scans the saves directory and returns metadata for all valid save files.
     /// </summary>
     /// <returns>Vector of SaveMetadata structures.</returns>
-    NO_DISCARD static std::vector<SaveMetadata>   ListSaves();
+    [[nodiscard]] static std::vector<SaveMetadata>   ListSaves();
 
     /// <summary>
     /// Reads metadata from a save file without deserializing the full payload.
     /// </summary>
     /// <param name="name">Save slot name.</param>
     /// <returns>Optional SaveMetadata.</returns>
-    NO_DISCARD static std::optional<SaveMetadata> GetMetadata(const String& name);
+    [[nodiscard]] static std::optional<SaveMetadata> GetMetadata(const String& name);
 
     /// <summary>
     /// Ensures that the save files directory exists on disk, creating it if needed.
@@ -185,7 +185,7 @@ public:
     /// </summary>
     /// <param name="name">Save slot name.</param>
     /// <returns>std::filesystem::path to file.</returns>
-    NO_DISCARD static std::filesystem::path GetSavePath(const String& name);
+    [[nodiscard]] static std::filesystem::path GetSavePath(const String& name);
 
     /// <summary>
     /// Sets an event callback invoked upon save completion.

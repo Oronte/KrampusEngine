@@ -1,5 +1,5 @@
 #pragma once
-#include "Graphics/Ressources/Image.h"
+#include "Graphics/Resources/Image.h"
 #include "Utilities/System/Event.h"
 
 namespace Krampus
@@ -29,7 +29,7 @@ namespace Krampus
 		/// Gets a reference to the underlying SFML RenderWindow.
 		/// </summary>
 		/// <returns>Reference to sf::RenderWindow.</returns>
-		virtual inline sf::RenderWindow& GetRenderWindow() noexcept
+		virtual sf::RenderWindow& GetRenderWindow() noexcept
 		{
 			return *window;
 		}
@@ -38,7 +38,7 @@ namespace Krampus
 		/// Checks whether the window is currently open.
 		/// </summary>
 		/// <returns>True if open, false if closed.</returns>
-		virtual inline Bool IsOpen() const noexcept
+		virtual Bool IsOpen() const noexcept
 		{
 			return window->isOpen();
 		}
@@ -47,7 +47,7 @@ namespace Krampus
 		/// Sets the target framerate limit in frames per second.
 		/// </summary>
 		/// <param name="_limit">Framerate limit (0 for unlimited).</param>
-		virtual inline void SetFramerateLimit(const UInt& _limit)
+		virtual void SetFramerateLimit(const UInt& _limit)
 		{
 			window->setFramerateLimit(_limit);
 		}
@@ -56,7 +56,7 @@ namespace Krampus
 		/// Enables or disables vertical synchronization (VSync).
 		/// </summary>
 		/// <param name="_enabled">True to enable VSync, false to disable.</param>
-		virtual inline void SetVerticalSyncEnabled(const Bool& _enabled)
+		virtual void SetVerticalSyncEnabled(const Bool& _enabled)
 		{
 			window->setVerticalSyncEnabled(_enabled);
 		}
@@ -65,16 +65,16 @@ namespace Krampus
 		/// Sets the OS window title bar text.
 		/// </summary>
 		/// <param name="_title">Title string.</param>
-		virtual inline void SetTitle(const String& _title)
+		virtual void SetTitle(const String& _title)
 		{
-			window->setTitle(sf::String(_title.ToCharPtr()));
+			window->setTitle(sf::String(_title.c_str()));
 		}
 
 		/// <summary>
 		/// Sets the client size of the window in pixels.
 		/// </summary>
 		/// <param name="_size">Width and height in pixels.</param>
-		virtual inline void SetSize(const UVector2& _size)
+		virtual void SetSize(const UVector2& _size)
 		{
 			window->setSize(_size);
 		}
@@ -83,7 +83,7 @@ namespace Krampus
 		/// Gets the client size of the window in pixels.
 		/// </summary>
 		/// <returns>Dimensions as UVector2.</returns>
-		virtual inline UVector2 GetSize() const noexcept
+		virtual UVector2 GetSize() const noexcept
 		{
 			return UVector2(window->getSize());
 		}
@@ -92,7 +92,7 @@ namespace Krampus
 		/// Sets the desktop position of the window in pixels.
 		/// </summary>
 		/// <param name="_position">Desktop screen coordinates.</param>
-		virtual inline void SetPosition(const IVector2& _position)
+		virtual void SetPosition(const IVector2& _position)
 		{
 			window->setPosition(_position);
 		}
@@ -101,7 +101,7 @@ namespace Krampus
 		/// Gets the desktop position of the window in pixels.
 		/// </summary>
 		/// <returns>Desktop screen coordinates.</returns>
-		virtual inline IVector2 GetPosition() const
+		virtual IVector2 GetPosition() const
 		{
 			return IVector2(window->getPosition());
 		}
@@ -110,7 +110,7 @@ namespace Krampus
 		/// Gets the center coordinate of the window on the desktop.
 		/// </summary>
 		/// <returns>Center desktop coordinates.</returns>
-		virtual inline IVector2 GetCenter() const
+		virtual IVector2 GetCenter() const
 		{
 			return GetPosition() + GetSize() / 2;
 		}
@@ -119,16 +119,15 @@ namespace Krampus
 		/// Sets the OS window application icon.
 		/// </summary>
 		/// <param name="_image">Source Image containing pixel data.</param>
-		virtual inline void SetIcon(const Image& _image)
+		virtual void SetIcon(const Image& _image)
 		{
 			window->setIcon(_image);
 		}
-
 		/// <summary>
 		/// Checks whether the window currently has keyboard/input focus.
 		/// </summary>
 		/// <returns>True if focused, false otherwise.</returns>
-		virtual inline Bool HasFocus() const
+		virtual Bool HasFocus() const
 		{
 			return window->hasFocus();
 		}
@@ -136,7 +135,7 @@ namespace Krampus
 		/// <summary>
 		/// Requests the operating system to give input focus to this window.
 		/// </summary>
-		virtual inline void RequestFocus()
+		virtual void RequestFocus()
 		{
 			window->requestFocus();
 		}
@@ -145,7 +144,7 @@ namespace Krampus
 		/// Gets the current active SFML view being rendered.
 		/// </summary>
 		/// <returns>Active sf::View.</returns>
-		virtual inline sf::View GetView() const
+		virtual sf::View GetView() const
 		{
 			return window->getView();
 		}
@@ -155,7 +154,7 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_worldPos">Position in world space.</param>
 		/// <returns>Pixel position.</returns>
-		inline IVector2 MapCoordsToPixel(const FVector2& _worldPos) const
+		IVector2 MapCoordsToPixel(const FVector2& _worldPos) const
 		{
 			return window->mapCoordsToPixel(_worldPos);
 		}
@@ -166,7 +165,7 @@ namespace Krampus
 		/// <param name="_worldPos">Position in world space.</param>
 		/// <param name="_view">Specific view to map through.</param>
 		/// <returns>Pixel position.</returns>
-		inline IVector2 MapCoordsToPixel(const FVector2& _worldPos, const sf::View& _view) const
+		IVector2 MapCoordsToPixel(const FVector2& _worldPos, const sf::View& _view) const
 		{
 			return window->mapCoordsToPixel(_worldPos, _view);
 		}
@@ -176,7 +175,7 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_screenPos">Pixel coordinates in window.</param>
 		/// <returns>World coordinates.</returns>
-		inline FVector2 MapPixelToCoords(const IVector2& _screenPos) const
+		FVector2 MapPixelToCoords(const IVector2& _screenPos) const
 		{
 			return window->mapPixelToCoords(_screenPos);
 		}
@@ -187,7 +186,7 @@ namespace Krampus
 		/// <param name="_screenPos">Pixel coordinates in window.</param>
 		/// <param name="_view">Specific view to map through.</param>
 		/// <returns>World coordinates.</returns>
-		inline FVector2 MapPixelToCoords(const IVector2& _screenPos, const sf::View& _view) const
+		FVector2 MapPixelToCoords(const IVector2& _screenPos, const sf::View& _view) const
 		{
 			return window->mapPixelToCoords(_screenPos, _view);
 		}
@@ -232,7 +231,7 @@ namespace Krampus
 		/// The window must outlive this object.
 		/// </summary>
 		/// <param name="_hostWindow">Already opened window.</param>
-		inline void Attach(sf::RenderWindow* _hostWindow)
+		void Attach(sf::RenderWindow* _hostWindow)
 		{
 			LOG(VerbosityType::Log, "Window: using the window of the host application");
 			window = _hostWindow;
@@ -243,7 +242,7 @@ namespace Krampus
 		/// GetMousePosition then maps that region to the full window size, as if the game filled the window.
 		/// </summary>
 		/// <param name="_region">Region in window pixels.</param>
-		inline void SetMouseViewport(const sf::FloatRect& _region)
+		void SetMouseViewport(const sf::FloatRect& _region)
 		{
 			mouseViewport = _region;
 		}
@@ -251,7 +250,7 @@ namespace Krampus
 		/// <summary>
 		/// The game fills the window again.
 		/// </summary>
-		inline void ResetMouseViewport()
+		void ResetMouseViewport()
 		{
 			mouseViewport = sf::FloatRect();
 		}

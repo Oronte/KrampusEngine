@@ -17,7 +17,6 @@ using namespace Krampus;
 
 namespace
 {
-	bool	g_open		= false;
 
 	// What the editor works on: the animation component of the selected actor or widget, found again every frame
 	// (the selection is cleared whenever the level changes, so nothing here can dangle).
@@ -42,7 +41,7 @@ namespace
 		_target.start = &_animation->startAnimation;
 		_target.playOnBegin = &_animation->playOnBeginPlay;
 		_target.apply = [_animation]() { _animation->ApplyClips(); };
-		_target.owner = _object.GetName().StdString();
+		_target.owner = _object.GetName();
 		if (S* _sprite = _object.template GetComponent<S>())
 			_target.shape = _sprite->GetShapeObject();
 		return true;
@@ -131,18 +130,22 @@ namespace
 		bool			fitted		= false;
 	};
 
-	View		g_view;
-	int			g_frame			= 0;	// frame shown in the preview (the one selected)
-	int			g_clip			= 0;	// animation of the list being edited
-	int			g_lastClip		= -1;
-	const void*	g_list			= nullptr;
-	bool		g_playing		= false;
-	float		g_time			= 0.f;
-	ImVec2		g_dragStart;
-	bool		g_dragging		= false;	// the left button went down on the sheet
-	bool		g_defining		= false;	// ... and moved: a new first frame is being drawn
-	int			g_gridColumns	= 4;
-	int			g_gridRows		= 1;
+	struct AnimationEditorState
+	{
+		bool	open		= false;
+		View		view;
+		int			frame			= 0;	// frame shown in the preview (the one selected)
+		int			clip			= 0;	// animation of the list being edited
+		int			lastClip		= -1;
+		const void*	list			= nullptr;
+		bool		playing		= false;
+		float		time			= 0.f;
+		ImVec2		dragStart;
+		bool		dragging		= false;	// the left button went down on the sheet
+		bool		defining		= false;	// ... and moved: a new first frame is being drawn
+		int			gridColumns	= 4;
+		int			gridRows		= 1;
+	} state;
 
 	void Edit(EditorContext& _context, const Target& _target, const char* _what)
 	{
@@ -156,9 +159,9 @@ namespace
 
 	void FitView(const ImVec2& _area, const ImVec2& _texture)
 	{
-		g_view.zoom = std::max(0.05f, std::min((_area.x - 20.f) / std::max(1.f, _texture.x), (_area.y - 20.f) / std::max(1.f, _texture.y)));
-		g_view.pan = ImVec2((_area.x - _texture.x * g_view.zoom) * 0.5f, (_area.y - _texture.y * g_view.zoom) * 0.5f);
-		g_view.fitted = true;
+		state.view.zoom = std::max(0.05f, std::min((_area.x - 20.f) / std::max(1.f, _texture.x), (_area.y - 20.f) / std::max(1.f, _texture.y)));
+		state.view.pan = ImVec2((_area.x - _texture.x * state.view.zoom) * 0.5f, (_area.y - _texture.y * state.view.zoom) * 0.5f);
+		state.view.fitted = true;
 	}
 
 	// The picture with the frames drawn on it. Left drag: first frame. Shift+click: last frame. Click: select a frame. Wheel: zoom. Middle drag: move.
@@ -179,26 +182,26 @@ namespace
 		}
 
 		const ImVec2 _textureSize = ImVec2(static_cast<float>(_texture->getSize().x), static_cast<float>(_texture->getSize().y));
-		if (!g_view.fitted) FitView(_area, _textureSize);
+		if (!state.view.fitted) FitView(_area, _textureSize);
 
 		ImGui::InvisibleButton("SheetArea", _area, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonMiddle | ImGuiButtonFlags_MouseButtonRight);
 		const bool _hovered = ImGui::IsItemHovered();
 		ImGuiIO& _io = ImGui::GetIO();
-		const ImVec2 _origin = ImVec2(_min.x + g_view.pan.x, _min.y + g_view.pan.y);
-		auto _toSheet = [&](const ImVec2& _screen) { return ImVec2((_screen.x - _origin.x) / g_view.zoom, (_screen.y - _origin.y) / g_view.zoom); };
-		auto _toScreen = [&](const float _x, const float _y) { return ImVec2(_origin.x + _x * g_view.zoom, _origin.y + _y * g_view.zoom); };
+		const ImVec2 _origin = ImVec2(_min.x + state.view.pan.x, _min.y + state.view.pan.y);
+		auto _toSheet = [&](const ImVec2& _screen) { return ImVec2((_screen.x - _origin.x) / state.view.zoom, (_screen.y - _origin.y) / state.view.zoom); };
+		auto _toScreen = [&](const float _x, const float _y) { return ImVec2(_origin.x + _x * state.view.zoom, _origin.y + _y * state.view.zoom); };
 
 		if (_hovered && _io.MouseWheel != 0.f)	// zoom around the cursor
 		{
 			const ImVec2 _before = _toSheet(_io.MousePos);
-			g_view.zoom = std::clamp(g_view.zoom * (_io.MouseWheel > 0.f ? 1.15f : 1.f / 1.15f), 0.05f, 64.f);
-			g_view.pan.x = _io.MousePos.x - _min.x - _before.x * g_view.zoom;
-			g_view.pan.y = _io.MousePos.y - _min.y - _before.y * g_view.zoom;
+			state.view.zoom = std::clamp(state.view.zoom * (_io.MouseWheel > 0.f ? 1.15f : 1.f / 1.15f), 0.05f, 64.f);
+			state.view.pan.x = _io.MousePos.x - _min.x - _before.x * state.view.zoom;
+			state.view.pan.y = _io.MousePos.y - _min.y - _before.y * state.view.zoom;
 		}
 		if (ImGui::IsItemActive() && (ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0.f) || ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.f)))
 		{
-			g_view.pan.x += _io.MouseDelta.x;
-			g_view.pan.y += _io.MouseDelta.y;
+			state.view.pan.x += _io.MouseDelta.x;
+			state.view.pan.y += _io.MouseDelta.y;
 		}
 
 		_draw->PushClipRect(_min, _max, true);
@@ -233,7 +236,7 @@ namespace
 			const ImVec2 _a = _toScreen(_frame.x, _frame.y);
 			const ImVec2 _b = _toScreen(_frame.x + _frame.w, _frame.y + _frame.h);
 			if (_b.x < _min.x || _b.y < _min.y || _a.x > _max.x || _a.y > _max.y) continue;
-			const bool _current = _i == g_frame;
+			const bool _current = _i == state.frame;
 			if (_current) _draw->AddRectFilled(_a, _b, Color(255, 200, 40, 50));
 			_draw->AddRect(_a, _b, _i == 0 ? Color(80, 220, 120) : (_current ? Color(255, 200, 40) : Color(255, 140, 40)), 0.f, 0, _current ? 2.f : 1.f);
 			if (_b.x - _a.x > 18.f && _labels < 400)
@@ -250,35 +253,35 @@ namespace
 
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 		{
-			g_dragging = true;
-			g_defining = false;
-			g_dragStart = _clampToPicture(_mouse);
+			state.dragging = true;
+			state.defining = false;
+			state.dragStart = _clampToPicture(_mouse);
 		}
-		if (g_dragging && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+		if (state.dragging && ImGui::IsMouseDown(ImGuiMouseButton_Left))
 		{
 			const ImVec2 _now = _clampToPicture(_mouse);
-			if (!g_defining && (std::abs(_now.x - g_dragStart.x) > 2.f / g_view.zoom || std::abs(_now.y - g_dragStart.y) > 2.f / g_view.zoom))
-				g_defining = true;
+			if (!state.defining && (std::abs(_now.x - state.dragStart.x) > 2.f / state.view.zoom || std::abs(_now.y - state.dragStart.y) > 2.f / state.view.zoom))
+				state.defining = true;
 
-			if (g_defining)
+			if (state.defining)
 			{
-				const float _w = std::abs(_now.x - g_dragStart.x);
-				const float _h = std::abs(_now.y - g_dragStart.y);
+				const float _w = std::abs(_now.x - state.dragStart.x);
+				const float _h = std::abs(_now.y - state.dragStart.y);
 				if (_w >= 1.f && _h >= 1.f)
 				{
 					Edit(_context, _target, "frame");
-					_target.clip->frameOrigin = FVector2(std::min(_now.x, g_dragStart.x), std::min(_now.y, g_dragStart.y));
+					_target.clip->frameOrigin = FVector2(std::min(_now.x, state.dragStart.x), std::min(_now.y, state.dragStart.y));
 					_target.clip->frameSize = FVector2(_w, _h);
-					if (static_cast<int>(_target.clip->frameCount) < 1) _target.clip->frameCount = Int(1);
+					if (static_cast<int>(_target.clip->frameCount) < 1) _target.clip->frameCount = 1;
 					_target.apply();
-					g_frame = 0;
+					state.frame = 0;
 				}
 			}
 		}
-		if (g_dragging && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		if (state.dragging && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 		{
-			g_dragging = false;
-			if (!g_defining)
+			state.dragging = false;
+			if (!state.defining)
 			{
 				const int _hit = FrameAt(*_target.clip, _mouse);
 				if (_io.KeyShift)	// last frame = the one clicked, counting from the first
@@ -306,14 +309,14 @@ namespace
 					}
 				}
 				else if (_hit >= 0)
-					g_frame = _hit;
+					state.frame = _hit;
 			}
-			g_defining = false;
+			state.defining = false;
 		}
 
 		// The rectangle being drawn.
-		if (g_defining)
-			_draw->AddRect(_toScreen(std::min(_mouse.x, g_dragStart.x), std::min(_mouse.y, g_dragStart.y)), _toScreen(std::max(_mouse.x, g_dragStart.x), std::max(_mouse.y, g_dragStart.y)), Color(80, 220, 120), 0.f, 0, 2.f);
+		if (state.defining)
+			_draw->AddRect(_toScreen(std::min(_mouse.x, state.dragStart.x), std::min(_mouse.y, state.dragStart.y)), _toScreen(std::max(_mouse.x, state.dragStart.x), std::max(_mouse.y, state.dragStart.y)), Color(80, 220, 120), 0.f, 0, 2.f);
 
 		_draw->PopClipRect();
 
@@ -321,7 +324,7 @@ namespace
 		ImGui::SetCursorScreenPos(ImVec2(_min.x + 6.f, _max.y - ImGui::GetTextLineHeightWithSpacing() * 2.f - 4.f));
 		ImGui::TextDisabled("Drag: draw the first frame   Shift+click: last frame   Click: select a frame");
 		ImGui::SetCursorScreenPos(ImVec2(_min.x + 6.f, _max.y - ImGui::GetTextLineHeightWithSpacing() - 2.f));
-		ImGui::TextDisabled("Wheel: zoom   Middle / right drag: move   Zoom %d%%   Pixel %d, %d", static_cast<int>(g_view.zoom * 100.f), static_cast<int>(std::floor(_mouse.x)), static_cast<int>(std::floor(_mouse.y)));
+		ImGui::TextDisabled("Wheel: zoom   Middle / right drag: move   Zoom %d%%   Pixel %d, %d", static_cast<int>(state.view.zoom * 100.f), static_cast<int>(std::floor(_mouse.x)), static_cast<int>(std::floor(_mouse.y)));
 		ImGui::SetCursorScreenPos(ImVec2(_max.x - 52.f, _min.y + 6.f));
 		if (ImGui::Button("Fit")) FitView(_area, _textureSize);
 
@@ -333,7 +336,7 @@ namespace
 		for (int _n = 1; ; ++_n)
 		{
 			const std::string _name = _n == 1 ? _base : _base + " " + std::to_string(_n);
-			if (std::none_of(_clips.begin(), _clips.end(), [&](const AnimationClip& _clip) { return _clip.name.StdString() == _name; }))
+			if (std::none_of(_clips.begin(), _clips.end(), [&](const AnimationClip& _clip) { return _clip.name == _name; }))
 				return _name;
 		}
 	}
@@ -342,10 +345,10 @@ namespace
 	void DrawAnimationList(EditorContext& _context, Target& _target)
 	{
 		std::vector<AnimationClip>& _clips = *_target.clips;
-		const std::string _startName = _target.start->StdString();
+		const std::string _startName = *_target.start;
 		const auto _isStart = [&](const int _index)
 		{
-			return _clips[_index].name.StdString() == _startName || (_index == 0 && std::none_of(_clips.begin(), _clips.end(), [&](const AnimationClip& _clip) { return _clip.name.StdString() == _startName; }));
+			return _clips[_index].name == _startName || (_index == 0 && std::none_of(_clips.begin(), _clips.end(), [&](const AnimationClip& _clip) { return _clip.name == _startName; }));
 		};
 		const std::string _key = std::to_string(reinterpret_cast<std::uintptr_t>(_target.clips)) + ".list";
 
@@ -353,9 +356,9 @@ namespace
 		for (int _i = 0; _i < static_cast<int>(_clips.size()); ++_i)
 		{
 			ImGui::PushID(_i);
-			const bool _selected = _i == g_clip;
+			const bool _selected = _i == state.clip;
 			if (_selected) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-			if (ImGui::Button(((_isStart(_i) ? "* " : "") + _clips[_i].name.StdString()).c_str())) g_clip = _i;
+			if (ImGui::Button(((_isStart(_i) ? "* " : "") + _clips[_i].name).c_str())) state.clip = _i;
 			if (_selected) ImGui::PopStyleColor();
 			if (ImGui::IsItemHovered()) ImGui::SetTooltip(_isStart(_i) ? "Starting animation" : "Click to edit");
 			ImGui::PopID();
@@ -366,11 +369,11 @@ namespace
 		{
 			_context.history.Record(_context, "Add animation", _key);
 			AnimationClip _new;
-			if (!_clips.empty()) _new = _clips[std::clamp(g_clip, 0, static_cast<int>(_clips.size()) - 1)];	// same cut as the one being edited
+			if (!_clips.empty()) _new = _clips[std::clamp(state.clip, 0, static_cast<int>(_clips.size()) - 1)];	// same cut as the one being edited
 			_new.name = String(UniqueName(_clips, "Animation"));
-			if (_new.frameCount <= 0) _new.frameCount = Int(1);
+			if (_new.frameCount <= 0) _new.frameCount = 1;
 			_clips.push_back(_new);
-			g_clip = static_cast<int>(_clips.size()) - 1;
+			state.clip = static_cast<int>(_clips.size()) - 1;
 			if (_clips.size() == 1) *_target.start = _new.name;
 			_target.apply();
 			ImGui::EndChild();
@@ -379,7 +382,7 @@ namespace
 
 		if (!_clips.empty())
 		{
-			const int _index = std::clamp(g_clip, 0, static_cast<int>(_clips.size()) - 1);
+			const int _index = std::clamp(state.clip, 0, static_cast<int>(_clips.size()) - 1);
 			ImGui::SameLine();
 			if (ImGui::Button("Set as start"))
 			{
@@ -393,8 +396,8 @@ namespace
 				_context.history.Record(_context, "Remove animation", _key);
 				const bool _wasStart = _isStart(_index);
 				_clips.erase(_clips.begin() + _index);
-				if (_wasStart) *_target.start = String(_clips.empty() ? "" : _clips.front().name.StdString());
-				g_clip = std::max(0, _index - 1);
+				if (_wasStart) *_target.start = String(_clips.empty() ? "" : _clips.front().name);
+				state.clip = std::max(0, _index - 1);
 				_target.apply();
 			}
 		}
@@ -411,7 +414,7 @@ namespace
 		_draw->AddRect(_min, ImVec2(_min.x + _box.x, _min.y + _box.y), Color(90, 90, 96));
 		if (_count <= 0) return;
 
-		const Frame _frame = FrameOf(_clip, std::clamp(g_frame, 0, _count - 1));
+		const Frame _frame = FrameOf(_clip, std::clamp(state.frame, 0, _count - 1));
 		if (_frame.w < 1.f || _frame.h < 1.f) return;
 
 		const float _scale = std::min((_box.x - 8.f) / _frame.w, (_box.y - 8.f) / _frame.h);
@@ -427,25 +430,25 @@ namespace
 	void UpdatePreview(const AnimationClip& _clip)
 	{
 		const int _count = static_cast<int>(_clip.frameCount);
-		if (!g_playing || _count <= 0) return;
+		if (!state.playing || _count <= 0) return;
 
 		const float _perFrame = std::max(0.001f, static_cast<float>(_clip.duration) / static_cast<float>(_count));
-		g_time += ImGui::GetIO().DeltaTime;
-		int _index = static_cast<int>(g_time / _perFrame);
+		state.time += ImGui::GetIO().DeltaTime;
+		int _index = static_cast<int>(state.time / _perFrame);
 		if (_index >= _count)
 		{
 			if (_clip.loop)
 			{
-				g_time = std::fmod(g_time, _perFrame * static_cast<float>(_count));
-				_index = static_cast<int>(g_time / _perFrame) % _count;
+				state.time = std::fmod(state.time, _perFrame * static_cast<float>(_count));
+				_index = static_cast<int>(state.time / _perFrame) % _count;
 			}
 			else
 			{
 				_index = _count - 1;
-				g_playing = false;
+				state.playing = false;
 			}
 		}
-		g_frame = _index;
+		state.frame = _index;
 	}
 
 	void DrawSettings(EditorContext& _context, Target& _target, const sf::Texture* _texture, const ImVec2& _size)
@@ -459,23 +462,23 @@ namespace
 			DrawPreview(*_texture, _clip, ImVec2(ImGui::GetContentRegionAvail().x, 170.f));
 
 		const float _buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 2.f) / 3.f;
-		if (ImGui::Button(g_playing ? "Pause" : "Play", ImVec2(_buttonWidth, 0.f)))
+		if (ImGui::Button(state.playing ? "Pause" : "Play", ImVec2(_buttonWidth, 0.f)))
 		{
-			g_playing = !g_playing;
-			if (g_playing)
+			state.playing = !state.playing;
+			if (state.playing)
 			{
 				const float _perFrame = _count > 0 ? static_cast<float>(_clip.duration) / static_cast<float>(_count) : 0.f;
-				g_time = _perFrame * static_cast<float>(g_frame);
+				state.time = _perFrame * static_cast<float>(state.frame);
 			}
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Stop", ImVec2(_buttonWidth, 0.f))) { g_playing = false; g_frame = 0; g_time = 0.f; }
+		if (ImGui::Button("Stop", ImVec2(_buttonWidth, 0.f))) { state.playing = false; state.frame = 0; state.time = 0.f; }
 		ImGui::SameLine();
-		ImGui::TextDisabled("%d / %d", _count > 0 ? std::clamp(g_frame, 0, _count - 1) + 1 : 0, _count);
+		ImGui::TextDisabled("%d / %d", _count > 0 ? std::clamp(state.frame, 0, _count - 1) + 1 : 0, _count);
 		ImGui::Separator();
 
 		char _name[128];
-		std::snprintf(_name, sizeof(_name), "%s", _clip.name.StdString().c_str());
+		std::snprintf(_name, sizeof(_name), "%s", _clip.name.c_str());
 		if (ImGui::InputText("Name", _name, sizeof(_name)))
 		{
 			Edit(_context, _target, "name");
@@ -555,14 +558,14 @@ namespace
 		if (ImGui::Checkbox("Loop", &_loop))
 		{
 			Edit(_context, _target, "loop");
-			_clip.loop = Bool(_loop);
+			_clip.loop = _loop;
 			_target.apply();
 		}
 		bool _playOnBegin = static_cast<bool>(*_target.playOnBegin);
 		if (ImGui::Checkbox("Play on begin play", &_playOnBegin))
 		{
 			Edit(_context, _target, "playOnBeginPlay");
-			*_target.playOnBegin = Bool(_playOnBegin);
+			*_target.playOnBegin = _playOnBegin;
 		}
 
 		if (_texture)
@@ -570,23 +573,23 @@ namespace
 			ImGui::Separator();
 			ImGui::TextUnformatted("Cut the sheet in a grid");
 			ImGui::SetNextItemWidth(70.f);
-			ImGui::InputInt("Columns", &g_gridColumns, 0);
+			ImGui::InputInt("Columns", &state.gridColumns, 0);
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(70.f);
-			ImGui::InputInt("Rows", &g_gridRows, 0);
-			g_gridColumns = std::clamp(g_gridColumns, 1, 512);
-			g_gridRows = std::clamp(g_gridRows, 1, 512);
+			ImGui::InputInt("Rows", &state.gridRows, 0);
+			state.gridColumns = std::clamp(state.gridColumns, 1, 512);
+			state.gridRows = std::clamp(state.gridRows, 1, 512);
 			// Frame size = picture / (columns, rows): the first row only, or every cell of the grid on several lines.
 			const auto _cut = [&](const bool _wholeGrid)
 			{
 				Edit(_context, _target, "grid");
 				_clip.frameOrigin = FVector2(0.f, 0.f);
-				_clip.frameSize = FVector2(std::floor(static_cast<float>(_texture->getSize().x) / static_cast<float>(g_gridColumns)), std::floor(static_cast<float>(_texture->getSize().y) / static_cast<float>(g_gridRows)));
-				_clip.direction = Int(0);
-				_clip.wrap = Int(_wholeGrid && g_gridRows > 1 ? g_gridColumns : 0);
-				_clip.frameCount = Int(std::clamp(_wholeGrid ? g_gridColumns * g_gridRows : g_gridColumns, 1, 4096));	// the same limit as the frame count field
+				_clip.frameSize = FVector2(std::floor(static_cast<float>(_texture->getSize().x) / static_cast<float>(state.gridColumns)), std::floor(static_cast<float>(_texture->getSize().y) / static_cast<float>(state.gridRows)));
+				_clip.direction = 0;
+				_clip.wrap = Int(_wholeGrid && state.gridRows > 1 ? state.gridColumns : 0);
+				_clip.frameCount = Int(std::clamp(_wholeGrid ? state.gridColumns * state.gridRows : state.gridColumns, 1, 4096));	// the same limit as the frame count field
 				_target.apply();
-				g_frame = 0;
+				state.frame = 0;
 			};
 			const float _half = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
 			if (ImGui::Button("First row", ImVec2(_half, 0.f))) _cut(false);
@@ -628,8 +631,8 @@ namespace
 			ImGui::PushID(_i);
 			if (ImGui::InvisibleButton("frame", ImVec2(_width, _height)))
 			{
-				g_frame = _i;
-				g_playing = false;
+				state.frame = _i;
+				state.playing = false;
 			}
 			ImGui::PopID();
 			if (!_onScreen)
@@ -642,7 +645,7 @@ namespace
 			const ImVec2 _max = ImVec2(_min.x + _width, _min.y + _height);
 			_draw->AddRectFilled(_min, _max, Color(28, 28, 30));
 			_draw->AddImage(TextureId(*_texture), _min, _max, ImVec2(_frame.x / _textureWidth, _frame.y / _textureHeight), ImVec2((_frame.x + _frame.w) / _textureWidth, (_frame.y + _frame.h) / _textureHeight));
-			_draw->AddRect(_min, _max, _i == g_frame ? Color(255, 200, 40) : Color(90, 90, 96), 0.f, 0, _i == g_frame ? 2.f : 1.f);
+			_draw->AddRect(_min, _max, _i == state.frame ? Color(255, 200, 40) : Color(90, 90, 96), 0.f, 0, _i == state.frame ? 2.f : 1.f);
 			const std::string _label = std::to_string(_i);
 			_draw->AddText(ImVec2(_min.x + 3.f, _min.y + 1.f), Color(255, 255, 255, 220), _label.c_str());
 			ImGui::SameLine();
@@ -655,16 +658,16 @@ namespace Krampus
 {
 	void OpenAnimationEditor()
 	{
-		g_open = true;
+		state.open = true;
 		ImGui::SetWindowFocus("Animation Editor");
 	}
 
 	void DrawAnimationEditor(EditorContext& _context)
 	{
-		if (!g_open) return;
+		if (!state.open) return;
 
 		ImGui::SetNextWindowSize(ImVec2(1100.f, 640.f), ImGuiCond_FirstUseEver);
-		if (!ImGui::Begin("Animation Editor", &g_open))
+		if (!ImGui::Begin("Animation Editor", &state.open))
 		{
 			ImGui::End();
 			return;
@@ -686,12 +689,12 @@ namespace Krampus
 		}
 
 		// The list of animations of the component, and which one is being edited.
-		if (g_list != _target.clips)
+		if (state.list != _target.clips)
 		{
-			g_list = _target.clips;
-			g_clip = 0;
-			g_frame = 0;
-			g_playing = false;
+			state.list = _target.clips;
+			state.clip = 0;
+			state.frame = 0;
+			state.playing = false;
 		}
 		ImGui::TextDisabled("%s", _target.owner.c_str());
 		DrawAnimationList(_context, _target);	// may add or remove a clip: the pointer to the edited one is taken after it
@@ -701,28 +704,28 @@ namespace Krampus
 			ImGui::End();
 			return;
 		}
-		g_clip = std::clamp(g_clip, 0, static_cast<int>(_target.clips->size()) - 1);
-		_target.clip = &(*_target.clips)[g_clip];
-		if (g_clip != g_lastClip)
+		state.clip = std::clamp(state.clip, 0, static_cast<int>(_target.clips->size()) - 1);
+		_target.clip = &(*_target.clips)[state.clip];
+		if (state.clip != state.lastClip)
 		{
-			g_lastClip = g_clip;
-			g_frame = 0;
-			g_playing = false;
+			state.lastClip = state.clip;
+			state.frame = 0;
+			state.playing = false;
 		}
 		// The picture to cut. Reload the view when it changes.
 		const sf::Texture* _texture = nullptr;
 		std::string _textureName;
-		if (_target.shape && !_target.shape->GetTexturePath().StdString().empty())
+		if (_target.shape && !_target.shape->GetTexturePath().empty())
 		{
-			_textureName = _target.shape->GetTexturePath().StdString() + "." + ExtensionOf(_target.shape->GetTextureType());
+			_textureName = _target.shape->GetTexturePath() + "." + ExtensionOf(_target.shape->GetTextureType());
 			_texture = ThumbnailOf(CONTENT_DIRECTORY / "Textures" / _textureName);
 		}
-		if (_textureName != g_view.texture)
+		if (_textureName != state.view.texture)
 		{
-			g_view = View();
-			g_view.texture = _textureName;
-			g_frame = 0;
-			g_playing = false;
+			state.view = View();
+			state.view.texture = _textureName;
+			state.frame = 0;
+			state.playing = false;
 		}
 
 		if (_target.shape && !_texture && !_textureName.empty())

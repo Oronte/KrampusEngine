@@ -83,10 +83,10 @@ namespace Krampus
 		/// <summary>Applies a state received from the owner (called by the NetworkManager).</summary>
 		void ReceiveState(const NetMessage& _message);
 
-		virtual void Tick(const Float& _deltaTime) override;
-		virtual void Deconstruct() override;
-		virtual void BeginDestroy() override;
-		virtual std::string ToString() const override;
+		void Tick(const Float& _deltaTime) override;
+		void Deconstruct() override;
+		void BeginDestroy() override;
+		std::string ToString() const override;
 
 	private:
 		void Register();

@@ -142,7 +142,7 @@ cmake --preset windows-vs2026
 cmake --build --preset vs2026-debug
 ```
 
-Then open `Build/vs2026/KrampusEngine.slnx` in Visual Studio and press **F5**: `Editor` is the startup project and runs from the repository root. To start it without Visual Studio, run `Bin/windows-x64/Debug/Editor/Editor.exe` with the repository root as the working directory.
+Then open `Build/vs2026/KrampusEngine.slnx` in Visual Studio and press **F5**: `Editor` is the startup project and runs from the repository root. To start it without Visual Studio, run `Bin/windows-x64/Debug/Editor/Krampus Engine.exe` with the repository root as the working directory.
 
 > Run `cmake --preset windows-vs2026` again after adding or removing source files: the solution is generated from the files on disk.
 
@@ -212,20 +212,24 @@ Choose the start scene in *Settings > Ship*, then use *File > Package Game* in t
 Ship.bat
 ```
 
-The result is a folder that runs on a PC with nothing installed:
+The result is a folder that runs on a PC with nothing installed, in the folder chosen in the editor (Settings > Ship > packageFolder,
+by default `Bin/windows-x64/Ship/Package`), named after the game:
 
 ```
-Bin/windows-x64/Ship/Package/
-├── KrampusGame.exe     the game (SFML linked statically)
-├── KrampusGame.pak     every file of Content/ in one file (editor files, scripts, logs and saves left out)
-└── *.dll               the Visual C++ runtime, deployed next to the exe
+<Game>/
+├── <Game>.exe              a small launcher, with the icon of Settings > Ship > icon
+├── Binaries/
+│   ├── <Game>.exe          the game (SFML linked statically)
+│   └── *.dll               the Visual C++ runtime (app-local), steam_api64.dll
+└── Content/
+    └── <Game>.pak          every file of Content/ in one file (editor files, scripts, logs and saves left out)
 ```
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Host["Editor.exe<br/>window + main loop"] -->|loads and hot reloads| Module["EditorModule.dll"]
+    Host["Krampus Engine.exe<br/>window + main loop"] -->|loads and hot reloads| Module["EditorModule.dll"]
     Module --> Tools["Editor tools<br/>(ImGui)"]
     Module --> EngineLib["Engine (static library)"]
     Module --> GameLib["Game + Content/Scripts"]

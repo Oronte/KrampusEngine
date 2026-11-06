@@ -45,13 +45,13 @@ namespace Krampus
 		/// Sets the background clear color of the level.
 		/// </summary>
 		/// <param name="_bgColor">The color used to clear the window before rendering.</param>
-		inline void SetBackgroundColor(const Color& _bgColor)
+		void SetBackgroundColor(const Color& _bgColor)
 		{
 			backgroundColor = _bgColor;
 		}
 
 		/// <returns>The color the window is cleared with before the level is drawn.</returns>
-		inline const Color& GetBackgroundColor() const
+		const Color& GetBackgroundColor() const
 		{
 			return backgroundColor;
 		}
@@ -60,7 +60,7 @@ namespace Krampus
 		/// Gets a reference to the level's TimerManager.
 		/// </summary>
 		/// <returns>Reference to TimerManager.</returns>
-		inline TimerManager& GetTimerManager()
+		TimerManager& GetTimerManager()
 		{
 			return timerManager;
 		}
@@ -69,7 +69,7 @@ namespace Krampus
 		/// Gets a reference to the level's CameraManager.
 		/// </summary>
 		/// <returns>Reference to CameraManager.</returns>
-		inline CameraManager& GetCameraManager()
+		CameraManager& GetCameraManager()
 		{
 			return cameraManager;
 		}
@@ -78,7 +78,7 @@ namespace Krampus
 		/// Gets a reference to the level's CollisionManager.
 		/// </summary>
 		/// <returns>Reference to CollisionManager.</returns>
-		inline WorldPhysics& GetWorldPhysics()
+		WorldPhysics& GetWorldPhysics()
 		{
 			return worldPhysics;
 		}
@@ -92,7 +92,7 @@ namespace Krampus
 		/// Gets a reference to the level's ActorManager.
 		/// </summary>
 		/// <returns>Reference to ActorManager.</returns>
-		inline ActorManager& GetActorManager()
+		ActorManager& GetActorManager()
 		{
 			return actorManager;
 		}
@@ -101,7 +101,7 @@ namespace Krampus
 		/// Gets a reference to the level's heads-up display (HUD).
 		/// </summary>
 		/// <returns>Reference to HUD.</returns>
-		inline HUD& GetHUD()
+		HUD& GetHUD()
 		{
 			return hud;
 		}
@@ -110,7 +110,7 @@ namespace Krampus
 		/// Gets a reference to the engine window.
 		/// </summary>
 		/// <returns>Reference to Window.</returns>
-		inline Window& GetWindow()
+		Window& GetWindow()
 		{
 			return GetWorld()->GetWindowRef();
 		}
@@ -129,8 +129,8 @@ namespace Krampus
 		/// <typeparam name="Type">Actor class derived from Actor.</typeparam>
 		/// <param name="_args">Arguments forwarded to the actor constructor.</param>
 		/// <returns>Pointer to the newly spawned actor.</returns>
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
-		inline Type* SpawnActor(Args&&... _args)
+		template <typename Type, typename ...Args> requires std::is_base_of_v<Actor, Type>
+		Type* SpawnActor(Args&&... _args)
 		{
 			return actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
 		}
@@ -142,8 +142,8 @@ namespace Krampus
 		/// <param name="_transform">The initial transform (position, rotation, scale).</param>
 		/// <param name="_args">Arguments forwarded to the actor constructor.</param>
 		/// <returns>Pointer to the newly spawned actor.</returns>
-		template <typename Type, typename ...Args, IS_BASE_OF(Actor, Type)>
-		inline Type* SpawnActorAt(const Transform& _transform, Args&&... _args)
+		template <typename Type, typename ...Args> requires std::is_base_of_v<Actor, Type>
+		Type* SpawnActorAt(const Transform& _transform, Args&&... _args)
 		{
 			return actorManager.CreateActorAt<Type>(_transform, this, std::forward<Args>(_args)...);
 		}
@@ -157,8 +157,8 @@ namespace Krampus
 		/// <summary>
 		/// Spawns a diegetic widget kept at _screenPosition (window pixels): SpawnDiegeticWidget&lt;DiegeticLabelWidget&gt;(FVector2(40, 40), TextData("Score")).
 		/// </summary>
-		template <typename Type, typename ...Args, IS_BASE_OF(DiegeticWidget, Type)>
-		inline Type* SpawnDiegeticWidget(const FVector2& _screenPosition, Args&&... _args)
+		template <typename Type, typename ...Args> requires std::is_base_of_v<DiegeticWidget, Type>
+		Type* SpawnDiegeticWidget(const FVector2& _screenPosition, Args&&... _args)
 		{
 			Type* _widget = actorManager.CreateActor<Type>(this, std::forward<Args>(_args)...);
 			_widget->SetScreenPosition(_screenPosition);
@@ -171,8 +171,8 @@ namespace Krampus
 		/// <typeparam name="Type">Widget class derived from Widget.</typeparam>
 		/// <param name="_args">Arguments forwarded to the widget constructor.</param>
 		/// <returns>Pointer to the newly created widget.</returns>
-		template <typename Type, typename ...Args, IS_BASE_OF(Widget, Type)>
-		inline Type* SpawnWidget(Args&&... _args)
+		template <typename Type, typename ...Args> requires std::is_base_of_v<Widget, Type>
+		Type* SpawnWidget(Args&&... _args)
 		{
 			return hud.CreateWidget<Type>(this, std::forward<Args>(_args)...);
 		}

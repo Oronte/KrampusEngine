@@ -19,7 +19,7 @@ Krampus::Gradient::Gradient(const Color& _a, const Color& _b)
 
 std::string Gradient::GradientString(const std::string& _text, const bool& _textOnly) const
 {
-    const int& _size = CAST(int, _text.size());
+    const int& _size = static_cast<int>(_text.size());
     std::string _newWord = "";
 
     for (int _index = 0; _index < _size; _index++)
@@ -37,21 +37,21 @@ Color Gradient::ClampGradient(const int& _index, const int& _maxDisplayChar) con
     float _valueGreen = 0;
     float _valueBlue = 0;
 
-    const float& _rangeRed = CAST(float, gradB.r - gradA.r);
+    const float& _rangeRed = static_cast<float>(gradB.r - gradA.r);
     _normalizer = _index * (_rangeRed / _maxDisplayChar);
     _valueRed += (gradA.r + _normalizer);
 
-    const float& _rangeGreen = CAST(float, gradB.g - gradA.g);
+    const float& _rangeGreen = static_cast<float>(gradB.g - gradA.g);
     _normalizer = _index * (_rangeGreen / _maxDisplayChar);
     _valueGreen += (gradA.g + _normalizer);
 
-    const float& _rangeBlue = CAST(float, gradB.b - gradA.b);
+    const float& _rangeBlue = static_cast<float>(gradB.b - gradA.b);
     _normalizer = _index * (_rangeBlue / _maxDisplayChar);
     _valueBlue += (gradA.b + _normalizer);
 
     return Color(
-        CAST(std::int8_t, _valueRed),
-        CAST(std::int8_t, _valueGreen),
-        CAST(std::int8_t, _valueBlue));
+        static_cast<std::int8_t>(_valueRed),
+        static_cast<std::int8_t>(_valueGreen),
+        static_cast<std::int8_t>(_valueBlue));
 }
 

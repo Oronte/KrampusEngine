@@ -23,7 +23,7 @@ namespace Krampus
 		/// Sets the master volume for all audio playback in the range [0, 100].
 		/// </summary>
 		/// <param name="_volume">The global volume level.</param>
-		static inline void SetGlobalVolume(const Float& _volume)
+		static void SetGlobalVolume(const Float& _volume)
 		{
 			sf::Listener::setGlobalVolume(_volume);
 		}
@@ -32,7 +32,7 @@ namespace Krampus
 		/// Gets the master audio volume level.
 		/// </summary>
 		/// <returns>Current global volume level.</returns>
-		static inline Float GetGlobalVolume()
+		static Float GetGlobalVolume()
 		{
 			return sf::Listener::getGlobalVolume();
 		}
@@ -41,7 +41,7 @@ namespace Krampus
 		/// Sets the directional hearing cone of the listener.
 		/// </summary>
 		/// <param name="_cone">Listener cone specification.</param>
-		inline void SetCone(const sf::Listener::Cone& _cone)
+		void SetCone(const sf::Listener::Cone& _cone)
 		{
 			sf::Listener::setCone(_cone);
 		}
@@ -50,7 +50,7 @@ namespace Krampus
 		/// Gets the directional hearing cone of the listener.
 		/// </summary>
 		/// <returns>Current listener cone.</returns>
-		inline sf::Listener::Cone GetCone() const
+		sf::Listener::Cone GetCone() const
 		{
 			return sf::Listener::getCone();
 		}
@@ -65,24 +65,24 @@ namespace Krampus
 		/// Checks whether this audio listener is currently active.
 		/// </summary>
 		/// <returns>True if active, false otherwise.</returns>
-		inline Bool IsActive() const { return active; }
+		Bool IsActive() const { return active; }
 
 		/// <summary>
 		/// Sets whether the listener is viewed from a top-down perspective (Z is up) or side view (Y is up).
 		/// </summary>
 		/// <param name="_topView">True for top-down perspective.</param>
-		inline void		SetTopView(const Bool& _topView)	{ topView = _topView; dirty = true; }
+		void		SetTopView(const Bool& _topView)	{ topView = _topView; dirty = true; }
 
 		/// <summary>
 		/// Checks whether the listener uses a top-down orientation.
 		/// </summary>
 		/// <returns>True if top view, false if side view.</returns>
-		inline Bool		IsTopView() const					{ return topView; }
+		Bool		IsTopView() const					{ return topView; }
 
 		/// <summary>
 		/// Marks the cached spatial values as dirty, forcing an update on next tick.
 		/// </summary>
-		inline void		MarkDirty() { dirty = true; }
+		void		MarkDirty() { dirty = true; }
 
 	public:
 		/// <summary>
@@ -95,13 +95,13 @@ namespace Krampus
 		/// <summary>
 		/// Lifecycle callback invoked when gameplay begins.
 		/// </summary>
-		virtual void BeginPlay()					override;
+		void BeginPlay()					override;
 
 		/// <summary>
 		/// Updates the global audio listener position and orientation each frame based on owner transform.
 		/// </summary>
 		/// <param name="_deltaTime">Elapsed frame time in seconds.</param>
-		virtual void Tick(const Float& _deltaTime)	override;
+		void Tick(const Float& _deltaTime)	override;
 
 	private:
 		void DrawDebug() override;	// the hearing cone
@@ -113,7 +113,7 @@ namespace Krampus
 		/// Returns a string representation of the component.
 		/// </summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 	};
 
 }

@@ -191,7 +191,7 @@ void Krampus::AnimationComponentSM::ResetParameters()
 void Krampus::AnimationComponentSM::SetValue(const std::string& _name, const float& _value, const AnimationParameterType& _type)
 {
 	if (!graph.FindParameter(_name) && !values.contains(_name))
-		LOG_WARNING("AnimationComponentSM: \"" + owner->GetName().StdString() + "\" has no parameter \"" + _name + "\" in its graph: added for this game");
+		LOG_WARNING("AnimationComponentSM: \"" + owner->GetName() + "\" has no parameter \"" + _name + "\" in its graph: added for this game");
 	values[_name] = _type == AnimationParameterType::Int ? std::round(_value) : _value;
 }
 
@@ -233,7 +233,7 @@ bool Krampus::AnimationComponentSM::Passes(const AnimationTransition& _transitio
 void Krampus::AnimationComponentSM::TakeGraphTransition()
 {
 	if (!current || graph.transitions.empty()) return;
-	const std::string _currentName = current->GetName().StdString();
+	const std::string _currentName = current->GetName();
 
 	// The ones from any animation first (a "hurt" or "die" wins over the rest), then the ones of the current animation, in their order.
 	for (int _pass = 0; _pass < 2; ++_pass)
@@ -272,7 +272,7 @@ void Krampus::AnimationComponentSM::PlayAnimation(const String& _name)
 	const auto _found = animations.find(_name);
 	if (_found == animations.end())
 	{
-		LOG_WARNING("AnimationComponentSM: no animation \"" + _name.StdString() + "\" on \"" + owner->GetName().StdString() + "\"");
+		LOG_WARNING("AnimationComponentSM: no animation \"" + _name + "\" on \"" + owner->GetName() + "\"");
 		return;
 	}
 	if (_found->second.get() == current) { current->Start(); return; }

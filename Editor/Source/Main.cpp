@@ -188,6 +188,39 @@ static bool BuildRunning()
 	return _running;
 }
 
+// A picture as a window icon: square (centered, transparent around), 64 px, each pixel the average of those it covers.
+// The same as Engine.cpp does for the game (the host does not link the engine).
+static sf::Image IconPicture(const sf::Image& _picture)
+{
+	constexpr unsigned SIZE = 64;
+	const sf::Vector2u _from = _picture.getSize();
+	const unsigned _side = std::max(_from.x, _from.y);
+	const int _left = static_cast<int>((_side - _from.x) / 2), _top = static_cast<int>((_side - _from.y) / 2);
+	sf::Image _icon({ SIZE, SIZE }, sf::Color::Transparent);
+	for (unsigned _y = 0; _y < SIZE; ++_y)
+		for (unsigned _x = 0; _x < SIZE; ++_x)
+		{
+			const unsigned _x0 = _x * _side / SIZE, _y0 = _y * _side / SIZE;
+			const unsigned _x1 = std::max(_x0 + 1, (_x + 1) * _side / SIZE), _y1 = std::max(_y0 + 1, (_y + 1) * _side / SIZE);
+			double _r = 0.0, _g = 0.0, _b = 0.0, _a = 0.0;
+			for (unsigned _sy = _y0; _sy < _y1; ++_sy)
+				for (unsigned _sx = _x0; _sx < _x1; ++_sx)
+				{
+					const int _px = static_cast<int>(_sx) - _left, _py = static_cast<int>(_sy) - _top;
+					if (_px < 0 || _py < 0 || _px >= static_cast<int>(_from.x) || _py >= static_cast<int>(_from.y)) continue;
+					const sf::Color _c = _picture.getPixel({ static_cast<unsigned>(_px), static_cast<unsigned>(_py) });
+					_r += _c.r * static_cast<double>(_c.a);
+					_g += _c.g * static_cast<double>(_c.a);
+					_b += _c.b * static_cast<double>(_c.a);
+					_a += _c.a;
+				}
+			if (_a > 0.0)
+				_icon.setPixel({ _x, _y }, sf::Color(static_cast<std::uint8_t>(_r / _a + 0.5), static_cast<std::uint8_t>(_g / _a + 0.5),
+					static_cast<std::uint8_t>(_b / _a + 0.5), static_cast<std::uint8_t>(_a / ((_x1 - _x0) * (_y1 - _y0)) + 0.5)));
+		}
+	return _icon;
+}
+
 // The engine loads "Content/..." relative to the working directory: go up until the project root is found.
 static void EnterProjectRoot(const fs::path& _start)
 {
@@ -212,16 +245,27 @@ int main()
 	EnterProjectRoot(_exeDir);
 	CrashReporter::Install();
 
-	sf::RenderWindow _window(sf::VideoMode({ 1600u, 900u }), "Krampus Editor");
+	sf::RenderWindow _window(sf::VideoMode({ 1600u, 900u }), "Krampus Engine");
 	_window.setVerticalSyncEnabled(true);
+	// The logo in the title bar and the taskbar (the exe has it too: PackTool --icon, Editor/CMakeLists.txt), 64 px (a 650 px
+	// picture shows in the title bar but not in the taskbar).
+	sf::Image _icon;
+	if (sf::Image _logo; _logo.loadFromFile("Content/Textures/_internal/KrampusLogo.png"))
+	{
+		_icon = IconPicture(_logo);
+		_window.setIcon(_icon);
+	}
 
 	GameModule _game(_exeDir / "EditorModule.dll");
 	const auto _setTitle = [&_window](const std::string& _state)
 	{
-		_window.setTitle(_state.empty() ? "Krampus Editor" : "Krampus Editor - " + _state);
+		_window.setTitle(_state.empty() ? "Krampus Engine" : "Krampus Engine - " + _state);
 	};
 	if (!_game.Load(_window))
 		_setTitle("the editor module could not start: fix the build (see the console), then build again or press F5");
+	// Again: the taskbar asks the window for its icon while the module loads (seconds without reading the messages), gets no
+	// answer and keeps a blank icon. Set now, its question comes while the loop below answers.
+	if (_icon.getSize().x > 0) _window.setIcon(_icon);
 
 	sf::Clock			_pollClock;
 	fs::file_time_type	_lastSeen { };

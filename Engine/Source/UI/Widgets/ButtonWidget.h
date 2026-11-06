@@ -57,6 +57,6 @@ namespace Krampus
         ButtonWidget(Level* _level, const CircleShapeData& _data);
 
         /// <summary>Constructs internal components and binds interaction callbacks.</summary>
-        virtual void Construct() override;
+        void Construct() override;
     };
 }

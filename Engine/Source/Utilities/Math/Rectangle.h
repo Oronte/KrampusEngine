@@ -11,23 +11,23 @@ namespace Krampus
 		sf::Rect<T> rect;
 
 	public:
-		inline constexpr Vector2D<T> GetPosition() const noexcept
+		constexpr Vector2D<T> GetPosition() const noexcept
 		{
 			return Vector2D<T>(rect.position);
 		}
-		inline void SetPosition(const Vector2D<T>& _position) noexcept
+		void SetPosition(const Vector2D<T>& _position) noexcept
 		{
 			rect.position = _position;
 		}
-		inline constexpr Vector2D<T> GetSize() const noexcept
+		constexpr Vector2D<T> GetSize() const noexcept
 		{
 			return Vector2D<T>(rect.size);
 		}
-		inline void SetSize(const Vector2D<T>& _position) noexcept
+		void SetSize(const Vector2D<T>& _position) noexcept
 		{
 			rect.size = _position;
 		}
-		inline constexpr Vector2D<T> GetCenter() const
+		constexpr Vector2D<T> GetCenter() const
 		{
 			return Vector2D<T>(rect.getCenter());
 		}
@@ -42,11 +42,11 @@ namespace Krampus
 			rect = _rect;
 		}
 
-		inline constexpr bool Contains(const Vector2D<T>& _point) const
+		constexpr bool Contains(const Vector2D<T>& _point) const
 		{
 			return rect.contains(_point);
 		}
-		inline constexpr std::optional<Rectangle<T>> FindIntersection(const Rectangle<T> _rect) const
+		constexpr std::optional<Rectangle<T>> FindIntersection(const Rectangle<T> _rect) const
 		{
 			return rect.findIntersection(_rect);
 		}
@@ -56,12 +56,12 @@ namespace Krampus
 			return _other.rect == rect;
 		}
 
-		inline operator sf::Rect<T>() const noexcept
+		operator sf::Rect<T>() const noexcept
 		{
 			return rect;
 		}
 
-		inline virtual std::string ToString() const override
+		std::string ToString() const override
 		{
 			return std::format("Position : {} , Size : {} , Center : {}",
 				GetPosition().ToString(), 

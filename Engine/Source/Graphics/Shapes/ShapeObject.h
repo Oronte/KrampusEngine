@@ -1,7 +1,7 @@
 #pragma once
 #include "Shape.h"
 #include "ShapeAssets.h"
-#include "Graphics/Ressources/Shader.h"
+#include "Graphics/Resources/Shader.h"
 
 namespace Krampus
 {
@@ -112,7 +112,7 @@ namespace Krampus
 		/// Gets the shape type (Circle or Rectangle).
 		/// </summary>
 		/// <returns>ShapeType enum value.</returns>
-		inline ShapeType GetShapeType()
+		ShapeType GetShapeType()
 		{
 			return shapeType;
 		}
@@ -121,7 +121,7 @@ namespace Krampus
 		/// Gets a reference to the texture applied to the shape.
 		/// </summary>
 		/// <returns>Reference to Texture.</returns>
-		inline Texture& GetTextureRef()
+		Texture& GetTextureRef()
 		{
 			return texture;
 		}
@@ -130,7 +130,7 @@ namespace Krampus
 		/// Gets a pointer to the polymorphic Shape instance.
 		/// </summary>
 		/// <returns>Pointer to Shape.</returns>
-		inline Shape* GetShape() const
+		Shape* GetShape() const
 		{
 			return shape.get();
 		}
@@ -139,7 +139,7 @@ namespace Krampus
 		/// Gets a reference to the shape dimension data.
 		/// </summary>
 		/// <returns>Reference to ShapeSizeData union.</returns>
-		inline ShapeSizeData& GetSizeData()
+		ShapeSizeData& GetSizeData()
 		{
 			return sizeData;
 		}
@@ -167,7 +167,7 @@ namespace Krampus
 		void SetPolygon(const std::string& _shapeName);
 
 		/// <returns>The name of the shape of Content/Shapes the polygon comes from (also kept while it is a circle or a rectangle).</returns>
-		inline const std::string& GetPolygonName() const
+		const std::string& GetPolygonName() const
 		{
 			return polygonName;
 		}
@@ -220,7 +220,7 @@ namespace Krampus
 		/// <param name="_isRepeated">Whether texture repeats/tiles.</param>
 		/// <param name="_smooth">Whether bilinear filtering is enabled.</param>
 		/// <summary>Extension type last given to SetTexture.</summary>
-		inline TextureExtensionType GetTextureType() const
+		TextureExtensionType GetTextureType() const
 		{
 			return textureType;
 		}
@@ -233,7 +233,7 @@ namespace Krampus
 		void SetShapeType(const ShapeType& _type);
 
 		/// <summary>Path last given to SetTexture (empty if none).</summary>
-		inline const String& GetTexturePath() const
+		const String& GetTexturePath() const
 		{
 			return texturePath;
 		}

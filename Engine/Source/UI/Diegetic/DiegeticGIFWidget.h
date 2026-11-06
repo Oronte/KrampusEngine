@@ -18,7 +18,7 @@ namespace Krampus
 	public:
 		/// <summary>Gets the name of the active GIF animation sequence.</summary>
 		/// <returns>Animation name string.</returns>
-		inline String GetAnimationName() const
+		String GetAnimationName() const
 		{
 			return animationName;
 		}
@@ -50,7 +50,7 @@ namespace Krampus
 	public:
 		/// <summary>Returns a string representation of the diegetic GIF widget.</summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 	};
 
 }

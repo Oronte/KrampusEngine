@@ -50,3 +50,16 @@ set_target_properties(Engine PROPERTIES
     PDB_OUTPUT_DIRECTORY
         "${CMAKE_SOURCE_DIR}/Bin/${KRAMPUS_PLATFORM}-${KRAMPUS_ARCH}/$<CONFIG>/Engine"
 )
+
+# Steam (multiplayer through Steam, Network/SteamNet.*): only when the Steamworks SDK is in ThirdParty/Steamworks/sdk.
+# Without it the engine builds as before and the Steam functions say that this build has no Steam.
+set(STEAMWORKS_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/Steamworks/sdk")
+if(EXISTS "${STEAMWORKS_DIR}/public/steam/steam_api.h")
+    target_compile_definitions(Engine PUBLIC KRAMPUS_STEAM=1)
+    target_include_directories(Engine PUBLIC "${STEAMWORKS_DIR}/public")
+    target_link_directories(Engine PUBLIC "${STEAMWORKS_DIR}/redistributable_bin/win64")
+    target_link_libraries(Engine PUBLIC steam_api64)
+    message(STATUS "Steam: SDK found, multiplayer through Steam enabled")
+else()
+    message(STATUS "Steam: SDK not found in ThirdParty/Steamworks/sdk, Steam multiplayer disabled")
+endif()

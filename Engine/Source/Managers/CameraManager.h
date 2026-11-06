@@ -28,7 +28,7 @@ namespace Krampus
 		/// <summary>
 		/// Gets the camera the level is drawn with (nullptr until the first render).
 		/// </summary>
-		inline CameraComponent* GetCurrent() const
+		CameraComponent* GetCurrent() const
 		{
 			return current;
 		}
@@ -36,7 +36,7 @@ namespace Krampus
 		/// <summary>
 		/// Adds an outline to what is drawn this frame: in the HUD view while the debug outlines of widgets are drawn, in the world otherwise.
 		/// </summary>
-		inline void PushDebug(const std::shared_ptr<Vertices>& _vertices)
+		void PushDebug(const std::shared_ptr<Vertices>& _vertices)
 		{
 			(drawingScreenDebug ? screenDebugs : debugs).push_back(_vertices);
 		}
@@ -49,7 +49,7 @@ namespace Krampus
 		/// <summary>
 		/// Draws the world through this view, whatever the cameras of the level are (the editor's free camera). Call it every frame it must hold.
 		/// </summary>
-		inline void SetViewOverride(const sf::View& _view)
+		void SetViewOverride(const sf::View& _view)
 		{
 			viewOverride = _view;
 		}
@@ -57,7 +57,7 @@ namespace Krampus
 		/// <summary>
 		/// Goes back to the cameras of the level.
 		/// </summary>
-		inline void ClearViewOverride()
+		void ClearViewOverride()
 		{
 			viewOverride.reset();
 		}
@@ -76,12 +76,12 @@ namespace Krampus
 		/// <summary>Back to one camera on the whole window.</summary>
 		void ClearSplitScreen();
 
-		inline bool IsSplitScreen() const
+		bool IsSplitScreen() const
 		{
 			return splitCameras.size() > 1;
 		}
 
-		inline const std::vector<CameraComponent*>& GetSplitCameras() const
+		const std::vector<CameraComponent*>& GetSplitCameras() const
 		{
 			return splitCameras;
 		}
@@ -89,9 +89,9 @@ namespace Krampus
 		/// <summary>A camera that is destroyed leaves the split screen (the others share the window again).</summary>
 		void RemoveSplitCamera(CameraComponent* _camera);
 
-		inline void SetCurrent(CameraComponent* _camera)
+		void SetCurrent(CameraComponent* _camera)
 		{
-			LOG(VerbosityType::Verbose, std::string("Camera: current camera changed to ") + (_camera && _camera->GetOwner() ? _camera->GetOwner()->GetName().StdString() : std::string("none")));
+			LOG(VerbosityType::Verbose, std::string("Camera: current camera changed to ") + (_camera && _camera->GetOwner() ? _camera->GetOwner()->GetName() : std::string("none")));
 			current = _camera;
 		}
 
@@ -99,7 +99,7 @@ namespace Krampus
 		/// Adds a drawable object into the world rendering layer sorted by its Z-order.
 		/// </summary>
 		/// <param name="_drawable">Pointer to IDrawable.</param>
-		inline void AddToWorld(IDrawable* _drawable)
+		void AddToWorld(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -116,7 +116,7 @@ namespace Krampus
 		/// Adds a drawable object into the UI screen rendering layer sorted by its Z-order.
 		/// </summary>
 		/// <param name="_drawable">Pointer to IDrawable.</param>
-		inline void AddToScreen(IDrawable* _drawable)
+		void AddToScreen(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -132,7 +132,7 @@ namespace Krampus
 		/// Removes a drawable object from the world rendering layer.
 		/// </summary>
 		/// <param name="_drawable">Pointer to IDrawable.</param>
-		inline void RemoveToWorld(IDrawable* _drawable)
+		void RemoveToWorld(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -149,7 +149,7 @@ namespace Krampus
 		/// Removes a drawable object from the UI screen rendering layer.
 		/// </summary>
 		/// <param name="_drawable">Pointer to IDrawable.</param>
-		inline void RemoveToScreen(IDrawable* _drawable)
+		void RemoveToScreen(IDrawable* _drawable)
 		{
 			if (!_drawable)
 			{
@@ -167,7 +167,7 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_drawable">Pointer to IDrawable.</param>
 		/// <param name="_oldZOrder">Previous Z-order layer value.</param>
-		inline void ChangeWorldZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
+		void ChangeWorldZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
 		{
 			std::erase_if(actors[_oldZOrder], [&](const IDrawable* _item)
 				{
@@ -182,7 +182,7 @@ namespace Krampus
 		/// </summary>
 		/// <param name="_drawable">Pointer to IDrawable.</param>
 		/// <param name="_oldZOrder">Previous Z-order layer value.</param>
-		inline void ChangeScreenZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
+		void ChangeScreenZOrder(IDrawable* _drawable, const uint8_t& _oldZOrder)
 		{
 			std::erase_if(widgets[_oldZOrder], [&](const IDrawable* _item)
 				{

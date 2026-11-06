@@ -32,7 +32,7 @@ Krampus::ShapeObject::ShapeObject(const RectangleShapeData& _data)
 Krampus::ShapeObject::ShapeObject(const PolygonShapeData& _data)
 {
 	shapeType = ShapeType::Polygon;
-	polygonName = _data.shape.StdString();
+	polygonName = _data.shape;
 	const Polygon2D& _polygon = ShapeAssets::Get(polygonName);
 	sizeData.size = _polygon.Bounds().GetSize();
 	shape = std::make_unique<PolygonShape>(_polygon);	// its origin is the (0, 0) of the points, not its middle

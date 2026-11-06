@@ -1,5 +1,5 @@
 #pragma once
-#include "Graphics/Ressources/Vertices.h"
+#include "Graphics/Resources/Vertices.h"
 #include "Utilities/Math/Angle.h"
 
 namespace Krampus

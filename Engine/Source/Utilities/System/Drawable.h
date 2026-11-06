@@ -25,17 +25,17 @@ namespace Krampus
 	{
 		uint8_t zOrder = 0;
 	public:
-		inline uint8_t GetZOrder() const
+		uint8_t GetZOrder() const
 		{
 			return zOrder;
 		}
-		inline virtual void SetZOrder(const uint8_t& _zOrder)
+		virtual void SetZOrder(const uint8_t& _zOrder)
 		{
 			zOrder = _zOrder;
 		}
-		inline virtual void SetZOrder(const ZOrder& _zOrder)
+		virtual void SetZOrder(const ZOrder& _zOrder)
 		{
-			zOrder = CAST(uint8_t, _zOrder);
+			zOrder = static_cast<uint8_t>(_zOrder);
 		}
 		virtual void Draw(Window& _window) = 0;
 	};

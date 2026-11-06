@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "Core/AssetPack.h"
 #include "Managers/InputManager.h"
 #include "Network/NetworkManager.h"
 #include "Managers/LevelManager.h"
@@ -39,6 +40,46 @@ Engine::Engine(sf::RenderWindow* _hostWindow)
 		else
 			window.Create(String(_ship.gameName), _size, _ship.windowMode == 2);
 		window.SetFramerateLimit(0);
+
+		// The icon of the window (title bar, taskbar): Settings > Ship > icon (the exe gets the same one, File > Package Game), else
+		// the logo. Made 64 px: a big picture shows in the title bar but not in the taskbar (nor did the icon loaded from the exe).
+		{
+			const std::string _file = _ship.icon.empty() ? std::string(ShipSettings::DEFAULT_ICON) : _ship.icon;
+			std::vector<std::uint8_t> _bytes;
+			sf::Image _picture;
+			if (AssetPack::ReadAll(CONTENT_PATH + "Textures/" + _file, _bytes) && _picture.loadFromMemory(_bytes.data(), _bytes.size()))
+			{
+				constexpr unsigned SIZE = 64;
+				const sf::Vector2u _from = _picture.getSize();
+				const unsigned _side = std::max(_from.x, _from.y);
+				const int _left = static_cast<int>((_side - _from.x) / 2), _top = static_cast<int>((_side - _from.y) / 2);
+				sf::Image _icon({ SIZE, SIZE }, sf::Color::Transparent);
+				for (unsigned _y = 0; _y < SIZE; ++_y)	// the picture centered in a square, each pixel the average of those it covers
+					for (unsigned _x = 0; _x < SIZE; ++_x)
+					{
+						const unsigned _x0 = _x * _side / SIZE, _y0 = _y * _side / SIZE;
+						const unsigned _x1 = std::max(_x0 + 1, (_x + 1) * _side / SIZE), _y1 = std::max(_y0 + 1, (_y + 1) * _side / SIZE);
+						double _r = 0.0, _g = 0.0, _b = 0.0, _a = 0.0;
+						for (unsigned _sy = _y0; _sy < _y1; ++_sy)
+							for (unsigned _sx = _x0; _sx < _x1; ++_sx)
+							{
+								const int _px = static_cast<int>(_sx) - _left, _py = static_cast<int>(_sy) - _top;
+								if (_px < 0 || _py < 0 || _px >= static_cast<int>(_from.x) || _py >= static_cast<int>(_from.y)) continue;
+								const sf::Color _c = _picture.getPixel({ static_cast<unsigned>(_px), static_cast<unsigned>(_py) });
+								_r += _c.r * static_cast<double>(_c.a);
+								_g += _c.g * static_cast<double>(_c.a);
+								_b += _c.b * static_cast<double>(_c.a);
+								_a += _c.a;
+							}
+						if (_a > 0.0)
+							_icon.setPixel({ _x, _y }, sf::Color(static_cast<std::uint8_t>(_r / _a + 0.5), static_cast<std::uint8_t>(_g / _a + 0.5),
+								static_cast<std::uint8_t>(_b / _a + 0.5), static_cast<std::uint8_t>(_a / ((_x1 - _x0) * (_y1 - _y0)) + 0.5)));
+					}
+				window.GetRenderWindow().setIcon(_icon);
+			}
+			else
+				LOG_WARNING("Engine: the icon Textures/" + _file + " (Settings > Ship) cannot be read");
+		}
 	}
 	settings.Apply();
 

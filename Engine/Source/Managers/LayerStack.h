@@ -22,7 +22,7 @@ namespace Krampus
 		/// </summary>
 		/// <returns>Pointer to the new layer.</returns>
 		template <typename Type, typename ...Args>
-		inline Type* PushLayer(Args&&... _args)
+		Type* PushLayer(Args&&... _args)
 		{
 			std::unique_ptr<Type> _owned = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _layer = _owned.get();
@@ -38,7 +38,7 @@ namespace Krampus
 		/// </summary>
 		/// <returns>Pointer to the new overlay.</returns>
 		template <typename Type, typename ...Args>
-		inline Type* PushOverlay(Args&&... _args)
+		Type* PushOverlay(Args&&... _args)
 		{
 			std::unique_ptr<Type> _owned = std::make_unique<Type>(std::forward<Args>(_args)...);
 			Type* _layer = _owned.get();
@@ -51,7 +51,7 @@ namespace Krampus
 		/// <summary>
 		/// Removes a layer or overlay from the stack. Does nothing if it is not in the stack.
 		/// </summary>
-		inline void Pop(Layer* _layer)
+		void Pop(Layer* _layer)
 		{
 			auto _it = std::find_if(layers.begin(), layers.end(), [&](const auto& _other) { return _other.get() == _layer; });
 			if (_it == layers.end()) return;
@@ -64,10 +64,19 @@ namespace Krampus
 			layers.erase(_it);
 		}
 
+		/// <returns>The first layer of type Type (an overlay too), or nullptr.</returns>
+		template <typename Type>
+		Type* Find() const
+		{
+			for (const std::unique_ptr<Layer>& _layer : layers)
+				if (Type* _found = dynamic_cast<Type*>(_layer.get())) return _found;
+			return nullptr;
+		}
+
 		/// <summary>
 		/// Removes every layer, top first.
 		/// </summary>
-		inline void Clear()
+		void Clear()
 		{
 			while (!layers.empty())
 			{
@@ -78,7 +87,7 @@ namespace Krampus
 			overlayStart = 0;
 		}
 
-		inline void Update(const Float& _deltaTime)
+		void Update(const Float& _deltaTime)
 		{
 			// Layers below the topmost pausing layer are skipped.
 			size_t _first = 0;
@@ -100,7 +109,7 @@ namespace Krampus
 		/// <summary>
 		/// True if any layer asks the InputManager to be cut off.
 		/// </summary>
-		inline Bool BlocksInput() const
+		Bool BlocksInput() const
 		{
 			for (const auto& _layer : layers)
 				if (_layer->BlocksInput())
@@ -108,7 +117,7 @@ namespace Krampus
 			return false;
 		}
 
-		inline void Render(Window& _window)
+		void Render(Window& _window)
 		{
 			for (size_t _i = 0; _i < layers.size(); ++_i)
 				layers[_i]->OnRender(_window);
@@ -118,7 +127,7 @@ namespace Krampus
 		/// Sends the event from the top layer down until one consumes it.
 		/// </summary>
 		/// <returns>True if a layer consumed the event.</returns>
-		inline Bool DispatchEvent(const sf::Event& _event)
+		Bool DispatchEvent(const sf::Event& _event)
 		{
 			for (size_t _i = layers.size(); _i > 0; --_i)
 				if (layers[_i - 1]->OnEvent(_event))

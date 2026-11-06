@@ -4,6 +4,10 @@
 
 namespace
 {
+	constexpr float SPATIAL_MIN_DISTANCE	= 400.f;	// full volume inside this radius (pixels)
+	constexpr float SPATIAL_ATTENUATION		= 1.5f;
+	constexpr float SPATIAL_DOPPLER_FACTOR	= 0.1f;		// velocities are pixels per frame: a full Doppler would be far too strong
+
 	// A sound that exists but plays nothing: a component without a file still has a valid sound to configure.
 	Krampus::Sound MakeSilentSound()
 	{
@@ -12,106 +16,95 @@ namespace
 		(void)_buffer->loadFromSamples(_samples, 2, 1, 44100, { sf::SoundChannel::Mono });
 		return Krampus::Sound(_buffer);
 	}
+
+	// SFML listens in 3D (X right, Y up, Z forward): the 2D plane of the game is X/Z.
+	Krampus::FVector3 ToAudioSpace(const Krampus::FVector2& _vector)
+	{
+		return Krampus::FVector3(_vector.x, 0.f, _vector.y);
+	}
 }
 
 Krampus::SpatialSoundComponent::SpatialSoundComponent(Actor* _owner)
-	: Component(_owner)
+	: Component(_owner), sound(MakeSilentSound())
 {
 	name = NAME_OF(SpatialSoundComponent);
-	sound = MakeSilentSound();
-
-	onOwnerMoveHandle = _owner->onMove.AddListener([this](FVector2 _newPos)
-		{
-			Set3DPosition(FVector3(_newPos.x, 0.0f, _newPos.y));
-		});
-	onOwnerRotateHandle = _owner->onRotate.AddListener([this](Angle _newRot)
-		{
-			FVector2 _dir;
-			if (isTopDown)
-				_dir = GetUpVector();
-			else
-				_dir = GetRightVector();
-			SetDirection(FVector3(_dir.x, 0.0f, _dir.y));
-		});
+	FollowOwner();
 }
 
 Krampus::SpatialSoundComponent::SpatialSoundComponent(Actor* _owner, const String& _fileName, const AudioExtensionType& _type)
-	: Component(_owner)
+	: Component(_owner), sound(M_AUDIO.CreateSound(_fileName, _type)), soundFile(_fileName), soundType(_type)
 {
 	name = NAME_OF(SpatialSoundComponent);
-	sound = M_AUDIO.CreateSound(_fileName, _type);
-	soundFile = _fileName;
-	soundType = _type;
+	FollowOwner();
+}
 
-	onOwnerMoveHandle = _owner->onMove.AddListener([this](FVector2 _newPos)
-		{
-			Set3DPosition(FVector3(_newPos.x, 0.0f, _newPos.y));
-		});
-	onOwnerRotateHandle = _owner->onRotate.AddListener([this](Angle _newRot)
-		{
-			FVector2 _dir;
-			if (isTopDown)
-				_dir = GetUpVector();
-			else
-				_dir = GetRightVector();
-			SetDirection(FVector3(_dir.x, 0.0f, _dir.y));
-		});
+void Krampus::SpatialSoundComponent::FollowOwner()
+{
+	onOwnerMoveHandle = owner->onMove.AddListener([this](FVector2 _newPosition) { sound.SetPosition(ToAudioSpace(_newPosition)); });
+	onOwnerRotateHandle = owner->onRotate.AddListener([this](Angle) { UpdateDirection(); });
+}
+
+void Krampus::SpatialSoundComponent::UpdateDirection()
+{
+	sound.SetDirection(ToAudioSpace(isTopDown ? GetUpVector() : GetRightVector()));
 }
 
 void Krampus::SpatialSoundComponent::Construct()
 {
 	Component::Construct();
-
 	previousPosition = GetPosition();
-	Set3DPosition(FVector3(previousPosition.x, 0.0f, previousPosition.y));
-	FVector2 _dir;
-	if (isTopDown)
-		_dir = GetUpVector();
-	else
-		_dir = GetRightVector();
-	SetDirection(FVector3(_dir.x, 0.0f, _dir.y));
+	UpdateDirection();
 	ApplySpatialSettings();
 }
 
 void Krampus::SpatialSoundComponent::ApplySpatialSettings()
 {
-	SetMinDistance(400.0f);
-	SetAttenuation(1.5f);
-	SetSpatializationEnabled(true);
-	SetRelativeToListener(false);
-	SetDopplerFactor(0.1f);
-	Set3DPosition(FVector3(GetPosition().x, 0.0f, GetPosition().y));
+	sound.SetMinDistance(SPATIAL_MIN_DISTANCE);
+	sound.SetAttenuation(SPATIAL_ATTENUATION);
+	sound.SetSpatializationEnabled(true);
+	sound.SetRelativeToListener(false);
+	sound.SetDopplerFactor(SPATIAL_DOPPLER_FACTOR);
+	sound.SetPosition(ToAudioSpace(GetPosition()));
 }
 
 void Krampus::SpatialSoundComponent::SetSoundFile(const String& _fileName, const AudioExtensionType& _type)
 {
-	const Float _volume = GetVolume();
-	const Bool _loop = IsLooping();
-	const Float _pitch = GetPitch();
-	const Float _attenuation = GetAttenuation();
-
+	const float _volume = sound.GetVolume();
+	const bool _loop = sound.IsLooping();
+	const float _pitch = sound.GetPitch();
+	const float _attenuation = sound.GetAttenuation();
 	sound.Stop();
 
-	const std::string _name = _fileName.StdString();
-	const bool _exists = !_name.empty() && AssetPack::Exists(CONTENT_PATH + "Audio/" + _name + std::string(_type == AudioExtensionType::WAV ? ".wav" : ".mp3"));
-	if (!_name.empty() && !_exists)
-		LOG_WARNING("SpatialSoundComponent: sound file not found: " + _name);
+	const bool _exists = !_fileName.empty() && AssetPack::Exists(CONTENT_PATH + "Audio/" + _fileName + (_type == AudioExtensionType::WAV ? ".wav" : ".mp3"));
+	if (!_fileName.empty() && !_exists)
+		LOG_WARNING("SpatialSoundComponent: sound file not found: " + _fileName);
 
 	sound = _exists ? M_AUDIO.CreateSound(_fileName, _type) : MakeSilentSound();
 	soundFile = _exists ? _fileName : String();
 	soundType = _type;
 
 	ApplySpatialSettings();
-	SetVolume(_volume);
-	SetLoop(_loop);
-	SetPitch(_pitch);
-	SetAttenuation(_attenuation);
+	sound.SetVolume(_volume);
+	sound.SetLoop(_loop);
+	sound.SetPitch(_pitch);
+	sound.SetAttenuation(_attenuation);
+}
+
+void Krampus::SpatialSoundComponent::Play()
+{
+	LOG(VerbosityType::Verbose, "Sound: play '" + soundFile + "' on " + GetName());
+	sound.Play();
+}
+
+void Krampus::SpatialSoundComponent::Stop()
+{
+	LOG(VerbosityType::Verbose, "Sound: stop '" + soundFile + "' on " + GetName());
+	sound.Stop();
 }
 
 void Krampus::SpatialSoundComponent::BeginPlay()
 {
 	Component::BeginPlay();
-
 	if (playOnBeginPlay)
 		Play();
 }
@@ -119,9 +112,7 @@ void Krampus::SpatialSoundComponent::BeginPlay()
 void Krampus::SpatialSoundComponent::Tick(const Float& _deltaTime)
 {
 	Component::Tick(_deltaTime);
-
-	FVector2 _currentPosition = GetPosition();
-	FVector2 _offset = _currentPosition - previousPosition;
-	SetVelocity(FVector3(_offset.x, 0.0f, _offset.y));
-	previousPosition = _currentPosition;
+	const FVector2 _position = GetPosition();
+	sound.SetVelocity(ToAudioSpace(_position - previousPosition));
+	previousPosition = _position;
 }

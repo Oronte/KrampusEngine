@@ -15,7 +15,7 @@ namespace Krampus
 		/// Gets a pointer to the engine world instance.
 		/// </summary>
 		/// <returns>Pointer to the Engine world.</returns>
-		inline Engine* GetWorld() const
+		Engine* GetWorld() const
 		{
 			return world;
 		}

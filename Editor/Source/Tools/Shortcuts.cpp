@@ -94,6 +94,7 @@ void Shortcuts::Initialize()
 	_add("Redo (second key)",	"Global",	{ ImGuiKey_Z, true, true, false });
 	_add("Play / Stop",			"Global",	{ ImGuiKey_P, true, false, false });
 	_add("Compile",				"Global",	{ ImGuiKey_F7, false, false, false }, true);
+	_add("Command Palette",	"Global",	{ ImGuiKey_K, true, false, false });
 	_add("Open Solution",		"Global",	{ });
 	_add("Package Game",		"Global",	{ });
 	_add("Gizmo: All tools",	"Viewport",	{ ImGuiKey_Q, false, false, false });

@@ -104,7 +104,9 @@ target_link_libraries(Editor PRIVATE
     $<$<OR:$<CONFIG:Release>,$<CONFIG:Ship>>:sfml-system>
 )
 
+# The exe is "Krampus Engine.exe" (the target keeps the name Editor), with the logo as its icon (PackTool --icon after the link).
 set_target_properties(Editor PROPERTIES
+    OUTPUT_NAME "Krampus Engine"
     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
     PDB_OUTPUT_DIRECTORY "${BIN_DIR}"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -114,7 +116,15 @@ add_custom_command(TARGET Editor POST_BUILD
     COMMAND "${CMAKE_COMMAND}"
         -D "CONFIG=$<CONFIG>"
         -D "SFML_BIN_DIR=${CMAKE_SOURCE_DIR}/ThirdParty/SFML-3.0.0/binaries"
+        -D "STEAM_BIN_DIR=${CMAKE_SOURCE_DIR}/ThirdParty/Steamworks/sdk/redistributable_bin/win64"
         -D "OUT_DIR=${CMAKE_SOURCE_DIR}/Bin/${KRAMPUS_PLATFORM}-${KRAMPUS_ARCH}/$<CONFIG>/Editor"
         -P "${CMAKE_SOURCE_DIR}/CMake/CopyDLLs.cmake"
     COMMENT "Copying SFML DLLs ($<CONFIG>)..."
+)
+
+add_dependencies(Editor PackTool)
+add_custom_command(TARGET Editor POST_BUILD
+    COMMAND "$<TARGET_FILE:PackTool>" --icon "${CMAKE_SOURCE_DIR}/Content/Textures/_internal/KrampusLogo.png" "$<TARGET_FILE:Editor>"
+    COMMENT "Icon of the editor (KrampusLogo.png)..."
+    VERBATIM
 )

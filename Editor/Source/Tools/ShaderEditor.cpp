@@ -1,4 +1,5 @@
 #include "EditorContext.h"
+#include "EditorWidgets.h"
 #include "EditorTheme.h"
 #include "Graphics/Shaders/ShaderMaterial.h"
 #include "Managers/TextureManager.h"
@@ -20,19 +21,22 @@ namespace
 	constexpr const char*	PREVIEW_KEY		= "__ShaderEditorPreview";
 	constexpr unsigned		PREVIEW_SIZE	= 256;
 
-	bool					g_open			= false;
-	std::string				g_name;					// the shader being edited
-	std::string				g_fragment, g_vertex;	// its text, as typed
-	std::string				g_savedFragment, g_savedVertex;
-	std::string				g_compiledFragment, g_compiledVertex;	// what the preview was made from
-	std::chrono::steady_clock::time_point	g_lastEdit;
-	std::string				g_error;
-	bool					g_compiled		= false;
-	ShaderMaterial			g_preview;				// the preview's own parameter values
-	char					g_picture[128]	= "_internal/KrampusEngineLogo.png";
-	bool					g_fullPicture	= false;	// preview as a post-process effect: the shader covers the whole picture
-	char					g_newName[64]	= "MyShader";
-	int						g_tab			= 0;	// 0 fragment, 1 vertex
+	struct ShaderEditorState
+	{
+		bool					open			= false;
+		std::string				name;					// the shader being edited
+		std::string				fragment, vertex;	// its text, as typed
+		std::string				savedFragment, savedVertex;
+		std::string				compiledFragment, compiledVertex;	// what the preview was made from
+		std::chrono::steady_clock::time_point	lastEdit;
+		std::string				error;
+		bool					compiled		= false;
+		ShaderMaterial			preview;				// the preview's own parameter values
+		char					picture[128]	= "_internal/KrampusEngineLogo.png";
+		bool					fullPicture	= false;	// preview as a post-process effect: the shader covers the whole picture
+		char					newName[64]	= "MyShader";
+		int						tab			= 0;	// 0 fragment, 1 vertex
+	} state;
 
 	const char* SPRITE_TEMPLATE = R"(// A sprite shader. A parameter is a uniform with a comment: default [min, max] help.
 uniform sampler2D texture;
@@ -99,16 +103,16 @@ void main()
 
 	bool Dirty()
 	{
-		return g_fragment != g_savedFragment || g_vertex != g_savedVertex;
+		return state.fragment != state.savedFragment || state.vertex != state.savedVertex;
 	}
 
 	void Save()
 	{
-		if (g_name.empty()) return;
-		const bool _ok = ShaderLibrary::Save(g_name, g_fragment, g_vertex);
-		g_savedFragment = g_fragment;
-		g_savedVertex = g_vertex;
-		LOG_MSG("Shader " + g_name + " saved" + (_ok ? "" : " (it does not compile)"));
+		if (state.name.empty()) return;
+		const bool _ok = ShaderLibrary::Save(state.name, state.fragment, state.vertex);
+		state.savedFragment = state.fragment;
+		state.savedVertex = state.vertex;
+		LOG_MSG("Shader " + state.name + " saved" + (_ok ? "" : " (it does not compile)"));
 	}
 
 	void Open(const std::string& _name)
@@ -116,14 +120,14 @@ void main()
 		if (Dirty()) Save();	// nothing typed is lost
 		const ShaderAsset* _asset = ShaderLibrary::Get(_name);
 		if (!_asset) return;
-		g_name = _name;
-		g_fragment = g_savedFragment = _asset->fragmentSource;
-		g_vertex = g_savedVertex = _asset->vertexSource;
-		g_compiledFragment.clear();
-		g_compiledVertex = "\x01";	// compile the preview at once
-		g_preview.values.clear();
-		g_fullPicture = _name.find("Post/") != std::string::npos;
-		g_tab = 0;
+		state.name = _name;
+		state.fragment = state.savedFragment = _asset->fragmentSource;
+		state.vertex = state.savedVertex = _asset->vertexSource;
+		state.compiledFragment.clear();
+		state.compiledVertex = "\x01";	// compile the preview at once
+		state.preview.values.clear();
+		state.fullPicture = _name.find("Post/") != std::string::npos;
+		state.tab = 0;
 	}
 
 	void Create(const std::string& _wanted, const bool _post)
@@ -155,7 +159,7 @@ void main()
 			_checker->setRepeated(true);
 		}
 
-		const std::shared_ptr<sf::Texture> _picture = M_TEXTURE.GetSharedTexture(String(g_picture));
+		const std::shared_ptr<sf::Texture> _picture = M_TEXTURE.GetSharedTexture(String(state.picture));
 		sf::Sprite _background(*_checker, sf::IntRect({ 0, 0 }, { static_cast<int>(PREVIEW_SIZE), static_cast<int>(PREVIEW_SIZE) }));
 		const auto _fitted = [&]() -> std::optional<sf::Sprite>
 		{
@@ -170,7 +174,7 @@ void main()
 
 		const sf::Vector2f _resolution(static_cast<float>(PREVIEW_SIZE), static_cast<float>(PREVIEW_SIZE));
 		_target->clear();
-		if (g_fullPicture)
+		if (state.fullPicture)
 		{
 			// As a post-process effect: the whole picture goes through the shader.
 			_scene->clear();
@@ -179,7 +183,7 @@ void main()
 			_scene->display();
 			sf::RenderStates _states;
 			_states.blendMode = sf::BlendNone;
-			g_preview.Apply(_states, &_scene->getTexture(), _resolution);
+			state.preview.Apply(_states, &_scene->getTexture(), _resolution);
 			_target->draw(sf::Sprite(_scene->getTexture()), _states);
 		}
 		else
@@ -188,13 +192,13 @@ void main()
 			if (auto _sprite = _fitted())
 			{
 				sf::RenderStates _states;
-				g_preview.Apply(_states, _picture.get(), _resolution);
+				state.preview.Apply(_states, _picture.get(), _resolution);
 				_target->draw(*_sprite, _states);
 			}
 		}
 		_target->display();
 		ImGui::Image(*_target, sf::Vector2f(static_cast<float>(PREVIEW_SIZE), static_cast<float>(PREVIEW_SIZE)));
-		if (!_picture) ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::ConsoleWarning), "No picture Content/Textures/%s", g_picture);
+		if (!_picture) ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::ConsoleWarning), "No picture Content/Textures/%s", state.picture);
 	}
 }
 
@@ -212,14 +216,14 @@ namespace Krampus
 		case ShaderParam::Type::Float:
 		{
 			float _v = _at(0, 0.f);
-			_changed = _param.min < _param.max ? ImGui::SliderFloat(_label, &_v, _param.min, _param.max) : ImGui::DragFloat(_label, &_v, 0.01f);
+			_changed = _param.min < _param.max ? EditorUI::SliderFloat(_label, &_v, _param.min, _param.max) : ImGui::DragFloat(_label, &_v, 0.01f);
 			if (_changed) _value = Number(_v);
 			break;
 		}
 		case ShaderParam::Type::Int:
 		{
 			int _v = static_cast<int>(_at(0, 0.f));
-			_changed = _param.min < _param.max ? ImGui::SliderInt(_label, &_v, static_cast<int>(_param.min), static_cast<int>(_param.max)) : ImGui::DragInt(_label, &_v);
+			_changed = _param.min < _param.max ? EditorUI::SliderInt(_label, &_v, static_cast<int>(_param.min), static_cast<int>(_param.max)) : ImGui::DragInt(_label, &_v);
 			if (_changed) _value = std::to_string(_v);
 			break;
 		}
@@ -267,36 +271,36 @@ namespace Krampus
 
 	void OpenShaderEditor(const std::string& _name)
 	{
-		g_open = true;
-		if (!_name.empty() && _name != g_name) Open(_name);
+		state.open = true;
+		if (!_name.empty() && _name != state.name) Open(_name);
 		ImGui::SetWindowFocus("Shader Editor");
 	}
 
 	void SaveShaderEditorChanges()
 	{
-		if (g_open && Dirty()) Save();
+		if (state.open && Dirty()) Save();
 	}
 
 	void DrawShaderEditor(EditorContext&)
 	{
-		if (!g_open) return;
+		if (!state.open) return;
 		ImGui::SetNextWindowSize(ImVec2(1180.f, 640.f), ImGuiCond_FirstUseEver);
-		if (!ImGui::Begin("Shader Editor", &g_open, ImGuiWindowFlags_MenuBar))
+		if (!ImGui::Begin("Shader Editor", &state.open, ImGuiWindowFlags_MenuBar))
 		{
 			ImGui::End();
 			return;
 		}
-		if (!g_open && Dirty()) Save();
+		if (!state.open && Dirty()) Save();
 
 		if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("Shader"))
 			{
-				if (ImGui::MenuItem("Save", "Ctrl+S", false, !g_name.empty())) Save();
-				if (ImGui::MenuItem("Revert to the saved file", nullptr, false, Dirty())) { g_fragment = g_savedFragment; g_vertex = g_savedVertex; }
+				if (ImGui::MenuItem("Save", "Ctrl+S", false, !state.name.empty())) Save();
+				if (ImGui::MenuItem("Revert to the saved file", nullptr, false, Dirty())) { state.fragment = state.savedFragment; state.vertex = state.savedVertex; }
 				ImGui::EndMenu();
 			}
-			if (!g_name.empty()) ImGui::TextDisabled("|  %s%s", g_name.c_str(), Dirty() ? " *" : "");
+			if (!state.name.empty()) ImGui::TextDisabled("|  %s%s", state.name.c_str(), Dirty() ? " *" : "");
 			if (!ShaderLibrary::Available()) ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::ConsoleError), "  this graphics card has no shaders");
 			ImGui::EndMenuBar();
 		}
@@ -307,16 +311,16 @@ namespace Krampus
 		if (ImGui::BeginChild("##shaderList", ImVec2(230.f * _scale, 0.f), ImGuiChildFlags_Borders))
 		{
 			ImGui::SetNextItemWidth(-FLT_MIN);
-			ImGui::InputText("##newName", g_newName, sizeof(g_newName));
-			if (ImGui::Button("+ Sprite shader", ImVec2(-FLT_MIN, 0.f))) Create(g_newName, false);
-			if (ImGui::Button("+ Post-process shader", ImVec2(-FLT_MIN, 0.f))) Create(g_newName, true);
+			ImGui::InputText("##newName", state.newName, sizeof(state.newName));
+			if (ImGui::Button("+ Sprite shader", ImVec2(-FLT_MIN, 0.f))) Create(state.newName, false);
+			if (ImGui::Button("+ Post-process shader", ImVec2(-FLT_MIN, 0.f))) Create(state.newName, true);
 			ImGui::SeparatorText("Content/Shaders");
 			for (const std::string& _name : ShaderLibrary::List())
 			{
 				const ShaderAsset* _asset = ShaderLibrary::Get(_name);
 				const bool _broken = _asset && !_asset->IsReady();
 				if (_broken) ImGui::PushStyleColor(ImGuiCol_Text, EditorTheme::Get(EditorTheme::Custom::ConsoleError));
-				if (ImGui::Selectable(_name.c_str(), _name == g_name)) Open(_name);
+				if (ImGui::Selectable(_name.c_str(), _name == state.name)) Open(_name);
 				if (_broken) ImGui::PopStyleColor();
 				if (_broken && ImGui::IsItemHovered()) ImGui::SetTooltip("Does not compile");
 			}
@@ -324,7 +328,7 @@ namespace Krampus
 		ImGui::EndChild();
 		ImGui::SameLine();
 
-		if (g_name.empty())
+		if (state.name.empty())
 		{
 			ImGui::TextWrapped("Pick a shader on the left, or make a new one. A shader is put on a sprite, a HUD image or particles in the "
 				"Inspector (Material), or on the whole screen with a PostProcessComponent (Add Actor > PostProcessVolume).");
@@ -338,32 +342,32 @@ namespace Krampus
 		{
 			if (ImGui::BeginTabBar("##stages"))
 			{
-				if (ImGui::BeginTabItem("Fragment")) { g_tab = 0; ImGui::EndTabItem(); }
-				if (ImGui::BeginTabItem(g_vertex.empty() ? "Vertex (none)" : "Vertex")) { g_tab = 1; ImGui::EndTabItem(); }
+				if (ImGui::BeginTabItem("Fragment")) { state.tab = 0; ImGui::EndTabItem(); }
+				if (ImGui::BeginTabItem(state.vertex.empty() ? "Vertex (none)" : "Vertex")) { state.tab = 1; ImGui::EndTabItem(); }
 				ImGui::EndTabBar();
 			}
-			const float _errorHeight = ImGui::GetTextLineHeightWithSpacing() * (g_error.empty() ? 1.6f : 6.f);
+			const float _errorHeight = ImGui::GetTextLineHeightWithSpacing() * (state.error.empty() ? 1.6f : 6.f);
 			const ImVec2 _codeSize(-FLT_MIN, std::max(100.f, ImGui::GetContentRegionAvail().y - _errorHeight));
-			const bool _edited = g_tab == 0 ? CodeField("##fragment", g_fragment, _codeSize) : CodeField("##vertex", g_vertex, _codeSize);
-			if (_edited) g_lastEdit = std::chrono::steady_clock::now();
-			if (g_tab == 1 && g_vertex.empty()) ImGui::TextDisabled("Empty: SFML's own vertex stage is used (the usual case).");
+			const bool _edited = state.tab == 0 ? CodeField("##fragment", state.fragment, _codeSize) : CodeField("##vertex", state.vertex, _codeSize);
+			if (_edited) state.lastEdit = std::chrono::steady_clock::now();
+			if (state.tab == 1 && state.vertex.empty()) ImGui::TextDisabled("Empty: SFML's own vertex stage is used (the usual case).");
 
-			const bool _changed = g_fragment != g_compiledFragment || g_vertex != g_compiledVertex;
-			if (_changed && std::chrono::duration<float>(std::chrono::steady_clock::now() - g_lastEdit).count() > 0.35f)
+			const bool _changed = state.fragment != state.compiledFragment || state.vertex != state.compiledVertex;
+			if (_changed && std::chrono::duration<float>(std::chrono::steady_clock::now() - state.lastEdit).count() > 0.35f)
 			{
-				const ShaderAsset* _asset = ShaderLibrary::CompileFromSource(PREVIEW_KEY, g_fragment, g_vertex);
-				g_error = _asset ? _asset->error : std::string("no source");
-				g_compiled = _asset && _asset->IsReady();
-				g_compiledFragment = g_fragment;
-				g_compiledVertex = g_vertex;
-				g_preview.shader = PREVIEW_KEY;
+				const ShaderAsset* _asset = ShaderLibrary::CompileFromSource(PREVIEW_KEY, state.fragment, state.vertex);
+				state.error = _asset ? _asset->error : std::string("no source");
+				state.compiled = _asset && _asset->IsReady();
+				state.compiledFragment = state.fragment;
+				state.compiledVertex = state.vertex;
+				state.preview.shader = PREVIEW_KEY;
 			}
-			if (g_error.empty()) ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::PlayButton), "Compiled%s", Dirty() ? "  (Ctrl+S to save it)" : "");
+			if (state.error.empty()) ImGui::TextColored(EditorTheme::Get(EditorTheme::Custom::PlayButton), "Compiled%s", Dirty() ? "  (Ctrl+S to save it)" : "");
 			else
 			{
 				ImGui::PushStyleColor(ImGuiCol_Text, EditorTheme::Get(EditorTheme::Custom::ConsoleError));
 				ImGui::BeginChild("##errors", ImVec2(0.f, 0.f), ImGuiChildFlags_Borders);
-				ImGui::TextWrapped("%s", g_error.c_str());
+				ImGui::TextWrapped("%s", state.error.c_str());
 				ImGui::EndChild();
 				ImGui::PopStyleColor();
 			}
@@ -375,10 +379,10 @@ namespace Krampus
 		if (ImGui::BeginChild("##shaderPreview", ImVec2(0.f, 0.f), ImGuiChildFlags_Borders))
 		{
 			DrawPreview();
-			ImGui::Checkbox("As a post-process effect", &g_fullPicture);
+			ImGui::Checkbox("As a post-process effect", &state.fullPicture);
 			if (ImGui::IsItemHovered()) ImGui::SetTooltip("The whole picture goes through the shader, as the screen does with a PostProcessComponent");
 			ImGui::SetNextItemWidth(-FLT_MIN);
-			ImGui::InputTextWithHint("##picture", "Picture of Content/Textures", g_picture, sizeof(g_picture));
+			ImGui::InputTextWithHint("##picture", "Picture of Content/Textures", state.picture, sizeof(state.picture));
 
 			ImGui::SeparatorText("Parameters (preview)");
 			const ShaderAsset* _asset = ShaderLibrary::Get(PREVIEW_KEY);
@@ -386,10 +390,10 @@ namespace Krampus
 			{
 				for (const ShaderParam& _param : _asset->params)
 				{
-					std::string _value = g_preview.ValueOf(_param);
-					if (DrawShaderParam(_param, _value)) g_preview.values[_param.name] = _value;
+					std::string _value = state.preview.ValueOf(_param);
+					if (DrawShaderParam(_param, _value)) state.preview.values[_param.name] = _value;
 				}
-				if (ImGui::Button("Defaults", ImVec2(-FLT_MIN, 0.f))) g_preview.values.clear();
+				if (ImGui::Button("Defaults", ImVec2(-FLT_MIN, 0.f))) state.preview.values.clear();
 			}
 			else ImGui::TextDisabled("No parameter. Declare a uniform with a comment:\nuniform float strength; // 0.5 [0, 1]");
 			ImGui::TextDisabled("Given by the engine: texture, textureSize,\nresolution, time.");

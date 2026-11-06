@@ -75,5 +75,5 @@ void Krampus::DiegeticButtonWidget::OnRelease()
 
 std::string Krampus::DiegeticButtonWidget::ToString() const
 {
-	return name + " -> IsHovered = " + isHovered.ToString() + ", IsPressed = " + isPressed.ToString();
+	return name + std::format(" -> IsHovered = {}, IsPressed = {}", isHovered, isPressed);
 }

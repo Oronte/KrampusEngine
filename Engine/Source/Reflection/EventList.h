@@ -8,7 +8,7 @@ namespace Krampus
 
 	/// <summary>
 	/// One call of an event list: "when the event happens, call this function of this object with this argument".
-	/// target: "" the object that owns the list, "A:Name" an actor of the level, "W:Name" a HUD widget, "Game" the game itself (open scene, quit).
+	/// target: "" the object that owns the list, "A:Name" an actor of the level, "T:Tag" every actor that has a gameplay tag, "W:Name" a HUD widget, "Game" the game itself (open scene, quit).
 	/// component: "" the actor / widget itself, else the class name of one of its components. function: a reflected function (KFUNCTION).
 	/// </summary>
 	struct EventCall
@@ -36,6 +36,9 @@ namespace Krampus
 
 		/// <summary>The object a call points at (the actor, the widget or one of their components), or nullptr if it does not exist. For target "Game", _owner itself.</summary>
 		static IGameObject* Resolve(IGameObject* _owner, const EventCall& _call);
+
+		/// <summary>Every object a call points at: one, or all the actors that have the tag for a target "T:Tag" (none is fine).</summary>
+		static std::vector<IGameObject*> ResolveAll(IGameObject* _owner, const EventCall& _call);
 	};
 
 

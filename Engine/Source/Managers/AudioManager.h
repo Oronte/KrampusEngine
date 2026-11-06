@@ -34,7 +34,7 @@ namespace Krampus
 		/// <summary>
 		/// Drops every cached sound buffer. Call before the game DLL is unloaded, since buffers keep the audio device alive.
 		/// </summary>
-		inline void ClearCache()
+		void ClearCache()
 		{
 			cache.clear();
 		}

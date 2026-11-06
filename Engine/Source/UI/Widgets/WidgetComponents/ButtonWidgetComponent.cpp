@@ -66,7 +66,7 @@ void Krampus::ButtonWidgetComponent::OnMouseMoved(const IVector2 &_screenPos)
 
 void Krampus::ButtonWidgetComponent::OnClick()
 {
-    if (isHovered) LOG(VerbosityType::Verbose, "Button: pressed on " + owner->GetName().StdString());
+    if (isHovered) LOG(VerbosityType::Verbose, "Button: pressed on " + owner->GetName());
     if (!isPressed && isHovered) { onPress.Broadcast(); onPressCalls.Invoke(this); }
     isPressed = isHovered;
 }
@@ -79,5 +79,5 @@ void Krampus::ButtonWidgetComponent::OnRelease()
 
 std::string Krampus::ButtonWidgetComponent::ToString() const
 {
-	return name + " -> IsHovered = " + isHovered.ToString() + ", IsPressed = " + isPressed.ToString();
+	return name + std::format(" -> IsHovered = {}, IsPressed = {}", isHovered, isPressed);
 }

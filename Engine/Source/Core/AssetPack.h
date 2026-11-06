@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-// The assets of a game (Content/) stored in ONE file, KrampusGame.pak, next to its exe (like the Paks of an Unreal game).
+// The assets of a game (Content/) stored in ONE file, <Game>/Content/<Game>.pak in a package (like the Paks of an Unreal game).
 //
 //   pack (count, index, data) | footer
 //

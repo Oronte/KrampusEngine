@@ -151,9 +151,9 @@ void Krampus::CheckBoxWidget::SetChecked(const bool& _checked, const bool& _noti
 	checked = _checked;
 
 	// A radio button: the others of the group let go (they tell it too).
-	if (_checked && !group.StdString().empty())
+	if (_checked && !group.empty())
 		for (CheckBoxWidget* _other : GetLevel()->GetHUD().GetAllWidgetOfClass<CheckBoxWidget>())
-			if (_other != this && _other->group.StdString() == group.StdString()) _other->SetChecked(false, _notify);
+			if (_other != this && _other->group == group) _other->SetChecked(false, _notify);
 
 	if (!_notify) return;
 	onChanged.Broadcast(_checked);
@@ -166,7 +166,7 @@ void Krampus::CheckBoxWidget::DrawControl(Window& _window)
 	const float _scale = UniformScale();
 	const float _box = std::min(static_cast<float>(_rect.GetSize().y), static_cast<float>(_rect.GetSize().x));
 	const FVector2 _boxMin(_rect.GetPosition().x, _rect.GetPosition().y + (_rect.GetSize().y - _box) * 0.5f);
-	const bool _radio = !group.StdString().empty();
+	const bool _radio = !group.empty();
 	const Color _outline = hovered ? checkColor : Color(255, 255, 255, 60);
 
 	if (_radio)
@@ -180,15 +180,15 @@ void Krampus::CheckBoxWidget::DrawControl(Window& _window)
 		FillRect(_window, FRect(_boxMin, FVector2(_box, _box)), boxColor, _outline, 1.5f * _scale);
 		if (checked) FillRect(_window, FRect(_boxMin + FVector2(_box, _box) * 0.22f, FVector2(_box, _box) * 0.56f), checkColor);
 	}
-	if (!text.StdString().empty())
-		DrawLabel(_window, FromUtf8(text.StdString()), FVector2(_boxMin.x + _box + 10.f * _scale, _rect.GetCenter().y),
+	if (!text.empty())
+		DrawLabel(_window, FromUtf8(text), FVector2(_boxMin.x + _box + 10.f * _scale, _rect.GetCenter().y),
 			static_cast<unsigned>(std::max(1.f, static_cast<float>(characterSize) * _scale)), textColor);
 }
 
 void Krampus::CheckBoxWidget::OnMouseDown()
 {
 	if (!hovered) return;
-	if (!group.StdString().empty()) SetChecked(true, true);	// a radio button is only unchecked by another one
+	if (!group.empty()) SetChecked(true, true);	// a radio button is only unchecked by another one
 	else SetChecked(!checked, true);
 }
 
@@ -268,7 +268,7 @@ void Krampus::TextEntryWidget::DrawControl(Window& _window)
 	const FRect _inner(_rect.GetPosition() + FVector2(_margin, 0.f), FVector2(std::max(0.f, _rect.GetSize().x - 2.f * _margin), _rect.GetSize().y));
 	const unsigned _characterSize = static_cast<unsigned>(std::max(1.f, static_cast<float>(characterSize) * _scale));
 	const bool _empty = value.isEmpty();
-	const sf::String _shown = _empty ? FromUtf8(placeholder.StdString()) : (password ? sf::String(std::u32string(value.getSize(), U'*')) : value);
+	const sf::String _shown = _empty ? FromUtf8(placeholder) : (password ? sf::String(std::u32string(value.getSize(), U'*')) : value);
 	const float _width = TextWidth(_shown, _characterSize);
 	// A text longer than the box shows its end, where the player types.
 	const float _x = (!_empty && _width > _inner.GetSize().x) ? _inner.GetPosition().x + _inner.GetSize().x - _width : _inner.GetPosition().x;

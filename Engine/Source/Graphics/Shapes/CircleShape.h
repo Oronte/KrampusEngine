@@ -14,7 +14,7 @@ namespace Krampus
 		/// Sets the radius of the circle shape.
 		/// </summary>
 		/// <param name="_radius">Radius value.</param>
-        inline void SetRadius(const Float& _radius)
+        void SetRadius(const Float& _radius)
         {
             if (!shape)
             {
@@ -28,7 +28,7 @@ namespace Krampus
 		/// Gets the radius of the circle shape.
 		/// </summary>
 		/// <returns>Radius value.</returns>
-        inline Float GetRadius() const
+        Float GetRadius() const
         {
             if (!shape)
             {
@@ -42,7 +42,7 @@ namespace Krampus
 		/// Sets the number of polygon points approximating the circle circumference.
 		/// </summary>
 		/// <param name="_count">Point count.</param>
-        inline void SetPointCount(const Int& _count)
+        void SetPointCount(const Int& _count)
         {
             if (!shape)
             {
@@ -56,7 +56,7 @@ namespace Krampus
 		/// Gets the number of points approximating the circle circumference.
 		/// </summary>
 		/// <returns>Point count.</returns>
-        inline Int GetPointCount() const
+        Int GetPointCount() const
         {
             if (!shape)
             {

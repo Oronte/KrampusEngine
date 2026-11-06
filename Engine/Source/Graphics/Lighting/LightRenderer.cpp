@@ -81,6 +81,46 @@ namespace
 		}
 	}
 
+	// The picture of a spot: a fan around its direction, as far as radius. Like the point light the light gets weaker with the
+	// distance ((1 - d / radius)^2), and it fades out towards the two edges of the cone over the outer part (softness: 0 = hard edge,
+	// 1 = fades from the middle).
+	void BuildSpotGradient(std::vector<sf::Vertex>& _out, const sf::Vector2f& _center, const float _radius, const FVector2& _direction,
+		const float _angleDegrees, const float _softness, const sf::Color& _color)
+	{
+		const float _half = std::clamp(_angleDegrees, 1.f, 360.f) * 0.5f * PI / 180.f;
+		const float _soft = std::clamp(_softness, 0.f, 1.f);
+		const float _middle = std::atan2(_direction.y, _direction.x);
+
+		// Angles from one edge to the other (-1 .. 1), with points where the fade starts and ends so it is drawn right.
+		std::vector<float> _steps;
+		constexpr int INNER = 10, FADE = 4;
+		for (int _f = 0; _f < FADE && _soft > 0.f; ++_f) _steps.push_back(-1.f + _soft * static_cast<float>(_f) / FADE);
+		if (_soft <= 0.f) _steps.push_back(-1.f);
+		for (int _i = 0; _i <= INNER; ++_i) _steps.push_back(-(1.f - _soft) + 2.f * (1.f - _soft) * static_cast<float>(_i) / INNER);
+		for (int _f = 1; _f <= FADE && _soft > 0.f; ++_f) _steps.push_back((1.f - _soft) + _soft * static_cast<float>(_f) / FADE);
+
+		constexpr float RINGS[] = { 0.f, 0.25f, 0.5f, 0.75f, 1.f };
+		const auto _point = [&](const float _ring, const float _step)
+		{
+			const float _angle = _middle + _step * _half;
+			const float _edge = _soft > 0.f ? std::clamp((1.f - std::abs(_step)) / _soft, 0.f, 1.f) : 1.f;
+			const float _falloff = (1.f - _ring) * (1.f - _ring) * _edge;
+			return sf::Vertex{ _center + sf::Vector2f(std::cos(_angle), std::sin(_angle)) * (_radius * _ring), Times(_color, _falloff) };
+		};
+		_out.clear();
+		for (size_t _s = 0; _s + 1 < _steps.size(); ++_s)
+		{
+			_out.push_back(sf::Vertex{ _center, _color });
+			_out.push_back(_point(RINGS[1], _steps[_s]));
+			_out.push_back(_point(RINGS[1], _steps[_s + 1]));
+			for (int _r = 1; _r + 1 < 5; ++_r)
+			{
+				const sf::Vertex _a = _point(RINGS[_r], _steps[_s]), _b = _point(RINGS[_r], _steps[_s + 1]), _c = _point(RINGS[_r + 1], _steps[_s + 1]), _d = _point(RINGS[_r + 1], _steps[_s]);
+				_out.insert(_out.end(), { _a, _b, _c, _a, _c, _d });
+			}
+		}
+	}
+
 	// A light that reaches nothing on the screen is skipped (the view is taken as not rotated: a bigger box, never too small).
 	bool Visible(const sf::View& _view, const sf::Vector2f& _center, const float _radius)
 	{
@@ -93,14 +133,15 @@ namespace
 
 bool LightRenderer::IsLit(const Level* _level)
 {
-	return GlobalLightComponent::Of(_level) || !PointLightComponent::LightsOf(_level).empty();
+	return GlobalLightComponent::Of(_level) || !PointLightComponent::LightsOf(_level).empty() || !SpotLightComponent::LightsOf(_level).empty();
 }
 
 void LightRenderer::Render(const Level* _level, sf::RenderTarget& _target)
 {
 	const std::vector<PointLightComponent*> _lights = PointLightComponent::LightsOf(_level);
+	const std::vector<SpotLightComponent*> _spots = SpotLightComponent::LightsOf(_level);
 	const GlobalLightComponent* _global = GlobalLightComponent::Of(_level);
-	if (_lights.empty() && !_global) return;
+	if (_lights.empty() && _spots.empty() && !_global) return;
 
 	const sf::Vector2u _size = _target.getSize();
 	if (_size.x == 0 || _size.y == 0) return;
@@ -116,16 +157,11 @@ void LightRenderer::Render(const Level* _level, sf::RenderTarget& _target)
 	for (const ShadowCasterComponent* _caster : ShadowCasterComponent::CastersOf(_level))
 		if (std::vector<FVector2> _outline = _caster->GetWorldOutline(); _outline.size() >= 3) _casters.push_back(std::move(_outline));
 
-	for (const PointLightComponent* _light : _lights)
+	// Adds the light whose picture is in "gradient": with the shadows of the casters it reaches, if it casts shadows.
+	const auto _addLight = [&](const FVector2& _position, const float _radius, const bool _castShadows)
 	{
-		const FVector2 _position = _light->GetPosition();
-		const sf::Vector2f _center(_position.x, _position.y);
-		const float _radius = std::max(1.f, _light->radius);
-		if (!Visible(_view, _center, _radius)) continue;
-		BuildGradient(gradient, _center, _radius, Scaled(_light->color, _light->intensity));
-
 		shadows.clear();
-		if (_light->castShadows)
+		if (_castShadows)
 			for (const std::vector<FVector2>& _outline : _casters)
 			{
 				// Only the casters the light reaches (their box against its circle).
@@ -138,9 +174,9 @@ void LightRenderer::Render(const Level* _level, sf::RenderTarget& _target)
 		if (shadows.empty())
 		{
 			lightMap.draw(gradient.data(), gradient.size(), sf::PrimitiveType::Triangles, sf::BlendAdd);
-			continue;
+			return;
 		}
-		if (oneLight.getSize() != _size && !oneLight.resize(_size)) continue;
+		if (oneLight.getSize() != _size && !oneLight.resize(_size)) return;
 		oneLight.clear(sf::Color::Black);
 		oneLight.setView(_view);
 		oneLight.draw(gradient.data(), gradient.size(), sf::PrimitiveType::Triangles);
@@ -149,6 +185,27 @@ void LightRenderer::Render(const Level* _level, sf::RenderTarget& _target)
 		lightMap.setView(_screen);
 		lightMap.draw(sf::Sprite(oneLight.getTexture()), sf::BlendAdd);
 		lightMap.setView(_view);
+	};
+
+	for (const PointLightComponent* _light : _lights)
+	{
+		const FVector2 _position = _light->GetPosition();
+		const sf::Vector2f _center(_position.x, _position.y);
+		const float _radius = std::max(1.f, _light->radius);
+		if (!Visible(_view, _center, _radius)) continue;
+		BuildGradient(gradient, _center, _radius, Scaled(_light->color, _light->intensity));
+		_addLight(_position, _radius, _light->castShadows);
+	}
+
+	// A spot is a point light cut to a cone: the same shadows, a different picture.
+	for (const SpotLightComponent* _spot : _spots)
+	{
+		const FVector2 _position = _spot->GetPosition();
+		const sf::Vector2f _center(_position.x, _position.y);
+		const float _radius = std::max(1.f, _spot->radius);
+		if (!Visible(_view, _center, _radius)) continue;
+		BuildSpotGradient(gradient, _center, _radius, _spot->GetDirection(), _spot->angle, _spot->softness, Scaled(_spot->color, _spot->intensity));
+		_addLight(_position, _radius, _spot->castShadows);
 	}
 	lightMap.display();
 

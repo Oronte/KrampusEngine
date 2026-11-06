@@ -1,17 +1,5 @@
 #pragma once
-#include "KrampusFwd.h"
-#include "Bool.h"
-#include "Char.h"
-#include "String.h"
-#include "Byte.h"
-#include "Short.h"
-#include "UShort.h"
-#include "Int.h"
-#include "UInt.h"
-#include "Long.h"
-#include "ULong.h"
-#include "LongLong.h"
-#include "ULongLong.h"
-#include "Float.h"
-#include "Double.h"
-#include "LongDouble.h"
+#include "Primitives.h"
+#include <string>
+
+using String = std::string;

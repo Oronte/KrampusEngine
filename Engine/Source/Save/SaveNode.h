@@ -70,54 +70,15 @@ public:
     SaveNode(String _name) : name(std::move(_name)) {}
 
     /// <summary>Sets a Bool field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Boolean value.</param>
-    void Set(const String& key, const Bool&     value) { fields[key] = value; }
+    void Set(const String& key, Bool value) { fields[key] = value; }
 
-    /// <summary>Sets a Byte integer field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Byte value.</param>
-    void Set(const String& key, const Byte&     value) { fields[key] = value.ToLongLong(); }
-
-    /// <summary>Sets a Short integer field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Short value.</param>
-    void Set(const String& key, const Short&    value) { fields[key] = value.ToLongLong(); }
-
-    /// <summary>Sets an Int integer field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Int value.</param>
-    void Set(const String& key, const Int&      value) { fields[key] = value.ToLongLong(); }
-
-    /// <summary>Sets a Long integer field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Long value.</param>
-    void Set(const String& key, const Long&     value) { fields[key] = value.ToLongLong(); }
-
-    /// <summary>Sets a LongLong 64-bit integer field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">LongLong value.</param>
-    void Set(const String& key, const LongLong& value) { fields[key] = value; }
-
-    /// <summary>Sets a Char character field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Char value.</param>
-    void Set(const String& key, const Char&     value) { fields[key] = LongLong(value.operator int()); }
-
-    /// <summary>Sets a Float floating point field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Float value.</param>
-    void Set(const String& key, const Float&      value) { fields[key] = value.ToDouble(); }
-
-    /// <summary>Sets a Double floating point field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Double value.</param>
-    void Set(const String& key, const Double&     value) { fields[key] = value; }
-
-    /// <summary>Sets a LongDouble floating point field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">LongDouble value.</param>
-    void Set(const String& key, const LongDouble& value) { fields[key] = value.ToDouble(); }
+    /// <summary>Sets a numeric field: integers are stored as LongLong, floating points as Double.</summary>
+    template<typename T> requires (std::is_arithmetic_v<T> && !std::is_same_v<T, Bool>)
+    void Set(const String& key, T value)
+    {
+        if constexpr (std::is_integral_v<T>) fields[key] = static_cast<LongLong>(value);
+        else                                 fields[key] = static_cast<Double>(value);
+    }
 
     /// <summary>Sets a String field by copy.</summary>
     /// <param name="key">Field key.</param>
@@ -149,34 +110,18 @@ public:
     /// <param name="value">Vector of String.</param>
     void Set(const String& key, std::vector<String>   value) { fields[key] = std::move(value); }
 
-    /// <summary>Sets a vector of Int integers field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Vector of Int.</param>
-    void Set(const String& key, const std::vector<Int>& value) 
-    {
-        std::vector<LongLong> out;
-        out.reserve(value.size());
-        for (const auto& v : value) out.push_back(v.ToLongLong());
-        fields[key] = std::move(out);
-    }
+    /// <summary>Sets a vector of Int field (stored as LongLong).</summary>
+    void Set(const String& key, const std::vector<Int>& value) { fields[key] = ConvertAll<LongLong>(value); }
 
-    /// <summary>Sets a vector of Float numbers field.</summary>
-    /// <param name="key">Field key.</param>
-    /// <param name="value">Vector of Float.</param>
-    void Set(const String& key, const std::vector<Float>& value) 
-    {
-        std::vector<Double> out;
-        out.reserve(value.size());
-        for (const auto& v : value) out.push_back(v.ToDouble());
-        fields[key] = std::move(out);
-    }
+    /// <summary>Sets a vector of Float field (stored as Double).</summary>
+    void Set(const String& key, const std::vector<Float>& value) { fields[key] = ConvertAll<Double>(value); }
 
     /// <summary>Sets a nested child SaveNode by copy.</summary>
     /// <param name="key">Field key.</param>
     /// <param name="node">SaveNode to nest.</param>
     void Set(const String& key, std::vector<SaveNodePtr> value) { fields[key] = std::move(value); }
 
-    NO_DISCARD std::vector<SaveNodePtr> GetNodes(const String& key) const
+    [[nodiscard]] std::vector<SaveNodePtr> GetNodes(const String& key) const
     {
         auto it = fields.find(key);
         if (it == fields.end()) return {};
@@ -230,7 +175,7 @@ public:
     /// <param name="key">Field key.</param>
     /// <returns>Optional containing value if found and convertible.</returns>
     template<typename T>
-    NO_DISCARD std::optional<T> TryGet(const String& key) const
+    [[nodiscard]] std::optional<T> TryGet(const String& key) const
     {
         auto it = fields.find(key);
         if (it == fields.end()) return std::nullopt;
@@ -243,7 +188,7 @@ public:
     /// <param name="defaultValue">Default value returned if key is missing.</param>
     /// <returns>Field value or defaultValue.</returns>
     template<typename T>
-    NO_DISCARD T Get(const String& key, T defaultValue = T{}) const
+    [[nodiscard]] T Get(const String& key, T defaultValue = T{}) const
     {
         return TryGet<T>(key).value_or(std::move(defaultValue));
     }
@@ -251,7 +196,7 @@ public:
     /// <summary>Retrieves a nested child SaveNode if present.</summary>
     /// <param name="key">Field key.</param>
     /// <returns>Optional child SaveNode.</returns>
-    NO_DISCARD std::optional<SaveNode> GetNode(const String& key) const
+    [[nodiscard]] std::optional<SaveNode> GetNode(const String& key) const
     {
         auto it = fields.find(key);
         if (it == fields.end()) return std::nullopt;
@@ -265,7 +210,7 @@ public:
     /// <param name="key">Field key.</param>
     /// <returns>Optional deserialized object.</returns>
     template<Serializable T>
-    NO_DISCARD std::optional<T> GetAs(const String& key) const
+    [[nodiscard]] std::optional<T> GetAs(const String& key) const
     {
         auto nodeOpt = GetNode(key);
         if (!nodeOpt) return std::nullopt;
@@ -279,7 +224,7 @@ public:
     /// <param name="key">Field key.</param>
     /// <returns>Vector of deserialized objects.</returns>
     template<Serializable T>
-    NO_DISCARD std::vector<T> GetArray(const String& key) const
+    [[nodiscard]] std::vector<T> GetArray(const String& key) const
     {
         auto it = fields.find(key);
         if (it == fields.end()) return {};
@@ -300,7 +245,7 @@ public:
     /// <summary>Checks whether a field with the specified key exists.</summary>
     /// <param name="key">Field key.</param>
     /// <returns>True if key exists, false otherwise.</returns>
-    NO_DISCARD Bool   Has(const String& key)  const { return Bool(fields.contains(key)); }
+    [[nodiscard]] Bool   Has(const String& key)  const { return fields.contains(key); }
 
     /// <summary>Removes a field by key.</summary>
     /// <param name="key">Field key to erase.</param>
@@ -311,15 +256,15 @@ public:
 
     /// <summary>Returns the total number of fields stored in this node.</summary>
     /// <returns>Field count.</returns>
-    NO_DISCARD Int    FieldCount()            const { return Int(fields.size()); }
+    [[nodiscard]] Int    FieldCount()            const { return Int(fields.size()); }
 
     /// <summary>Checks whether the node contains no fields.</summary>
     /// <returns>True if empty, false otherwise.</returns>
-    NO_DISCARD Bool   IsEmpty()               const { return Bool(fields.empty()); }
+    [[nodiscard]] Bool   IsEmpty()               const { return fields.empty(); }
 
     /// <summary>Gets the name of the save node.</summary>
     /// <returns>Const reference to node name.</returns>
-    NO_DISCARD const  String& GetName()       const { return name; }
+    [[nodiscard]] const  String& GetName()       const { return name; }
 
     /// <summary>Sets the name of the save node.</summary>
     /// <param name="_name">New node name.</param>
@@ -334,99 +279,45 @@ public:
 
     /// <summary>Gets a const reference to the internal fields map.</summary>
     /// <returns>Const reference to fields map.</returns>
-    NO_DISCARD const auto& GetFields() const { return fields; }
+    [[nodiscard]] const auto& GetFields() const { return fields; }
 
     /// <summary>Gets a mutable reference to the internal fields map.</summary>
     /// <returns>Mutable reference to fields map.</returns>
-    NO_DISCARD       auto& GetFields()       { return fields; }
+    [[nodiscard]]       auto& GetFields()       { return fields; }
 
 private:
-    template<typename T>
-    static std::optional<T> CastValue(const SaveValue& val) 
+    template<typename To, typename From>
+    static std::vector<To> ConvertAll(const std::vector<From>& _values)
     {
-        if constexpr (std::is_same_v<T, Bool>) 
+        std::vector<To> _out;
+        _out.reserve(_values.size());
+        for (const From& _value : _values) _out.push_back(static_cast<To>(_value));
+        return _out;
+    }
+
+    /// Numbers convert between the stored LongLong/Double; any other type must match the stored alternative.
+    template<typename T>
+    static std::optional<T> CastValue(const SaveValue& val)
+    {
+        if constexpr (std::is_same_v<T, Bool>)
         {
             if (const auto* v = std::get_if<Bool>(&val))     return *v;
-            if (const auto* v = std::get_if<LongLong>(&val)) return Bool(v->IsZero().Not());
+            if (const auto* v = std::get_if<LongLong>(&val)) return *v != 0;
         }
-        else if constexpr (std::is_same_v<T, LongLong>) 
+        else if constexpr (std::is_arithmetic_v<T>)
         {
-            if (const auto* v = std::get_if<LongLong>(&val)) return *v;
-            if (const auto* v = std::get_if<Double>(&val))   return v->ToLongLong();
+            if (const auto* v = std::get_if<LongLong>(&val)) return static_cast<T>(*v);
+            if (const auto* v = std::get_if<Double>(&val))   return static_cast<T>(*v);
         }
-        else if constexpr (std::is_same_v<T, Int>) 
+        else if constexpr (std::is_same_v<T, std::vector<Int>>)
         {
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToInt();
-            if (const auto* v = std::get_if<Double>(&val))   return v->ToInt();
+            if (const auto* v = std::get_if<std::vector<LongLong>>(&val)) return ConvertAll<Int>(*v);
         }
-        else if constexpr (std::is_same_v<T, Long>) 
+        else if constexpr (std::is_same_v<T, std::vector<Float>>)
         {
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToLong();
-            if (const auto* v = std::get_if<Double>(&val))   return v->ToLong();
+            if (const auto* v = std::get_if<std::vector<Double>>(&val)) return ConvertAll<Float>(*v);
         }
-        else if constexpr (std::is_same_v<T, Short>) 
-        {
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToShort();
-        }
-        else if constexpr (std::is_same_v<T, Byte>) 
-        {
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToByte();
-        }
-        else if constexpr (std::is_same_v<T, Double>) 
-        {
-            if (const auto* v = std::get_if<Double>(&val))   return *v;
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToDouble();
-        }
-        else if constexpr (std::is_same_v<T, Float>) 
-        {
-            if (const auto* v = std::get_if<Double>(&val))   return v->ToFloat();
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToFloat();
-        }
-        else if constexpr (std::is_same_v<T, LongDouble>) 
-        {
-            if (const auto* v = std::get_if<Double>(&val))   return v->ToLongDouble();
-            if (const auto* v = std::get_if<LongLong>(&val)) return v->ToLongDouble();
-        }
-        else if constexpr (std::is_same_v<T, String>) 
-        {
-            if (const auto* v = std::get_if<String>(&val)) return *v;
-        }
-        else if constexpr (std::is_same_v<T, std::vector<Byte>>) 
-        {
-            if (const auto* v = std::get_if<std::vector<Byte>>(&val)) return *v;
-        }
-        else if constexpr (std::is_same_v<T, std::vector<LongLong>>) 
-        {
-            if (const auto* v = std::get_if<std::vector<LongLong>>(&val)) return *v;
-        }
-        else if constexpr (std::is_same_v<T, std::vector<Int>>) 
-        {
-            if (const auto* v = std::get_if<std::vector<LongLong>>(&val)) 
-            {
-                std::vector<Int> out;
-                out.reserve(v->size());
-                for (const auto& x : *v) out.push_back(x.ToInt());
-                return out;
-            }
-        }
-        else if constexpr (std::is_same_v<T, std::vector<Double>>) 
-        {
-            if (const auto* v = std::get_if<std::vector<Double>>(&val)) return *v;
-        }
-        else if constexpr (std::is_same_v<T, std::vector<Float>>) 
-        {
-            if (const auto* v = std::get_if<std::vector<Double>>(&val)) 
-            {
-                std::vector<Float> out;
-                out.reserve(v->size());
-                for (const auto& x : *v) out.push_back(x.ToFloat());
-                return out;
-            }
-        }
-        else if constexpr (std::is_same_v<T, std::vector<String>>) 
-        {
-            if (const auto* v = std::get_if<std::vector<String>>(&val)) return *v;
-        }
+        else if (const auto* v = std::get_if<T>(&val)) return *v;
         return std::nullopt;
     }
 };

@@ -13,35 +13,35 @@ namespace Krampus
 		std::function<void()>	callback;
 
 	public:
-		inline Bool IsToDelete() const
+		Bool IsToDelete() const
 		{
 			return isToDelete;
 		}
-		inline void SetDuration(const Float& _duration)
+		void SetDuration(const Float& _duration)
 		{
 			duration = _duration;
 		}
-		inline Float GetDuration() const
+		Float GetDuration() const
 		{
 			return duration;
 		}
-		inline Bool IsRunning() const
+		Bool IsRunning() const
 		{
 			return isRunning;
 		}
-		inline void SetIsLoop(const Bool& _isLoop)
+		void SetIsLoop(const Bool& _isLoop)
 		{
 			isLoop = _isLoop;
 		}
-		inline Bool IsLoop() const
+		Bool IsLoop() const
 		{
 			return isLoop;
 		}
-		inline Float GetTime() const
+		Float GetTime() const
 		{
 			return currentTime;
 		}
-		inline Float GetRemainingTime() const
+		Float GetRemainingTime() const
 		{
 			return duration - currentTime;
 		}
@@ -73,11 +73,9 @@ namespace Krampus
 		void Pause();
 		void Update(const Float& _deltaTime);
 
-		virtual std::string ToString() const override
+		std::string ToString() const override
 		{
-			return std::format("Time : {} / {}", currentTime.ToString(), duration.ToString()) +
-				", IsRunning = " + isRunning.ToString() +
-				", IsLoop = " + isLoop.ToString();
+			return std::format("Time : {} / {}, IsRunning = {}, IsLoop = {}", currentTime, duration, isRunning, isLoop);
 		}
 	};
 

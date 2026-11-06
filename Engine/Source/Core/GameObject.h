@@ -49,7 +49,7 @@ namespace Krampus
 		/// Sets whether this game object is active.
 		/// </summary>
 		/// <param name="_active">True to activate, false to deactivate.</param>
-		inline virtual void SetActive(const Bool& _active)
+		virtual void SetActive(const Bool& _active)
 		{
 			isActive = _active;
 		}
@@ -58,7 +58,7 @@ namespace Krampus
 		/// Checks whether this game object is currently active.
 		/// </summary>
 		/// <returns>True if active, false otherwise.</returns>
-		inline bool IsActive() const
+		bool IsActive() const
 		{
 			return isActive;
 		}
@@ -104,9 +104,9 @@ namespace Krampus
 		/// Converts the game object state to a human-readable string representation.
 		/// </summary>
 		/// <returns>String representation of the game object.</returns>
-		virtual std::string ToString() const override
+		std::string ToString() const override
 		{
-			return std::format("{} -> Core : isActive = {}", name.StdString(), isActive.ToString());
+			return std::format("{} -> Core : isActive = {}", name, isActive);
 		}
 	};
 }

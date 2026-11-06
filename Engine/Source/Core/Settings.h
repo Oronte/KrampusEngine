@@ -145,6 +145,9 @@ namespace Krampus
 		float		timeout			= 10.f;				// seconds of silence before a player is dropped
 		int			discoveryPort	= 7778;				// UDP port of the LAN search (SearchLan)
 		bool		lanVisible		= true;				// a host answers the LAN searches (else: join by address only)
+		bool		steamEnabled	= false;			// start Steam at launch (needs the Steam client + the SDK): invitations then work from the menu
+		int			steamAppId		= 480;				// 480 = Spacewar (Valve's test app). Put your own AppID once the game is on Steam
+		bool		steamFriendsOnly = true;			// a Steam game is visible to friends only (else: public lobby list)
 
 		const char* Title() const override { return "Network"; }
 		const char* Description() const override { return "Hosting and joining a network game (see NetworkManager). Port, the host address to join, player name, LAN search."; }
@@ -165,9 +168,12 @@ namespace Krampus
 		int			windowWidth		= 1280;						// for the window and the fullscreen modes
 		int			windowHeight	= 720;
 		bool		showSplash		= true;						// the Krampus logo at the start
+		std::string	icon;										// "Folder/Name.png" in Content/Textures: icon of the exe and of the window; empty: DEFAULT_ICON
+		static constexpr const char* DEFAULT_ICON = "_internal/KrampusLogo.png";
+		std::string	packageFolder;								// where File > Package Game writes <gameName>/; empty: Bin/windows-x64/Ship/Package
 
 		const char* Title() const override { return "Ship"; }
-		const char* Description() const override { return "The packaged game: first scene, window title and mode, splash screen. Saved in the settings file, so the package carries them."; }
+		const char* Description() const override { return "The packaged game: first scene, window title and mode, splash screen, icon, output folder. Saved in the settings file, so the package carries them."; }
 		void ResetToDefaults() override;
 	};
 

@@ -38,14 +38,13 @@ namespace Krampus
 		std::vector<std::unique_ptr<Timer>> timers;
 
 	private:
-		static inline Float GetTime(const sf::Time& _time) 
+		static Float GetTime(const sf::Time& _time) 
 		{
 			return _time.asSeconds();
 		}
-		static inline String TwoDigitsTime(const Int& _value)
+		static String TwoDigitsTime(const Int& _value)
 		{
-			if (_value >= 10) return _value.ToString();
-			return "0" + _value.ToString();
+			return std::format("{:02}", _value);
 		}
 	
 	public:
@@ -53,7 +52,7 @@ namespace Krampus
 		/// Gets the scaled frame delta time in seconds (multiplied by timeScale).
 		/// </summary>
 		/// <returns>Delta time as Float.</returns>
-		inline Float GetDeltaTime() const
+		Float GetDeltaTime() const
 		{
 			return deltaTime;
 		}
@@ -62,7 +61,7 @@ namespace Krampus
 		/// Gets the raw unscaled frame duration in seconds.
 		/// </summary>
 		/// <returns>Elapsed frame time as Float.</returns>
-		inline Float GetElapsedTime() const
+		Float GetElapsedTime() const
 		{
 			return elapsedTime;
 		}
@@ -71,7 +70,7 @@ namespace Krampus
 		/// Gets the instantaneous frames-per-second measurement of the current frame.
 		/// </summary>
 		/// <returns>Current FPS.</returns>
-		inline Float GetInstantFPS() const
+		Float GetInstantFPS() const
 		{
 			return fps;
 		}
@@ -80,7 +79,7 @@ namespace Krampus
 		/// Gets the exponentially smoothed frames-per-second value suitable for UI display.
 		/// </summary>
 		/// <returns>Smoothed FPS.</returns>
-		inline Float GetSmoothedFPS() const
+		Float GetSmoothedFPS() const
 		{
 			return smoothedFPS;
 		}
@@ -89,7 +88,7 @@ namespace Krampus
 		/// Sets the time dilation scale multiplier (1.0 is normal speed, 0.5 is slow motion).
 		/// </summary>
 		/// <param name="_timeScale">Time multiplier.</param>
-		inline void SetTimerScale(const Float& _timeScale)
+		void SetTimerScale(const Float& _timeScale)
 		{
 			timeScale = _timeScale;
 		}
@@ -98,7 +97,7 @@ namespace Krampus
 		/// Caps the engine framerate limit and configures the window limit.
 		/// </summary>
 		/// <param name="_fps">Target frame rate cap (0 = unlimited).</param>
-		inline void SetMaxFrameRate(const UInt& _fps)
+		void SetMaxFrameRate(const UInt& _fps)
 		{
 			maxFrameRate = _fps;
 			GetWorld()->GetWindowRef().SetFramerateLimit(maxFrameRate);
@@ -108,7 +107,7 @@ namespace Krampus
 		/// Gets the currently configured maximum framerate limit.
 		/// </summary>
 		/// <returns>Frame rate cap.</returns>
-		inline UInt GetMaxFrameRate() const
+		UInt GetMaxFrameRate() const
 		{
 			return maxFrameRate;
 		}
@@ -164,7 +163,7 @@ namespace Krampus
 		/// <param name="_startRunning">Whether timer starts immediately.</param>
 		/// <returns>Pointer to created Timer.</returns>
 		template<typename T, typename MemFn>
-		inline Timer* CreateTimer(T* _instance, MemFn _memFn, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true)
+		Timer* CreateTimer(T* _instance, MemFn _memFn, const Float& _duration, const Bool& _isLoop = false, const Bool& _startRunning = true)
 		{
 			return timers.emplace_back(
 				std::make_unique<Timer>(_instance, _memFn, _duration, _isLoop, _startRunning)

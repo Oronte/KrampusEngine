@@ -30,9 +30,9 @@ void Krampus::ButtonWidget::Construct()
 
     actionHandle = onPress.AddListener([this]()
         {
-            LOG_MSG("Button: " + GetName().StdString() + " action " + std::to_string(CAST(int, action)) + (action == 1 ? " -> " + targetScene.StdString() : std::string()));
-            if (action == 1 && !targetScene.StdString().empty())
-                Scene::Open(*GetWorld(), targetScene.StdString());
+            LOG_MSG("Button: " + GetName() + " action " + std::to_string(static_cast<int>(action)) + (action == 1 ? " -> " + targetScene : std::string()));
+            if (action == 1 && !targetScene.empty())
+                Scene::Open(*GetWorld(), targetScene);
             else if (action == 2)
                 GetWorld()->QuitGame();
         });

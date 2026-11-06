@@ -38,7 +38,7 @@ namespace Krampus
 		/// Gets the LevelManager responsible for loading and switching levels.
 		/// </summary>
 		/// <returns>Pointer to the LevelManager.</returns>
-		inline LevelManager* GetLevelManager()
+		LevelManager* GetLevelManager()
 		{
 			return levelManager.get();
 		}
@@ -48,12 +48,12 @@ namespace Krampus
 		/// </summary>
 		/// <returns>Pointer to the InputManager.</returns>
 		/// <summary>Hosting, joining, messages: see Network/NetworkManager.h.</summary>
-		inline NetworkManager* GetNetwork()
+		NetworkManager* GetNetwork()
 		{
 			return network.get();
 		}
 
-		inline InputManager* GetInputManager()
+		InputManager* GetInputManager()
 		{
 			return inputManager.get();
 		}
@@ -62,7 +62,7 @@ namespace Krampus
 		/// Gets a reference to the main application window.
 		/// </summary>
 		/// <returns>Reference to the Window.</returns>
-		inline Window& GetWindowRef()
+		Window& GetWindowRef()
 		{
 			return window;
 		}
@@ -71,7 +71,7 @@ namespace Krampus
 		/// Gets the stack of layers (level, UI, overlays...) updated, drawn and fed events each frame.
 		/// </summary>
 		/// <returns>Reference to the LayerStack.</returns>
-		inline LayerStack& GetLayerStack()
+		LayerStack& GetLayerStack()
 		{
 			return layerStack;
 		}
@@ -79,7 +79,7 @@ namespace Krampus
 		/// <summary>
 		/// Freezes or resumes the level logic (actors, physics, HUD). The level is still drawn. Used by the editor outside of Play mode.
 		/// </summary>
-		inline void SetLevelPaused(const Bool& _paused)
+		void SetLevelPaused(const Bool& _paused)
 		{
 			levelPaused = _paused;
 		}
@@ -87,7 +87,7 @@ namespace Krampus
 		/// <summary>
 		/// Checks whether the level logic is frozen.
 		/// </summary>
-		inline Bool IsLevelPaused() const
+		Bool IsLevelPaused() const
 		{
 			return levelPaused;
 		}
@@ -95,7 +95,7 @@ namespace Krampus
 		/// <summary>
 		/// Gets the settings (Logger, physics, time, window, audio), stored in Content/Settings/EngineSettings.cfg.
 		/// </summary>
-		inline EngineSettings& GetSettings()
+		EngineSettings& GetSettings()
 		{
 			return settings;
 		}

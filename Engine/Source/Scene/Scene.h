@@ -64,7 +64,7 @@ namespace Krampus
 		}
 
 		/// <returns>The scene file this level was made from (empty for a new scene).</returns>
-		inline const std::filesystem::path& GetScenePath() const
+		const std::filesystem::path& GetScenePath() const
 		{
 			return scenePath;
 		}

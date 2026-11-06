@@ -1,6 +1,7 @@
 #pragma once
 #include "GameFramework/Level.h"
 #include "Reflection/EventList.h"
+#include "GameplayTags/GameplayTag.h"
 
 // Reflection for the editor and for scenes (.ka7). Usage, in the header of an Actor or Component:
 //
@@ -16,7 +17,7 @@
 //       KPROPERTY(SpriteComponent*, sprite) = nullptr;   // a component of an actor of the scene
 //   };
 //
-// Supported types: bool, int, float, std::string, FVector2, Color and the engine's Bool, Int, Float, String.
+// Supported types: bool, int, float, String (std::string), FVector2, Color.
 // References: a pointer to Actor, Component or any class derived from them (include its header). Only objects of that class can be
 // picked; the scene saves which one it is and finds it again when it loads; the pointer becomes nullptr when its target is destroyed.
 // Components that scenes and the editor can add by name use KCOMPONENT(Class, Parent) with a public constructor Class(Actor*).
@@ -42,6 +43,9 @@ namespace Krampus
 		Events,		// stored as a string (EventList::Encode), edited as a list of function calls
 		InputBindings,	// stored as a string (InputComponent::EncodeBindings): input events and their function calls
 		MessageBindings,	// the same, but the names are network messages typed by the user
+		GameplayTag,		// stored as a string ("Status.Debuff.Burning", empty = None), picked from the tags of the project (Tools > Gameplay Tags)
+		GameplayTagContainer,	// stored as a string ("A.B;C.D"), several tags picked from the project tags
+		GameplayTagQuery,	// stored as a string ("all=A;B|any=C|none=D"): all of, any of, none of
 		Shape,			// stored as a string (name of a shape of Content/Shapes, without .kshape), picked from a list, edited in the Shape Editor
 		ActorRef,		// a pointer to an actor of the level, stored as a string (Reflection::EncodeReference): see PropertyInfo::getObject
 		ComponentRef	// a pointer to a component of an actor of the level, stored the same way
@@ -69,7 +73,7 @@ namespace Krampus
 		std::function<bool(IGameObject*)>							accepts;
 		std::string													referenceClass;	// "Actor", "SpriteComponent"...
 
-		inline bool IsReference() const { return type == PropertyType::ActorRef || type == PropertyType::ComponentRef; }
+		bool IsReference() const { return type == PropertyType::ActorRef || type == PropertyType::ComponentRef; }
 	};
 
 	/// <summary>
@@ -120,41 +124,36 @@ namespace Krampus
 			static_assert(!std::is_base_of_v<IGameObject, T>, "KPROPERTY: an actor or a component is reflected as a pointer: KPROPERTY(Actor*, name) = nullptr;");
 			if constexpr (IsReference<T>)
 				return std::is_base_of_v<Actor, std::remove_cv_t<std::remove_pointer_t<T>>> ? PropertyType::ActorRef : PropertyType::ComponentRef;
-			else if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, Bool>)			return PropertyType::Bool;
-			else if constexpr (std::is_same_v<T, int> || std::is_same_v<T, Int>)		return PropertyType::Int;
-			else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, Float>)	return PropertyType::Float;
-			else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, String>)	return PropertyType::String;
+			else if constexpr (std::is_same_v<T, bool>)									return PropertyType::Bool;
+			else if constexpr (std::is_same_v<T, int>)								return PropertyType::Int;
+			else if constexpr (std::is_same_v<T, float>)								return PropertyType::Float;
+			else if constexpr (std::is_same_v<T, std::string>)							return PropertyType::String;
 			else if constexpr (std::is_same_v<T, FVector2>)								return PropertyType::Vector2;
 			else if constexpr (std::is_same_v<T, Color>)								return PropertyType::Color;
 			else if constexpr (std::is_same_v<T, EventList>)							return PropertyType::Events;
+			else if constexpr (std::is_same_v<T, GameplayTag>)						return PropertyType::GameplayTag;
+			else if constexpr (std::is_same_v<T, GameplayTagContainer>)				return PropertyType::GameplayTagContainer;
+			else if constexpr (std::is_same_v<T, GameplayTagQuery>)					return PropertyType::GameplayTagQuery;
 			else static_assert(AlwaysFalse<T>, "KPROPERTY: unsupported type");
 		}
 
 		template <typename T>
 		PropertyValue ToValue(const T& _value)
 		{
-			if constexpr (std::is_same_v<T, Bool>)			return static_cast<bool>(_value);
-			else if constexpr (std::is_same_v<T, Int>)		return static_cast<int>(_value);
-			else if constexpr (std::is_same_v<T, Float>)	return static_cast<float>(_value);
-			else if constexpr (std::is_same_v<T, String>)	return _value.StdString();
-			else if constexpr (std::is_same_v<T, EventList>)	return _value.Encode();
+			if constexpr (std::is_same_v<T, EventList>)			return _value.Encode();
+			else if constexpr (std::is_same_v<T, GameplayTag>)	return _value.GetName();
+			else if constexpr (std::is_same_v<T, GameplayTagContainer> || std::is_same_v<T, GameplayTagQuery>)	return _value.Encode();
 			else											return _value;
 		}
 
 		template <typename T>
 		T FromValue(const PropertyValue& _value)
 		{
-			if constexpr (std::is_same_v<T, bool>)				return std::get<bool>(_value);
-			else if constexpr (std::is_same_v<T, Bool>)			return Bool(std::get<bool>(_value));
-			else if constexpr (std::is_same_v<T, int>)			return std::get<int>(_value);
-			else if constexpr (std::is_same_v<T, Int>)			return Int(std::get<int>(_value));
-			else if constexpr (std::is_same_v<T, float>)		return std::get<float>(_value);
-			else if constexpr (std::is_same_v<T, Float>)		return Float(std::get<float>(_value));
-			else if constexpr (std::is_same_v<T, std::string>)	return std::get<std::string>(_value);
-			else if constexpr (std::is_same_v<T, String>)		return String(std::get<std::string>(_value));
-			else if constexpr (std::is_same_v<T, FVector2>)		return std::get<FVector2>(_value);
-			else if constexpr (std::is_same_v<T, EventList>)	return EventList::Decode(std::get<std::string>(_value));
-			else												return std::get<Color>(_value);
+			if constexpr (std::is_same_v<T, EventList>)						return EventList::Decode(std::get<std::string>(_value));
+			else if constexpr (std::is_same_v<T, GameplayTag>)				return GameplayTag::Request(std::get<std::string>(_value));
+			else if constexpr (std::is_same_v<T, GameplayTagContainer>)		return GameplayTagContainer::Decode(std::get<std::string>(_value));
+			else if constexpr (std::is_same_v<T, GameplayTagQuery>)			return GameplayTagQuery::Decode(std::get<std::string>(_value));
+			else															return std::get<T>(_value);
 		}
 	}
 
@@ -203,7 +202,7 @@ namespace Krampus
 				_property.readOnly = _readOnly;
 				_property.get = [_get](IGameObject* _object)
 				{
-					return PropertyValue(_get(*static_cast<Class*>(_object)));
+					return Reflection::ToValue<T>(_get(*static_cast<Class*>(_object)));
 				};
 				_property.set = [_set](IGameObject* _object, const PropertyValue& _value)
 				{

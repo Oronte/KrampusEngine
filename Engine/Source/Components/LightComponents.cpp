@@ -2,6 +2,8 @@
 #include "Actors/Actor.h"
 #include "Components/SpriteComponent.h"
 #include "Utilities/Math/Polygon2D.h"
+#include "Utilities/Debug/Debug.h"
+#include <cmath>
 #include <algorithm>
 
 using namespace Krampus;
@@ -80,6 +82,62 @@ GlobalLightComponent* GlobalLightComponent::Of(const Level* _level)
 {
 	const std::vector<GlobalLightComponent*> _lights = ::Of<GlobalLightComponent>(_level);
 	return _lights.empty() ? nullptr : _lights.front();
+}
+
+// ---- Spot light
+
+SpotLightComponent::SpotLightComponent(Actor* _owner)
+	: Component(_owner)
+{
+	name = NAME_OF(SpotLightComponent);
+}
+
+void SpotLightComponent::Construct()
+{
+	Component::Construct();
+	Register(this);
+}
+
+void SpotLightComponent::Deconstruct()
+{
+	Component::Deconstruct();
+	std::erase(All<SpotLightComponent>(), this);
+}
+
+FVector2 SpotLightComponent::GetDirection() const
+{
+	const float _radians = static_cast<float>(GetRotation().ToRadians());
+	return FVector2(std::cos(_radians), std::sin(_radians));
+}
+
+std::vector<SpotLightComponent*> SpotLightComponent::LightsOf(const Level* _level)
+{
+	return Of<SpotLightComponent>(_level);
+}
+
+void SpotLightComponent::DrawDebug()
+{
+#ifdef DEBUG
+	// The two edges of the cone and its far arc, in yellow, with a line along the direction.
+	const FVector2 _from = GetPosition();
+	const float _middle = static_cast<float>(GetRotation().ToRadians());
+	const float _half = std::clamp(angle, 1.f, 360.f) * 0.5f * 3.14159265f / 180.f;
+	const float _reach = std::max(1.f, radius);
+	const auto _at = [&](const float _offset) { return _from + FVector2(std::cos(_middle + _offset), std::sin(_middle + _offset)) * _reach; };
+
+	constexpr int ARC = 16;
+	FVector2 _previous = _at(-_half);
+	Debug::DrawDebugSegment(GetLevel(), _from, _previous, Color::Yellow());
+	for (int _i = 1; _i <= ARC; ++_i)
+	{
+		const FVector2 _next = _at(-_half + 2.f * _half * static_cast<float>(_i) / ARC);
+		Debug::DrawDebugSegment(GetLevel(), _previous, _next, Color::Yellow());
+		_previous = _next;
+	}
+	Debug::DrawDebugSegment(GetLevel(), _from, _previous, Color::Yellow());
+	Debug::DrawDebugSegment(GetLevel(), _from, _at(0.f), Color(255, 255, 0, 120));
+	Debug::DrawDebugPoint(GetLevel(), _from, 6.f, Color::Yellow());
+#endif
 }
 
 // ---- Shadow caster

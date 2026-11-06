@@ -92,10 +92,7 @@ void Krampus::AudioListenerComponent::UpdateListener()
 
 std::string Krampus::AudioListenerComponent::ToString() const
 {
-	return	name
-		+	" -> Is Top View = "	+ topView.ToString()
-		+	" | Active = "			+ active.ToString()
-		+	" | Volume = "			+ std::to_string(sf::Listener::getGlobalVolume());
+	return name + std::format(" -> Is Top View = {} | Active = {} | Volume = {}", topView, active, sf::Listener::getGlobalVolume());
 }
 
 void Krampus::AudioListenerComponent::DrawDebug()

@@ -5,7 +5,7 @@ using namespace Krampus;
 
 Krampus::TextureManager::TextureManager()
 {
-	if (!AssetPack::IsMounted()) std::filesystem::create_directories(texturePath.StdString());
+	if (!AssetPack::IsMounted()) std::filesystem::create_directories(texturePath);
 	LoadDefaultTexture();
 }
 
@@ -75,7 +75,7 @@ String Krampus::TextureManager::GetExtensionNameByType(const TextureExtensionTyp
 		"pnm"
 	};
 
-	return _extensionNames[CAST(int, _textureType)];
+	return _extensionNames[static_cast<int>(_textureType)];
 }
 
 void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const String& _path, const TextureExtensionType& _textureType, const IRect& _rect, const Bool& _isRepeated, const Bool& _smooth)
@@ -88,7 +88,7 @@ void Krampus::TextureManager::Load(ShapeObject* _shapeObject, const String& _pat
 
 	Texture& texRef = _shapeObject->GetTextureRef();
 
-	if (_path.IsEmpty())
+	if (_path.empty())
 	{
 		LOG(VerbosityType::Error, "Cannot open file with an empty path !");
 		SetTextureToDefault(texRef);

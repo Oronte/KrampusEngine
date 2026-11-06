@@ -11,6 +11,7 @@ namespace Krampus
 	{
 		sf::Keyboard::Key	toggleKey	= sf::Keyboard::Key::Escape;
 		bool				paused		= false;
+		bool				enabled		= true;
 
 	public:
 		PauseLayer() = default;
@@ -29,6 +30,18 @@ namespace Krampus
 			return paused;
 		}
 
+		/// <summary>A game without pause (a network game, or Escape used for its own menu): the key does nothing, a pause stops.</summary>
+		void SetEnabled(const bool& _enabled)
+		{
+			enabled = _enabled;
+			if (!enabled) SetPaused(false);
+		}
+
+		bool IsEnabled() const
+		{
+			return enabled;
+		}
+
 		Bool PausesLayersBelow() const override
 		{
 			return paused;
@@ -41,6 +54,7 @@ namespace Krampus
 
 		Bool OnEvent(const sf::Event& _event) override
 		{
+			if (!enabled) return false;
 			if (const sf::Event::KeyPressed* _key = _event.getIf<sf::Event::KeyPressed>())
 				if (_key->code == toggleKey)
 				{

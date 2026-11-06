@@ -25,7 +25,7 @@ namespace Krampus
 		/// Gets the mouse position mapped into world coordinates based on the active window view.
 		/// </summary>
 		/// <returns>Mouse position in world coordinates.</returns>
-		inline IVector2 GetPosition() const noexcept
+		IVector2 GetPosition() const noexcept
 		{
 			const Window& _window = GetWorld()->GetWindowRef();
 			return _window.MapPixelToCoords(position);
@@ -35,7 +35,7 @@ namespace Krampus
 		/// Gets the raw mouse coordinates in screen/window pixels.
 		/// </summary>
 		/// <returns>Screen pixel coordinates.</returns>
-		inline IVector2 GetScreenPosition() const noexcept
+		IVector2 GetScreenPosition() const noexcept
 		{
 			return position;
 		}
@@ -44,7 +44,7 @@ namespace Krampus
 		/// Sets the mouse position using world coordinates, converting them to screen pixels.
 		/// </summary>
 		/// <param name="_position">Target position in world coordinates.</param>
-		inline void SetPosition(const IVector2& _position) noexcept
+		void SetPosition(const IVector2& _position) noexcept
 		{
 			const Window& _window = GetWorld()->GetWindowRef();
 			SetScreenPosition(_window.MapCoordsToPixel(_position, _window.GetView()));
@@ -54,7 +54,7 @@ namespace Krampus
 		/// Sets the hardware cursor position in screen coordinates and updates internal position.
 		/// </summary>
 		/// <param name="_position">Target position in screen pixels.</param>
-		inline void SetScreenPosition(const IVector2& _position) noexcept
+		void SetScreenPosition(const IVector2& _position) noexcept
 		{
 			GetWorld()->GetWindowRef().SetMousePosition(_position);
 			Update();
@@ -64,7 +64,7 @@ namespace Krampus
 		/// Checks whether the mouse position changed since the last update.
 		/// </summary>
 		/// <returns>True if mouse moved, false otherwise.</returns>
-		inline Bool HasMoved() const noexcept
+		Bool HasMoved() const noexcept
 		{
 			return position != lastPosition;
 		}
@@ -72,7 +72,7 @@ namespace Krampus
 		/// <summary>
 		/// Makes the operating system mouse cursor visible within the window.
 		/// </summary>
-		inline void Show()
+		void Show()
 		{
 			GetWorld()->GetWindowRef().GetRenderWindow().setMouseCursorVisible(true);
 		}
@@ -80,7 +80,7 @@ namespace Krampus
 		/// <summary>
 		/// Hides the operating system mouse cursor within the window.
 		/// </summary>
-		inline void Hide()
+		void Hide()
 		{
 			GetWorld()->GetWindowRef().GetRenderWindow().setMouseCursorVisible(false);
 		}
@@ -88,7 +88,7 @@ namespace Krampus
 		/// <summary>
 		/// Updates the tracked mouse position from the operating system.
 		/// </summary>
-		inline void Update()
+		void Update()
 		{
 			lastPosition = position;
 			position = GetWorld()->GetWindowRef().GetMousePosition();

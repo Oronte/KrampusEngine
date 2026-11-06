@@ -35,7 +35,7 @@ namespace Krampus
 		/// Gets a pointer to the underlying SFML view.
 		/// </summary>
 		/// <returns>Pointer to sf::View.</returns>
-		inline sf::View* GetView() const
+		sf::View* GetView() const
 		{
 			return view.get();
 		}
@@ -44,7 +44,7 @@ namespace Krampus
 		/// Gets the normalized viewport rectangle in the window [0, 1].
 		/// </summary>
 		/// <returns>FRect representing viewport bounds.</returns>
-		inline FRect GetViewport() const
+		FRect GetViewport() const
 		{
 			return view->getViewport();
 		}
@@ -53,7 +53,7 @@ namespace Krampus
 		/// Sets the normalized viewport rectangle in the window [0, 1].
 		/// </summary>
 		/// <param name="_rect">The viewport rectangle.</param>
-		inline void SetViewport(const FRect& _rect)
+		void SetViewport(const FRect& _rect)
 		{
 			view->setViewport(_rect);
 		}
@@ -62,7 +62,7 @@ namespace Krampus
 		/// Sets the center coordinates of the camera view in world units.
 		/// </summary>
 		/// <param name="_center">World position of the view center.</param>
-		inline void SetCenter(const FVector2& _center)
+		void SetCenter(const FVector2& _center)
 		{
 			view->setCenter(_center);
 		}
@@ -71,7 +71,7 @@ namespace Krampus
 		/// Sets the rotation angle of the camera view.
 		/// </summary>
 		/// <param name="_angle">Rotation angle.</param>
-		inline void SetRotation(const Angle& _angle)
+		void SetRotation(const Angle& _angle)
 		{
 			view->setRotation(_angle);
 		}
@@ -80,7 +80,7 @@ namespace Krampus
 		/// Sets the visible dimensions (width and height) of the camera view.
 		/// </summary>
 		/// <param name="_size">View dimensions vector.</param>
-		inline void SetSize(const FVector2& _size)
+		void SetSize(const FVector2& _size)
 		{
 			view->setSize(_size);
 		}
@@ -89,7 +89,7 @@ namespace Krampus
 		/// Sets the scissor rectangle for rendering through this camera view.
 		/// </summary>
 		/// <param name="_rect">Scissor bounds rectangle.</param>
-		inline void SetScissor(const FRect& _rect)
+		void SetScissor(const FRect& _rect)
 		{
 			view->setScissor(_rect);
 		}
@@ -98,7 +98,7 @@ namespace Krampus
 		/// Translates the camera view by an offset.
 		/// </summary>
 		/// <param name="_offset">Offset vector to move the center.</param>
-		inline void Move(const FVector2& _offset)
+		void Move(const FVector2& _offset)
 		{
 			view->move(_offset);
 		}
@@ -107,7 +107,7 @@ namespace Krampus
 		/// Rotates the camera view by an angle delta.
 		/// </summary>
 		/// <param name="_angle">Angle offset.</param>
-		inline void Rotate(const Angle& _angle)
+		void Rotate(const Angle& _angle)
 		{
 			view->rotate(_angle);
 		}
@@ -116,7 +116,7 @@ namespace Krampus
 		/// Zooms the camera view by a scale factor. Values &gt; 1 zoom out, &lt; 1 zoom in.
 		/// </summary>
 		/// <param name="_factor">Zoom multiplier.</param>
-		inline void Zoom(const Float& _factor)
+		void Zoom(const Float& _factor)
 		{
 			view->zoom(_factor);
 		}
@@ -154,10 +154,10 @@ namespace Krampus
 		/// </summary>
 		void SetCurrent();
 
-		virtual void Construct() override;
+		void Construct() override;
 
 	private:
-		virtual void BeginDestroy() override;
+		void BeginDestroy() override;
 		void DrawDebug() override;	// outline of the area the camera shows
 
 		void InitEvent();
@@ -167,7 +167,7 @@ namespace Krampus
 		/// Returns a string representation of the component.
 		/// </summary>
 		/// <returns>String representation.</returns>
-		virtual std::string ToString() const override;
+		std::string ToString() const override;
 	};
 
 }
